@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  vocabulary-app:
+    build: .
+    container_name: vocabulary-learning-app
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # Mount per persistenza dati se necessario (opzionale)
+      - vocabulary_data:/usr/share/nginx/html/data
+    networks:
+      - vocabulary_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vocabulary.rule=Host(`vocabulary.local`)"
+      - "traefik.http.routers.vocabulary.entrypoints=web"
+      - "traefik.http.services.vocabulary.loadbalancer.server.port=80"
+
+  # Opzionale: Reverse proxy con Traefik
+  traefik:
+    image: traefik:v2.9
+    container_name: vocabulary-traefik
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - vocabulary_network
+
+volumes:
+  vocabulary_data:
+
+networks:
+  vocabulary_network:
+    driver: bridge
