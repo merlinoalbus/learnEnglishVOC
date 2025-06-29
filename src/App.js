@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { Textarea } from './components/ui/textarea';
-import { Plus, Trash2, Play, RotateCcw, Check, X, RefreshCw, Copy, FileDown, ChevronDown, ChevronUp, Edit3, BarChart3, TrendingUp, Calendar, Target } from 'lucide-react';
+import { Plus, Trash2, Play, RotateCcw, Check, X, RefreshCw, Copy, FileDown, ChevronDown, ChevronUp, Edit3, BarChart3, TrendingUp, Calendar } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import './App.css';
 
@@ -29,10 +29,9 @@ const VocabularyApp = () => {
   const [editingWord, setEditingWord] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [statusMessage, setStatusMessage] = useState('');
-
+  
   // Nuovi stati per statistiche e cronologia
   const [testHistory, setTestHistory] = useState([]);
-  const [showStatsSection, setShowStatsSection] = useState(false);
   const [currentView, setCurrentView] = useState('main'); // 'main', 'stats'
   const [confirmClearHistory, setConfirmClearHistory] = useState(false);
 
@@ -45,7 +44,7 @@ const VocabularyApp = () => {
       return null;
     }
   };
-
+  
   const setStorageItem = (key, value) => {
     try {
       localStorage.setItem(key, value);
@@ -66,7 +65,7 @@ const VocabularyApp = () => {
         console.error('Errore nel caricamento delle parole:', error);
       }
     }
-
+    
     // Carica cronologia test
     const savedHistory = getStorageItem('testHistory');
     if (savedHistory) {
@@ -85,7 +84,7 @@ const VocabularyApp = () => {
       setStorageItem('vocabularyWords', JSON.stringify(words));
     }
   }, [words]);
-
+  
   // Salva la cronologia nel storage ogni volta che cambia
   useEffect(() => {
     if (testHistory.length > 0) {
@@ -98,7 +97,7 @@ const VocabularyApp = () => {
     setStatusMessage(message);
     setTimeout(() => setStatusMessage(''), 3000);
   };
-
+  
   // Salva un test completato nella cronologia
   const saveTestToHistory = (testStats) => {
     const testResult = {
@@ -110,10 +109,10 @@ const VocabularyApp = () => {
       percentage: Math.round((testStats.correct / (testStats.correct + testStats.incorrect)) * 100),
       wrongWords: [...wrongWords]
     };
-
+    
     setTestHistory(prev => [testResult, ...prev]);
   };
-
+  
   // Funzioni per gestire le statistiche
   const getOverallStats = () => {
     if (testHistory.length === 0) {
@@ -128,7 +127,7 @@ const VocabularyApp = () => {
         improvementTrend: 0
       };
     }
-
+    
     const totalTests = testHistory.length;
     const totalCorrect = testHistory.reduce((sum, test) => sum + test.correctWords, 0);
     const totalIncorrect = testHistory.reduce((sum, test) => sum + test.incorrectWords, 0);
@@ -136,20 +135,20 @@ const VocabularyApp = () => {
     const averageScore = Math.round(testHistory.reduce((sum, test) => sum + test.percentage, 0) / totalTests);
     const bestScore = Math.max(...testHistory.map(test => test.percentage));
     const worstScore = Math.min(...testHistory.map(test => test.percentage));
-
+    
     // Calcola trend di miglioramento (ultimi 5 test vs precedenti 5)
     let improvementTrend = 0;
     if (totalTests >= 4) {
       const recentTests = testHistory.slice(0, Math.min(5, Math.floor(totalTests / 2)));
       const olderTests = testHistory.slice(Math.min(5, Math.floor(totalTests / 2)), Math.min(10, totalTests));
-
+      
       if (olderTests.length > 0) {
         const recentAvg = recentTests.reduce((sum, test) => sum + test.percentage, 0) / recentTests.length;
         const olderAvg = olderTests.reduce((sum, test) => sum + test.percentage, 0) / olderTests.length;
         improvementTrend = Math.round(recentAvg - olderAvg);
       }
     }
-
+    
     return {
       totalTests,
       averageScore,
@@ -161,24 +160,24 @@ const VocabularyApp = () => {
       improvementTrend
     };
   };
-
+  
   // Prepara dati per i grafici
   const getChartData = () => {
     const sortedHistory = [...testHistory].reverse(); // Dal più vecchio al più recente
-
+    
     return sortedHistory.map((test, index) => ({
       test: `Test ${index + 1}`,
       percentage: test.percentage,
       correct: test.correctWords,
       incorrect: test.incorrectWords,
       date: new Date(test.timestamp).toLocaleDateString('it-IT'),
-      time: new Date(test.timestamp).toLocaleTimeString('it-IT', {
-        hour: '2-digit',
-        minute: '2-digit'
+      time: new Date(test.timestamp).toLocaleTimeString('it-IT', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
       })
     }));
   };
-
+  
   // Pulisce la cronologia
   const clearTestHistory = () => {
     setTestHistory([]);
@@ -203,14 +202,14 @@ const VocabularyApp = () => {
       'TECNOLOGIA': { color: 'from-cyan-400 via-cyan-500 to-blue-500', icon: '💻', bgColor: 'bg-cyan-500' },
       'VESTITI': { color: 'from-purple-300 via-purple-400 to-pink-500', icon: '👕', bgColor: 'bg-purple-400' }
     };
-
+    
     return Object.keys(categoryMap).sort();
   };
 
   // Funzione per ottenere colore e icona della categoria
   const getCategoryStyle = (group) => {
     if (!group) return { color: 'from-blue-400 via-blue-500 to-blue-600', icon: '📚', bgColor: 'bg-blue-500' };
-
+    
     const categoryMap = {
       'VERBI': { color: 'from-red-400 via-red-500 to-red-600', icon: '⚡', bgColor: 'bg-red-500' },
       'VERBI_IRREGOLARI': { color: 'from-red-500 via-red-600 to-red-700', icon: '🔄', bgColor: 'bg-red-600' },
@@ -227,7 +226,7 @@ const VocabularyApp = () => {
       'VESTITI': { color: 'from-purple-300 via-purple-400 to-pink-500', icon: '👕', bgColor: 'bg-purple-400' },
       'DEFAULT': { color: 'from-emerald-400 via-emerald-500 to-cyan-500', icon: '📚', bgColor: 'bg-blue-500' }
     };
-
+    
     const upperGroup = group ? group.toUpperCase().trim() : '';
     const result = categoryMap[upperGroup] || categoryMap['DEFAULT'];
     return result;
@@ -236,9 +235,9 @@ const VocabularyApp = () => {
   // Funzione per formattare le note con parole chiave in grassetto
   const formatNotes = (notes) => {
     if (!notes) return null;
-
+    
     const keywords = [
-      'Altri Significati', 'Altre Traduzioni', 'Espressioni', 'Verbo Irregolare',
+      'Altri Significati', 'Altre Traduzioni', 'Espressioni', 'Verbo Irregolare', 
       'Pronuncia', 'Sinonimi', 'Esempi', 'Attenzione', 'Nota', 'Importante',
       'Plurale irregolare', 'Tecnologia', 'Posizione', 'Contrario', 'Espressione',
       'Verbo', 'Phrasal verbs', 'Differenza', 'Abbreviazione', 'Sinonimo',
@@ -252,18 +251,18 @@ const VocabularyApp = () => {
       'Struttura', 'Espressione fissa', 'Figurativo', 'Specificità', 'Pattern',
       'Più specifico di'
     ];
-
+    
     let formattedText = notes;
-
+    
     keywords.forEach(keyword => {
       const regex = new RegExp(`(${keyword})\\s*:`, 'gi');
       formattedText = formattedText.replace(regex, `**$1:**`);
     });
-
+    
     formattedText = formattedText.replace(/^([A-Za-z\s]+):/gm, '**$1:**');
-
+    
     const parts = formattedText.split(/(\*\*[^*]+\*\*)/g);
-
+    
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const boldText = part.slice(2, -2);
@@ -277,7 +276,7 @@ const VocabularyApp = () => {
   const getTestResult = () => {
     const total = stats.correct + stats.incorrect;
     const percentage = total > 0 ? Math.round((stats.correct / total) * 100) : 0;
-
+    
     if (percentage >= 80) {
       return { type: 'victory', message: 'Eccellente! 🏆', color: 'text-green-600', bgColor: 'bg-green-50' };
     } else if (percentage >= 60) {
@@ -291,7 +290,7 @@ const VocabularyApp = () => {
   const getRandomUnusedWord = (wordList, usedIds) => {
     const unusedWords = wordList.filter(word => !usedIds.has(word.id));
     if (unusedWords.length === 0) return null;
-
+    
     const randomIndex = Math.floor(Math.random() * unusedWords.length);
     return unusedWords[randomIndex];
   };
@@ -301,7 +300,7 @@ const VocabularyApp = () => {
     if (words.length === 0) {
       return;
     }
-
+    
     setUsedWordIds(new Set());
     setWrongWords([]);
     const firstWord = getRandomUnusedWord(words, new Set());
@@ -315,7 +314,7 @@ const VocabularyApp = () => {
   // Prossima parola nel test
   const nextWord = () => {
     const nextRandomWord = getRandomUnusedWord(words, usedWordIds);
-
+    
     if (nextRandomWord) {
       setUsedWordIds(prev => new Set([...prev, nextRandomWord.id]));
       setCurrentWord(nextRandomWord);
@@ -335,11 +334,11 @@ const VocabularyApp = () => {
       correct: prev.correct + (isCorrect ? 1 : 0),
       incorrect: prev.incorrect + (isCorrect ? 0 : 1)
     }));
-
+    
     if (!isCorrect && currentWord) {
       setWrongWords(prev => [...prev, currentWord]);
     }
-
+    
     // Prima gira la carta se è girata
     if (showMeaning) {
       setShowMeaning(false);
@@ -358,7 +357,7 @@ const VocabularyApp = () => {
     }
 
     const englishWord = newWordEn.trim().toLowerCase();
-
+    
     // Controlla duplicati solo se non stiamo modificando
     if (!editingWord) {
       const wordExists = words.some(word => word.english.toLowerCase() === englishWord);
@@ -366,11 +365,11 @@ const VocabularyApp = () => {
         return;
       }
     }
-
+    
     if (editingWord) {
       // Modifica parola esistente
-      const updatedWords = words.map(word =>
-        word.id === editingWord.id
+      const updatedWords = words.map(word => 
+        word.id === editingWord.id 
           ? {
               ...word,
               english: newWordEn.trim(),
@@ -394,7 +393,7 @@ const VocabularyApp = () => {
       };
       setWords(prev => [...prev, newWord].sort((a, b) => a.english.localeCompare(b.english)));
     }
-
+    
     clearForm();
   };
 
@@ -418,11 +417,11 @@ const VocabularyApp = () => {
     setNewWordNotes(word.notes || '');
     setEditingWord(word);
     setShowAdvancedForm(true);
-
+    
     // Scroll verso il form
-    document.querySelector('[data-form-section]')?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
+    document.querySelector('[data-form-section]')?.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'start' 
     });
   };
 
@@ -476,7 +475,7 @@ const VocabularyApp = () => {
 
     try {
       const importedWords = JSON.parse(jsonText.trim());
-
+      
       if (!Array.isArray(importedWords)) {
         showStatus('❌ Il JSON deve contenere un array di parole!');
         return;
@@ -487,7 +486,7 @@ const VocabularyApp = () => {
         return;
       }
 
-      const validWords = importedWords.filter(word =>
+      const validWords = importedWords.filter(word => 
         word && word.english && word.italian
       ).map(word => ({
         id: word.id || Date.now() + Math.random(),
@@ -500,7 +499,7 @@ const VocabularyApp = () => {
 
       if (validWords.length > 0) {
         const existingWords = words.map(w => w.english.toLowerCase());
-        const newWords = validWords.filter(word =>
+        const newWords = validWords.filter(word => 
           !existingWords.includes(word.english.toLowerCase())
         );
 
@@ -590,13 +589,13 @@ const VocabularyApp = () => {
                 Questa azione non può essere annullata e perderai tutte le statistiche.
               </p>
               <div className="flex gap-3">
-                <Button
+                <Button 
                   onClick={clearTestHistory}
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >
                   Sì, elimina cronologia
                 </Button>
-                <Button
+                <Button 
                   onClick={() => setConfirmClearHistory(false)}
                   variant="outline"
                 >
@@ -620,13 +619,13 @@ const VocabularyApp = () => {
                 Questa azione non può essere annullata.
               </p>
               <div className="flex gap-3">
-                <Button
+                <Button 
                   onClick={confirmRemoveWord}
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >
                   Sì, elimina parola
                 </Button>
-                <Button
+                <Button 
                   onClick={cancelRemoveWord}
                   variant="outline"
                 >
@@ -649,13 +648,13 @@ const VocabularyApp = () => {
                 Questa azione non può essere annullata.
               </p>
               <div className="flex gap-3">
-                <Button
+                <Button 
                   onClick={confirmClearWords}
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >
                   Sì, elimina tutto
                 </Button>
-                <Button
+                <Button 
                   onClick={cancelClearWords}
                   variant="outline"
                 >
@@ -686,24 +685,24 @@ const VocabularyApp = () => {
             {currentWord && (
               <div className="w-full">
                 <div className="relative w-full" style={{ height: '80vh' }}>
-                  <div
+                  <div 
                     className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
                     style={{ width: '24rem', height: '36rem' }}
                   >
-                    <div
+                    <div 
                       className="relative w-full h-full cursor-pointer"
                       style={{ perspective: '1000px' }}
                       onClick={() => setShowMeaning(!showMeaning)}
                     >
-                      <div
+                      <div 
                         className="absolute inset-0 w-full h-full transition-transform duration-700"
-                        style={{
+                        style={{ 
                           transformStyle: 'preserve-3d',
                           transform: showMeaning ? 'rotateY(180deg)' : 'rotateY(0deg)'
                         }}
                       >
                         {/* Fronte */}
-                        <div
+                        <div 
                           className="absolute inset-0 w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-2xl flex items-center justify-center overflow-hidden"
                           style={{ backfaceVisibility: 'hidden' }}
                         >
@@ -723,9 +722,9 @@ const VocabularyApp = () => {
                         </div>
 
                         {/* Retro */}
-                        <div
+                        <div 
                           className={`absolute inset-0 w-full h-full bg-gradient-to-br ${getCategoryStyle(currentWord.group).color} rounded-xl shadow-2xl overflow-hidden`}
-                          style={{
+                          style={{ 
                             backfaceVisibility: 'hidden',
                             transform: 'rotateY(180deg)'
                           }}
@@ -738,7 +737,7 @@ const VocabularyApp = () => {
                               </div>
                             </div>
                           )}
-
+                          
                           <div className="h-full flex flex-col text-white p-6">
                             {/* Header */}
                             <div className="text-center border-b border-white/30 pb-4 mb-6">
@@ -749,11 +748,11 @@ const VocabularyApp = () => {
 
                             {/* Traduzione */}
                             <div className="text-center mb-6">
-                              <div
+                              <div 
                                 className="font-bold text-white drop-shadow-lg leading-tight px-4"
                                 style={{
-                                  fontSize: currentWord.italian.length > 25 ? '1.75rem' :
-                                           currentWord.italian.length > 15 ? '2.25rem' :
+                                  fontSize: currentWord.italian.length > 25 ? '1.75rem' : 
+                                           currentWord.italian.length > 15 ? '2.25rem' : 
                                            currentWord.italian.length > 10 ? '2.75rem' : '3rem'
                                 }}
                               >
@@ -824,11 +823,11 @@ const VocabularyApp = () => {
                       <p className="text-sm opacity-75">🎯 Cerca di ricordare il significato prima di girare la carta</p>
                     </div>
                   </div>
-
+                  
                 </div>
               </div>
             )}
-
+            
             {/* Controlli test */}
             <div className="flex justify-center">
               <Button onClick={resetTest} variant="outline">
@@ -848,10 +847,10 @@ const VocabularyApp = () => {
             <CardContent className="space-y-6">
               <div className="text-center space-y-4">
                 <div className="text-6xl">
-                  {getTestResult().type === 'victory' ? '🏆' :
+                  {getTestResult().type === 'victory' ? '🏆' : 
                    getTestResult().type === 'good' ? '👍' : '📚'}
                 </div>
-
+                
                 <div className="space-y-2">
                   <div className="text-2xl font-bold">
                     {Math.round((stats.correct / (stats.correct + stats.incorrect)) * 100)}% Corretto
@@ -902,7 +901,7 @@ const VocabularyApp = () => {
                             <span className="font-bold text-lg text-indigo-800">{word.english}</span>
                             <span className="mx-3 text-orange-500">→</span>
                             <span className="text-gray-700 text-lg">{word.italian}</span>
-
+                            
                             {word.group && (
                               <div className="mt-1">
                                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
@@ -910,14 +909,14 @@ const VocabularyApp = () => {
                                 </span>
                               </div>
                             )}
-
+                            
                             {word.sentence && (
                               <div className="mt-2 p-2 bg-green-50 rounded text-xs">
                                 <div className="text-green-600 font-semibold">💬 Esempio:</div>
                                 <div className="text-green-800 italic">"{word.sentence}"</div>
                               </div>
                             )}
-
+                            
                             {word.notes && (
                               <div className="mt-2 p-2 bg-yellow-50 rounded text-xs">
                                 <div className="text-yellow-600 font-semibold">📝 Note:</div>
@@ -979,8 +978,8 @@ const VocabularyApp = () => {
                         <div className="text-6xl mb-4">📊</div>
                         <h3 className="text-xl font-bold text-gray-700 mb-2">Nessun test completato</h3>
                         <p className="text-gray-600">Completa il tuo primo test per vedere le statistiche!</p>
-                        <Button
-                          onClick={() => setCurrentView('main')}
+                        <Button 
+                          onClick={() => setCurrentView('main')} 
                           className="mt-4"
                         >
                           <Play className="w-4 h-4 mr-2" />
@@ -1016,7 +1015,7 @@ const VocabularyApp = () => {
                               <TrendingUp className={`w-6 h-6 ${getOverallStats().improvementTrend > 0 ? 'text-green-500' : 'text-red-500'}`} />
                               <div>
                                 <div className="font-bold text-lg">
-                                  Trend di Miglioramento:
+                                  Trend di Miglioramento: 
                                   <span className={`ml-2 ${getOverallStats().improvementTrend > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                     {getOverallStats().improvementTrend > 0 ? '+' : ''}{getOverallStats().improvementTrend}%
                                   </span>
@@ -1041,15 +1040,15 @@ const VocabularyApp = () => {
                               <ResponsiveContainer width="100%" height={300}>
                                 <LineChart data={getChartData()}>
                                   <CartesianGrid strokeDasharray="3 3" />
-                                  <XAxis
-                                    dataKey="test"
+                                  <XAxis 
+                                    dataKey="test" 
                                     tick={{ fontSize: 12 }}
                                   />
-                                  <YAxis
+                                  <YAxis 
                                     domain={[0, 100]}
                                     tick={{ fontSize: 12 }}
                                   />
-                                  <Tooltip
+                                  <Tooltip 
                                     formatter={(value, name) => [`${value}%`, 'Punteggio']}
                                     labelFormatter={(label, payload) => {
                                       const data = payload?.[0]?.payload;
@@ -1057,10 +1056,10 @@ const VocabularyApp = () => {
                                     }}
                                   />
                                   <Legend />
-                                  <Line
-                                    type="monotone"
-                                    dataKey="percentage"
-                                    stroke="#3b82f6"
+                                  <Line 
+                                    type="monotone" 
+                                    dataKey="percentage" 
+                                    stroke="#3b82f6" 
                                     strokeWidth={3}
                                     dot={{ r: 6 }}
                                     name="Punteggio %"
@@ -1078,12 +1077,12 @@ const VocabularyApp = () => {
                               <ResponsiveContainer width="100%" height={300}>
                                 <BarChart data={getChartData()}>
                                   <CartesianGrid strokeDasharray="3 3" />
-                                  <XAxis
-                                    dataKey="test"
+                                  <XAxis 
+                                    dataKey="test" 
                                     tick={{ fontSize: 12 }}
                                   />
                                   <YAxis tick={{ fontSize: 12 }} />
-                                  <Tooltip
+                                  <Tooltip 
                                     labelFormatter={(label, payload) => {
                                       const data = payload?.[0]?.payload;
                                       return data ? `${label} - ${data.date} ${data.time}` : label;
@@ -1143,7 +1142,7 @@ const VocabularyApp = () => {
                                     {test.percentage}%
                                   </div>
                                 </div>
-
+                                
                                 <div className="text-sm text-gray-600 mb-2">
                                   📅 {new Date(test.timestamp).toLocaleDateString('it-IT', {
                                     year: 'numeric',
@@ -1153,7 +1152,7 @@ const VocabularyApp = () => {
                                     minute: '2-digit'
                                   })}
                                 </div>
-
+                                
                                 <div className="grid grid-cols-3 gap-4 text-sm">
                                   <div>
                                     <span className="text-blue-600 font-semibold">📊 Totale:</span>
@@ -1170,7 +1169,7 @@ const VocabularyApp = () => {
                                 </div>
                               </div>
                             </div>
-
+                            
                             {/* Parole sbagliate nel test */}
                             {test.wrongWords && test.wrongWords.length > 0 && (
                               <div className="mt-3 p-3 bg-red-50 rounded border border-red-200">
@@ -1221,9 +1220,9 @@ const VocabularyApp = () => {
                     Importa JSON
                   </Button>
 
-                  <Button
-                    onClick={clearAllWords}
-                    variant="outline"
+                  <Button 
+                    onClick={clearAllWords} 
+                    variant="outline" 
                     disabled={words.length === 0}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
@@ -1236,8 +1235,8 @@ const VocabularyApp = () => {
 
             {/* JSON Section */}
             <Card>
-              <CardHeader
-                className="cursor-pointer"
+              <CardHeader 
+                className="cursor-pointer" 
                 onClick={() => setShowJsonSection(!showJsonSection)}
               >
                 <CardTitle className="flex items-center justify-between">
@@ -1277,8 +1276,8 @@ const VocabularyApp = () => {
                   )}
                   <div className="flex gap-2">
                     {editingWord && (
-                      <Button
-                        variant="ghost"
+                      <Button 
+                        variant="ghost" 
                         size="sm"
                         onClick={clearForm}
                         className="text-gray-600 hover:text-gray-800"
@@ -1286,8 +1285,8 @@ const VocabularyApp = () => {
                         ✕ Annulla
                       </Button>
                     )}
-                    <Button
-                      variant="ghost"
+                    <Button 
+                      variant="ghost" 
                       size="sm"
                       onClick={() => setShowAdvancedForm(!showAdvancedForm)}
                     >
@@ -1297,7 +1296,7 @@ const VocabularyApp = () => {
                 </CardTitle>
                 {editingWord && (
                   <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
-                    💡 Stai modificando la parola "<strong>{editingWord.english}</strong>".
+                    💡 Stai modificando la parola "<strong>{editingWord.english}</strong>". 
                     Cambia i campi che vuoi aggiornare e clicca "Salva Modifiche".
                   </div>
                 )}
@@ -1322,7 +1321,7 @@ const VocabularyApp = () => {
                   {showAdvancedForm && (
                     <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <h4 className="font-semibold text-blue-800">📋 Informazioni Aggiuntive</h4>
-
+                      
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Gruppo/Categoria */}
                         <div className="space-y-2">
@@ -1340,14 +1339,14 @@ const VocabularyApp = () => {
                             ))}
                           </select>
                         </div>
-
+                        
                         <Input
                           placeholder="Frase d'esempio"
                           value={newWordSentence}
                           onChange={(e) => setNewWordSentence(e.target.value)}
                         />
                       </div>
-
+                      
                       <Textarea
                         placeholder="Note aggiuntive"
                         value={newWordNotes}
@@ -1376,8 +1375,8 @@ const VocabularyApp = () => {
 
             {/* Lista Parole */}
             <Card>
-              <CardHeader
-                className="cursor-pointer"
+              <CardHeader 
+                className="cursor-pointer" 
                 onClick={() => setShowWordsList(!showWordsList)}
               >
                 <CardTitle className="flex items-center justify-between">
@@ -1405,14 +1404,14 @@ const VocabularyApp = () => {
                                 <span className="text-gray-400">→</span>
                                 <span className="text-gray-700 text-lg">{word.italian}</span>
                               </div>
-
+                              
                               {word.group && (
                                 <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full inline-block mb-2">
                                   📂 {word.group}
                                 </div>
                               )}
                             </div>
-
+                            
                             <div className="flex gap-1">
                               <Button
                                 onClick={() => editWord(word)}

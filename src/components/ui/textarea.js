@@ -1,3 +1,5 @@
+import React from 'react';
+
 const Textarea = React.forwardRef(({ className = "", ...props }, ref) => {
   return (
     <textarea
@@ -9,4 +11,4 @@ const Textarea = React.forwardRef(({ className = "", ...props }, ref) => {
 });
 Textarea.displayName = "Textarea";
 
-export { Input, Textarea };
+export { Textarea };
