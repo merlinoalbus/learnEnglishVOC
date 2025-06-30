@@ -1,3 +1,9 @@
+// /src/components/ui/button.js
+// This file contains the Button component with various styles and sizes.
+// It is designed to be used in forms and other interactive elements, providing a consistent look and feel for buttons.
+// It supports different variants like default, outline, ghost, and destructive, as well as size options like default, sm, and lg.
+// The Button component can be customized with additional classes and styles as needed.
+
 import React from 'react';
 
 const Button = React.forwardRef(({

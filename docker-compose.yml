@@ -1,3 +1,8 @@
+# docker-compose.yml
+# --- a/docker-compose.yml  
+# This file is part of the Docker Compose configuration for the Vocabulary Learning App.
+# # It defines the services, networks, and volumes needed to run the application in a Docker environment.
+# # The application is built using Node.js and serves a vocabulary learning interface.
 version: '3.8'
 
 services:

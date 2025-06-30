@@ -1,3 +1,7 @@
+/*
+/src/index.css
+This file contains the main CSS styles for the application, including Tailwind CSS imports and custom styles.
+*/
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

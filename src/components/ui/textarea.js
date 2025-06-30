@@ -1,3 +1,7 @@
+// /src/components/ui/textarea.js
+// This file contains the Textarea component with various styles and properties.
+//
+
 import React from 'react';
 
 const Textarea = React.forwardRef(({ className = "", ...props }, ref) => {

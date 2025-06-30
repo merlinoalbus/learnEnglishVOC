@@ -1,3 +1,7 @@
+// /src/components/ui/input.js
+// This file contains the Input component with various styles and properties.
+// It is designed to be used in forms and other input scenarios, providing a consistent look and feel for text inputs.
+//
 import React from 'react';
 
 const Input = React.forwardRef(({ className = "", type = "text", ...props }, ref) => {

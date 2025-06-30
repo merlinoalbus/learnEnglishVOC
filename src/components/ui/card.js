@@ -1,3 +1,12 @@
+// /src/components/ui/card.js
+// This file contains the Card component and its subcomponents for displaying content in a card format.
+// It includes CardHeader, CardTitle, CardDescription, CardContent, and CardFooter components
+// to structure the card layout.
+// It is designed to be used in various parts of the application where a card-like UI is needed.
+// It provides a consistent look and feel for displaying information in a card format.
+// The Card component can be customized with additional classes and styles as needed.   
+
+
 import React from 'react';
 
 const Card = React.forwardRef(({ className = "", ...props }, ref) => (

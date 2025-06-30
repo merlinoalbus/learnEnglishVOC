@@ -1,3 +1,9 @@
+// tailwind.config.js
+// This file is part of the Tailwind CSS configuration for the Vocabulary Learning App.
+// It defines the content paths, theme extensions, colors, border radii, keyframes, and animations used throughout the application.
+// The configuration allows for custom styling and theming, ensuring a consistent look and feel across the application.
+// It is essential for building the application's styles and ensuring a responsive and modern user interface.
+
 module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",

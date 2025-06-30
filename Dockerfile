@@ -1,4 +1,8 @@
 # Dockerfile
+# This Dockerfile sets up a multi-stage build for a React application using Node.js and Nginx.
+# It builds the application in a Node.js environment and serves it using Nginx in production.
+# Use Node.js as the base image for the build stage
+
 # Build stage
 FROM node:18-alpine as build
 
