@@ -12,8 +12,7 @@
     "lucide-react": "^0.263.1"
   },
   "scripts": {
-    "start": "GENERATE_SOURCEMAP=false react-scripts start",
-    "dev": "react-scripts start",
+    "start": "react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test --watchAll=false --coverage=false",
     "eject": "react-scripts eject",

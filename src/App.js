@@ -4,7 +4,7 @@ import { Button } from './components/ui/button';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './components/ui/modal';
 import { 
   Play, RotateCcw, Check, X, RefreshCw, Trash2, BarChart3, 
-  Brain, Sparkles, Calendar, BookOpen
+  Brain, Sparkles, Calendar, BookOpen, Settings // ⭐ NUOVO IMPORT
 } from 'lucide-react';
 
 // Custom Hooks
@@ -12,6 +12,7 @@ import { useWords } from './hooks/useWords';
 import { useTest } from './hooks/useTest';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useNotification } from './hooks/useNotification';
+import { useStats } from './hooks/useStats'; // ⭐ NUOVO IMPORT
 
 // Components
 import TestCard from './components/TestCard';
@@ -20,6 +21,7 @@ import AddWordForm from './components/AddWordForm';
 import WordsList from './components/WordsList';
 import JSONManager from './components/JSONManager';
 import StatsOverview from './components/StatsOverview';
+import StatsManager from './components/StatsManager'; // ⭐ NUOVO IMPORT
 import ChapterTestSelector from './components/ChapterTestSelector';
 
 import './App.css';
@@ -40,6 +42,9 @@ const VocabularyApp = () => {
   
   const { message: statusMessage, showNotification } = useNotification();
   const [testHistory, setTestHistory] = useLocalStorage('testHistory', []);
+  
+  // ⭐ NUOVO: Hook per gestione statistiche avanzate
+  const { stats: advancedStats, updateTestStats } = useStats();
 
   // Ottieni i capitoli usati nel test corrente
   const getUsedChapters = useCallback((testWordsArray) => {
@@ -54,7 +59,7 @@ const VocabularyApp = () => {
     return Array.from(chapters);
   }, []);
   
-  // Test completion handler con parametri avanzati
+  // ⭐ AGGIORNATO: Test completion handler con integrazione statistiche avanzate
   const handleTestComplete = useCallback((testStats, testWordsUsed, wrongWordsArray) => {
     // Calcola statistiche per capitolo
     const chapterStats = {};
@@ -120,9 +125,19 @@ const VocabularyApp = () => {
       difficulty: calculateTestDifficulty()
     };
     
+    // ⭐ NUOVO: Aggiorna anche le statistiche avanzate
+    updateTestStats({
+      correct: testStats.correct,
+      incorrect: testStats.incorrect,
+      totalWords: words.length,
+      timeSpent: Math.round(Math.random() * 10) + 5, // Tempo simulato 5-15 min (puoi sostituire con tempo reale)
+      category: usedChapters.length === 1 ? usedChapters[0] : 'misto',
+      difficulty: testResult.difficulty
+    });
+    
     setTestHistory(prev => [testResult, ...prev]);
     showNotification(`✅ Test completato! Risultato: ${testResult.percentage}%`);
-  }, [words, getAvailableChapters, getUsedChapters, setTestHistory, showNotification]);
+  }, [words, getAvailableChapters, getUsedChapters, setTestHistory, showNotification, updateTestStats]);
   
   const {
     currentWord,
@@ -310,9 +325,15 @@ const VocabularyApp = () => {
       <div className="relative z-10 max-w-6xl mx-auto p-6 space-y-8">
         <AppHeader />
         
-        {/* Navigation */}
-        <ViewNavigation currentView={currentView} setCurrentView={setCurrentView} testHistory={testHistory} />
+        {/* ⭐ AGGIORNATO: Navigation con nuovo pulsante */}
+        <ViewNavigation 
+          currentView={currentView} 
+          setCurrentView={setCurrentView} 
+          testHistory={testHistory}
+          advancedStats={advancedStats} 
+        />
 
+        {/* ⭐ AGGIORNATO: Gestione delle viste con StatsManager */}
         {currentView === 'stats' ? (
           <StatsOverview
             testHistory={testHistory}
@@ -320,6 +341,12 @@ const VocabularyApp = () => {
             onClearHistory={() => setConfirmClearHistory(true)}
             onGoToMain={() => setCurrentView('main')}
           />
+        ) : currentView === 'stats-manager' ? (
+          <StatsManager onDataUpdated={() => {
+            // ⭐ NUOVO: Forza re-render quando i dati vengono importati
+            const updatedHistory = JSON.parse(localStorage.getItem('testHistory') || '[]');
+            setTestHistory(updatedHistory);
+          }} />
         ) : (
           <MainView
             words={words}
@@ -385,7 +412,8 @@ const NotificationToast = ({ message }) => {
   );
 };
 
-const ViewNavigation = ({ currentView, setCurrentView, testHistory }) => (
+// ⭐ AGGIORNATO: ViewNavigation con terzo pulsante
+const ViewNavigation = ({ currentView, setCurrentView, testHistory, advancedStats }) => (
   <Card className="backdrop-blur-sm bg-white/90 border-0 shadow-xl rounded-3xl overflow-hidden">
     <CardContent className="p-2">
       <div className="flex gap-2 p-2">
@@ -400,6 +428,7 @@ const ViewNavigation = ({ currentView, setCurrentView, testHistory }) => (
           <Brain className="w-6 h-6 mr-3" />
           Studio & Vocabolario
         </Button>
+        
         <Button
           onClick={() => setCurrentView('stats')}
           className={`flex-1 py-4 px-6 rounded-2xl text-lg font-semibold transition-all duration-300 ${
@@ -413,6 +442,24 @@ const ViewNavigation = ({ currentView, setCurrentView, testHistory }) => (
           {testHistory.length > 0 && (
             <span className="ml-2 bg-white/20 text-white px-2 py-1 rounded-full text-sm">
               {testHistory.length}
+            </span>
+          )}
+        </Button>
+        
+        {/* ⭐ NUOVO PULSANTE */}
+        <Button
+          onClick={() => setCurrentView('stats-manager')}
+          className={`flex-1 py-4 px-6 rounded-2xl text-lg font-semibold transition-all duration-300 ${
+            currentView === 'stats-manager' 
+              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg transform scale-105' 
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <Settings className="w-6 h-6 mr-3" />
+          Gestisci Stats
+          {advancedStats.testsCompleted > 0 && (
+            <span className="ml-2 bg-white/20 text-white px-2 py-1 rounded-full text-sm">
+              {advancedStats.testsCompleted}
             </span>
           )}
         </Button>
