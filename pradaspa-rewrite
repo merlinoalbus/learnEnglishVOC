@@ -1,0 +1,174 @@
+#############################################################
+#### Prada SPA (Single Page Application)         ############
+#############################################################
+
+# ------------------------ Social login
+RewriteRule ^/prspa\.callSocialCallback\.json$ /content/pradaspa.prspa.callSocialCallback.json [PT,L,QSA,NC,NE]
+
+# ---------- SITEMAP PRADA SPA
+# Sitemap Prada SPA (Root)
+## pradaspa is not active yet
+#RewriteRule ^/sitemap\.xml$ /content/pradaspa.prspa.sitemap.xml [PT,L,QSA,NC,NE]
+
+# ---------- Sitemap Prada SPA (Country)
+#RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+#RewriteRule ^/(${PRADA_SPA_COUNTRIES})/sitemap\.xml$ /content/pradaspa/$1.prspa.sitemap.xml [PT,L,QSA,NC,NE]
+#
+## ---------- Sitemap's country rewrite rule for production only
+#RewriteCond %{HTTP_HOST} ^www\.(.*)
+#RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})/sitemap\.xml$ /content/pradaspa/$1/$2.prspa.sitemap.xml [PT,L]
+#
+## ---------- Sitemap's country/language rewrite rule
+#RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+#RewriteRule ^/([a-zA-Z]{2})((\.|/)[a-zA-Z]{2})?(\.|/)sitemap\.xml$ /content/pradaspa/$1$2.prspa.sitemap.xml [PT,L,QSA,NC,NE]
+#
+## ---------- Sitemap's country/language rewrite rule for production only
+#RewriteCond %{HTTP_HOST} ^www\.(.*)
+#RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})/([a-zA-Z]{2})/sitemap\.xml$ /content/pradaspa/$1/$2.prspa.sitemap.xml [PT,L]
+
+# ---------- Sitemap's country/language rewrite rule all country
+#RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+#RewriteRule ^/([a-zA-Z]{2})/([a-zA-Z]{2})(\.|/)sitemap\.xml$ /content/pradaspa/$1/$2.prspa.sitemap.xml [PT,L,QSA,NC,NE]
+
+
+#######################################################
+### Prada SPA (Single Page Application) PDP and PLP ###
+#######################################################
+
+# ----------  Category and product pages
+RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+RewriteCond %{REQUEST_URI} .*\/(c|p)\/.*$
+RewriteCond %{REQUEST_URI} !.*\.json$
+RewriteRule ^/(${PRADA_SPA_COUNTRIES})/([a-zA-Z]{2})(\.|/)(.*) /content/pradaspa/$1/$2$3$4.html [PT,L,QSA,NC,NE]
+
+
+# ----------  Category and product pages - Live
+RewriteCond %{HTTP_HOST} ^www\.(.*)
+RewriteCond %{REQUEST_URI} .*\/(c|p)\/.*$
+RewriteCond %{REQUEST_URI} !.*\.json$
+RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})/([a-zA-Z]{2})(\.|/)(.*) /content/pradaspa/$1/$2$3$4.html [PT,L,QSA,NC,NE]
+
+#######################################################
+#######################################################
+#######################################################
+
+#########################################################
+## Prada SPA (Single Page Application) womens and mens ##
+#########################################################
+
+# ---------- Point to Prada SPA (Single Page Application) for the category womens/mens
+RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+RewriteCond %{REQUEST_URI} !.*\/(c|p)\/.*$
+RewriteRule ^/(${PRADA_SPA_COUNTRIES})/([a-zA-Z]{2})/(womens|mens)(\/?.*) /content/pradaspa/$1/$2/$3$4 [PT,L,QSA,NC,NE]
+
+# ---------- Point to Prada SPA (Single Page Application) for the category womens/mens production only
+RewriteCond %{HTTP_HOST} ^www\.(.*)
+RewriteCond %{REQUEST_URI} !.*\/(c|p)\/.*$
+RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})/([a-zA-Z]{2})/(womens|mens)(\/?.*) /content/pradaspa/$1/$2/$3$4 [PT,L,QSA,NC,NE]
+
+#########################################################
+#########################################################
+#########################################################
+
+##################################################
+### Prada SPA (Single Page Application) Models ###
+##################################################
+
+# ---------- Home Pages
+RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+RewriteRule ^/(${PRADA_SPA_COUNTRIES})(\/[a-zA-Z]{2})?(\.model(\.[a-zA-Z]{2})?\.json)$ /content/pradaspa/$1$2$3 [PT,L,QSA,NC,NE]
+
+# ---------- Home Page Production only
+RewriteCond %{HTTP_HOST} ^www\.(.*)
+RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})(\/[a-zA-Z]{2})?(\.model(\.[a-zA-Z]{2})?\.json)$ /content/pradaspa/$1$2$3 [PT,L,QSA,NC,NE]
+
+# ----------- Variant selector
+RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+RewriteRule ^\/(${PRADA_SPA_COUNTRIES})(\/[a-zA-Z]{2})?(\.model)?((\/|\.)[a-zA-Z]{2})?(\.variant[A-Z]{1})\.(html|json) /content/pradaspa/$1$2$3$4$6.$7 [PT,L,QSA,NC,NE]
+
+# ----------- Variant selector production only
+RewriteCond %{HTTP_HOST} ^www\.(.*)
+RewriteRule ^\/(${PRADA_SPA_COUNTRIES_LIVE})(\/[a-zA-Z]{2})?(\.model)?((\/|\.)[a-zA-Z]{2})?(\.variant[A-Z]{1})\.(html|json) /content/pradaspa/$1$2$3$4$6.$7 [PT,L,QSA,NC,NE]
+
+# ---------- PLP and PDP
+RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+RewriteCond %{REQUEST_URI} .*\/(c|p)\/.*$
+RewriteRule ^/(${PRADA_SPA_COUNTRIES})/([a-zA-Z]{2})(\.|/)(.*)\.model\.json /content/pradaspa/$1/$2$3$4.model.json [PT,L,QSA,NC,NE]
+
+# ---------- PLP and PDP Production only
+RewriteCond %{HTTP_HOST} ^www\.(.*)
+RewriteCond %{REQUEST_URI} .*\/(c|p)\/.*$
+RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})/([a-zA-Z]{2})(\.|/)(.*)\.model\.json /content/pradaspa/$1/$2$3$4.model.json [PT,L,QSA,NC,NE]
+
+# ---------- Miscellaneous pages model
+RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+RewriteCond %{REQUEST_URI} !^/cn/.*store-locator(.*)?\.model\.json$
+RewriteRule ^/(${PRADA_SPA_COUNTRIES})/([a-zA-Z]{2})/(shopping-bag|wishlist|sitemap|store-locator|ac_factory|americas-cup|prada_linea_rossa|gifts|sustainability|info|prada-services)(.*)?\.model\.json /content/pradaspa/$1/$2/$3$4.model.json [PT,L,QSA,NC,NE]
+
+# ---------- Miscellaneous pages model production only
+RewriteCond %{HTTP_HOST} ^www\.(.*)
+RewriteCond %{REQUEST_URI} !^/cn/.*store-locator(.*)?\.model\.json$
+RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})/([a-zA-Z]{2})/(shopping-bag|wishlist|sitemap|store-locator|ac_factory|americas-cup|prada_linea_rossa|gifts)(.*)?\.model\.json /content/pradaspa/$1/$2/$3$4.model.json [PT,L,QSA,NC,NE]
+
+# ---------- Logged Area
+RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+RewriteRule ^/(${PRADA_SPA_COUNTRIES_LOGGED_AREA})/([a-zA-Z]{2})/my_account(\.model)?\.(json|html) /content/pradaspa/$1/$2/my_account$3.$4 [PT,L,QSA,NC,NE]
+
+# ---------- Logged Area production only
+RewriteCond %{HTTP_HOST} ^www\.(.*)
+RewriteRule ^/(${PRADA_SPA_COUNTRIES_LOGGED_AREA_LIVE})/([a-zA-Z]{2})/my_account(\.model)?\.(json|html) /content/pradaspa/$1/$2/my_account$3.$4 [PT,L,QSA,NC,NE]
+
+# ---------- Selector _page (eg. /it/it/eyewear_page.model.json)
+RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+RewriteRule ^/(${PRADA_SPA_COUNTRIES})/([a-zA-Z]{2})/(.*)?(_page)(.*)?\.model\.json /content/pradaspa/$1/$2/$3$4$5.model.json [PT,L,QSA,NC,NE]
+
+# ---------- Selector _page (eg. /it/it/eyewear_page.model.json) production only
+RewriteCond %{HTTP_HOST} ^www\.(.*)
+RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})/([a-zA-Z]{2})/(.*)?(_page)(.*)?\.model\.json /content/pradaspa/$1/$2/$3$4$5.model.json [PT,L,QSA,NC,NE]
+
+##################################################
+##################################################
+##################################################
+
+###############################################################
+### Prada SPA (Single Page Application) Miscellaneous pages ###
+###############################################################
+
+# ---------- Only homepage on Prada SPA (Single Page Application)
+RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+RewriteRule ^/(${PRADA_SPA_COUNTRIES})/([a-zA-Z]{2})\.html$ /content/pradaspa/$1/$2.html [PT,L,QSA,NC,NE]
+
+# ---------- Only homepage on Prada SPA (Single Page Application)
+RewriteCond %{HTTP_HOST} ^www\.(.*)
+RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})/([a-zA-Z]{2}).html$ /content/pradaspa/$1/$2.html [PT,L,QSA,NC,NE]
+
+# -------------- Custom rewrites on prada SPA ADO-18837
+RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+RewriteCond %{REQUEST_URI} !^/cn/.*store-locator(.*)?\.html$
+RewriteRule ^/(${PRADA_SPA_COUNTRIES})/([a-zA-Z]{2})/(shopping-bag|wishlist|sitemap|store-locator|ac_factory|americas-cup|prada_linea_rossa|gifts|sustainability|info|prada-services)(.*)?\.html /content/pradaspa/$1/$2/$3$4.html [PT,L,QSA,NC,NE]
+
+# -------------- Custom rewrites on prada SPA ADO-18837 production only
+RewriteCond %{HTTP_HOST} ^www\.(.*)
+RewriteCond %{REQUEST_URI} !^/cn/.*store-locator(.*)?\.html$
+RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})/([a-zA-Z]{2})/(shopping-bag|wishlist|sitemap|store-locator|ac_factory|americas-cup|prada_linea_rossa|gifts)(.*)?\.html /content/pradaspa/$1/$2/$3$4.html [PT,L,QSA,NC,NE]
+
+# -------------- Selector _page html
+RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+RewriteRule ^/(${PRADA_SPA_COUNTRIES})/([a-zA-Z]{2})/(.*\_page.html) /content/pradaspa/$1/$2/$3 [PT,L,QSA,NC,NE]
+
+# -------------- Selector _page html production only
+RewriteCond %{HTTP_HOST} ^www\.(.*)
+RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})/([a-zA-Z]{2})/(.*\_page.html) /content/pradaspa/$1/$2/$3 [PT,L,QSA,NC,NE]
+
+# /??/??/* to Content Prada SPA
+#RewriteCond %{HTTP_HOST} ${PRADA_SPA_ENVIRONMENTS}
+#RewriteRule ^/(${PRADA_SPA_COUNTRIES})/([a-zA-Z]{2})(\.|/)(.*) /content/pradaspa/$1/$2$3$4 [PT,L,QSA,NC,NE]
+#
+#
+## /??/??/* to Content Prada SPA - live
+#RewriteCond %{HTTP_HOST} ^www\.(.*)
+#RewriteRule ^/(${PRADA_SPA_COUNTRIES_LIVE})/([a-zA-Z]{2})(\.|/)(.*) /content/pradaspa/$1/$2$3$4 [PT,L,QSA,NC,NE]
+
+########################################################
+########################################################
+########################################################
