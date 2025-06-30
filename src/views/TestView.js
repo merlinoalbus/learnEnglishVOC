@@ -8,11 +8,8 @@ import { RotateCcw, Check, X } from 'lucide-react';
 export const TestView = React.memo(() => {
   const {
     currentWord,
-    // usedWordIds, // ✅ Removed unused variable
-    stats,
     showMeaning,
     setShowMeaning,
-    // testWords, // ✅ Removed unused variable
     handleAnswer,
     resetTest,
     getTestProgress,
@@ -41,11 +38,13 @@ export const TestView = React.memo(() => {
               <div className="text-right">
                 <div className="flex gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{stats.correct}</div>
+                    {/* ⭐ CORRETTO: Usa summary.correct dall'hook sistemato */}
+                    <div className="text-2xl font-bold text-green-600">{summary.correct}</div>
                     <div className="text-sm text-green-700">Corrette</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">{stats.incorrect}</div>
+                    {/* ⭐ CORRETTO: Usa summary.incorrect dall'hook sistemato */}
+                    <div className="text-2xl font-bold text-red-600">{summary.incorrect}</div>
                     <div className="text-sm text-red-700">Sbagliate</div>
                   </div>
                 </div>

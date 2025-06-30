@@ -11,29 +11,34 @@ export const useOptimizedTest = (onTestComplete) => {
   const [testWords, setTestWords] = useState([]);
   const [testSaved, setTestSaved] = useState(false);
 
-  // ⭐ MEMOIZED PROGRESS CALCULATIONS
+  // ⭐ CORREZIONE: Progress basato su parole RISPOSTE, non viste
   const progressData = useMemo(() => {
     if (testWords.length === 0) return { current: 0, total: 0, percentage: 0 };
     
+    const answered = stats.correct + stats.incorrect;
+    
     return {
-      current: usedWordIds.size,
+      current: answered + 1, // +1 per la parola corrente in corso
       total: testWords.length,
-      percentage: Math.round((usedWordIds.size / testWords.length) * 100)
+      percentage: Math.round((answered / testWords.length) * 100)
     };
-  }, [usedWordIds.size, testWords.length]);
+  }, [stats.correct, stats.incorrect, testWords.length]);
 
   const summaryData = useMemo(() => {
     const totalAnswered = stats.correct + stats.incorrect;
     const accuracy = totalAnswered > 0 ? Math.round((stats.correct / totalAnswered) * 100) : 0;
     
     return {
-      ...progressData,
+      current: totalAnswered + 1, // +1 per la parola corrente
+      total: testWords.length,
+      percentage: Math.round((totalAnswered / testWords.length) * 100),
       answered: totalAnswered,
-      remaining: testWords.length - usedWordIds.size,
+      remaining: testWords.length - totalAnswered,
       accuracy,
-      stats
+      correct: stats.correct,
+      incorrect: stats.incorrect
     };
-  }, [progressData, stats, testWords.length, usedWordIds.size]);
+  }, [stats.correct, stats.incorrect, testWords.length]);
 
   // ⭐ OPTIMIZED RANDOM WORD SELECTION
   const getRandomUnusedWord = useCallback((wordList, usedIds) => {
@@ -56,23 +61,30 @@ export const useOptimizedTest = (onTestComplete) => {
     if (filteredWords.length === 0) return;
     
     setTestWords(filteredWords);
-    setUsedWordIds(new Set());
     setWrongWords([]);
     setTestSaved(false);
+    setStats({ correct: 0, incorrect: 0 });
+    setUsedWordIds(new Set());
+    
     const firstWord = getRandomUnusedWord(filteredWords, new Set());
     setCurrentWord(firstWord);
-    setUsedWordIds(new Set([firstWord.id]));
+    
+    // ⭐ CORREZIONE: Aggiungi la prima parola a usedWordIds per evitare duplicati
+    if (firstWord) {
+      setUsedWordIds(new Set([firstWord.id]));
+    }
+    
     setShowMeaning(false);
     setTestMode(true);
-    setStats({ correct: 0, incorrect: 0 });
   }, [getRandomUnusedWord]);
 
   const nextWord = useCallback(() => {
     const nextRandomWord = getRandomUnusedWord(testWords, usedWordIds);
     
     if (nextRandomWord) {
-      setUsedWordIds(prev => new Set([...prev, nextRandomWord.id]));
       setCurrentWord(nextRandomWord);
+      // ⭐ CORREZIONE: Aggiungi la nuova parola a usedWordIds subito per evitare duplicati
+      setUsedWordIds(prev => new Set([...prev, nextRandomWord.id]));
       setShowMeaning(false);
     }
   }, [testWords, usedWordIds, getRandomUnusedWord]);
@@ -85,6 +97,7 @@ export const useOptimizedTest = (onTestComplete) => {
     
     setStats(newStats);
     
+    // ⭐ NOTA: usedWordIds è già aggiornato quando mostro la parola
     if (!isCorrect && currentWord) {
       setWrongWords(prev => [...prev, currentWord]);
     }
