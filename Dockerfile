@@ -1,49 +1,47 @@
-# Build stage
+# Multi-stage build per ottimizzare dimensioni e sicurezza
 FROM node:18-alpine AS builder
 
-# Installa git per clonare il repository
+# Imposta working directory
+WORKDIR /app
+
+# Installa git per clonare il repository (se necessario)
 RUN apk add --no-cache git
 
-# Imposta directory di lavoro
-WORKDIR /app
+# Copia package files per sfruttare cache Docker
+COPY package*.json ./
 
-# Clona il repository
-RUN git clone https://github.com/merlinoalbus/learnEnglishVOC.git .
+# Installa dipendenze (solo production + dev per build)
+RUN npm ci --only=production --silent && \
+    npm ci --only=dev --silent && \
+    npm cache clean --force
 
-# Installa dipendenze
-RUN npm ci --only=production
+# Copia tutto il codice sorgente
+COPY . .
 
-# Build dell'applicazione
+# Build dell'applicazione React
 RUN npm run build
 
-# Production stage
-FROM node:18-alpine AS production
+# ==========================================
+# Stage 2: Production con Nginx
+# ==========================================
+FROM nginx:alpine AS production
 
-# Installa serve e curl per healthcheck
-RUN npm install -g serve && \
-    apk add --no-cache curl
+# Copia i file build dalla stage precedente
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Copia configurazione Nginx custom
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Crea utente non-root per sicurezza
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
 
-# Imposta directory di lavoro
-WORKDIR /app
+# Esponi porta 80
+EXPOSE 80
 
-# Copia i file build dal stage precedente
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/package.json ./package.json
+# Health check per verificare che l'app funzioni
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
 
-# Cambia ownership
-RUN chown -R nextjs:nodejs /app
-USER nextjs
-
-# Esponi porta
-EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:3000 || exit 1
-
-# Comando per avviare l'applicazione
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Avvia Nginx
+CMD ["nginx", "-g", "daemon off;"]
