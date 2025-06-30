@@ -1,6 +1,6 @@
-// components/StatsManager.js - Versione Sincronizzata
+// components/StatsManager.js - Versione Sincronizzata - HOOK CORRETTO
 import React, { useState, useRef, useEffect } from 'react';
-import { useStats } from '../hooks/useStats';
+import { useOptimizedStats } from '../hooks/useOptimizedStats'; // ✅ Fixed: correct hook name
 import './StatsManager.css';
 
 /**
@@ -23,7 +23,7 @@ const StatsManager = ({ onDataUpdated, forceUpdate }) => {
     isMigrated,
     refreshData,
     isProcessing
-  } = useStats();
+  } = useOptimizedStats(); // ✅ Fixed: using correct hook name
 
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);

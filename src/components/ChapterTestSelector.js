@@ -1,11 +1,18 @@
+// =====================================================
+// 📁 src/components/ChapterTestSelector.js - SOSTITUISCE il file esistente
+// =====================================================
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Play, BookOpen, CheckSquare, Square, Target } from 'lucide-react';
+import { useNotification } from '../contexts/NotificationContext';
 
-const ChapterTestSelector = ({ words, onStartTest, onClose, showNotification }) => {
+const ChapterTestSelector = ({ words, onStartTest, onClose }) => {
   const [selectedChapters, setSelectedChapters] = useState(new Set());
   const [includeLearnedWords, setIncludeLearnedWords] = useState(false);
+  
+  // ⭐ AGGIORNATO: Usa il context invece della prop
+  const { showWarning } = useNotification();
   
   // Ottieni tutti i capitoli disponibili dalle parole
   const getAvailableChapters = () => {
@@ -88,8 +95,9 @@ const ChapterTestSelector = ({ words, onStartTest, onClose, showNotification }) 
   const handleStartTest = () => {
     const totalWords = getTotalSelectedWords();
     
+    // ⭐ AGGIORNATO: Usa showWarning dal context
     if (totalWords === 0) {
-      showNotification?.('⚠️ Seleziona almeno un capitolo con parole disponibili!');
+      showWarning('⚠️ Seleziona almeno un capitolo con parole disponibili!');
       return;
     }
 
@@ -109,7 +117,7 @@ const ChapterTestSelector = ({ words, onStartTest, onClose, showNotification }) 
     });
 
     if (filteredWords.length === 0) {
-      showNotification?.('⚠️ Nessuna parola disponibile per i capitoli selezionati!');
+      showWarning('⚠️ Nessuna parola disponibile per i capitoli selezionati!');
       return;
     }
 
