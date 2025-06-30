@@ -1,66 +1,49 @@
-# Dockerfile
-# This Dockerfile sets up a multi-stage build for a React application using Node.js and Nginx.
-# It builds the application in a Node.js environment and serves it using Nginx in production.
-# Use Node.js as the base image for the build stage
-
-## Multi-stage build per ottimizzare dimensioni
+# Build stage
 FROM node:18-alpine AS builder
 
-# Metadata
-LABEL maintainer="merlinoalbus"
-LABEL description="Vocabulary Learning App - English Study Tool"
-LABEL version="1.0.0"
+# Installa git per clonare il repository
+RUN apk add --no-cache git
 
-# Set working directory
+# Imposta directory di lavoro
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Clona il repository
+RUN git clone https://github.com/merlinoalbus/learnEnglishVOC.git .
 
-# Install dependencies (solo production + dev per build)
-RUN npm ci --include=dev && npm cache clean --force
+# Installa dipendenze
+RUN npm ci --only=production
 
-# Copy source code
-COPY . .
-
-# Build application
+# Build dell'applicazione
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM node:18-alpine AS production
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# Installa serve e curl per healthcheck
+RUN npm install -g serve && \
+    apk add --no-cache curl
 
-# Copy built app
-COPY --from=builder /app/build /usr/share/nginx/html
+# Crea utente non-root per sicurezza
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Imposta directory di lavoro
+WORKDIR /app
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && adduser -S reactjs -u 1001 -G nodejs
+# Copia i file build dal stage precedente
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/package.json ./package.json
 
-# Set permissions
-RUN chown -R reactjs:nodejs /usr/share/nginx/html && \
-    chown -R reactjs:nodejs /var/cache/nginx && \
-    chown -R reactjs:nodejs /var/log/nginx && \
-    chown -R reactjs:nodejs /etc/nginx/conf.d && \
-    touch /var/run/nginx.pid && \
-    chown -R reactjs:nodejs /var/run/nginx.pid
+# Cambia ownership
+RUN chown -R nextjs:nodejs /app
+USER nextjs
 
-# Create directory for custom data persistence
-RUN mkdir -p /app/data && chown -R reactjs:nodejs /app/data
-
-# Switch to non-root user
-USER reactjs
-
-# Expose port
-EXPOSE 8080
+# Esponi porta
+EXPOSE 3000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/ || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:3000 || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Comando per avviare l'applicazione
+CMD ["serve", "-s", "build", "-l", "3000"]
