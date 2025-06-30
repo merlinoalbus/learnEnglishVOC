@@ -1,6 +1,3 @@
-// =====================================================
-// 📁 src/components/AddWordForm.js - SOSTITUISCE il file esistente
-// =====================================================
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -8,9 +5,8 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Plus, Edit3, Check, Sparkles, Loader2, Wand2 } from 'lucide-react';
 import { getPredefinedGroups, getCategoryStyle } from '../utils/categoryUtils';
-import { useNotification } from '../contexts/NotificationContext';
 
-const AddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
+const AddWordForm = ({ onAddWord, editingWord, onClearForm, showNotification }) => {
   const [formData, setFormData] = useState({
     english: '',
     italian: '',
@@ -22,9 +18,6 @@ const AddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
   });
   const [showAdvancedForm, setShowAdvancedForm] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
-
-  // ⭐ AGGIORNATO: Usa il context invece della prop
-  const { showNotification, showError, showWarning, showSuccess } = useNotification();
 
   // Gemini API Configuration
   const GEMINI_API_KEY = 'AIzaSyCHftv0ACPTtX7unUKg6y_eqb09mBobTAM';
@@ -183,16 +176,14 @@ ESEMPI:
 
   const handleAiAssist = async () => {
     if (!formData.english.trim()) {
-      // ⭐ AGGIORNATO: Usa showWarning dal context
-      showWarning('⚠️ Inserisci prima una parola inglese!');
+      showNotification?.('⚠️ Inserisci prima una parola inglese!');
       return;
     }
 
     setIsAiLoading(true);
     
     try {
-      // ⭐ AGGIORNATO: Usa showNotification dal context
-      showNotification('🤖 L\'AI sta analizzando la parola...', 'info');
+      showNotification?.('🤖 L\'AI sta analizzando la parola...');
       
       const aiData = await callGeminiAPI(formData.english.trim());
       
@@ -216,15 +207,14 @@ ESEMPI:
       // Feedback specifico se la categoria è stata corretta
       const availableGroups = getPredefinedGroups();
       if (aiData.group && !availableGroups.includes(aiData.group)) {
-        showSuccess('✨ Dati compilati! (Categoria corretta automaticamente)');
+        showNotification?.('✨ Dati compilati! (Categoria corretta automaticamente)');
       } else {
-        showSuccess('✨ Dati compilati dall\'AI con successo!');
+        showNotification?.('✨ Dati compilati dall\'AI con successo!');
       }
       
     } catch (error) {
       console.error('AI Assist Error:', error);
-      // ⭐ AGGIORNATO: Usa showError dal context per gestione errori centralizzata
-      showError(error, 'AI Assistant');
+      showNotification?.('❌ Errore AI: ' + error.message);
     } finally {
       setIsAiLoading(false);
     }
@@ -232,8 +222,7 @@ ESEMPI:
 
   const handleSubmit = () => {
     if (!formData.english.trim() || !formData.italian.trim()) {
-      // ⭐ AGGIORNATO: Usa showWarning dal context
-      showWarning('⚠️ Parola inglese e traduzione sono obbligatorie!');
+      showNotification?.('⚠️ Parola inglese e traduzione sono obbligatorie!');
       return;
     }
 
@@ -262,8 +251,6 @@ ESEMPI:
       
     } catch (error) {
       console.error('Error adding word:', error);
-      // ⭐ AGGIORNATO: Usa showError dal context
-      showError(error, 'Add Word');
     }
   };
 

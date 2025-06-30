@@ -1,24 +1,23 @@
-// =====================================================
-// 📁 src/components/JSONManager.js - SOSTITUISCE il file esistente
-// =====================================================
+// /src/components/JSONManager.js
+// +// This file contains the JSONManager component, which allows users to export and import vocabulary words in JSON format.
+// +// It provides functionality to export the current vocabulary as a JSON string, display it in a textarea, and import words from a JSON string.
+// +// The component includes buttons for exporting and importing JSON, and it handles notifications for successful operations or errors.
+// +// The JSONManager component is designed to help users back up their vocabulary or share it between devices, making it easier to manage their vocabulary data.
+// +// It is styled using Tailwind CSS for a modern and responsive design.
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { FileDown, ChevronDown, ChevronUp } from 'lucide-react';
-import { useNotification } from '../contexts/NotificationContext';
 
-const JSONManager = ({ words, onImportWords }) => {
+const JSONManager = ({ words, onImportWords, showNotification }) => {
   const [jsonText, setJsonText] = useState('');
   const [showSection, setShowSection] = useState(false);
 
-  // ⭐ AGGIORNATO: Usa il context invece della prop
-  const { showSuccess, showError, showWarning } = useNotification();
-
   const handleExport = () => {
     if (words.length === 0) {
-      // ⭐ AGGIORNATO: Usa showWarning dal context
-      showWarning('⚠️ Nessuna parola da esportare!');
+      showNotification('⚠️ Nessuna parola da esportare!');
       return;
     }
 
@@ -26,41 +25,28 @@ const JSONManager = ({ words, onImportWords }) => {
       const dataStr = JSON.stringify(words, null, 2);
       setJsonText(dataStr);
       setShowSection(true);
-      // ⭐ AGGIORNATO: Usa showSuccess dal context
-      showSuccess('✅ Parole esportate con successo!');
+      showNotification('✅ Parole esportate con successo!');
     } catch (error) {
       console.error('Error exporting words:', error);
-      // ⭐ AGGIORNATO: Usa showError dal context per gestione centralizzata
-      showError(error, 'Export JSON');
+      showNotification('❌ Errore durante l\'esportazione!');
     }
   };
 
   const handleImport = () => {
     if (!jsonText.trim()) {
-      // ⭐ AGGIORNATO: Usa showWarning dal context
-      showWarning('⚠️ Inserisci del JSON da importare!');
+      showNotification('⚠️ Inserisci del JSON da importare!');
       return;
     }
 
     try {
       const newWordsCount = onImportWords(jsonText.trim());
       setJsonText('');
-      // ⭐ AGGIORNATO: Usa showSuccess dal context
-      showSuccess(`✅ ${newWordsCount} parole importate con successo!`);
+      showNotification(`✅ ${newWordsCount} parole importate con successo!`);
     } catch (error) {
-      console.error('Error importing words:', error);
-      
-      // ⭐ AGGIORNATO: Gestione errori migliorata con context
       const errorMessage = error.message.includes('JSON') ? 
         '❌ JSON non valido! Controlla la sintassi.' : 
         `❌ ${error.message}`;
-      
-      // Usa showError per errori gravi, showWarning per problemi di formato
-      if (error.message.includes('JSON') || error.message.includes('Invalid')) {
-        showWarning(errorMessage);
-      } else {
-        showError(error, 'Import JSON');
-      }
+      showNotification(errorMessage);
     }
   };
 
@@ -115,35 +101,6 @@ const JSONManager = ({ words, onImportWords }) => {
               rows={12}
               className="font-mono text-sm border-2 border-gray-200 rounded-2xl focus:border-blue-500 transition-colors"
             />
-            
-            {/* ⭐ AGGIUNTO: Info sui formati supportati */}
-            {jsonText && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
-                <p className="text-green-800 text-sm">
-                  💾 <strong>Formato rilevato:</strong> {
-                    (() => {
-                      try {
-                        const parsed = JSON.parse(jsonText);
-                        const isArray = Array.isArray(parsed);
-                        const hasWords = isArray && parsed.length > 0;
-                        const firstItem = hasWords ? parsed[0] : null;
-                        const hasEnglishItalian = firstItem && firstItem.english && firstItem.italian;
-                        
-                        if (hasEnglishItalian) {
-                          return `Array di ${parsed.length} parole (✅ Formato valido)`;
-                        } else if (isArray) {
-                          return `Array con ${parsed.length} elementi (⚠️ Verificare formato)`;
-                        } else {
-                          return 'Oggetto JSON (⚠️ Array richiesto)';
-                        }
-                      } catch {
-                        return 'JSON non valido (❌ Errore sintassi)';
-                      }
-                    })()
-                  }
-                </p>
-              </div>
-            )}
           </div>
         </CardContent>
       )}

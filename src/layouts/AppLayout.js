@@ -1,0 +1,32 @@
+import React from 'react';
+import { useAppContext } from '../contexts/AppContext';
+import { AppHeader } from '../components/layout/AppHeader';
+import { AppNavigation } from '../components/layout/AppNavigation';
+import { BackgroundParticles } from '../components/ui/BackgroundParticles';
+import { NotificationToast } from '../components/ui/NotificationToast';
+import { GlobalModals } from '../components/modals/GlobalModals';
+
+export const AppLayout = ({ children }) => {
+  const { testMode, showResults } = useAppContext();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+      <BackgroundParticles />
+      <NotificationToast />
+      <GlobalModals />
+      
+      <div className="relative z-10 max-w-6xl mx-auto p-6 space-y-8">
+        {!testMode && !showResults && (
+          <>
+            <AppHeader />
+            <AppNavigation />
+          </>
+        )}
+        
+        <main>
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
