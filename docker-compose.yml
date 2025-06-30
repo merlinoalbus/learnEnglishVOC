@@ -7,45 +7,97 @@ version: '3.8'
 
 services:
   vocabulary-app:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: merlinoalbus/vocabulary-learning-app:latest
     container_name: vocabulary-learning-app
     restart: unless-stopped
+    
+    # Network configuration
     ports:
-      - "3000:80"
+      - "30080:8080"  # TrueNAS Scale formato: host_port:container_port
+    
+    # Environment variables
     environment:
       - NODE_ENV=production
+      - TZ=Europe/Rome  # Imposta il tuo timezone
+      - NGINX_PORT=8080
+    
+    # Volume mounts per persistenza dati
     volumes:
-      # Mount per persistenza dati se necessario (opzionale)
-      - vocabulary_data:/usr/share/nginx/html/data
+      # Data persistence (opzionale - localStorage già gestito dal browser)
+      - vocabulary_data:/app/data
+      # Logs persistence
+      - vocabulary_logs:/var/log/nginx
+      # Custom configuration (opzionale)
+      - ./custom-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Security settings
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource limits (adatta secondo il tuo TrueNAS)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Networks
     networks:
       - vocabulary_network
+    
+    # Labels per TrueNAS Scale UI
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.vocabulary.rule=Host(`vocabulary.local`)"
       - "traefik.http.routers.vocabulary.entrypoints=web"
-      - "traefik.http.services.vocabulary.loadbalancer.server.port=80"
+      - "traefik.http.services.vocabulary.loadbalancer.server.port=8080"
+      - "com.centurylinklabs.watchtower.enable=true"
+      # TrueNAS Scale specific labels
+      - "app.kubernetes.io/name=vocabulary-learning"
+      - "app.kubernetes.io/version=1.0.0"
+      - "app.kubernetes.io/component=frontend"
 
-  # Opzionale: Reverse proxy con Traefik
-  traefik:
-    image: traefik:v2.9
-    container_name: vocabulary-traefik
-    restart: unless-stopped
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-    ports:
-      - "80:80"
-      - "8080:8080"  # Traefik dashboard
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - vocabulary_network
-
+# Volumes definition
 volumes:
   vocabulary_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/pool/apps/vocabulary/data  # Modifica con il tuo path TrueNAS
+  
+  vocabulary_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/pool/apps/vocabulary/logs  # Modifica con il tuo path TrueNAS
 
+# Networks definition
 networks:
   vocabulary_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
