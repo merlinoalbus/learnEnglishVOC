@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Plus, Trash2, Edit3, ChevronDown, ChevronUp, BookOpen, CheckCircle, Circle, Filter } from 'lucide-react';
+import { Plus, Trash2, Edit3, ChevronDown, ChevronUp, BookOpen, CheckCircle, Circle, Filter, AlertTriangle } from 'lucide-react';
 
 // Simulated utility functions (replace with your actual imports)
 const getCategoryStyle = (group) => {
@@ -35,9 +35,10 @@ const formatNotes = (notes) => {
   });
 };
 
-const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWordsList, setShowWordsList }) => {
+const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, onToggleDifficult, showWordsList, setShowWordsList }) => {
   const [filterChapter, setFilterChapter] = useState('');
   const [filterLearned, setFilterLearned] = useState('all'); // 'all', 'learned', 'not_learned'
+  const [filterDifficult, setFilterDifficult] = useState('all'); // ⭐ NEW: 'all', 'difficult', 'not_difficult'
   const [filterGroup, setFilterGroup] = useState('');
 
   // Calcolo dati derivati all'inizio per evitare problemi di scope
@@ -65,15 +66,13 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
     return words.filter(word => !word.chapter);
   }, [words]);
 
-  // Filtra le parole
+  // ⭐ ENHANCED: Filtra le parole includendo filtro difficoltà
   const filteredWords = words.filter(word => {
     // Filtro per capitolo
     if (filterChapter !== '') {
       if (filterChapter === 'no-chapter') {
-        // "Senza capitolo" - mostra solo parole senza capitolo
         if (word.chapter) return false;
       } else {
-        // Capitolo specifico - mostra solo parole di quel capitolo
         if (word.chapter !== filterChapter) return false;
       }
     }
@@ -84,6 +83,10 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
     // Filtro per stato appreso
     if (filterLearned === 'learned' && !word.learned) return false;
     if (filterLearned === 'not_learned' && word.learned) return false;
+    
+    // ⭐ NEW: Filtro per stato difficile
+    if (filterDifficult === 'difficult' && !word.difficult) return false;
+    if (filterDifficult === 'not_difficult' && word.difficult) return false;
     
     return true;
   });
@@ -96,11 +99,12 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
     return groups;
   }, {});
 
-  // Statistiche
+  // ⭐ ENHANCED: Statistiche con parole difficili
   const stats = {
     total: words.length,
     learned: words.filter(w => w.learned).length,
     notLearned: words.filter(w => !w.learned).length,
+    difficult: words.filter(w => w.difficult).length, // ⭐ NEW
     withChapter: words.filter(w => w.chapter).length,
     filtered: filteredWords.length
   };
@@ -108,6 +112,7 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
   const clearFilters = () => {
     setFilterChapter('');
     setFilterLearned('all');
+    setFilterDifficult('all'); // ⭐ NEW
     setFilterGroup('');
   };
 
@@ -127,6 +132,7 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
               <div className="flex gap-4 text-sm text-gray-600 mt-1">
                 <span>✅ {stats.learned} apprese</span>
                 <span>📖 {stats.notLearned} da studiare</span>
+                <span>⭐ {stats.difficult} difficili</span> {/* ⭐ NEW */}
                 <span>📚 {stats.withChapter} con capitolo</span>
               </div>
             </div>
@@ -151,7 +157,7 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Filtri */}
+              {/* ⭐ ENHANCED: Filtri con difficoltà */}
               <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
@@ -160,7 +166,7 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-2 block">Capitolo</label>
                       <select
@@ -179,7 +185,7 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
                     </div>
                     
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">Stato</label>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Stato Apprendimento</label>
                       <select
                         value={filterLearned}
                         onChange={(e) => setFilterLearned(e.target.value)}
@@ -188,6 +194,20 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
                         <option value="all">Tutte le parole</option>
                         <option value="learned">✅ Solo apprese</option>
                         <option value="not_learned">📖 Solo da studiare</option>
+                      </select>
+                    </div>
+                    
+                    {/* ⭐ NEW: Filtro difficoltà */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Difficoltà</label>
+                      <select
+                        value={filterDifficult}
+                        onChange={(e) => setFilterDifficult(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 bg-white"
+                      >
+                        <option value="all">Tutte le parole</option>
+                        <option value="difficult">⭐ Solo difficili</option>
+                        <option value="not_difficult">📚 Solo normali</option>
                       </select>
                     </div>
                     
@@ -220,8 +240,8 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
                 </CardContent>
               </Card>
 
-              {/* Statistiche Generali */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* ⭐ ENHANCED: Statistiche Generali con difficoltà */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="text-center p-4 bg-blue-50 rounded-2xl border border-blue-200">
                   <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
                   <div className="text-blue-700 text-sm">Totale Parole</div>
@@ -233,6 +253,10 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
                 <div className="text-center p-4 bg-orange-50 rounded-2xl border border-orange-200">
                   <div className="text-2xl font-bold text-orange-600">{stats.notLearned}</div>
                   <div className="text-orange-700 text-sm">Da Studiare</div>
+                </div>
+                <div className="text-center p-4 bg-red-50 rounded-2xl border border-red-200">
+                  <div className="text-2xl font-bold text-red-600">{stats.difficult}</div>
+                  <div className="text-red-700 text-sm">⭐ Difficili</div>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-2xl border border-purple-200">
                   <div className="text-2xl font-bold text-purple-600">{availableChapters.length}</div>
@@ -252,7 +276,7 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
                   })
                   .map(([chapter, chapterWords]) => (
                     <div key={chapter} className="space-y-3">
-                      {/* Header Capitolo */}
+                      {/* Header Capitolo Enhanced */}
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-2xl border border-indigo-200">
                         <BookOpen className="w-5 h-5 text-indigo-600" />
                         <h3 className="font-bold text-indigo-800 text-lg">
@@ -263,6 +287,10 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
                         </span>
                         <span className="text-sm text-green-600 bg-green-200 px-3 py-1 rounded-full">
                           {chapterWords.filter(w => w.learned).length} apprese
+                        </span>
+                        {/* ⭐ NEW: Difficili counter */}
+                        <span className="text-sm text-red-600 bg-red-200 px-3 py-1 rounded-full">
+                          {chapterWords.filter(w => w.difficult).length} difficili
                         </span>
                       </div>
                       
@@ -275,6 +303,7 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
                             onEdit={() => onEditWord(word)}
                             onRemove={() => onRemoveWord(word.id)}
                             onToggleLearned={() => onToggleLearned(word.id)}
+                            onToggleDifficult={() => onToggleDifficult(word.id)} // ⭐ NEW
                           />
                         ))}
                       </div>
@@ -289,11 +318,14 @@ const WordsList = ({ words, onEditWord, onRemoveWord, onToggleLearned, showWords
   );
 };
 
-const WordCard = ({ word, onEdit, onRemove, onToggleLearned }) => (
+// ⭐ ENHANCED: WordCard con gestione difficoltà
+const WordCard = ({ word, onEdit, onRemove, onToggleLearned, onToggleDifficult }) => (
   <div className={`p-6 rounded-2xl border-2 hover:shadow-lg transition-all duration-300 hover-lift ${
     word.learned 
       ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
-      : 'bg-gradient-to-r from-white to-gray-50 border-gray-100 hover:border-gray-200'
+      : word.difficult
+        ? 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200'
+        : 'bg-gradient-to-r from-white to-gray-50 border-gray-100 hover:border-gray-200'
   }`}>
     <div className="flex justify-between items-start">
       <div className="flex-1">
@@ -322,6 +354,19 @@ const WordCard = ({ word, onEdit, onRemove, onToggleLearned }) => (
               <Circle className="w-6 h-6 text-gray-400 hover:text-green-500 transition-colors" />
             )}
           </div>
+          
+          {/* ⭐ NEW: Stato Difficile */}
+          <div 
+            onClick={onToggleDifficult}
+            className="cursor-pointer"
+            title={word.difficult ? "Rimuovi da parole difficili" : "Segna come difficile"}
+          >
+            {word.difficult ? (
+              <AlertTriangle className="w-6 h-6 text-red-500 hover:text-red-600 transition-colors fill-current" />
+            ) : (
+              <AlertTriangle className="w-6 h-6 text-gray-400 hover:text-red-500 transition-colors" />
+            )}
+          </div>
         </div>
         
         <div className="flex flex-wrap gap-2 mb-3">
@@ -343,6 +388,14 @@ const WordCard = ({ word, onEdit, onRemove, onToggleLearned }) => (
             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
               <CheckCircle className="w-4 h-4" />
               Appresa
+            </span>
+          )}
+          
+          {/* ⭐ NEW: Badge parola difficile */}
+          {word.difficult && (
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700">
+              <AlertTriangle className="w-4 h-4" />
+              ⭐ Difficile
             </span>
           )}
         </div>

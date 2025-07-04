@@ -1,6 +1,6 @@
 import React from 'react';
-import { useAppContext } from '../contexts/AppContext'; // ✅ Fixed: named export
-import { useNotification } from '../contexts/NotificationContext'; // ✅ Fixed: named export
+import { useAppContext } from '../contexts/AppContext';
+import { useNotification } from '../contexts/NotificationContext';
 import { ControlPanel } from '../components/main/ControlPanel';
 import JSONManager from '../components/JSONManager';
 import AddWordForm from '../components/AddWordForm';
@@ -13,9 +13,8 @@ export const MainView = React.memo(() => {
     showWordsList,
     dispatch,
     addWord,
-    // removeWord, // ✅ Removed unused variable
     toggleWordLearned,
-    // clearAllWords, // ✅ Removed unused variable  
+    toggleWordDifficult, // ⭐ NEW: Difficult toggle
     importWords,
     getAvailableChapters,
     getChapterStats,
@@ -66,6 +65,19 @@ export const MainView = React.memo(() => {
     }
   }, [words, toggleWordLearned, showSuccess]);
 
+  // ⭐ NEW: Handle difficult toggle
+  const handleToggleWordDifficult = React.useCallback((id) => {
+    const word = words.find(w => w.id === id);
+    if (word) {
+      toggleWordDifficult(id);
+      showSuccess(
+        word.difficult 
+          ? `📚 "${word.english}" rimossa dalle parole difficili`
+          : `⭐ "${word.english}" segnata come difficile!`
+      );
+    }
+  }, [words, toggleWordDifficult, showSuccess]);
+
   const handleImportWords = React.useCallback((jsonText) => {
     try {
       const count = importWords(jsonText);
@@ -104,6 +116,7 @@ export const MainView = React.memo(() => {
         onEditWord={(word) => dispatch({ type: 'SET_EDITING_WORD', payload: word })}
         onRemoveWord={handleRemoveWord}
         onToggleLearned={handleToggleWordLearned}
+        onToggleDifficult={handleToggleWordDifficult} // ⭐ NEW: Difficult toggle
         showWordsList={showWordsList}
         setShowWordsList={() => dispatch({ type: 'TOGGLE_WORDS_LIST' })}
       />

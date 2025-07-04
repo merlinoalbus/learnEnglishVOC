@@ -7,11 +7,13 @@ export const useOptimizedWords = () => {
   const [words, setWords] = useLocalStorage('vocabularyWords', EMPTY_ARRAY);
   const [editingWord, setEditingWord] = useState(null);
 
-  // ⭐ MEMOIZED COMPUTATIONS
+  // ⭐ MEMOIZED COMPUTATIONS - Enhanced with difficult words
   const wordStats = useMemo(() => ({
     total: words.length,
     learned: words.filter(w => w.learned).length,
     unlearned: words.filter(w => !w.learned).length,
+    difficult: words.filter(w => w.difficult).length,
+    normal: words.filter(w => !w.difficult && !w.learned).length,
     chapters: [...new Set(words.map(w => w.chapter).filter(Boolean))].sort(),
     groups: [...new Set(words.map(w => w.group).filter(Boolean))].sort()
   }), [words]);
@@ -33,7 +35,7 @@ export const useOptimizedWords = () => {
     });
   }, [setWords]);
 
-  // ⭐ OPTIMIZED ADD WORD
+  // ⭐ OPTIMIZED ADD WORD - Enhanced with difficult flag
   const addWord = useCallback((wordData) => {
     if (!wordData.english?.trim() || !wordData.italian?.trim()) {
       throw new Error('English word and Italian translation are required');
@@ -61,7 +63,8 @@ export const useOptimizedWords = () => {
           sentence: wordData.sentence?.trim() || null,
           notes: wordData.notes?.trim() || null,
           chapter: wordData.chapter?.trim() || null,
-          learned: wordData.learned || false
+          learned: wordData.learned || false,
+          difficult: wordData.difficult || false // ⭐ NEW: Difficult flag
         };
         return [...prevWords, newWord];
       }
@@ -70,9 +73,10 @@ export const useOptimizedWords = () => {
     setEditingWord(null);
   }, [editingWord, wordMap, batchUpdateWords]);
 
-  // ⭐ FILTERED GETTERS
+  // ⭐ FILTERED GETTERS - Enhanced with difficult words
   const getters = useMemo(() => ({
     getWordsByChapter: (chapter) => words.filter(word => word.chapter === chapter),
+    getDifficultWordsByChapter: (chapter) => words.filter(word => word.chapter === chapter && word.difficult),
     getAvailableChapters: () => {
       const chapters = new Set();
       words.forEach(word => {
@@ -89,7 +93,9 @@ export const useOptimizedWords = () => {
       return {
         total: chapterWords.length,
         learned: chapterWords.filter(w => w.learned).length,
-        unlearned: chapterWords.filter(w => !w.learned).length
+        unlearned: chapterWords.filter(w => !w.learned).length,
+        difficult: chapterWords.filter(w => w.difficult).length,
+        normal: chapterWords.filter(w => !w.difficult && !w.learned).length
       };
     }
   }), [words]);
@@ -110,6 +116,15 @@ export const useOptimizedWords = () => {
       batchUpdateWords(prevWords => 
         prevWords.map(word => 
           word.id === id ? { ...word, learned: !word.learned } : word
+        )
+      );
+    }, [batchUpdateWords]),
+
+    // ⭐ NEW: Toggle difficult status
+    toggleWordDifficult: useCallback((id) => {
+      batchUpdateWords(prevWords => 
+        prevWords.map(word => 
+          word.id === id ? { ...word, difficult: !word.difficult } : word
         )
       );
     }, [batchUpdateWords]),
@@ -136,7 +151,8 @@ export const useOptimizedWords = () => {
           sentence: word.sentence || null,
           notes: word.notes || null,
           chapter: word.chapter || null,
-          learned: word.learned || false
+          learned: word.learned || false,
+          difficult: word.difficult || false // ⭐ NEW: Import difficult flag
         }));
 
       const existingEnglish = new Set(words.map(w => w.english.toLowerCase()));

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
-import { Play, RefreshCw, BookOpen } from 'lucide-react';
+import { Play, RefreshCw, BookOpen, AlertTriangle } from 'lucide-react';
 
 export const ControlPanel = React.memo(({ 
   onStartTest, 
@@ -23,8 +23,8 @@ export const ControlPanel = React.memo(({
             Controlli di Studio
           </CardTitle>
           
-          {/* Statistiche Enhanced */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {/* ⭐ ENHANCED: Statistiche con parole difficili */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <div className="text-center p-4 bg-blue-50 rounded-2xl border border-blue-200">
               <div className="text-2xl font-bold text-blue-600">{wordStats.total}</div>
               <div className="text-blue-700 text-sm">Totale Parole</div>
@@ -37,11 +37,29 @@ export const ControlPanel = React.memo(({
               <div className="text-2xl font-bold text-orange-600">{wordStats.unlearned}</div>
               <div className="text-orange-700 text-sm">Da Studiare</div>
             </div>
+            <div className="text-center p-4 bg-red-50 rounded-2xl border border-red-200">
+              <div className="text-2xl font-bold text-red-600">{wordStats.difficult}</div>
+              <div className="text-red-700 text-sm">⭐ Difficili</div>
+            </div>
             <div className="text-center p-4 bg-purple-50 rounded-2xl border border-purple-200">
               <div className="text-2xl font-bold text-purple-600">{chapters.length}</div>
               <div className="text-purple-700 text-sm">Capitoli</div>
             </div>
           </div>
+
+          {/* ⭐ NEW: Info box per parole difficili */}
+          {wordStats.difficult > 0 && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl">
+              <div className="flex items-center gap-3 mb-2">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+                <h4 className="font-bold text-red-800">Parole Difficili Disponibili</h4>
+              </div>
+              <p className="text-red-700 text-sm">
+                Hai {wordStats.difficult} parole marcate come difficili. 
+                Usa la modalità "Solo Parole Difficili" per concentrarti su di esse!
+              </p>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Button 
@@ -52,7 +70,10 @@ export const ControlPanel = React.memo(({
               <div className="flex flex-col items-center gap-2">
                 <BookOpen className="w-8 h-8" />
                 <span className="font-bold">Inizia Test</span>
-                <span className="text-sm opacity-90">({availableWords.length} disponibili)</span>
+                <span className="text-sm opacity-90">
+                  ({availableWords.length} disponibili
+                  {wordStats.difficult > 0 && `, ${wordStats.difficult} difficili`})
+                </span>
               </div>
             </Button>
 

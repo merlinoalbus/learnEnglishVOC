@@ -1,12 +1,12 @@
 // =====================================================
-// 📁 src/components/AddWordForm.js - SOSTITUISCE il file esistente
+// 📁 src/components/AddWordForm.js - VERSIONE ENHANCED con campo "Difficile"
 // =====================================================
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
-import { Plus, Edit3, Check, Sparkles, Loader2, Wand2 } from 'lucide-react';
+import { Plus, Edit3, Check, Sparkles, Loader2, Wand2, AlertTriangle } from 'lucide-react';
 import { getPredefinedGroups, getCategoryStyle } from '../utils/categoryUtils';
 import { useNotification } from '../contexts/NotificationContext';
 
@@ -18,12 +18,12 @@ const AddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
     sentence: '',
     notes: '',
     chapter: '',
-    learned: false
+    learned: false,
+    difficult: false // ⭐ NEW: Difficult flag
   });
   const [showAdvancedForm, setShowAdvancedForm] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
-  // ⭐ AGGIORNATO: Usa il context invece della prop
   const { showNotification, showError, showWarning, showSuccess } = useNotification();
 
   // Gemini API Configuration
@@ -93,14 +93,14 @@ const AddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
         sentence: editingWord.sentence || '',
         notes: editingWord.notes || '',
         chapter: editingWord.chapter || '',
-        learned: editingWord.learned || false
+        learned: editingWord.learned || false,
+        difficult: editingWord.difficult || false // ⭐ NEW: Load difficult status
       });
       setShowAdvancedForm(true);
     }
   }, [editingWord]);
 
   const callGeminiAPI = async (englishWord) => {
-    // Ottieni le categorie predefinite disponibili
     const availableGroups = getPredefinedGroups();
     const groupsList = availableGroups.join(', ');
     
@@ -169,7 +169,6 @@ ESEMPI:
       const availableGroups = getPredefinedGroups();
       if (parsedData.group && !availableGroups.includes(parsedData.group)) {
         console.warn(`Categoria AI "${parsedData.group}" non valida. Uso categoria di fallback.`);
-        // Prova a indovinare la categoria basandosi sulla parola inglese
         parsedData.group = categorizeWordFallback(englishWord);
       }
       
@@ -183,7 +182,6 @@ ESEMPI:
 
   const handleAiAssist = async () => {
     if (!formData.english.trim()) {
-      // ⭐ AGGIORNATO: Usa showWarning dal context
       showWarning('⚠️ Inserisci prima una parola inglese!');
       return;
     }
@@ -191,12 +189,10 @@ ESEMPI:
     setIsAiLoading(true);
     
     try {
-      // ⭐ AGGIORNATO: Usa showNotification dal context
       showNotification('🤖 L\'AI sta analizzando la parola...', 'info');
       
       const aiData = await callGeminiAPI(formData.english.trim());
       
-      // Valida che tutti i campi siano presenti
       if (!aiData.italian) {
         throw new Error('L\'AI non ha fornito una traduzione valida');
       }
@@ -208,12 +204,11 @@ ESEMPI:
         sentence: aiData.sentence || prev.sentence,
         notes: aiData.notes || prev.notes,
         chapter: aiData.chapter || prev.chapter
-        // learned rimane invariato (non modificato dall'AI)
+        // learned e difficult rimangono invariati (non modificati dall'AI)
       }));
 
       setShowAdvancedForm(true);
       
-      // Feedback specifico se la categoria è stata corretta
       const availableGroups = getPredefinedGroups();
       if (aiData.group && !availableGroups.includes(aiData.group)) {
         showSuccess('✨ Dati compilati! (Categoria corretta automaticamente)');
@@ -223,7 +218,6 @@ ESEMPI:
       
     } catch (error) {
       console.error('AI Assist Error:', error);
-      // ⭐ AGGIORNATO: Usa showError dal context per gestione errori centralizzata
       showError(error, 'AI Assistant');
     } finally {
       setIsAiLoading(false);
@@ -232,7 +226,6 @@ ESEMPI:
 
   const handleSubmit = () => {
     if (!formData.english.trim() || !formData.italian.trim()) {
-      // ⭐ AGGIORNATO: Usa showWarning dal context
       showWarning('⚠️ Parola inglese e traduzione sono obbligatorie!');
       return;
     }
@@ -245,7 +238,8 @@ ESEMPI:
         sentence: formData.sentence.trim() || null,
         notes: formData.notes.trim() || null,
         chapter: formData.chapter.trim() || null,
-        learned: formData.learned
+        learned: formData.learned,
+        difficult: formData.difficult // ⭐ NEW: Include difficult status
       });
       
       // Reset form sempre dopo salvataggio (sia nuova parola che modifica)
@@ -256,13 +250,13 @@ ESEMPI:
         sentence: '',
         notes: '',
         chapter: '',
-        learned: false
+        learned: false,
+        difficult: false // ⭐ NEW: Reset difficult status
       });
-      setShowAdvancedForm(false); // Chiudi sezione avanzata
+      setShowAdvancedForm(false);
       
     } catch (error) {
       console.error('Error adding word:', error);
-      // ⭐ AGGIORNATO: Usa showError dal context
       showError(error, 'Add Word');
     }
   };
@@ -275,7 +269,8 @@ ESEMPI:
       sentence: '',
       notes: '',
       chapter: '',
-      learned: false
+      learned: false,
+      difficult: false // ⭐ NEW: Reset difficult status
     });
     setShowAdvancedForm(false);
     onClearForm();
@@ -350,7 +345,7 @@ ESEMPI:
             />
           </div>
 
-          {/* AI Assistant Button - Espanso a Doppia Colonna */}
+          {/* AI Assistant Button */}
           <Button
             onClick={handleAiAssist}
             disabled={isAiLoading || !formData.english.trim()}
@@ -391,6 +386,7 @@ ESEMPI:
               <div className="text-sm text-green-700 space-y-1">
                 <p>• <strong>Capitolo:</strong> Organizza le parole per capitoli del libro (es. 1, 2A, Unit 5)</p>
                 <p>• <strong>Parola Appresa:</strong> Le parole apprese rimangono nel vocabolario ma vengono saltate nei test</p>
+                <p>• <strong>Parola Difficile:</strong> ⭐ Marca le parole difficili per test specifici</p>
                 <p>• <strong>Selezione Test:</strong> Potrai scegliere quali capitoli includere nei test</p>
               </div>
             </div>
@@ -435,24 +431,45 @@ ESEMPI:
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <span>🎓</span> Stato Apprendimento
+                    <span>🎓</span> Stato Parola
                   </label>
-                  <div className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl bg-white">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <div 
-                        onClick={() => handleInputChange('learned', !formData.learned)}
-                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                          formData.learned 
-                            ? 'bg-green-500 border-green-500 text-white' 
-                            : 'border-gray-300 bg-white'
-                        }`}
-                      >
-                        {formData.learned && <span className="text-sm">✓</span>}
-                      </div>
-                      <span className="text-sm font-medium text-gray-700">
-                        Parola appresa
-                      </span>
-                    </label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl bg-white">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <div 
+                          onClick={() => handleInputChange('learned', !formData.learned)}
+                          className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                            formData.learned 
+                              ? 'bg-green-500 border-green-500 text-white' 
+                              : 'border-gray-300 bg-white'
+                          }`}
+                        >
+                          {formData.learned && <span className="text-sm">✓</span>}
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">
+                          Parola appresa
+                        </span>
+                      </label>
+                    </div>
+                    
+                    {/* ⭐ NEW: Difficult flag */}
+                    <div className="flex items-center gap-3 p-3 border-2 border-orange-200 rounded-xl bg-orange-50">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <div 
+                          onClick={() => handleInputChange('difficult', !formData.difficult)}
+                          className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                            formData.difficult 
+                              ? 'bg-orange-500 border-orange-500 text-white' 
+                              : 'border-orange-300 bg-white'
+                          }`}
+                        >
+                          {formData.difficult && <AlertTriangle className="w-4 h-4" />}
+                        </div>
+                        <span className="text-sm font-medium text-orange-700">
+                          ⭐ Parola difficile
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,24 +1,29 @@
-// /src/components/StatsOverview.js - Versione Sincronizzata
+
+// /src/components/StatsOverview.js - Enhanced con word performance tracking
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
-import { BarChart3, TrendingUp, Trophy, Sparkles, Play, BookOpen, Target, Award, Calendar, Filter } from 'lucide-react';
+import { Input } from './ui/input';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, ScatterPlot, Scatter, ReferenceLine } from 'recharts';
+import { BarChart3, TrendingUp, Trophy, Sparkles, Play, BookOpen, Target, Award, Calendar, Filter, Search, AlertTriangle, CheckCircle, Clock, Lightbulb } from 'lucide-react';
+import { useAppContext } from '../contexts/AppContext';
 
-// ⭐ COMPONENTE AGGIORNATO: Usa dati centralizzati con sincronizzazione automatica
 const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUpdate }) => {
   const [selectedView, setSelectedView] = useState('overview');
   const [selectedChapter, setSelectedChapter] = useState('all');
+  const [searchWord, setSearchWord] = useState('');
+  const [selectedWordId, setSelectedWordId] = useState(null);
   
-  // ⭐ NUOVO: State per forzare refresh quando cambiano i dati
+  // ⭐ NEW: Get word performance from context
+  const { getAllWordsPerformance, getWordAnalysis } = useAppContext();
+  
   const [localRefresh, setLocalRefresh] = useState(0);
 
-  // ⭐ NUOVO: Effetto per aggiornare quando cambiano i dati esterni
   useEffect(() => {
     setLocalRefresh(prev => prev + 1);
   }, [testHistory.length, forceUpdate]);
 
-  // ⭐ FIXED: Analisi avanzata dei dati senza localRefresh nelle dipendenze
+  // ⭐ ENHANCED: Advanced stats with hints
   const getAdvancedStats = React.useMemo(() => {
     if (testHistory.length === 0) {
       return {
@@ -29,6 +34,8 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
         totalWordsStudied: 0,
         totalCorrect: 0,
         totalIncorrect: 0,
+        totalHints: 0, // ⭐ NEW
+        hintsPercentage: 0, // ⭐ NEW
         chaptersAnalyzed: 0,
         testTypeDistribution: {},
         difficultyDistribution: {},
@@ -38,31 +45,17 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
       };
     }
 
-    console.log('📊 Calcolo statistiche per', testHistory.length, 'test'); // Debug log
-
     const totalTests = testHistory.length;
     const totalCorrect = testHistory.reduce((sum, test) => sum + (test.correctWords || 0), 0);
     const totalIncorrect = testHistory.reduce((sum, test) => sum + (test.incorrectWords || 0), 0);
+    const totalHints = testHistory.reduce((sum, test) => sum + (test.hintsUsed || 0), 0); // ⭐ NEW
     const totalWordsStudied = totalCorrect + totalIncorrect;
+    const hintsPercentage = totalWordsStudied > 0 ? Math.round((totalHints / totalWordsStudied) * 100) : 0; // ⭐ NEW
     const averageScore = Math.round(testHistory.reduce((sum, test) => sum + (test.percentage || 0), 0) / totalTests);
     const bestScore = Math.max(...testHistory.map(test => test.percentage || 0));
     const worstScore = Math.min(...testHistory.map(test => test.percentage || 100));
 
-    // Analisi tipi di test
-    const testTypeDistribution = testHistory.reduce((acc, test) => {
-      const type = test.testType || 'unknown';
-      acc[type] = (acc[type] || 0) + 1;
-      return acc;
-    }, {});
-
-    // Analisi difficoltà
-    const difficultyDistribution = testHistory.reduce((acc, test) => {
-      const difficulty = test.difficulty || 'medium';
-      acc[difficulty] = (acc[difficulty] || 0) + 1;
-      return acc;
-    }, {});
-
-    // Performance per capitolo
+    // Performance per capitolo con hints
     const chapterPerformance = {};
     testHistory.forEach(test => {
       if (test.chapterStats) {
@@ -73,9 +66,11 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
               totalWords: 0,
               totalCorrect: 0,
               totalIncorrect: 0,
+              totalHints: 0, // ⭐ NEW
               averagePercentage: 0,
               bestPercentage: 0,
-              worstPercentage: 100
+              worstPercentage: 100,
+              hintsPercentage: 0 // ⭐ NEW
             };
           }
           
@@ -84,6 +79,7 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
           perf.totalWords += stats.totalWords || 0;
           perf.totalCorrect += stats.correctWords || 0;
           perf.totalIncorrect += stats.incorrectWords || 0;
+          perf.totalHints += stats.hintsUsed || 0; // ⭐ NEW
           perf.bestPercentage = Math.max(perf.bestPercentage, stats.percentage || 0);
           perf.worstPercentage = Math.min(perf.worstPercentage, stats.percentage || 100);
         });
@@ -94,27 +90,8 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
     Object.keys(chapterPerformance).forEach(chapter => {
       const perf = chapterPerformance[chapter];
       perf.averagePercentage = perf.totalWords > 0 ? Math.round((perf.totalCorrect / perf.totalWords) * 100) : 0;
+      perf.hintsPercentage = perf.totalWords > 0 ? Math.round((perf.totalHints / perf.totalWords) * 100) : 0; // ⭐ NEW
     });
-
-    // Trend di miglioramento
-    let improvementTrend = 0;
-    if (totalTests >= 4) {
-      const recentTests = testHistory.slice(0, Math.min(5, Math.floor(totalTests / 2)));
-      const olderTests = testHistory.slice(Math.min(5, Math.floor(totalTests / 2)), Math.min(10, totalTests));
-      
-      if (olderTests.length > 0) {
-        const recentAvg = recentTests.reduce((sum, test) => sum + (test.percentage || 0), 0) / recentTests.length;
-        const olderAvg = olderTests.reduce((sum, test) => sum + (test.percentage || 0), 0) / olderTests.length;
-        improvementTrend = Math.round(recentAvg - olderAvg);
-      }
-    }
-
-    // Test ultima settimana
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const lastWeekTests = testHistory.filter(test => 
-      new Date(test.timestamp) >= oneWeekAgo
-    ).length;
 
     return {
       totalTests,
@@ -124,22 +101,26 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
       totalWordsStudied,
       totalCorrect,
       totalIncorrect,
+      totalHints, // ⭐ NEW
+      hintsPercentage, // ⭐ NEW
       chaptersAnalyzed: Object.keys(chapterPerformance).length,
-      testTypeDistribution,
-      difficultyDistribution,
-      improvementTrend,
-      lastWeekTests,
+      testTypeDistribution: {},
+      difficultyDistribution: {},
+      improvementTrend: 0,
+      lastWeekTests: 0,
       chapterPerformance
     };
-  }, [testHistory]); // ⭐ FIXED: Rimosso localRefresh dalle dipendenze
+  }, [testHistory]);
 
-  // ⭐ FIXED: Timeline data senza localRefresh nelle dipendenze
+  // ⭐ ENHANCED: Timeline with hints and timing
   const getTimelineData = React.useMemo(() => {
     const data = [...testHistory].reverse().slice(-20).map((test, index) => ({
       test: `Test ${index + 1}`,
       percentage: test.percentage || 0,
       correct: test.correctWords || 0,
       incorrect: test.incorrectWords || 0,
+      hints: test.hintsUsed || 0, // ⭐ NEW
+      avgTime: test.avgTimePerWord || 0, // ⭐ NEW
       date: new Date(test.timestamp).toLocaleDateString('it-IT'),
       time: new Date(test.timestamp).toLocaleTimeString('it-IT', { 
         hour: '2-digit', 
@@ -150,40 +131,42 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
       type: test.testType || 'unknown'
     }));
     
-    console.log('📈 Timeline data aggiornata:', data.length, 'punti'); // Debug log
     return data;
-  }, [testHistory]); // ⭐ FIXED: Rimosso localRefresh dalle dipendenze
+  }, [testHistory]);
 
-  // ⭐ FIXED: Chapter comparison data senza localRefresh nelle dipendenze
+  // ⭐ NEW: Chapter performance with better visualization
   const getChapterComparisonData = React.useMemo(() => {
     return Object.entries(getAdvancedStats.chapterPerformance).map(([chapter, perf]) => ({
       chapter: chapter === 'Senza Capitolo' ? 'Senza Cap.' : `Cap. ${chapter}`,
       fullChapter: chapter,
-      percentage: perf.averagePercentage,
+      accuracy: perf.averagePercentage,
       tests: perf.totalTests,
       words: perf.totalWords,
-      best: perf.bestPercentage,
-      worst: perf.worstPercentage
-    })).sort((a, b) => b.percentage - a.percentage);
-  }, [getAdvancedStats]); // ⭐ FIXED: Rimosso localRefresh dalle dipendenze
+      hints: perf.hintsPercentage, // ⭐ NEW: Hints percentage
+      efficiency: Math.max(0, perf.averagePercentage - perf.hintsPercentage), // ⭐ NEW: Performance without hints
+      trend: perf.bestPercentage - perf.worstPercentage // ⭐ NEW: Improvement range
+    })).sort((a, b) => b.accuracy - a.accuracy);
+  }, [getAdvancedStats]);
 
-  // ⭐ FIXED: Difficulty data senza localRefresh nelle dipendenze
-  const getDifficultyData = React.useMemo(() => {
-    return Object.entries(getAdvancedStats.difficultyDistribution).map(([difficulty, count]) => ({
-      name: difficulty === 'easy' ? 'Facile' : difficulty === 'medium' ? 'Medio' : 'Difficile',
-      value: count,
-      percentage: Math.round((count / getAdvancedStats.totalTests) * 100),
-      color: difficulty === 'easy' ? '#10b981' : difficulty === 'medium' ? '#f59e0b' : '#ef4444'
-    }));
-  }, [getAdvancedStats]); // ⭐ FIXED: Rimosso localRefresh dalle dipendenze
+  // ⭐ NEW: Word performance data
+  const getWordPerformanceData = React.useMemo(() => {
+    if (!getAllWordsPerformance) return [];
+    
+    const wordsPerformance = getAllWordsPerformance();
+    return wordsPerformance.filter(word => {
+      if (searchWord && !word.english.toLowerCase().includes(searchWord.toLowerCase())) {
+        return false;
+      }
+      if (selectedChapter !== 'all' && word.chapter !== selectedChapter) {
+        return false;
+      }
+      return true;
+    });
+  }, [getAllWordsPerformance, searchWord, selectedChapter]);
 
-  // ⭐ AGGIORNATO: Handler per cancellazione con feedback
   const handleClearHistory = React.useCallback(() => {
     if (window.confirm(`Vuoi cancellare la cronologia di ${testHistory.length} test? Questa azione non può essere annullata.`)) {
-      console.log('🗑️ Cancellazione cronologia richiesta');
       onClearHistory();
-      
-      // ⭐ AGGIORNAMENTO UI IMMEDIATO
       setTimeout(() => {
         setLocalRefresh(prev => prev + 1);
       }, 100);
@@ -215,7 +198,7 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* ⭐ AGGIORNATO: Header con indicatori di sincronizzazione */}
+      {/* Header with enhanced indicators */}
       <Card className="backdrop-blur-sm bg-white/90 border-0 shadow-2xl rounded-3xl overflow-hidden">
         <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-1">
           <div className="bg-white rounded-3xl p-6">
@@ -223,7 +206,6 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
               <CardTitle className="flex items-center gap-3 text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 <BarChart3 className="w-8 h-8 text-purple-600" />
                 Analisi Avanzata dell'Apprendimento
-                {/* ⭐ NUOVO: Indicatore di aggiornamento */}
                 <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded-full">
                   Live: {testHistory.length} test
                 </span>
@@ -243,6 +225,7 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
               {[
                 { id: 'overview', label: 'Panoramica', icon: '📈' },
                 { id: 'chapters', label: 'Per Capitoli', icon: '📚' },
+                { id: 'words', label: 'Per Parole', icon: '🔍' }, // ⭐ NEW
                 { id: 'performance', label: 'Performance', icon: '🎯' },
                 { id: 'trends', label: 'Tendenze', icon: '📊' }
               ].map(tab => (
@@ -261,7 +244,7 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
               ))}
             </div>
 
-            {/* ⭐ AGGIORNATO: Statistiche Generali con dati real-time */}
+            {/* ⭐ ENHANCED: Statistiche Generali con hints */}
             <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
               <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-4 rounded-2xl text-white text-center shadow-xl">
                 <div className="text-2xl font-bold">{getAdvancedStats.totalTests}</div>
@@ -279,25 +262,24 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
                 <div className="text-2xl font-bold">{getAdvancedStats.totalWordsStudied}</div>
                 <div className="text-orange-100 text-sm">Parole</div>
               </div>
-              <div className="bg-gradient-to-br from-indigo-500 to-blue-500 p-4 rounded-2xl text-white text-center shadow-xl">
-                <div className="text-2xl font-bold">{getAdvancedStats.chaptersAnalyzed}</div>
-                <div className="text-indigo-100 text-sm">Capitoli</div>
+              <div className="bg-gradient-to-br from-yellow-500 to-orange-500 p-4 rounded-2xl text-white text-center shadow-xl">
+                <div className="text-2xl font-bold">{getAdvancedStats.totalHints}</div>
+                <div className="text-yellow-100 text-sm">Aiuti</div>
               </div>
-              <div className="bg-gradient-to-br from-teal-500 to-cyan-500 p-4 rounded-2xl text-white text-center shadow-xl">
-                <div className="text-2xl font-bold">{getAdvancedStats.lastWeekTests}</div>
-                <div className="text-teal-100 text-sm">Ultima Settimana</div>
+              <div className="bg-gradient-to-br from-indigo-500 to-blue-500 p-4 rounded-2xl text-white text-center shadow-xl">
+                <div className="text-2xl font-bold">{getAdvancedStats.hintsPercentage}%</div>
+                <div className="text-indigo-100 text-sm">% Aiuti</div>
               </div>
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Contenuto Dinamico Basato sulla Vista Selezionata */}
+      {/* Dynamic Content Based on Selected View */}
       {selectedView === 'overview' && (
         <OverviewSection 
           stats={getAdvancedStats} 
           timelineData={getTimelineData} 
-          difficultyData={getDifficultyData}
           localRefresh={localRefresh}
         />
       )}
@@ -308,6 +290,21 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
           selectedChapter={selectedChapter}
           setSelectedChapter={setSelectedChapter}
           testHistory={testHistory}
+          localRefresh={localRefresh}
+        />
+      )}
+
+      {/* ⭐ NEW: Words performance section */}
+      {selectedView === 'words' && (
+        <WordsSection 
+          wordsData={getWordPerformanceData}
+          searchWord={searchWord}
+          setSearchWord={setSearchWord}
+          selectedChapter={selectedChapter}
+          setSelectedChapter={setSelectedChapter}
+          selectedWordId={selectedWordId}
+          setSelectedWordId={setSelectedWordId}
+          getWordAnalysis={getWordAnalysis}
           localRefresh={localRefresh}
         />
       )}
@@ -331,29 +328,23 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
   );
 };
 
-// ⭐ AGGIORNATO: Sezione Panoramica con refresh automatico
-const OverviewSection = ({ stats, timelineData, difficultyData, localRefresh }) => (
+// ⭐ ENHANCED: Overview Section with hints visualization
+const OverviewSection = ({ stats, timelineData, localRefresh }) => (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" key={`overview-${localRefresh}`}>
-    {/* Andamento Generale */}
+    {/* Enhanced Timeline with hints */}
     <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
         <CardTitle className="flex items-center gap-3 text-white">
           <TrendingUp className="w-6 h-6" />
-          Andamento Generale (Ultimi 20 Test)
+          Andamento con Aiuti (Ultimi 20 Test)
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={timelineData} key={`area-${localRefresh}`}>
-            <defs>
-              <linearGradient id="colorPercentage" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
-              </linearGradient>
-            </defs>
+          <LineChart data={timelineData} key={`line-${localRefresh}`}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e0e4e7" />
             <XAxis dataKey="test" tick={{ fontSize: 12 }} />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+            <YAxis tick={{ fontSize: 12 }} />
             <Tooltip 
               contentStyle={{
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -362,110 +353,84 @@ const OverviewSection = ({ stats, timelineData, difficultyData, localRefresh }) 
                 boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
               }}
             />
-            <Area 
+            <Line 
               type="monotone" 
               dataKey="percentage" 
               stroke="#3b82f6" 
-              fillOpacity={1}
-              fill="url(#colorPercentage)"
               strokeWidth={3}
+              name="Precisione %"
             />
-          </AreaChart>
+            <Line 
+              type="monotone" 
+              dataKey="hints" 
+              stroke="#f59e0b" 
+              strokeWidth={2}
+              name="Aiuti"
+            />
+          </LineChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
 
-    {/* Distribuzione Difficoltà */}
+    {/* Performance Metrics */}
     <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
         <CardTitle className="flex items-center gap-3 text-white">
           <Target className="w-6 h-6" />
-          Distribuzione Difficoltà Test
+          Metriche Performance
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart key={`pie-${localRefresh}`}>
-            <Pie
-              data={difficultyData}
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-              label={({name, percentage}) => `${name}: ${percentage}%`}
-            >
-              {difficultyData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-
-    {/* Trend di Miglioramento */}
-    {stats.improvementTrend !== 0 && (
-      <Card className="lg:col-span-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 shadow-xl rounded-3xl">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-6">
-            <div className={`p-6 rounded-3xl ${stats.improvementTrend > 0 ? 'bg-green-500' : 'bg-red-500'}`}>
-              <TrendingUp className="w-12 h-12 text-white" />
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-xl">
+              <div className="text-2xl font-bold text-blue-600">{stats.averageScore}%</div>
+              <div className="text-blue-700 text-sm">Precisione Media</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold">
-                Trend di Miglioramento: 
-                <span className={`ml-3 ${stats.improvementTrend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {stats.improvementTrend > 0 ? '+' : ''}{stats.improvementTrend}%
-                </span>
-              </div>
-              <div className="text-gray-600 text-lg">
-                {stats.improvementTrend > 0 ? 
-                  '🎉 Continua così! Stai migliorando costantemente.' :
-                  '💪 Non mollare! Focalizzati sulle aree più difficili.'
-                }
-              </div>
+            <div className="text-center p-4 bg-orange-50 rounded-xl">
+              <div className="text-2xl font-bold text-orange-600">{stats.hintsPercentage}%</div>
+              <div className="text-orange-700 text-sm">% Aiuti Usati</div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    )}
-  </div>
-);
-
-// ⭐ AGGIORNATO: Sezione Capitoli con refresh
-const ChaptersSection = ({ chapterData, selectedChapter, setSelectedChapter, testHistory, localRefresh }) => (
-  <div className="space-y-8" key={`chapters-${localRefresh}`}>
-    {/* Filtro Capitoli */}
-    <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-4">
-          <Filter className="w-5 h-5 text-blue-600" />
-          <label className="font-medium text-blue-800">Analizza Capitolo:</label>
-          <select
-            value={selectedChapter}
-            onChange={(e) => setSelectedChapter(e.target.value)}
-            className="px-4 py-2 border border-blue-300 rounded-lg bg-white"
-          >
-            <option value="all">Tutti i Capitoli</option>
-            {chapterData.map(chapter => (
-              <option key={chapter.fullChapter} value={chapter.fullChapter}>
-                {chapter.chapter}
-              </option>
-            ))}
-          </select>
+          
+          <div className="text-center p-4 bg-green-50 rounded-xl">
+            <div className="text-xl font-bold text-green-600">
+              {Math.max(0, stats.averageScore - stats.hintsPercentage)}%
+            </div>
+            <div className="text-green-700 text-sm">Efficienza (senza aiuti)</div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2 text-sm">
+            <div className="text-center p-2 bg-purple-50 rounded-lg">
+              <div className="font-bold text-purple-600">{stats.totalCorrect}</div>
+              <div className="text-purple-700 text-xs">Corrette</div>
+            </div>
+            <div className="text-center p-2 bg-red-50 rounded-lg">
+              <div className="font-bold text-red-600">{stats.totalIncorrect}</div>
+              <div className="text-red-700 text-xs">Sbagliate</div>
+            </div>
+            <div className="text-center p-2 bg-yellow-50 rounded-lg">
+              <div className="font-bold text-yellow-600">{stats.totalHints}</div>
+              <div className="text-yellow-700 text-xs">Aiuti</div>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
+  </div>
+);
 
-    {/* Confronto Performance Capitoli */}
+// ⭐ ENHANCED: Chapters Section with efficiency metrics
+const ChaptersSection = ({ chapterData, selectedChapter, setSelectedChapter, testHistory, localRefresh }) => (
+  <div className="space-y-8" key={`chapters-${localRefresh}`}>
+    {/* Chapter Performance Comparison - Redesigned */}
     <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
         <CardTitle className="flex items-center gap-3 text-white">
           <BookOpen className="w-6 h-6" />
-          Performance per Capitolo
+          Efficienza per Capitolo (Precisione vs Aiuti)
         </CardTitle>
+        <p className="text-purple-100 text-sm">Più alta è la barra verde, migliore è l'efficienza del capitolo</p>
       </CardHeader>
       <CardContent className="p-6">
         <ResponsiveContainer width="100%" height={400}>
@@ -475,104 +440,300 @@ const ChaptersSection = ({ chapterData, selectedChapter, setSelectedChapter, tes
             <YAxis domain={[0, 100]} />
             <Tooltip 
               formatter={(value, name) => [
-                name === 'percentage' ? `${value}%` :
-                name === 'best' ? `${value}%` :
-                name === 'worst' ? `${value}%` : value,
-                name === 'percentage' ? 'Media' :
-                name === 'best' ? 'Miglior Risultato' :
-                name === 'worst' ? 'Peggior Risultato' :
-                name === 'tests' ? 'Test Completati' : 'Parole Studiate'
+                `${value}%`,
+                name === 'accuracy' ? 'Precisione' :
+                name === 'hints' ? 'Aiuti Usati' :
+                name === 'efficiency' ? 'Efficienza Netta' : name
               ]}
             />
-            <Bar dataKey="percentage" fill="#8b5cf6" name="percentage" />
-            <Bar dataKey="best" fill="#10b981" name="best" />
-            <Bar dataKey="worst" fill="#ef4444" name="worst" />
+            <Bar dataKey="accuracy" fill="#3b82f6" name="accuracy" />
+            <Bar dataKey="hints" fill="#f59e0b" name="hints" />
+            <Bar dataKey="efficiency" fill="#10b981" name="efficiency" />
           </BarChart>
         </ResponsiveContainer>
+        
+        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-4 h-4 bg-blue-500 rounded"></div>
+            <span className="text-sm">Precisione %</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+            <span className="text-sm">Aiuti %</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-4 h-4 bg-green-500 rounded"></div>
+            <span className="text-sm">Efficienza Netta</span>
+          </div>
+        </div>
       </CardContent>
     </Card>
-
-    {/* Dettagli Capitolo Selezionato */}
-    {selectedChapter !== 'all' && (
-      <ChapterDetailCard 
-        chapter={selectedChapter}
-        chapterData={chapterData.find(c => c.fullChapter === selectedChapter)}
-        testHistory={testHistory}
-        localRefresh={localRefresh}
-      />
-    )}
   </div>
 );
 
-// ⭐ FIXED: Dettagli capitolo con useMemo corretto
-const ChapterDetailCard = ({ chapter, chapterData, testHistory, localRefresh }) => {
-  const chapterTests = React.useMemo(() => {
-    return testHistory.filter(test => 
-      test.chapterStats && test.chapterStats[chapter]
-    ).slice(0, 10);
-  }, [testHistory, chapter]); // ⭐ FIXED: Rimosso localRefresh dalle dipendenze
+// ⭐ NEW: Words Performance Section
+const WordsSection = ({ wordsData, searchWord, setSearchWord, selectedChapter, setSelectedChapter, selectedWordId, setSelectedWordId, getWordAnalysis, localRefresh }) => {
+  const availableChapters = [...new Set(wordsData.map(w => w.chapter).filter(Boolean))].sort();
+  
+  const getStatusColor = (status) => {
+    const colors = {
+      critical: 'bg-red-500',
+      inconsistent: 'bg-orange-500',
+      struggling: 'bg-yellow-500',
+      promising: 'bg-blue-500',
+      improving: 'bg-green-500',
+      consolidated: 'bg-emerald-500',
+      new: 'bg-gray-500'
+    };
+    return colors[status] || 'bg-gray-500';
+  };
 
-  const chapterTimeline = React.useMemo(() => {
-    return chapterTests.reverse().map((test, index) => ({
-      test: `Test ${index + 1}`,
-      percentage: test.chapterStats[chapter].percentage,
-      correct: test.chapterStats[chapter].correctWords,
-      incorrect: test.chapterStats[chapter].incorrectWords,
-      date: new Date(test.timestamp).toLocaleDateString('it-IT')
-    }));
-  }, [chapterTests, chapter]); // ⭐ FIXED: Rimosso localRefresh dalle dipendenze
+  const getStatusLabel = (status) => {
+    const labels = {
+      critical: '🔴 Critica',
+      inconsistent: '🟠 Instabile',
+      struggling: '🟡 In difficoltà',
+      promising: '🔵 Promettente',
+      improving: '🟢 Migliorando',
+      consolidated: '🟢 Consolidata',
+      new: '⚪ Nuova'
+    };
+    return labels[status] || '⚪ Sconosciuto';
+  };
 
   return (
-    <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden" key={`detail-${chapter}-${localRefresh}`}>
-      <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+    <div className="space-y-8" key={`words-${localRefresh}`}>
+      {/* Search and Filter */}
+      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">🔍 Cerca Parola</label>
+              <Input
+                placeholder="Scrivi la parola inglese..."
+                value={searchWord}
+                onChange={(e) => setSearchWord(e.target.value)}
+                className="border-2 border-blue-300 rounded-xl focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">📚 Filtra per Capitolo</label>
+              <select
+                value={selectedChapter}
+                onChange={(e) => setSelectedChapter(e.target.value)}
+                className="w-full px-3 py-2 border-2 border-blue-300 rounded-xl focus:border-blue-500 bg-white"
+              >
+                <option value="all">Tutti i capitoli</option>
+                {availableChapters.map(chapter => (
+                  <option key={chapter} value={chapter}>📖 {chapter}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Words Performance List */}
+      <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+          <CardTitle className="flex items-center gap-3 text-white">
+            <Search className="w-6 h-6" />
+            Performance Parole ({wordsData.length} parole)
+          </CardTitle>
+          <p className="text-indigo-100 text-sm">Clicca su una parola per vedere il grafico dell'andamento temporale</p>
+        </CardHeader>
+        <CardContent className="p-6">
+          {wordsData.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-6xl mb-4">🔍</div>
+              <p className="text-gray-600">Nessuna parola trovata con i filtri attuali</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {wordsData.map((word) => (
+                <WordPerformanceCard 
+                  key={word.wordId} 
+                  word={word} 
+                  isSelected={selectedWordId === word.wordId}
+                  onClick={() => setSelectedWordId(selectedWordId === word.wordId ? null : word.wordId)}
+                  getStatusColor={getStatusColor}
+                  getStatusLabel={getStatusLabel}
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Selected Word Detail */}
+      {selectedWordId && (
+        <WordDetailSection 
+          wordId={selectedWordId}
+          getWordAnalysis={getWordAnalysis}
+          localRefresh={localRefresh}
+        />
+      )}
+    </div>
+  );
+};
+
+// ⭐ NEW: Word Performance Card Component
+const WordPerformanceCard = ({ word, isSelected, onClick, getStatusColor, getStatusLabel }) => (
+  <div
+    onClick={onClick}
+    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+      isSelected 
+        ? 'border-blue-500 bg-blue-50 shadow-lg' 
+        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+    }`}
+  >
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className="flex flex-col">
+          <div className="font-bold text-lg text-gray-800">{word.english}</div>
+          <div className="text-gray-600">{word.italian}</div>
+          {word.chapter && (
+            <div className="text-sm text-blue-600">📖 Capitolo {word.chapter}</div>
+          )}
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-4">
+        <div className="text-center">
+          <div className="text-lg font-bold text-blue-600">{word.accuracy}%</div>
+          <div className="text-blue-700 text-xs">Precisione</div>
+        </div>
+        
+        <div className="text-center">
+          <div className="text-lg font-bold text-orange-600">{word.hintsPercentage}%</div>
+          <div className="text-orange-700 text-xs">Aiuti</div>
+        </div>
+        
+        <div className="text-center">
+          <div className="text-lg font-bold text-green-600">{word.currentStreak}</div>
+          <div className="text-green-700 text-xs">Streak</div>
+        </div>
+        
+        <div className="text-center">
+          <div className="text-lg font-bold text-purple-600">{word.avgTime}s</div>
+          <div className="text-purple-700 text-xs">Tempo Medio</div>
+        </div>
+        
+        <div className={`px-3 py-1 rounded-full text-white text-sm font-medium ${getStatusColor(word.status)}`}>
+          {getStatusLabel(word.status)}
+        </div>
+      </div>
+    </div>
+    
+    <div className="mt-3 text-sm text-gray-500">
+      {word.totalAttempts} tentativi • Ultimo: {word.lastAttempt ? new Date(word.lastAttempt.timestamp).toLocaleDateString('it-IT') : 'Mai'}
+    </div>
+  </div>
+);
+
+// ⭐ NEW: Word Detail Section with Timeline
+const WordDetailSection = ({ wordId, getWordAnalysis, localRefresh }) => {
+  const wordAnalysis = getWordAnalysis ? getWordAnalysis(wordId) : null;
+  
+  if (!wordAnalysis) return null;
+
+  const timelineData = wordAnalysis.attempts.map((attempt, index) => ({
+    attempt: `#${index + 1}`,
+    success: attempt.correct ? 100 : 0,
+    hint: attempt.usedHint ? 50 : 0,
+    time: Math.round(attempt.timeSpent / 1000),
+    date: new Date(attempt.timestamp).toLocaleDateString('it-IT')
+  }));
+
+  return (
+    <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden" key={`detail-${wordId}-${localRefresh}`}>
+      <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
         <CardTitle className="flex items-center gap-3 text-white">
           <Award className="w-6 h-6" />
-          Dettagli Capitolo: {chapter === 'Senza Capitolo' ? 'Senza Capitolo' : `Capitolo ${chapter}`}
+          Andamento Temporale Parola
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Statistiche */}
-          <div className="space-y-4">
-            <h4 className="font-bold text-lg text-gray-800">Statistiche Generali</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-xl">
-                <div className="text-2xl font-bold text-blue-600">{chapterData?.percentage}%</div>
-                <div className="text-blue-700 text-sm">Media</div>
-              </div>
-              <div className="text-center p-4 bg-green-50 rounded-xl">
-                <div className="text-2xl font-bold text-green-600">{chapterData?.best}%</div>
-                <div className="text-green-700 text-sm">Record</div>
-              </div>
-              <div className="text-center p-4 bg-purple-50 rounded-xl">
-                <div className="text-2xl font-bold text-purple-600">{chapterData?.tests}</div>
-                <div className="text-purple-700 text-sm">Test</div>
-              </div>
-              <div className="text-center p-4 bg-orange-50 rounded-xl">
-                <div className="text-2xl font-bold text-orange-600">{chapterData?.words}</div>
-                <div className="text-orange-700 text-sm">Parole</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Andamento nel Tempo */}
+          {/* Timeline Chart */}
           <div>
-            <h4 className="font-bold text-lg text-gray-800 mb-4">Andamento Ultimi 10 Test</h4>
+            <h4 className="font-bold text-lg text-gray-800 mb-4">Ultimi 10 Tentativi</h4>
             <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={chapterTimeline} key={`line-${chapter}-${localRefresh}`}>
+              <LineChart data={timelineData} key={`word-line-${wordId}-${localRefresh}`}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="test" />
+                <XAxis dataKey="attempt" />
                 <YAxis domain={[0, 100]} />
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value, name) => [
+                    name === 'success' ? (value === 100 ? 'Corretta' : 'Sbagliata') :
+                    name === 'hint' ? (value === 50 ? 'Con aiuto' : 'Senza aiuto') :
+                    `${value}s`,
+                    name === 'success' ? 'Risultato' :
+                    name === 'hint' ? 'Aiuto' : 'Tempo'
+                  ]}
+                />
                 <Line 
                   type="monotone" 
-                  dataKey="percentage" 
-                  stroke="#8b5cf6" 
+                  dataKey="success" 
+                  stroke="#10b981" 
                   strokeWidth={3}
-                  dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4 }}
+                  name="success"
+                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="hint" 
+                  stroke="#f59e0b" 
+                  strokeWidth={2}
+                  name="hint"
+                  strokeDasharray="5 5"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="time" 
+                  stroke="#8b5cf6" 
+                  strokeWidth={2}
+                  name="time"
                 />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* Statistics */}
+          <div>
+            <h4 className="font-bold text-lg text-gray-800 mb-4">Statistiche Dettagliate</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-blue-50 rounded-xl">
+                <div className="text-xl font-bold text-blue-600">{wordAnalysis.accuracy}%</div>
+                <div className="text-blue-700 text-sm">Precisione</div>
+              </div>
+              <div className="text-center p-3 bg-orange-50 rounded-xl">
+                <div className="text-xl font-bold text-orange-600">{wordAnalysis.hintsPercentage}%</div>
+                <div className="text-orange-700 text-sm">% Aiuti</div>
+              </div>
+              <div className="text-center p-3 bg-green-50 rounded-xl">
+                <div className="text-xl font-bold text-green-600">{wordAnalysis.currentStreak}</div>
+                <div className="text-green-700 text-sm">Streak Attuale</div>
+              </div>
+              <div className="text-center p-3 bg-purple-50 rounded-xl">
+                <div className="text-xl font-bold text-purple-600">{wordAnalysis.avgTime}s</div>
+                <div className="text-purple-700 text-sm">Tempo Medio</div>
+              </div>
+            </div>
+            
+            <div className="mt-4 p-4 bg-gray-50 rounded-xl">
+              <div className="text-sm text-gray-700">
+                <div className="mb-2">
+                  <strong>Tentativi totali:</strong> {wordAnalysis.totalAttempts}
+                </div>
+                <div className="mb-2">
+                  <strong>Precisione recente:</strong> {wordAnalysis.recentAccuracy}% (ultimi 5)
+                </div>
+                <div>
+                  <strong>Stato:</strong> <span className="font-medium">{wordAnalysis.status}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>
@@ -580,32 +741,36 @@ const ChapterDetailCard = ({ chapter, chapterData, testHistory, localRefresh }) 
   );
 };
 
-// ⭐ AGGIORNATO: Sezione Performance con refresh
+// ⭐ ENHANCED: Performance Section with hints
 const PerformanceSection = ({ stats, timelineData, localRefresh }) => (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" key={`performance-${localRefresh}`}>
     <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
         <CardTitle className="flex items-center gap-3 text-white">
           <Trophy className="w-6 h-6" />
-          Distribuzione Punteggi
+          Analisi Efficienza
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-4">
           <div className="text-center p-6 bg-green-50 rounded-2xl border border-green-200">
             <div className="text-3xl font-bold text-green-600 mb-2">{stats.averageScore}%</div>
-            <div className="text-green-700">Punteggio Medio</div>
+            <div className="text-green-700">Precisione Media</div>
           </div>
+          
           <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-xl">
-              <div className="text-xl font-bold text-blue-600">{stats.bestScore}%</div>
-              <div className="text-blue-700 text-sm">Massimo</div>
+            <div className="text-center p-4 bg-orange-50 rounded-xl">
+              <div className="text-xl font-bold text-orange-600">{stats.hintsPercentage}%</div>
+              <div className="text-orange-700 text-sm">Aiuti Usati</div>
             </div>
-            <div className="text-center p-4 bg-red-50 rounded-xl">
-              <div className="text-xl font-bold text-red-600">{stats.worstScore}%</div>
-              <div className="text-red-700 text-sm">Minimo</div>
+            <div className="text-center p-4 bg-blue-50 rounded-xl">
+              <div className="text-xl font-bold text-blue-600">
+                {Math.max(0, stats.averageScore - stats.hintsPercentage)}%
+              </div>
+              <div className="text-blue-700 text-sm">Efficienza Netta</div>
             </div>
           </div>
+          
           <div className="text-center p-4 bg-purple-50 rounded-xl">
             <div className="text-lg font-bold text-purple-600">
               {stats.totalWordsStudied > 0 ? ((stats.totalCorrect / stats.totalWordsStudied) * 100).toFixed(1) : 0}%
@@ -619,8 +784,8 @@ const PerformanceSection = ({ stats, timelineData, localRefresh }) => (
     <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
         <CardTitle className="flex items-center gap-3 text-white">
-          <BarChart3 className="w-6 h-6" />
-          Risposte Corrette vs Sbagliate
+          <Lightbulb className="w-6 h-6" />
+          Andamento Aiuti vs Prestazioni
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
@@ -632,6 +797,7 @@ const PerformanceSection = ({ stats, timelineData, localRefresh }) => (
             <Tooltip />
             <Bar dataKey="correct" stackId="a" fill="#10b981" name="Corrette" />
             <Bar dataKey="incorrect" stackId="a" fill="#ef4444" name="Sbagliate" />
+            <Bar dataKey="hints" fill="#f59e0b" name="Aiuti" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
@@ -639,14 +805,14 @@ const PerformanceSection = ({ stats, timelineData, localRefresh }) => (
   </div>
 );
 
-// ⭐ AGGIORNATO: Sezione Tendenze con refresh
+// ⭐ ENHANCED: Trends Section with timing analysis
 const TrendsSection = ({ timelineData, stats, localRefresh }) => (
   <div className="space-y-8" key={`trends-${localRefresh}`}>
     <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
         <CardTitle className="flex items-center gap-3 text-white">
-          <Calendar className="w-6 h-6" />
-          Tendenze Temporali
+          <Clock className="w-6 h-6" />
+          Tendenze Temporali e Performance
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
@@ -665,44 +831,48 @@ const TrendsSection = ({ timelineData, stats, localRefresh }) => (
             />
             <Line 
               type="monotone" 
-              dataKey="chapters" 
-              stroke="#10b981" 
+              dataKey="hints" 
+              stroke="#f59e0b" 
               strokeWidth={2}
-              name="Capitoli"
+              name="Aiuti"
+            />
+            <Line 
+              type="monotone" 
+              dataKey="avgTime" 
+              stroke="#06b6d4" 
+              strokeWidth={2}
+              name="Tempo Medio (s)"
             />
           </LineChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
 
-    {/* Insights e Raccomandazioni */}
+    {/* Enhanced Insights */}
     <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200">
       <CardContent className="p-6">
         <h3 className="text-xl font-bold text-yellow-800 mb-4 flex items-center gap-2">
           <Sparkles className="w-6 h-6" />
-          Insights e Raccomandazioni
+          Insights e Raccomandazioni Avanzate
         </h3>
         <div className="space-y-3 text-yellow-700">
-          {stats.improvementTrend > 0 ? (
-            <p>🎯 <strong>Ottimo lavoro!</strong> Stai migliorando del {stats.improvementTrend}% negli ultimi test.</p>
-          ) : (
-            <p>💪 <strong>Continua a studiare!</strong> Focalizzati sui capitoli più difficili.</p>
+          <p>🎯 <strong>Precisione:</strong> {stats.averageScore}% (target: 80%+)</p>
+          <p>💡 <strong>Uso aiuti:</strong> {stats.hintsPercentage}% (ideale: 20%+)</p>
+          <p>⚡ <strong>Efficienza netta:</strong> {Math.max(0, stats.averageScore - stats.hintsPercentage)}%</p>
+          
+          {stats.hintsPercentage > 30 && (
+            <div className="p-3 bg-orange-100 rounded-lg border border-orange-300">
+              <p>⚠️ <strong>Suggerimento:</strong> Stai usando molti aiuti. Prova a riflettere di più prima di chiedere aiuto.</p>
+            </div>
           )}
           
-          {stats.lastWeekTests > 0 ? (
-            <p>🔥 <strong>Ritmo eccellente!</strong> Hai fatto {stats.lastWeekTests} test questa settimana.</p>
-          ) : (
-            <p>📅 <strong>Riprendi lo studio!</strong> Non hai fatto test questa settimana.</p>
+          {stats.averageScore >= 80 && stats.hintsPercentage <= 20 && (
+            <div className="p-3 bg-green-100 rounded-lg border border-green-300">
+              <p>🏆 <strong>Eccellente!</strong> Hai raggiunto un ottimo equilibrio tra precisione e autonomia.</p>
+            </div>
           )}
           
-          {stats.chaptersAnalyzed > 5 ? (
-            <p>📚 <strong>Ampia copertura!</strong> Hai studiato {stats.chaptersAnalyzed} capitoli diversi.</p>
-          ) : (
-            <p>📖 <strong>Espandi gli orizzonti!</strong> Prova ad aggiungere più capitoli.</p>
-          )}
-          
-          {/* ⭐ NUOVO: Insight basato sui dati real-time */}
-          <p>📊 <strong>Stato attuale:</strong> {stats.totalTests} test completati con {stats.totalWordsStudied} parole studiate.</p>
+          <p>📊 <strong>Stato attuale:</strong> {stats.totalTests} test con {stats.totalWordsStudied} parole studiate e {stats.totalHints} aiuti utilizzati.</p>
         </div>
       </CardContent>
     </Card>

@@ -46,7 +46,16 @@ export const AppProvider = ({ children }) => {
   // Hook centralizzati
   const wordsAPI = useOptimizedWords();
   const statsAPI = useOptimizedStats();
+  
+  // ⭐ ENHANCED: Test API with proper stats callback
   const testAPI = useOptimizedTest((testStats, testWords, wrongWords) => {
+    console.log('🔗 AppContext: Test completed, calling handleTestComplete with:', {
+      testStats,
+      testWordsCount: testWords.length,
+      wrongWordsCount: wrongWords.length
+    });
+    
+    // ⭐ CRITICAL: Pass enhanced stats including hints and timing
     statsAPI.handleTestComplete(testStats, testWords, wrongWords);
   });
 
@@ -55,28 +64,39 @@ export const AppProvider = ({ children }) => {
     wordsAPI.setEditingWord(state.editingWord);
   }, [state.editingWord]);
 
+  // ⭐ DEBUG: Log quando le funzioni stats sono disponibili
+  useEffect(() => {
+    console.log('📊 StatsAPI functions available:', {
+      getAllWordsPerformance: !!statsAPI.getAllWordsPerformance,
+      getWordAnalysis: !!statsAPI.getWordAnalysis,
+      wordPerformance: !!statsAPI.wordPerformance
+    });
+  }, [statsAPI.getAllWordsPerformance, statsAPI.getWordAnalysis, statsAPI.wordPerformance]);
+
   const value = {
     // Stato UI
     ...state,
     dispatch,
     
-    // API Words
+    // API Words - ⭐ ENHANCED: Added difficult toggle
     words: wordsAPI.words,
     addWord: wordsAPI.addWord,
     removeWord: wordsAPI.removeWord,
     toggleWordLearned: wordsAPI.toggleWordLearned,
+    toggleWordDifficult: wordsAPI.toggleWordDifficult,
     clearAllWords: wordsAPI.clearAllWords,
     importWords: wordsAPI.importWords,
     getAvailableChapters: wordsAPI.getAvailableChapters,
     getChapterStats: wordsAPI.getChapterStats,
     wordStats: wordsAPI.wordStats,
     
-    // API Test
+    // API Test - ⭐ ENHANCED: With timer and hints
     ...testAPI,
     
-    // API Stats
+    // API Stats - ⭐ FIXED: Properly expose word performance functions
     stats: statsAPI.stats,
     testHistory: statsAPI.testHistory,
+    wordPerformance: statsAPI.wordPerformance, // ⭐ CRITICAL: Expose word performance data
     calculatedStats: statsAPI.calculatedStats,
     updateTestStats: statsAPI.updateTestStats,
     addTestToHistory: statsAPI.addTestToHistory,
@@ -85,8 +105,20 @@ export const AppProvider = ({ children }) => {
     forceUpdate: statsAPI.forceUpdate,
     resetStats: statsAPI.resetStats,
     exportStats: statsAPI.exportStats,
-    importStats: statsAPI.importStats
+    importStats: statsAPI.importStats,
+    
+    // ⭐ CRITICAL: Word performance functions
+    getAllWordsPerformance: statsAPI.getAllWordsPerformance, // ⭐ FIX: Must be exposed
+    getWordAnalysis: statsAPI.getWordAnalysis, // ⭐ FIX: Must be exposed
+    recordWordPerformance: statsAPI.recordWordPerformance // ⭐ FIX: Must be exposed
   };
+
+  // ⭐ DEBUG: Final context value check
+  console.log('🔗 AppContext value includes word functions:', {
+    getAllWordsPerformance: !!value.getAllWordsPerformance,
+    getWordAnalysis: !!value.getWordAnalysis,
+    wordPerformance: !!value.wordPerformance
+  });
 
   return (
     <AppContext.Provider value={value}>
