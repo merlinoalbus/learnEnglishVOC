@@ -1,91 +1,40 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
+// src/contexts/NotificationContext.js
+import React, { createContext, useContext } from 'react';
 
 const NotificationContext = createContext();
 
-const notificationReducer = (state, action) => {
-  switch (action.type) {
-    case 'ADD_NOTIFICATION':
-      return {
-        ...state,
-        notifications: [...state.notifications, action.payload]
-      };
-    case 'REMOVE_NOTIFICATION':
-      return {
-        ...state,
-        notifications: state.notifications.filter(n => n.id !== action.payload)
-      };
-    case 'CLEAR_ALL':
-      return { ...state, notifications: [] };
-    default:
-      return state;
-  }
-};
-
-const getUserFriendlyError = (errorMessage, context) => {
-  const errorMap = {
-    'JSON': '❌ File JSON non valido',
-    'localStorage': '❌ Errore salvataggio dati',
-    'Network': '❌ Errore di connessione',
-    'Word already exists': '⚠️ Parola già esistente',
-    'English word and Italian translation are required': '⚠️ Campi obbligatori mancanti',
-    'All words already exist': '⚠️ Tutte le parole sono già presenti'
+export const NotificationProvider = ({ children }) => {
+  // Simplified notification functions
+  const showSuccess = (message) => {
+    console.log('✅ Success:', message);
+    // You can replace this with your existing notification system
+    // For now, we'll use browser alert for demo
+    // alert('✅ ' + message);
   };
 
-  for (const [key, message] of Object.entries(errorMap)) {
-    if (errorMessage.includes(key)) {
-      return message;
-    }
-  }
+  const showError = (error, context = '') => {
+    const message = error?.message || error || 'Unknown error';
+    console.error('❌ Error:', context, message);
+    // You can replace this with your existing notification system
+    // alert('❌ ' + message);
+  };
 
-  return `❌ Errore ${context}: ${errorMessage}`;
-};
+  const showWarning = (message) => {
+    console.warn('⚠️ Warning:', message);
+    // You can replace this with your existing notification system
+    // alert('⚠️ ' + message);
+  };
 
-export const NotificationProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(notificationReducer, {
-    notifications: []
-  });
-
-  const showNotification = useCallback((message, type = 'success', duration = 3000) => {
-    const id = Date.now() + Math.random();
-    
-    dispatch({
-      type: 'ADD_NOTIFICATION',
-      payload: { id, message, type, timestamp: Date.now() }
-    });
-
-    setTimeout(() => {
-      dispatch({ type: 'REMOVE_NOTIFICATION', payload: id });
-    }, duration);
-
-    return id;
-  }, []);
-
-  const showError = useCallback((error, context = '') => {
-    console.error(`❌ Error in ${context}:`, error);
-    
-    const errorMessage = error.message || error.toString();
-    const userFriendlyMessage = getUserFriendlyError(errorMessage, context);
-    
-    return showNotification(userFriendlyMessage, 'error', 5000);
-  }, [showNotification]);
-
-  const showSuccess = useCallback((message) => {
-    return showNotification(message, 'success');
-  }, [showNotification]);
-
-  const showWarning = useCallback((message) => {
-    return showNotification(message, 'warning', 4000);
-  }, [showNotification]);
+  const showNotification = (message, type = 'info') => {
+    console.log(`📢 ${type.toUpperCase()}:`, message);
+    // You can replace this with your existing notification system
+  };
 
   const value = {
-    notifications: state.notifications,
-    showNotification,
-    showError,
     showSuccess,
+    showError,
     showWarning,
-    clearAllNotifications: useCallback(() => {
-      dispatch({ type: 'CLEAR_ALL' });
-    }, [])
+    showNotification
   };
 
   return (
@@ -98,7 +47,7 @@ export const NotificationProvider = ({ children }) => {
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotification must be used within NotificationProvider');
+    throw new Error('useNotification must be used within a NotificationProvider');
   }
   return context;
 };

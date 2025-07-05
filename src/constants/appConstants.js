@@ -1,5 +1,5 @@
 // =====================================================
-// 📁 src/constants/appConstants.js - VERSIONE SEMPLIFICATA
+// 📁 src/constants/appConstants.js - FIXED VERSION with REAL keys
 // =====================================================
 
 // App Metadata
@@ -11,67 +11,71 @@ export const APP_CONFIG = {
 
 // Test Configuration
 export const TEST_CONFIG = {
-  // Timer settings
   warningThresholds: {
-    slow: 25,      // seconds - quando mostrare warning "tempo lungo"
-    verySlow: 40   // seconds - quando mostrare "molto lento"
+    slow: 25,
+    verySlow: 40
   },
-  
-  // Test flow settings
-  autoAdvanceDelay: 1500, // ms after answer before next question
-  hintCooldown: 3000,     // ms between hint requests
-  maxHintsPerWord: 1,     // limite aiuti per parola
-  
-  // Scoring thresholds
+  autoAdvanceDelay: 1500,
+  hintCooldown: 3000,
+  maxHintsPerWord: 1,
   scoring: {
-    excellent: 80,  // % for "excellent" result  
-    good: 60,      // % for "good" result
-    victory: 80    // % for victory message
+    excellent: 80,
+    good: 60,
+    victory: 80
   }
 };
 
-// Statistics Configuration
+// Statistics Configuration  
 export const STATS_CONFIG = {
-  // Performance thresholds
   performance: {
-    excellent: 90,    // %
-    good: 75,        // %
-    average: 60,     // %
-    needsWork: 40    // %
+    excellent: 90,
+    good: 75,
+    average: 60,
+    needsWork: 40
   },
-  
-  // History limits
-  maxHistorySize: 1000,   // max test history entries
-  maxRecentTests: 20,     // tests shown in timeline
-  
-  // Chart settings
+  maxHistorySize: 1000,
+  maxRecentTests: 20,
   charts: {
     maxTimelinePoints: 20,
     defaultChartHeight: 300
   }
 };
 
-// Storage Configuration
+// ⭐ FIXED: Storage Configuration using YOUR REAL keys from localStorage
 export const STORAGE_CONFIG = {
   keys: {
-    words: 'vocabulary_words',
-    stats: 'vocabulary_stats', 
-    testHistory: 'vocabulary_test_history',
-    settings: 'vocabulary_settings',
-    wordPerformance: 'wordPerformance'
+    // ✅ REAL keys found in your localStorage
+    words: 'vocabularyWords',                    // 84 items - YOUR main words
+    stats: 'vocabularyStats',                    // 14 fields - YOUR main stats  
+    testHistory: 'vocabulary_test_history',      // 75 items - YOUR main test history
+    settings: 'vocabulary_settings',             // Will be created for settings
+    wordPerformance: 'wordPerformance',          // 84 items - YOUR performance data
+    
+    // ⭐ Fallback keys (if main keys are empty, try these)
+    fallback: {
+      words: ['vocabulary-words', 'vocabulary_words'],           // Your duplicates/old versions
+      stats: ['vocabularyStats_v2', 'vocabulary-stats', 'vocabulary_stats'], 
+      testHistory: ['testHistory', 'testHistory_v2'],
+      wordPerformance: ['vocabulary-words-performance']
+    },
+    
+    // ⭐ Metadata keys (for tracking updates)
+    meta: {
+      lastUpdate: 'vocabularyWords_lastUpdate',  // Found this in your data
+      version: 'vocabulary-version',              // Found this too
+      migrationBackup: 'vocabulary-migration-backup', // You have this
+      uiPreferences: 'vocabulary-ui-preferences'  // Found this too
+    }
   }
 };
 
 // Word/Vocabulary Configuration
 export const WORD_CONFIG = {
-  // Field lengths
   maxWordLength: 100,
   maxTranslationLength: 200, 
   maxNotesLength: 1000,
   maxSentenceLength: 300,
   maxChapterLength: 20,
-  
-  // Required fields
   requiredFields: ['english', 'italian'],
   optionalFields: ['group', 'sentence', 'notes', 'chapter', 'learned', 'difficult']
 };
@@ -181,24 +185,21 @@ export const CATEGORY_STYLES = {
   }
 };
 
-// UI Configuration (solo elementi utilizzati)
+// UI Configuration
 export const UI_CONFIG = {
-  // Animation durations
   animations: {
     fast: 150,
     normal: 300,
     slow: 500,
     cardFlip: 700
   },
-  
-  // Toast notification settings
   notifications: {
     defaultDuration: 3000,
     maxVisible: 5
   }
 };
 
-// Error Messages (solo quelli utilizzati)
+// Error Messages
 export const ERROR_MESSAGES = {
   network: 'Errore di connessione. Controlla la tua connessione internet.',
   ai: 'Servizio AI temporaneamente non disponibile. Riprova più tardi.',
@@ -211,7 +212,7 @@ export const ERROR_MESSAGES = {
   noWordsAvailable: 'Nessuna parola disponibile per il test.'
 };
 
-// Success Messages (per consistency UI)
+// Success Messages
 export const SUCCESS_MESSAGES = {
   wordAdded: 'Parola aggiunta con successo!',
   wordUpdated: 'Parola modificata con successo!', 

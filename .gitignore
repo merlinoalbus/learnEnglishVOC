@@ -1,1 +1,8 @@
-node_modules
+# Firebase
+.env
+.env.local
+.env.production
+.env.development
+
+# Dependencies
+node_modules/
