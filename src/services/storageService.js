@@ -2,7 +2,7 @@
 // 📁 src/services/storageService.js - Optimized localStorage Wrapper
 // =====================================================
 
-import { STORAGE_CONFIG, ERROR_MESSAGES } from '../constants/appConstants';
+import { STORAGE_CONFIG } from '../constants/appConstants';
 
 /**
  * Enhanced localStorage service with error handling, compression, and backup functionality
@@ -364,7 +364,53 @@ class StorageService {
    * @returns {Array} Array of word objects
    */
   getWords() {
-    return this.get(this.keys.words, []);
+    // Try new key first, then fallback to possible old keys
+    let words = this.get(this.keys.words, null);
+    
+    if (!words || words.length === 0) {
+      // Try common alternative keys that might be used by existing app
+      const fallbackKeys = [
+        'words', 
+        'vocabularyWords', 
+        'vocabulary_words_v1',
+        'vocabulary-words',
+        'app_words',
+        'vocabWords'
+      ];
+      
+      for (const key of fallbackKeys) {
+        words = this.get(key, null);
+        if (words && words.length > 0) {
+          console.log(`📦 StorageService: Found words in fallback key "${key}" (${words.length} words)`);
+          // Migrate to new key
+          this.set(this.keys.words, words);
+          break;
+        }
+      }
+      
+      // If still nothing, check raw localStorage for any key containing "word"
+      if (!words || words.length === 0) {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.toLowerCase().includes('word')) {
+            try {
+              const data = JSON.parse(localStorage.getItem(key));
+              if (Array.isArray(data) && data.length > 0 && data[0].english && data[0].italian) {
+                console.log(`📦 StorageService: Found words in discovered key "${key}" (${data.length} words)`);
+                words = data;
+                // Migrate to new key
+                this.set(this.keys.words, words);
+                break;
+              }
+            } catch (e) {
+              // Ignore parsing errors
+            }
+          }
+        }
+      }
+    }
+    
+    return words || [];
   }
 
   /**
@@ -381,7 +427,25 @@ class StorageService {
    * @returns {Object} Stats object
    */
   getStats() {
-    return this.get(this.keys.stats, {
+    let stats = this.get(this.keys.stats, null);
+    
+    if (!stats || Object.keys(stats).length === 0) {
+      // Try fallback keys for stats
+      const fallbackKeys = ['stats', 'vocabulary_stats_v1', 'app_stats', 'vocabularyStats'];
+      
+      for (const key of fallbackKeys) {
+        stats = this.get(key, null);
+        if (stats && Object.keys(stats).length > 0) {
+          console.log(`📦 StorageService: Found stats in fallback key "${key}"`);
+          // Migrate to new key
+          this.set(this.keys.stats, stats);
+          break;
+        }
+      }
+    }
+    
+    // Return with defaults merged
+    return {
       testsCompleted: 0,
       correctAnswers: 0,
       incorrectAnswers: 0,
@@ -389,8 +453,9 @@ class StorageService {
       streakDays: 0,
       lastStudyDate: null,
       timeSpent: 0,
-      categoriesProgress: {}
-    });
+      categoriesProgress: {},
+      ...stats
+    };
   }
 
   /**
@@ -407,7 +472,24 @@ class StorageService {
    * @returns {Array} Array of test history objects
    */
   getTestHistory() {
-    return this.get(this.keys.testHistory, []);
+    let history = this.get(this.keys.testHistory, null);
+    
+    if (!history || history.length === 0) {
+      // Try fallback keys for test history
+      const fallbackKeys = ['testHistory', 'vocabulary_test_history_v1', 'test_history', 'vocabHistory'];
+      
+      for (const key of fallbackKeys) {
+        history = this.get(key, null);
+        if (history && history.length > 0) {
+          console.log(`📦 StorageService: Found test history in fallback key "${key}" (${history.length} tests)`);
+          // Migrate to new key
+          this.set(this.keys.testHistory, history);
+          break;
+        }
+      }
+    }
+    
+    return history || [];
   }
 
   /**
