@@ -1,8 +1,8 @@
 // =====================================================
-// 📁 src/components/stats/sections/ChaptersSection.js - ENHANCED
+// 📁 src/components/stats/sections/ChaptersSection.js - FIXED Dati Corretti + Date Ordinate
 // =====================================================
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { 
   BarChart, 
@@ -14,25 +14,21 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
-  ComposedChart,
-  Area,
-  AreaChart
+  ComposedChart
 } from 'recharts';
-import { BookOpen, TrendingUp, Award, Target } from 'lucide-react';
-import { useStatsData } from '../hooks/useStatsData';
+import { BookOpen, TrendingUp, Award, Target, Info } from 'lucide-react';
 
 const ChaptersSection = ({ testHistory, words, localRefresh }) => {
-  const { advancedStats, chapterComparisonData } = useStatsData(testHistory);
+  const [selectedChapterForTrend, setSelectedChapterForTrend] = useState(null);
 
-  // ⭐ ENHANCED: Elaborazione dati completa per capitoli
+  // ⭐ FIXED: Calcolo corretto dei dati per capitoli
   const enhancedChapterData = useMemo(() => {
     const chapterStats = {};
-    const chapterTrends = {};
+    const chapterFirstTestDate = {};
+    const chapterDetailedHistory = {};
 
-    // Raccolta dati base per capitolo
+
+    // 1️⃣ STEP 1: Raccolta dati base per capitolo dalle parole
     words.forEach(word => {
       const chapter = word.chapter || 'Senza Capitolo';
       if (!chapterStats[chapter]) {
@@ -40,11 +36,12 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
           totalWords: 0,
           learnedWords: 0,
           difficultWords: 0,
-          tests: 0,
+          // Performance metrics (will be calculated from tests)
+          testsPerformed: 0,
           totalCorrect: 0,
           totalIncorrect: 0,
-          totalHints: 0,
-          testsPerformed: 0
+          totalTestsAnswers: 0, // Total questions answered in tests
+          estimatedHints: 0 // We'll estimate hints proportionally
         };
       }
       chapterStats[chapter].totalWords++;
@@ -52,47 +49,77 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
       if (word.difficult) chapterStats[chapter].difficultWords++;
     });
 
-    // Analisi test history per capitolo
-    testHistory.forEach(test => {
+    // 2️⃣ STEP 2: Analisi test history per capitolo con distribuzione aiuti
+    testHistory.forEach((test, testIndex) => {
+      const testDate = new Date(test.timestamp);
+      
       if (test.chapterStats) {
         Object.entries(test.chapterStats).forEach(([chapter, stats]) => {
           if (!chapterStats[chapter]) {
+            // If chapter exists in tests but not in words, create entry
             chapterStats[chapter] = {
               totalWords: 0, learnedWords: 0, difficultWords: 0,
-              tests: 0, totalCorrect: 0, totalIncorrect: 0, totalHints: 0, testsPerformed: 0
+              testsPerformed: 0, totalCorrect: 0, totalIncorrect: 0,
+              totalTestsAnswers: 0, estimatedHints: 0
             };
           }
           
-          chapterStats[chapter].tests++;
-          chapterStats[chapter].totalCorrect += stats.correctWords || 0;
-          chapterStats[chapter].totalIncorrect += stats.incorrectWords || 0;
-          chapterStats[chapter].totalHints += stats.hintsUsed || 0;
-          chapterStats[chapter].testsPerformed++;
-
-          // Trend temporale
-          const testDate = new Date(test.timestamp).toISOString().split('T')[0];
-          if (!chapterTrends[chapter]) {
-            chapterTrends[chapter] = [];
+          const chapterStat = chapterStats[chapter];
+          
+          // Track first test date for ordering
+          if (!chapterFirstTestDate[chapter] || testDate < chapterFirstTestDate[chapter]) {
+            chapterFirstTestDate[chapter] = testDate;
           }
-          chapterTrends[chapter].push({
+          
+          // Update chapter performance
+          chapterStat.testsPerformed++;
+          chapterStat.totalCorrect += stats.correctWords || 0;
+          chapterStat.totalIncorrect += stats.incorrectWords || 0;
+          chapterStat.totalTestsAnswers += (stats.correctWords || 0) + (stats.incorrectWords || 0);
+          
+          // ⭐ CRITICAL: Distribute hints proportionally across chapters in test
+          if (test.hintsUsed > 0) {
+            const totalWordsInAllChapters = Object.values(test.chapterStats)
+              .reduce((sum, chStats) => sum + (chStats.correctWords || 0) + (chStats.incorrectWords || 0), 0);
+            const wordsInThisChapter = (stats.correctWords || 0) + (stats.incorrectWords || 0);
+            
+            if (totalWordsInAllChapters > 0) {
+              const proportionalHints = (test.hintsUsed * wordsInThisChapter) / totalWordsInAllChapters;
+              chapterStat.estimatedHints += proportionalHints;
+            }
+          }
+          
+          // Store detailed history for trend analysis
+          if (!chapterDetailedHistory[chapter]) {
+            chapterDetailedHistory[chapter] = [];
+          }
+          chapterDetailedHistory[chapter].push({
             date: testDate,
             accuracy: stats.percentage || 0,
-            hints: stats.hintsUsed || 0,
-            timestamp: test.timestamp
+            correct: stats.correctWords || 0,
+            incorrect: stats.incorrectWords || 0,
+            hints: test.hintsUsed || 0, // Total hints in test
+            estimatedChapterHints: chapterStat.estimatedHints,
+            timestamp: test.timestamp,
+            testIndex
           });
         });
       }
     });
 
-    // Calcolo metriche finali
+    // 3️⃣ STEP 3: Calcolo metriche finali CORRETTE
     const processedData = Object.entries(chapterStats).map(([chapter, data]) => {
+      // ⭐ FIXED: Use correct denominators
       const totalAnswers = data.totalCorrect + data.totalIncorrect;
       const accuracy = totalAnswers > 0 ? Math.round((data.totalCorrect / totalAnswers) * 100) : 0;
-      const hintsPercentage = totalAnswers > 0 ? Math.round((data.totalHints / totalAnswers) * 100) : 0;
+      const hintsPercentage = totalAnswers > 0 ? Math.round((data.estimatedHints / totalAnswers) * 100) : 0;
       const efficiency = Math.max(0, accuracy - hintsPercentage);
       const completionRate = data.totalWords > 0 ? Math.round((data.learnedWords / data.totalWords) * 100) : 0;
       const difficultyRate = data.totalWords > 0 ? Math.round((data.difficultWords / data.totalWords) * 100) : 0;
-
+      const studyProgress = Math.min(100, completionRate + (accuracy / 3));
+      
+      // Get first test date for ordering
+      const firstTestDate = chapterFirstTestDate[chapter] || new Date();
       return {
         chapter: chapter === 'Senza Capitolo' ? 'Senza Cap.' : `Cap. ${chapter}`,
         fullChapter: chapter,
@@ -100,67 +127,106 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
         learnedWords: data.learnedWords,
         difficultWords: data.difficultWords,
         testsPerformed: data.testsPerformed,
+        totalAnswers: totalAnswers,
         accuracy,
         hintsPercentage,
         efficiency,
         completionRate,
         difficultyRate,
-        studyProgress: Math.min(100, completionRate + (accuracy / 2)),
-        trend: chapterTrends[chapter] ? chapterTrends[chapter].slice(-5) : []
+        studyProgress,
+        estimatedHints: Math.round(data.estimatedHints * 100) / 100,
+        firstTestDate,
+        detailedHistory: chapterDetailedHistory[chapter] || []
       };
-    }).sort((a, b) => b.studyProgress - a.studyProgress);
+    }).sort((a, b) => {
+      // ⭐ FIXED: Sort by first test date (chronological order)
+      if (a.testsPerformed === 0 && b.testsPerformed === 0) {
+        return a.fullChapter.localeCompare(b.fullChapter);
+      }
+      if (a.testsPerformed === 0) return 1;
+      if (b.testsPerformed === 0) return -1;
+      return a.firstTestDate - b.firstTestDate;
+    });
 
-    return { processedData, chapterTrends };
+    return { processedData, chapterDetailedHistory };
   }, [testHistory, words, localRefresh]);
 
-  // ⭐ NEW: Dati per grafico trend temporale
-  const trendData = useMemo(() => {
-    const trends = {};
-    testHistory.slice(-20).forEach(test => {
-      const date = new Date(test.timestamp).toLocaleDateString('it-IT', { month: 'short', day: 'numeric' });
-      if (!trends[date]) {
-        trends[date] = { date, chapters: {} };
-      }
-      
-      if (test.chapterStats) {
-        Object.entries(test.chapterStats).forEach(([chapter, stats]) => {
-          const chapterKey = chapter === 'Senza Capitolo' ? 'Senza Cap.' : `Cap. ${chapter}`;
-          if (!trends[date].chapters[chapterKey]) {
-            trends[date].chapters[chapterKey] = [];
-          }
-          trends[date].chapters[chapterKey].push(stats.percentage || 0);
-        });
-      }
-    });
+  // ⭐ FIXED: Trend data for selected chapter only - CHRONOLOGICALLY ORDERED
+  const selectedChapterTrendData = useMemo(() => {
+    if (!selectedChapterForTrend || !enhancedChapterData.chapterDetailedHistory[selectedChapterForTrend]) {
+      return [];
+    }
 
-    return Object.values(trends).map(day => {
-      const result = { date: day.date };
-      Object.entries(day.chapters).forEach(([chapter, scores]) => {
-        result[chapter] = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
-      });
-      return result;
+    const history = enhancedChapterData.chapterDetailedHistory[selectedChapterForTrend];
+    
+    // ⭐ CRITICAL: Sort chronologically (oldest to newest) BEFORE taking last 15
+    // Timestamps are ISO strings, sort them directly as Date objects
+    const sortedHistory = [...history].sort((a, b) => {
+      const dateA = new Date(a.timestamp);
+      const dateB = new Date(b.timestamp);
+      return dateA.getTime() - dateB.getTime(); // Oldest first
     });
-  }, [testHistory]);
+    
+    // Take last 15 tests (most recent) but keep chronological order
+    const recentHistory = sortedHistory.slice(-15);
+        
+    return recentHistory.map((entry, index) => ({
+      testNumber: `Test ${index + 1}`,
+      date: entry.date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }),
+      accuracy: entry.accuracy,
+      correct: entry.correct,
+      incorrect: entry.incorrect,
+      fullDate: entry.date.toLocaleDateString('it-IT', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      timestamp: entry.timestamp
+    }));
+  }, [selectedChapterForTrend, enhancedChapterData.chapterDetailedHistory]);
 
-  // ⭐ NEW: Top performing chapters
-  const topChapters = enhancedChapterData.processedData.slice(0, 5);
-  const strugglingChapters = enhancedChapterData.processedData
+  // ⭐ FIXED: Statistics calculations
+  const overviewStats = useMemo(() => {
+    const testedChapters = enhancedChapterData.processedData.filter(c => c.testsPerformed > 0);
+    
+    return {
+      totalChapters: enhancedChapterData.processedData.length,
+      testedChapters: testedChapters.length,
+      bestEfficiency: testedChapters.length > 0 ? Math.max(...testedChapters.map(c => c.efficiency)) : 0,
+      averageCompletion: enhancedChapterData.processedData.length > 0 
+        ? Math.round(enhancedChapterData.processedData.reduce((sum, c) => sum + c.completionRate, 0) / enhancedChapterData.processedData.length)
+        : 0,
+      averageAccuracy: testedChapters.length > 0
+        ? Math.round(testedChapters.reduce((sum, c) => sum + c.accuracy, 0) / testedChapters.length)
+        : 0
+    };
+  }, [enhancedChapterData.processedData]);
+
+  // ⭐ FIXED: Top and struggling chapters
+  const topChapters = enhancedChapterData.processedData
     .filter(c => c.testsPerformed > 0)
+    .sort((a, b) => b.efficiency - a.efficiency)
+    .slice(0, 5);
+
+  const strugglingChapters = enhancedChapterData.processedData
+    .filter(c => c.testsPerformed > 2) // At least 3 tests to be considered struggling
     .sort((a, b) => a.efficiency - b.efficiency)
     .slice(0, 3);
 
-  // ⭐ NEW: Colors for charts
+  // Colors for charts
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16'];
 
   return (
     <div className="space-y-8" key={`chapters-${localRefresh}`}>
       
-      {/* ⭐ ENHANCED: Overview Cards */}
+      {/* ⭐ FIXED: Overview Cards with correct calculations */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
           <CardContent className="p-4 text-center">
             <BookOpen className="w-8 h-8 mx-auto mb-2" />
-            <div className="text-2xl font-bold">{enhancedChapterData.processedData.length}</div>
+            <div className="text-2xl font-bold">{overviewStats.totalChapters}</div>
             <div className="text-blue-100 text-sm">Capitoli Totali</div>
           </CardContent>
         </Card>
@@ -168,9 +234,7 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
           <CardContent className="p-4 text-center">
             <Award className="w-8 h-8 mx-auto mb-2" />
-            <div className="text-2xl font-bold">
-              {topChapters.length > 0 ? Math.round(topChapters[0]?.efficiency || 0) : 0}%
-            </div>
+            <div className="text-2xl font-bold">{overviewStats.bestEfficiency}%</div>
             <div className="text-green-100 text-sm">Miglior Efficienza</div>
           </CardContent>
         </Card>
@@ -178,9 +242,7 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
         <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
           <CardContent className="p-4 text-center">
             <Target className="w-8 h-8 mx-auto mb-2" />
-            <div className="text-2xl font-bold">
-              {Math.round(enhancedChapterData.processedData.reduce((sum, c) => sum + c.completionRate, 0) / Math.max(1, enhancedChapterData.processedData.length))}%
-            </div>
+            <div className="text-2xl font-bold">{overviewStats.averageCompletion}%</div>
             <div className="text-purple-100 text-sm">Completamento Medio</div>
           </CardContent>
         </Card>
@@ -188,28 +250,30 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
           <CardContent className="p-4 text-center">
             <TrendingUp className="w-8 h-8 mx-auto mb-2" />
-            <div className="text-2xl font-bold">
-              {enhancedChapterData.processedData.filter(c => c.testsPerformed > 0).length}
-            </div>
+            <div className="text-2xl font-bold">{overviewStats.testedChapters}</div>
             <div className="text-orange-100 text-sm">Capitoli Testati</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* ⭐ ENHANCED: Performance Comparison Chart */}
+      {/* ⭐ FIXED: Performance Comparison Chart with correct data */}
       <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
           <CardTitle className="flex items-center gap-3 text-white">
             <BarChart className="w-6 h-6" />
             Analisi Performance Dettagliata per Capitolo
           </CardTitle>
-          <p className="text-blue-100 text-sm">
-            Efficienza = Precisione - Aiuti utilizzati. Verde = Ottimo, Giallo = Buono, Rosso = Da migliorare
-          </p>
+          <div className="text-blue-100 text-sm space-y-1">
+            <p><strong>Efficienza = Precisione - Aiuti utilizzati.</strong> Verde = Ottimo, Giallo = Buono, Rosso = Da migliorare</p>
+            <p>📊 Aiuti stimati proporzionalmente dai test. Capitoli ordinati per primo test cronologico.</p>
+          </div>
         </CardHeader>
         <CardContent className="p-6">
           <ResponsiveContainer width="100%" height={400}>
-            <ComposedChart data={enhancedChapterData.processedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <ComposedChart 
+              data={enhancedChapterData.processedData.filter(c => c.testsPerformed > 0)} 
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e4e7" />
               <XAxis dataKey="chapter" tick={{ fontSize: 12 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
@@ -217,12 +281,13 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
                 formatter={(value, name) => [
                   `${value}%`,
                   name === 'accuracy' ? 'Precisione' :
-                  name === 'hintsPercentage' ? 'Aiuti Usati' :
+                  name === 'hintsPercentage' ? 'Aiuti Stimati' :
                   name === 'efficiency' ? 'Efficienza Netta' :
                   name === 'completionRate' ? 'Completamento' : name
                 ]}
                 labelFormatter={(label) => `Capitolo: ${label}`}
                 contentStyle={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
+                labelStyle={{ fontWeight: 'bold' }}
               />
               <Bar dataKey="accuracy" fill="#3b82f6" name="accuracy" />
               <Bar dataKey="hintsPercentage" fill="#f59e0b" name="hintsPercentage" />
@@ -238,7 +303,7 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
             </div>
             <div className="flex items-center justify-center gap-2">
               <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-              <span>Aiuti %</span>
+              <span>Aiuti Stimati %</span>
             </div>
             <div className="flex items-center justify-center gap-2">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
@@ -252,42 +317,71 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
         </CardContent>
       </Card>
 
-      {/* ⭐ NEW: Trend Temporale */}
-      {trendData.length > 5 && (
+      {/* ⭐ FIXED: Interactive Chapter Trend Analysis with correct chronological order */}
+      {selectedChapterForTrend && selectedChapterTrendData.length > 0 && (
         <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
             <CardTitle className="flex items-center gap-3 text-white">
               <TrendingUp className="w-6 h-6" />
-              Andamento Temporale per Capitolo (Ultimi Test)
+              Andamento Temporale: {selectedChapterForTrend === 'Senza Capitolo' ? 'Senza Cap.' : `Cap. ${selectedChapterForTrend}`}
             </CardTitle>
+            <div className="flex items-center gap-4 text-sm text-green-100">
+              <span>Ultimi {selectedChapterTrendData.length} test del capitolo (cronologici)</span>
+              <span>•</span>
+              <span>
+                Dal {selectedChapterTrendData[0]?.date} al {selectedChapterTrendData[selectedChapterTrendData.length - 1]?.date}
+              </span>
+              <button 
+                onClick={() => setSelectedChapterForTrend(null)}
+                className="px-3 py-1 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+              >
+                ✕ Chiudi
+              </button>
+            </div>
           </CardHeader>
           <CardContent className="p-6">
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={trendData}>
+            <ResponsiveContainer width="100%" height={300}>
+              <ComposedChart data={selectedChapterTrendData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 11 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={70}
+                />
                 <YAxis domain={[0, 100]} />
-                <Tooltip />
-                {Object.keys(trendData[0] || {})
-                  .filter(key => key !== 'date')
-                  .slice(0, 5)
-                  .map((chapter, index) => (
-                    <Line 
-                      key={chapter}
-                      type="monotone" 
-                      dataKey={chapter} 
-                      stroke={colors[index]} 
-                      strokeWidth={2}
-                      name={chapter}
-                    />
-                  ))}
-              </LineChart>
+                <Tooltip 
+                  labelFormatter={(label, payload) => {
+                    if (payload && payload.length > 0) {
+                      return `Data: ${payload[0].payload.fullDate}`;
+                    }
+                    return `Data: ${label}`;
+                  }}
+                  formatter={(value, name) => [
+                    name === 'accuracy' ? `${value}%` : value,
+                    name === 'accuracy' ? 'Precisione' :
+                    name === 'correct' ? 'Corrette' :
+                    name === 'incorrect' ? 'Sbagliate' : name
+                  ]}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="accuracy" 
+                  stroke="#3b82f6" 
+                  strokeWidth={3}
+                  name="accuracy"
+                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                />
+                <Bar dataKey="correct" fill="#10b981" name="correct" opacity={0.7} />
+                <Bar dataKey="incorrect" fill="#ef4444" name="incorrect" opacity={0.7} />
+              </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       )}
 
-      {/* ⭐ NEW: Top & Struggling Chapters */}
+      {/* ⭐ FIXED: Top & Struggling Chapters with correct calculations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Top Performing */}
@@ -297,10 +391,14 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
               <Award className="w-6 h-6" />
               🏆 Top Capitoli Performer
             </CardTitle>
+            <div className="flex items-center gap-2 text-green-100">
+              <Info className="w-4 h-4" />
+              <span className="text-sm">Efficienza = Precisione - % Aiuti Stimati</span>
+            </div>
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              {topChapters.map((chapter, index) => (
+              {topChapters.length > 0 ? topChapters.map((chapter, index) => (
                 <div key={chapter.fullChapter} className="flex items-center justify-between p-4 bg-white rounded-xl border border-green-200">
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
@@ -311,7 +409,10 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
                     <div>
                       <div className="font-bold text-gray-800">{chapter.chapter}</div>
                       <div className="text-sm text-gray-600">
-                        {chapter.totalWords} parole • {chapter.testsPerformed} test
+                        {chapter.totalWords} parole • {chapter.testsPerformed} test • {chapter.totalAnswers} risposte
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Precisione: {chapter.accuracy}% • Aiuti: {chapter.hintsPercentage}%
                       </div>
                     </div>
                   </div>
@@ -320,67 +421,87 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
                     <div className="text-sm text-green-700">Efficienza</div>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Nessun capitolo testato ancora</p>
+                  <p className="text-sm">Completa alcuni test per vedere i top performer</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
         {/* Struggling Chapters */}
-        {strugglingChapters.length > 0 && (
-          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200">
-            <CardHeader className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
-              <CardTitle className="flex items-center gap-3">
-                <Target className="w-6 h-6" />
-                📚 Capitoli da Migliorare
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                {strugglingChapters.map((chapter, index) => (
-                  <div key={chapter.fullChapter} className="p-4 bg-white rounded-xl border border-orange-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="font-bold text-gray-800">{chapter.chapter}</div>
-                      <div className="text-xl font-bold text-red-600">{chapter.efficiency}%</div>
+        <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200">
+          <CardHeader className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
+            <CardTitle className="flex items-center gap-3">
+              <Target className="w-6 h-6" />
+              📚 Capitoli da Migliorare
+            </CardTitle>
+            <div className="text-orange-100 text-sm">
+              Capitoli con almeno 3 test e bassa efficienza
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              {strugglingChapters.length > 0 ? strugglingChapters.map((chapter, index) => (
+                <div key={chapter.fullChapter} className="p-4 bg-white rounded-xl border border-orange-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="font-bold text-gray-800">{chapter.chapter}</div>
+                    <div className="text-xl font-bold text-red-600">{chapter.efficiency}%</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 text-sm mb-3">
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">{chapter.accuracy}%</div>
+                      <div className="text-blue-700 text-xs">Precisione</div>
                     </div>
-                    
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div className="text-center">
-                        <div className="font-bold text-blue-600">{chapter.accuracy}%</div>
-                        <div className="text-blue-700 text-xs">Precisione</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-bold text-orange-600">{chapter.hintsPercentage}%</div>
-                        <div className="text-orange-700 text-xs">Aiuti</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-bold text-purple-600">{chapter.difficultyRate}%</div>
-                        <div className="text-purple-700 text-xs">Difficili</div>
-                      </div>
+                    <div className="text-center">
+                      <div className="font-bold text-orange-600">{chapter.hintsPercentage}%</div>
+                      <div className="text-orange-700 text-xs">Aiuti Stimati</div>
                     </div>
-                    
-                    <div className="mt-3 p-2 bg-orange-100 rounded-lg">
-                      <p className="text-xs text-orange-800">
-                        💡 <strong>Suggerimento:</strong> 
-                        {chapter.hintsPercentage > 30 ? ' Riduci l\'uso degli aiuti' : ''}
-                        {chapter.difficultyRate > 50 ? ' Ripassa le parole difficili' : ''}
-                        {chapter.accuracy < 60 ? ' Concentrati su questo capitolo' : ''}
-                      </p>
+                    <div className="text-center">
+                      <div className="font-bold text-purple-600">{chapter.difficultyRate}%</div>
+                      <div className="text-purple-700 text-xs">Difficili</div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  
+                  <div className="text-xs text-gray-600 mb-2">
+                    {chapter.totalAnswers} risposte in {chapter.testsPerformed} test • 
+                    Aiuti stimati: {chapter.estimatedHints}
+                  </div>
+                  
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <p className="text-xs text-orange-800">
+                      💡 <strong>Suggerimento:</strong> 
+                      {chapter.hintsPercentage > 30 ? ' Riduci l\'uso degli aiuti.' : ''}
+                      {chapter.difficultyRate > 50 ? ' Ripassa le parole difficili.' : ''}
+                      {chapter.accuracy < 60 ? ' Concentrati su questo capitolo.' : ''}
+                      {chapter.hintsPercentage <= 30 && chapter.difficultyRate <= 50 && chapter.accuracy >= 60 ? ' Continua così, stai migliorando!' : ''}
+                    </p>
+                  </div>
+                </div>
+              )) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Nessun capitolo in difficoltà</p>
+                  <p className="text-sm">Ottimo lavoro! Tutti i capitoli testati hanno buone performance</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* ⭐ NEW: Detailed Chapter Breakdown */}
+      {/* ⭐ ENHANCED: Detailed Chapter Breakdown with Interactive Trend */}
       <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
           <CardTitle className="flex items-center gap-3 text-white">
             <BookOpen className="w-6 h-6" />
             Analisi Dettagliata Tutti i Capitoli
           </CardTitle>
+          <div className="text-indigo-100 text-sm">
+            Clicca su un capitolo per vedere l'andamento temporale • Ordinati per primo test cronologico
+          </div>
         </CardHeader>
         <CardContent className="p-6">
           <div className="overflow-x-auto">
@@ -390,8 +511,9 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
                   <th className="text-left py-3 px-2 font-bold">Capitolo</th>
                   <th className="text-center py-3 px-2 font-bold">Parole</th>
                   <th className="text-center py-3 px-2 font-bold">Test</th>
+                  <th className="text-center py-3 px-2 font-bold">Risposte</th>
                   <th className="text-center py-3 px-2 font-bold">Precisione</th>
-                  <th className="text-center py-3 px-2 font-bold">Aiuti</th>
+                  <th className="text-center py-3 px-2 font-bold">Aiuti Est.</th>
                   <th className="text-center py-3 px-2 font-bold">Efficienza</th>
                   <th className="text-center py-3 px-2 font-bold">Completamento</th>
                   <th className="text-center py-3 px-2 font-bold">Status</th>
@@ -399,7 +521,23 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
               </thead>
               <tbody>
                 {enhancedChapterData.processedData.map((chapter, index) => (
-                  <tr key={chapter.fullChapter} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                  <tr 
+                    key={chapter.fullChapter} 
+                    className={`border-b border-gray-100 transition-colors ${
+                      index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                    } ${
+                      chapter.testsPerformed > 0 ? 'hover:bg-blue-50 cursor-pointer' : ''
+                    } ${
+                      selectedChapterForTrend === chapter.fullChapter ? 'bg-blue-100 border-blue-300' : ''
+                    }`}
+                    onClick={() => {
+                      if (chapter.testsPerformed > 0) {
+                        setSelectedChapterForTrend(
+                          selectedChapterForTrend === chapter.fullChapter ? null : chapter.fullChapter
+                        );
+                      }
+                    }}
+                  >
                     <td className="py-3 px-2 font-medium">{chapter.chapter}</td>
                     <td className="text-center py-3 px-2">
                       <span className="inline-flex items-center gap-1">
@@ -412,6 +550,16 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
                       </span>
                     </td>
                     <td className="text-center py-3 px-2">{chapter.testsPerformed}</td>
+                    <td className="text-center py-3 px-2">
+                      <span className="text-xs">
+                        {chapter.totalAnswers}
+                        {chapter.testsPerformed > 0 && (
+                          <div className="text-gray-500">
+                            ({Math.round(chapter.totalAnswers / chapter.testsPerformed)}/test)
+                          </div>
+                        )}
+                      </span>
+                    </td>
                     <td className="text-center py-3 px-2">
                       <span className={`font-bold ${
                         chapter.accuracy >= 80 ? 'text-green-600' : 
@@ -427,6 +575,9 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
                       }`}>
                         {chapter.hintsPercentage}%
                       </span>
+                      <div className="text-xs text-gray-500">
+                        ({chapter.estimatedHints})
+                      </div>
                     </td>
                     <td className="text-center py-3 px-2">
                       <span className={`font-bold ${
@@ -466,6 +617,14 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
               </tbody>
             </table>
           </div>
+          
+          {enhancedChapterData.processedData.some(c => c.testsPerformed > 0) && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800">
+                💡 <strong>Suggerimento:</strong> Clicca su un capitolo testato per visualizzare il suo andamento temporale dettagliato.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

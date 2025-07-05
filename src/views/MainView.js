@@ -36,7 +36,6 @@ export const MainView = React.memo(() => {
   // ⭐ ENHANCED: Better word addition with validation
   const handleAddWord = React.useCallback((wordData) => {
     try {
-      console.log('MainView: Adding/editing word:', wordData);
       addWord(wordData);
       dispatch({ type: 'SET_EDITING_WORD', payload: null });
       showSuccess(
@@ -84,14 +83,14 @@ export const MainView = React.memo(() => {
   // ⭐ FIXED: Enhanced import with better error handling and force refresh
   const handleImportWords = React.useCallback(async (jsonText) => {
     try {
-      console.log('MainView: Starting import process...');
+
       
       // Call the import function
       const count = await importWords(jsonText);
       
       // ⭐ CRITICAL: Force refresh to ensure UI synchronization
       if (forceRefresh) {
-        console.log('MainView: Forcing refresh after import');
+
         setTimeout(forceRefresh, 100);
       }
       
@@ -114,7 +113,6 @@ export const MainView = React.memo(() => {
 
   // ⭐ NEW: Handle edit word with better ID validation
   const handleEditWord = React.useCallback((word) => {
-    console.log('MainView: Editing word:', word);
     
     if (!word || !word.id) {
       showError(new Error('Impossibile modificare: parola non valida'), 'Edit Word');

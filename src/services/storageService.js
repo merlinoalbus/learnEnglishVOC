@@ -25,7 +25,6 @@ class StorageService {
       localStorage.removeItem(test);
       return true;
     } catch (error) {
-      console.warn('localStorage not available:', error);
       return false;
     }
   }
@@ -38,7 +37,6 @@ class StorageService {
    */
   get(key, defaultValue = null) {
     if (!this.isAvailable) {
-      console.warn('Storage not available, returning default value');
       return defaultValue;
     }
 
@@ -52,11 +50,9 @@ class StorageService {
       try {
         return JSON.parse(item);
       } catch (parseError) {
-        console.warn(`Failed to parse JSON for key "${key}":`, parseError);
         return item; // Return as string if JSON parsing fails
       }
     } catch (error) {
-      console.error(`Error getting item "${key}" from storage:`, error);
       return defaultValue;
     }
   }
@@ -69,7 +65,6 @@ class StorageService {
    */
   set(key, value) {
     if (!this.isAvailable) {
-      console.warn('Storage not available, cannot save data');
       return false;
     }
 
@@ -78,11 +73,8 @@ class StorageService {
       localStorage.setItem(key, serializedValue);
       return true;
     } catch (error) {
-      console.error(`Error setting item "${key}" in storage:`, error);
-      
       // Handle quota exceeded error
       if (error.name === 'QuotaExceededError') {
-        console.warn('Storage quota exceeded, attempting cleanup...');
         this.cleanup();
         
         // Try again after cleanup
@@ -91,7 +83,6 @@ class StorageService {
           localStorage.setItem(key, serializedValue);
           return true;
         } catch (retryError) {
-          console.error('Failed to save even after cleanup:', retryError);
           return false;
         }
       }
@@ -113,7 +104,6 @@ class StorageService {
       localStorage.removeItem(key);
       return true;
     } catch (error) {
-      console.error(`Error removing item "${key}" from storage:`, error);
       return false;
     }
   }
@@ -131,7 +121,6 @@ class StorageService {
       localStorage.clear();
       return true;
     } catch (error) {
-      console.error('Error clearing storage:', error);
       return false;
     }
   }
@@ -163,7 +152,6 @@ class StorageService {
       });
       return true;
     } catch (error) {
-      console.error('Error setting multiple items:', error);
       return false;
     }
   }
@@ -203,7 +191,6 @@ class StorageService {
       
       return matchingKeys;
     } catch (error) {
-      console.error('Error getting keys matching pattern:', error);
       return [];
     }
   }
@@ -238,7 +225,6 @@ class StorageService {
         usagePercentage: ((used / total) * 100).toFixed(1)
       };
     } catch (error) {
-      console.error('Error calculating usage stats:', error);
       return { used: 0, available: 0, total: 0 };
     }
   }
@@ -253,8 +239,6 @@ class StorageService {
     }
 
     try {
-      console.log('Starting storage cleanup...');
-      
       // Get all items with their sizes
       const items = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -277,19 +261,13 @@ class StorageService {
           // Check if it's an old backup or temporary data
           if (item.key.includes('backup_') || item.key.includes('temp_') || item.key.includes('cache_')) {
             localStorage.removeItem(item.key);
-            console.log(`Removed non-essential item: ${item.key} (${item.size} bytes)`);
             cleaned = true;
           }
         }
       }
 
-      if (!cleaned) {
-        console.warn('No non-essential items found for cleanup');
-      }
-
       return cleaned;
     } catch (error) {
-      console.error('Error during cleanup:', error);
       return false;
     }
   }
@@ -319,7 +297,6 @@ class StorageService {
       
       return backup;
     } catch (error) {
-      console.error('Error creating backup:', error);
       return null;
     }
   }
@@ -347,10 +324,8 @@ class StorageService {
         }
       });
 
-      console.log('Successfully restored from backup');
       return true;
     } catch (error) {
-      console.error('Error restoring from backup:', error);
       return false;
     }
   }
@@ -381,7 +356,6 @@ class StorageService {
       for (const key of fallbackKeys) {
         words = this.get(key, null);
         if (words && words.length > 0) {
-          console.log(`📦 StorageService: Found words in fallback key "${key}" (${words.length} words)`);
           // Migrate to new key
           this.set(this.keys.words, words);
           break;
@@ -396,7 +370,6 @@ class StorageService {
             try {
               const data = JSON.parse(localStorage.getItem(key));
               if (Array.isArray(data) && data.length > 0 && data[0].english && data[0].italian) {
-                console.log(`📦 StorageService: Found words in discovered key "${key}" (${data.length} words)`);
                 words = data;
                 // Migrate to new key
                 this.set(this.keys.words, words);
@@ -436,7 +409,6 @@ class StorageService {
       for (const key of fallbackKeys) {
         stats = this.get(key, null);
         if (stats && Object.keys(stats).length > 0) {
-          console.log(`📦 StorageService: Found stats in fallback key "${key}"`);
           // Migrate to new key
           this.set(this.keys.stats, stats);
           break;
@@ -481,7 +453,6 @@ class StorageService {
       for (const key of fallbackKeys) {
         history = this.get(key, null);
         if (history && history.length > 0) {
-          console.log(`📦 StorageService: Found test history in fallback key "${key}" (${history.length} tests)`);
           // Migrate to new key
           this.set(this.keys.testHistory, history);
           break;

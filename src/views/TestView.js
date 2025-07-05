@@ -43,7 +43,6 @@ export const TestView = React.memo(() => {
 
     // Start timer when word appears, continues until answer is given
     if (currentWord && !isTransitioning && !isAnswering) {
-      console.log('🕐 Starting UI timer for word:', currentWord.english);
       setCurrentWordTime(0);
       wordStartTimeRef.current = Date.now();
       
@@ -79,7 +78,7 @@ export const TestView = React.memo(() => {
 
   // ⭐ ENHANCED: Handle answer with proper timer management
   const handleAnswerWithTimer = (isCorrect) => {
-    console.log('📝 Answer given, stopping timer at:', currentWordTime, 'seconds');
+
     
     // ⭐ CRITICAL: Set answering state and stop timer
     setIsAnswering(true);

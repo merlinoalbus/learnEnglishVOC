@@ -10,10 +10,6 @@ import { formatNotes } from '../utils/textUtils';
 
 const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
   
-  console.log('📊 TestResults - Dati ricevuti:', {
-    stats,
-    wrongWords: wrongWords?.length || 0
-  });
 
   // ⭐ ENHANCED: Gestione robusta dei dati stats con timing e hints completi
   const getCorrectStats = () => {
@@ -29,8 +25,6 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
         minTimePerWord: stats.minTimePerWord || 0, // ⭐ NEW: Extract min time
         totalRecordedTime: stats.totalRecordedTime || 0 // ⭐ NEW: Extract recorded time
       };
-      
-      console.log('✅ TestResults - Using enhanced stats directly:', enhancedStats);
       return enhancedStats;
     }
     
@@ -56,8 +50,7 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
           minTimePerWord, 
           totalRecordedTime 
         };
-        
-        console.log('⚠️ TestResults - Using legacy format:', legacyStats);
+      
         return legacyStats;
       }
     }
@@ -78,7 +71,7 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
         totalRecordedTime: 0
       };
       
-      console.log('⚠️ TestResults - Using wrongWords fallback:', fallbackStats);
+
       return fallbackStats;
     }
     
@@ -94,7 +87,7 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
       totalRecordedTime: 0
     };
     
-    console.log('❌ TestResults - Using default stats:', defaultStats);
+
     return defaultStats;
   };
 
@@ -104,11 +97,6 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
     ? Math.round((finalStats.correct / totalAnswers) * 100) 
     : 0;
 
-  console.log('📊 TestResults - Final processed stats:', {
-    finalStats,
-    totalAnswers,
-    percentage
-  });
 
   const result = getTestResult({ 
     correct: finalStats.correct, 
@@ -140,8 +128,6 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
                  finalStats.avgTimePerWord <= 25 ? 'Normale' : 'Lento',
     efficiency: Math.max(0, percentage - (finalStats.hints / Math.max(1, totalAnswers) * 100))
   };
-
-  console.log('📊 TestResults - Performance metrics calculated:', performanceMetrics);
 
   return (
     <div className="space-y-8">

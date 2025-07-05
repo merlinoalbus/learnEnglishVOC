@@ -1,5 +1,5 @@
 // =====================================================
-// 📁 src/components/stats/sections/PerformanceSection.js - FIXED
+// 📁 src/components/stats/sections/PerformanceSection.js - SAFE FIX
 // =====================================================
 
 import React, { useMemo } from 'react';
@@ -26,11 +26,57 @@ import {
 import { Trophy, Lightbulb, Zap, Clock, Target, TrendingUp } from 'lucide-react';
 import { useStatsData } from '../hooks/useStatsData';
 
-// ⭐ FIXED: Move helper functions BEFORE their usage
+// ⭐ SAFE: Create Performance-specific data processing WITHOUT modifying useStatsData
+const usePerformanceData = (testHistory) => {
+  return useMemo(() => {
+    if (testHistory.length === 0) return [];
+
+    return [...testHistory].reverse().slice(-20).map((test, index) => {
+      const totalWords = (test.correctWords || 0) + (test.incorrectWords || 0);
+      
+      // ⭐ PERFORMANCE-SPECIFIC: Calculate realistic time estimates
+      let avgTimePerWord = 0;
+      if (test.totalTime && totalWords > 0) {
+        // Use actual time if available
+        avgTimePerWord = Math.round((test.totalTime / totalWords) * 10) / 10;
+      } else if (totalWords > 0) {
+        // ⭐ ESTIMATE: Based on difficulty and performance (ONLY for Performance section)
+        const baseTime = 8; // seconds per word baseline
+        const difficultyMultiplier = test.difficulty === 'hard' ? 1.5 : test.difficulty === 'easy' ? 0.7 : 1.0;
+        const performanceMultiplier = test.percentage < 50 ? 1.8 : test.percentage < 70 ? 1.3 : test.percentage < 85 ? 1.0 : 0.8;
+        const hintsMultiplier = (test.hintsUsed || 0) > 0 ? 1.2 : 1.0;
+        
+        avgTimePerWord = Math.round(baseTime * difficultyMultiplier * performanceMultiplier * hintsMultiplier * 10) / 10;
+      }
+
+      return {
+        test: `Test ${index + 1}`,
+        percentage: test.percentage || 0,
+        correct: test.correctWords || 0,
+        incorrect: test.incorrectWords || 0,
+        hints: test.hintsUsed || 0, // Real hints data
+        avgTime: avgTimePerWord, // Performance-specific time calculation
+        date: new Date(test.timestamp).toLocaleDateString('it-IT'),
+        time: new Date(test.timestamp).toLocaleTimeString('it-IT', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        chapters: test.testParameters?.selectedChapters?.length || 0,
+        difficulty: test.difficulty || 'medium',
+        type: test.testType || 'unknown',
+        totalWords: totalWords,
+        hasRealTime: !!(test.totalTime),
+        isEstimated: !test.totalTime // Flag for Performance section
+      };
+    });
+  }, [testHistory]);
+};
+
+// ⭐ KEEP: Original helper functions
 const calculateBestStreak = (data) => {
   let currentStreak = 0;
   let bestStreak = 0;
-  const threshold = 75; // Soglia per considerare un test "buono"
+  const threshold = 75;
   
   data.forEach(test => {
     if (test.percentage >= threshold) {
@@ -46,10 +92,10 @@ const calculateBestStreak = (data) => {
 
 const calculateDifficultyHandling = (history) => {
   const hardTests = history.filter(test => (test.totalWords || 0) >= 20);
-  if (hardTests.length === 0) return 70; // Default se non ci sono test difficili
+  if (hardTests.length === 0) return 70;
   
   const hardTestsAvg = hardTests.reduce((sum, test) => sum + (test.percentage || 0), 0) / hardTests.length;
-  return Math.min(100, hardTestsAvg + 10); // Bonus per affrontare test difficili
+  return Math.min(100, hardTestsAvg + 10);
 };
 
 const calculateOverallRating = (accuracy, consistency, hintEff, speed) => {
@@ -58,15 +104,15 @@ const calculateOverallRating = (accuracy, consistency, hintEff, speed) => {
 };
 
 const PerformanceSection = ({ testHistory, localRefresh }) => {
-  const { advancedStats, timelineData } = useStatsData(testHistory);
+  const { advancedStats } = useStatsData(testHistory); // Keep using original for compatibility
+  const performanceTimelineData = usePerformanceData(testHistory); // Performance-specific data
 
-  // ⭐ FIXED: Now functions are available before usage
   const performanceMetrics = useMemo(() => {
     if (testHistory.length === 0) return null;
 
-    // Calcolo metriche avanzate
-    const recentTests = timelineData.slice(-10);
-    const oldTests = timelineData.slice(0, Math.min(10, timelineData.length - 10));
+    // ⭐ USE: Performance-specific timeline data for calculations
+    const recentTests = performanceTimelineData.slice(-10);
+    const oldTests = performanceTimelineData.slice(0, Math.min(10, performanceTimelineData.length - 10));
     
     // Trend di miglioramento
     const recentAvg = recentTests.reduce((sum, t) => sum + t.percentage, 0) / Math.max(1, recentTests.length);
@@ -74,29 +120,27 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
     const improvementTrend = recentAvg - oldAvg;
 
     // Consistenza (standard deviation)
-    const scores = timelineData.map(t => t.percentage);
+    const scores = performanceTimelineData.map(t => t.percentage);
     const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
     const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
     const consistency = Math.max(0, 100 - Math.sqrt(variance));
 
-    // Efficienza aiuti
-    const totalHints = timelineData.reduce((sum, t) => sum + (t.hints || 0), 0);
-    const totalQuestions = timelineData.reduce((sum, t) => sum + (t.correct || 0) + (t.incorrect || 0), 0);
+    // ⭐ FIXED: Efficienza aiuti with REAL data
+    const totalHints = performanceTimelineData.reduce((sum, t) => sum + (t.hints || 0), 0);
+    const totalQuestions = performanceTimelineData.reduce((sum, t) => sum + (t.correct || 0) + (t.incorrect || 0), 0);
     const hintEfficiency = totalQuestions > 0 ? Math.max(0, 100 - (totalHints / totalQuestions * 100)) : 100;
 
-    // Velocità di risposta
-    const avgSpeed = timelineData.reduce((sum, t) => sum + (t.avgTime || 0), 0) / Math.max(1, timelineData.length);
+    // ⭐ FIXED: Velocità di risposta with realistic estimates
+    const avgSpeed = performanceTimelineData.reduce((sum, t) => sum + (t.avgTime || 0), 0) / Math.max(1, performanceTimelineData.length);
     const speedScore = avgSpeed <= 8 ? 100 : avgSpeed <= 15 ? 80 : avgSpeed <= 25 ? 60 : 40;
 
-    // Peak performance (miglior periodo) - ⭐ FIXED: Function now available
-    const bestStreak = calculateBestStreak(timelineData);
+    // Other metrics using Performance-specific data
+    const bestStreak = calculateBestStreak(performanceTimelineData);
     
-    // Learning velocity (velocità di apprendimento)
-    const learningVelocity = timelineData.length > 5 ? 
-      (timelineData.slice(-5).reduce((sum, t) => sum + t.percentage, 0) / 5) -
-      (timelineData.slice(0, 5).reduce((sum, t) => sum + t.percentage, 0) / 5) : 0;
+    const learningVelocity = performanceTimelineData.length > 5 ? 
+      (performanceTimelineData.slice(-5).reduce((sum, t) => sum + t.percentage, 0) / 5) -
+      (performanceTimelineData.slice(0, 5).reduce((sum, t) => sum + t.percentage, 0) / 5) : 0;
 
-    // Difficulty handling (gestione difficoltà) - ⭐ FIXED: Function now available
     const difficultyScore = calculateDifficultyHandling(testHistory);
 
     return {
@@ -110,11 +154,12 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
       difficultyScore: Math.round(difficultyScore),
       avgSpeed: Math.round(avgSpeed * 10) / 10,
       recentPerformance: Math.round(recentAvg),
-      overallRating: calculateOverallRating(advancedStats.averageScore, consistency, hintEfficiency, speedScore) // ⭐ FIXED: Function now available
+      overallRating: calculateOverallRating(advancedStats.averageScore, consistency, hintEfficiency, speedScore),
+      // ⭐ DEBUG: Add info about data quality
+      realTimePercentage: Math.round((performanceTimelineData.filter(t => t.hasRealTime).length / performanceTimelineData.length) * 100)
     };
-  }, [testHistory, timelineData, advancedStats]);
+  }, [testHistory, performanceTimelineData, advancedStats]);
 
-  // ⭐ FIXED: Dati per radar chart
   const radarData = useMemo(() => {
     if (!performanceMetrics) return [];
     
@@ -147,13 +192,13 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
     ];
   }, [performanceMetrics]);
 
-  // ⭐ FIXED: Dati per trend miglioramento
+  // ⭐ FIXED: Use Performance-specific data for trend analysis
   const improvementData = useMemo(() => {
     const windows = [];
     const windowSize = 5;
     
-    for (let i = 0; i <= timelineData.length - windowSize; i += 2) {
-      const window = timelineData.slice(i, i + windowSize);
+    for (let i = 0; i <= performanceTimelineData.length - windowSize; i += 2) {
+      const window = performanceTimelineData.slice(i, i + windowSize);
       const avgScore = window.reduce((sum, t) => sum + t.percentage, 0) / windowSize;
       const avgHints = window.reduce((sum, t) => sum + (t.hints || 0), 0) / windowSize;
       const avgSpeed = window.reduce((sum, t) => sum + (t.avgTime || 0), 0) / windowSize;
@@ -161,15 +206,14 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
       windows.push({
         period: `Test ${i + 1}-${i + windowSize}`,
         accuracy: Math.round(avgScore),
-        efficiency: Math.max(0, Math.round(avgScore - avgHints)),
-        speed: avgSpeed > 0 ? Math.round(100 - Math.min(100, avgSpeed * 2)) : 50
+        efficiency: Math.max(0, Math.round(avgScore - (avgHints / window.reduce((sum, t) => sum + t.totalWords, 0) * 100))),
+        speed: avgSpeed > 0 ? Math.round(Math.max(0, 100 - Math.min(100, avgSpeed * 3))) : 50 // Better speed calculation
       });
     }
     
     return windows;
-  }, [timelineData]);
+  }, [performanceTimelineData]);
 
-  // ⭐ FIXED: Analisi performance per difficoltà
   const difficultyAnalysis = useMemo(() => {
     const analysis = { easy: [], medium: [], hard: [] };
     
@@ -192,13 +236,14 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
       
       const avgPercentage = tests.reduce((sum, t) => sum + t.percentage, 0) / tests.length;
       const avgHints = tests.reduce((sum, t) => sum + t.hints, 0) / tests.length;
+      const totalWords = tests.reduce((sum, t) => sum + t.words, 0);
       
       return {
         difficulty: difficulty.charAt(0).toUpperCase() + difficulty.slice(1),
         count: tests.length,
         avgScore: Math.round(avgPercentage),
         avgHints: Math.round(avgHints * 10) / 10,
-        efficiency: Math.round(avgPercentage - (avgHints / tests.reduce((sum, t) => sum + t.words, 0) * 100))
+        efficiency: Math.round(avgPercentage - (avgHints / totalWords * 100 * tests.length))
       };
     }).filter(Boolean);
   }, [testHistory]);
@@ -215,7 +260,7 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
   return (
     <div className="space-y-8" key={`performance-${localRefresh}`}>
       
-      {/* ⭐ ENHANCED: Performance Overview */}
+      {/* ⭐ KEEP: Same UI as before */}
       <Card className="bg-gradient-to-br from-purple-500 via-indigo-600 to-blue-500 text-white">
         <CardContent className="p-8">
           <div className="text-center mb-6">
@@ -233,6 +278,12 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
               }`}>
                 <TrendingUp className={`w-5 h-5 ${performanceMetrics.improvementTrend < 0 ? 'rotate-180' : ''}`} />
                 {performanceMetrics.improvementTrend > 0 ? '+' : ''}{performanceMetrics.improvementTrend}% trend
+              </div>
+            )}
+            {/* ⭐ DEBUG: Show data quality info */}
+            {performanceMetrics.realTimePercentage < 100 && (
+              <div className="mt-2 text-sm text-white/70">
+                ⏱️ Tempi stimati per {100 - performanceMetrics.realTimePercentage}% dei test
               </div>
             )}
           </div>
@@ -269,7 +320,7 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* ⭐ FIXED: Radar Chart Performance */}
+        {/* ⭐ KEEP: Same Radar Chart */}
         <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
             <CardTitle className="flex items-center gap-3 text-white">
@@ -310,7 +361,7 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
           </CardContent>
         </Card>
 
-        {/* ⭐ FIXED: Performance Trends */}
+        {/* ⭐ FIXED: Performance Trends with realistic data */}
         <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
             <CardTitle className="flex items-center gap-3 text-white">
@@ -374,7 +425,7 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
         </Card>
       </div>
 
-      {/* ⭐ FIXED: Performance by Difficulty */}
+      {/* ⭐ KEEP: Rest of the component unchanged */}
       {difficultyAnalysis.length > 0 && (
         <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
@@ -419,7 +470,7 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
         </Card>
       )}
 
-      {/* ⭐ FIXED: Detailed Performance Insights */}
+      {/* ⭐ KEEP: Detailed Performance Insights - same as before */}
       <Card className="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200">
         <CardHeader className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
           <CardTitle className="flex items-center gap-3">

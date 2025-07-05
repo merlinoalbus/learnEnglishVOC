@@ -183,7 +183,6 @@ ESEMPI:
         error.message.includes('network') ||
         error.message.includes('timeout')
       )) {
-        console.warn(`AI request attempt ${attempt} failed, retrying in ${this.retryDelay}ms...`);
         await this.sleep(this.retryDelay * attempt); // Exponential backoff
         return this.makeRequest(prompt, attempt + 1);
       }
@@ -215,7 +214,6 @@ ESEMPI:
 
       // Validate category: must be one of predefined categories
       if (parsedData.group && !CATEGORIES.includes(parsedData.group)) {
-        console.warn(`Invalid AI category "${parsedData.group}", using fallback categorization`);
         parsedData.group = this.categorizeWordFallback(fallbackWord);
       }
 
@@ -237,7 +235,6 @@ ESEMPI:
       };
 
     } catch (error) {
-      console.error('Error parsing AI response:', error);
       
       // Fallback: return minimal data with categorization
       return {
@@ -277,13 +274,10 @@ ESEMPI:
       
       // Parse and validate response
       const wordData = this.parseAIResponse(content, trimmedWord);
-      
-      console.log('✅ AI analysis successful for:', trimmedWord);
+
       return wordData;
 
-    } catch (error) {
-      console.error('❌ AI analysis failed for:', trimmedWord, error);
-      
+    } catch (error) {      
       // Re-throw with user-friendly message
       if (error.message.includes('timeout')) {
         throw new Error(ERROR_MESSAGES.network);
@@ -325,7 +319,6 @@ ESEMPI:
       
       return testResponse.ok || testResponse.status === 400; // 400 is OK, means API is responsive
     } catch (error) {
-      console.warn('AI service availability check failed:', error);
       return false;
     }
   }

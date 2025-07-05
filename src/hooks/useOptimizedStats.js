@@ -301,10 +301,94 @@ export const useOptimizedStats = () => {
     showSuccess(`✅ Migrati ${testHistory.length} test!`);
   }, [testHistory, calculateStreak, performBatchUpdate, showSuccess]);
 
-  // ⭐ ENHANCED: Test completion with word tracking
-  const handleTestComplete = useCallback((testStats, testWordsUsed, wrongWordsArray) => {
-    console.log('📊 handleTestComplete called with:', { testStats, testWordsUsed: testWordsUsed.length, wrongWords: wrongWordsArray.length });
+  // ⭐ NEW: Smart Test Difficulty Calculator - PROPORTIONAL & WEIGHTED
+  const calculateSmartTestDifficulty = useCallback((testWords, getWordAnalysisFunc) => {
+    // ⭐ Categorize words by difficulty level
+    const categories = {
+      hard: [], // critical, inconsistent, struggling
+      medium: [], // promising, new (uncertain)
+      easy: [] // improving, consolidated
+    };
 
+    testWords.forEach(word => {
+      const analysis = getWordAnalysisFunc(word.id);
+      const status = analysis ? analysis.status : 'new';
+      
+      if (['critical', 'inconsistent', 'struggling'].includes(status)) {
+        categories.hard.push({ word, status, analysis });
+      } else if (['promising', 'new'].includes(status)) {
+        categories.medium.push({ word, status, analysis });
+      } else if (['improving', 'consolidated'].includes(status)) {
+        categories.easy.push({ word, status, analysis });
+      }
+    });
+
+    const totalWords = testWords.length;
+    const hardCount = categories.hard.length;
+    const mediumCount = categories.medium.length;
+    const easyCount = categories.easy.length;
+
+    // ⭐ Calculate proportions
+    const hardPercentage = (hardCount / totalWords) * 100;
+    const easyPercentage = (easyCount / totalWords) * 100;
+    const mediumPercentage = (mediumCount / totalWords) * 100;
+
+    // ⭐ Weighted scoring system
+    const hardWeight = 3; // Critical words have high impact
+    const mediumWeight = 1; // Neutral impact
+    const easyWeight = -1; // Easy words reduce difficulty
+
+    const weightedScore = (hardCount * hardWeight + mediumCount * mediumWeight + easyCount * easyWeight) / totalWords;
+
+    // ⭐ Size adjustment factor - larger tests are generally easier to manage
+    const sizeAdjustment = totalWords > 50 ? -0.3 : totalWords < 15 ? +0.2 : 0;
+    const adjustedScore = weightedScore + sizeAdjustment;
+
+    // ⭐ Determine difficulty level with nuanced thresholds
+    let difficulty;
+    let difficultyReason;
+
+    if (hardPercentage >= 50 || adjustedScore >= 1.5) {
+      difficulty = 'hard';
+      difficultyReason = `Test difficile: ${hardPercentage.toFixed(1)}% parole problematiche (${hardCount}/${totalWords})`;
+    } else if (easyPercentage >= 70 || adjustedScore <= -0.5) {
+      difficulty = 'easy';
+      difficultyReason = `Test facile: ${easyPercentage.toFixed(1)}% parole consolidate/miglioranti (${easyCount}/${totalWords})`;
+    } else {
+      difficulty = 'medium';
+      difficultyReason = `Test bilanciato: ${hardPercentage.toFixed(1)}% difficili, ${easyPercentage.toFixed(1)}% facili (${totalWords} parole)`;
+    }
+
+    // ⭐ Detailed analysis for debugging and statistics
+    const difficultyAnalysis = {
+      difficulty,
+      difficultyReason,
+      totalWords,
+      weightedScore: parseFloat(adjustedScore.toFixed(2)),
+      sizeAdjustment,
+      distribution: {
+        hard: { count: hardCount, percentage: parseFloat(hardPercentage.toFixed(1)) },
+        medium: { count: mediumCount, percentage: parseFloat(mediumPercentage.toFixed(1)) },
+        easy: { count: easyCount, percentage: parseFloat(easyPercentage.toFixed(1)) }
+      },
+      statusBreakdown: {
+        critical: categories.hard.filter(item => item.status === 'critical').length,
+        inconsistent: categories.hard.filter(item => item.status === 'inconsistent').length,
+        struggling: categories.hard.filter(item => item.status === 'struggling').length,
+        promising: categories.medium.filter(item => item.status === 'promising').length,
+        new: categories.medium.filter(item => item.status === 'new').length,
+        improving: categories.easy.filter(item => item.status === 'improving').length,
+        consolidated: categories.easy.filter(item => item.status === 'consolidated').length
+      }
+    };
+
+    
+    return { difficulty, difficultyAnalysis };
+  }, []);
+
+  // ⭐ ENHANCED: Test completion with smart difficulty calculation
+  const handleTestComplete = useCallback((testStats, testWordsUsed, wrongWordsArray) => {
+    
     const usedChapters = [...new Set(testWordsUsed.map(word => word.chapter || 'Senza Capitolo'))];
     
     const chapterStats = {};
@@ -342,6 +426,9 @@ export const useOptimizedStats = () => {
       });
     }
 
+    // ⭐ CRITICAL: Calculate smart difficulty
+    const { difficulty, difficultyAnalysis } = calculateSmartTestDifficulty(testWordsUsed, getWordAnalysis);
+
     const updates = {
       stats: { ...stats },
       testHistory: [
@@ -364,7 +451,13 @@ export const useOptimizedStats = () => {
             totalAvailableWords: testWordsUsed.length
           },
           testType: usedChapters.length === 1 ? 'selective' : 'complete',
-          difficulty: testWordsUsed.length < 10 ? 'easy' : testWordsUsed.length < 25 ? 'medium' : 'hard'
+          
+          // ⭐ NEW: Smart proportional difficulty system
+          difficulty, // Smart calculated difficulty
+          difficultyAnalysis, // Detailed analysis for stats/debugging
+          
+          // ⭐ LEGACY: Keep old system for comparison
+          legacyDifficulty: testWordsUsed.length < 10 ? 'easy' : testWordsUsed.length < 25 ? 'medium' : 'hard'
         },
         ...testHistory
       ]
@@ -392,10 +485,9 @@ export const useOptimizedStats = () => {
     updates.stats.lastStudyDate = today;
     updates.stats.streakDays = calculateStreak(updates.stats.dailyProgress);
 
-    console.log('📊 Updating stats with:', updates.stats);
     performBatchUpdate(updates);
-    showSuccess(`✅ Test completato! Risultato: ${updates.testHistory[0].percentage}%`);
-  }, [stats, testHistory, calculateStreak, performBatchUpdate, showSuccess, recordWordPerformance]);
+    showSuccess(`✅ Test completato! Risultato: ${updates.testHistory[0].percentage}% (Difficoltà: ${difficulty})`);
+  }, [stats, testHistory, calculateStreak, performBatchUpdate, showSuccess, recordWordPerformance, calculateSmartTestDifficulty, getWordAnalysis]);
 
   // ⭐ FIXED: Export with WORDS included
   const exportStats = useCallback(() => {
@@ -409,12 +501,12 @@ export const useOptimizedStats = () => {
         testHistory,
         wordPerformance, // ⭐ NEW: Include word performance
         exportDate: new Date().toISOString(),
-        version: '2.2', // ⭐ Updated version
+        version: '2.3', // ⭐ Updated version for smart difficulty
         dataTypes: ['words', 'stats', 'testHistory', 'wordPerformance'], // ⭐ Updated
         totalTests: testHistory.length,
         totalWords: words.length, // ⭐ FIXED: Count actual words, not performance
         totalWordPerformance: Object.keys(wordPerformance).length,
-        description: 'Backup completo v2.2: parole + statistiche + cronologia test + performance parole'
+        description: 'Backup completo v2.3: parole + statistiche + cronologia test + performance parole + difficoltà intelligente'
       };
       
       const dataStr = JSON.stringify(exportData, null, 2);
@@ -423,13 +515,13 @@ export const useOptimizedStats = () => {
       
       const link = document.createElement('a');
       link.href = url;
-      link.download = `vocabulary-complete-backup-v2.2-${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `vocabulary-complete-backup-v2.3-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      showSuccess(`✅ Backup v2.2 esportato! (${words.length} parole + ${testHistory.length} test + ${Object.keys(wordPerformance).length} performance)`);
+      showSuccess(`✅ Backup v2.3 esportato! (${words.length} parole + ${testHistory.length} test + ${Object.keys(wordPerformance).length} performance)`);
     } catch (error) {
       showError(error, 'Export');
     }
@@ -460,14 +552,14 @@ export const useOptimizedStats = () => {
             throw new Error('File non contiene dati validi (parole, statistiche o cronologia)');
           }
           
-          const isNewFormat = importedData.version === '2.2' && hasWords;
-          const isEnhancedBackup = importedData.version === '2.1' && hasWordPerformance;
+          const isNewFormat = importedData.version === '2.3' && hasWords;
+          const isEnhancedBackup = importedData.version === '2.2' && hasWordPerformance;
           
           let confirmMessage = '';
           if (isNewFormat) {
-            confirmMessage = `Backup Completo v2.2 rilevato (${importedData.words?.length || 0} parole + ${importedData.testHistory?.length || 0} test + ${Object.keys(importedData.wordPerformance || {}).length} performance).\nOK = Sostituisci tutto | Annulla = Combina`;
+            confirmMessage = `Backup Completo v2.3 rilevato (${importedData.words?.length || 0} parole + ${importedData.testHistory?.length || 0} test + ${Object.keys(importedData.wordPerformance || {}).length} performance).\nOK = Sostituisci tutto | Annulla = Combina`;
           } else if (isEnhancedBackup) {
-            confirmMessage = `Backup Enhanced v2.1 rilevato (${importedData.testHistory?.length || 0} test + ${Object.keys(importedData.wordPerformance || {}).length} performance).\nOK = Sostituisci tutto | Annulla = Combina\n⚠️ ATTENZIONE: Non contiene parole!`;
+            confirmMessage = `Backup Enhanced v2.2 rilevato (${importedData.testHistory?.length || 0} test + ${Object.keys(importedData.wordPerformance || {}).length} performance).\nOK = Sostituisci tutto | Annulla = Combina\n⚠️ ATTENZIONE: Non contiene parole!`;
           } else {
             confirmMessage = `Backup standard rilevato.\nOK = Sostituisci | Annulla = Combina`;
           }
@@ -502,7 +594,7 @@ export const useOptimizedStats = () => {
             if (hasHistory) components.push(`${newHistory.length} test`);
             if (hasWordPerformance) components.push(`${Object.keys(newWordPerformance).length} performance`);
             
-            showSuccess(`✅ Backup ${isNewFormat ? 'v2.2' : isEnhancedBackup ? 'v2.1' : 'standard'} importato! ${components.join(' + ')}`);
+            showSuccess(`✅ Backup ${isNewFormat ? 'v2.3' : isEnhancedBackup ? 'v2.2' : 'standard'} importato! ${components.join(' + ')}`);
           } else {
             // Merge data
             if (hasHistory) {

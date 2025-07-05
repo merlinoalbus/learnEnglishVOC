@@ -16,7 +16,6 @@ export const useOptimizedWords = () => {
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'vocabularyWords' || e.key === 'vocabularyWords_lastUpdate') {
-        console.log('📦 useOptimizedWords: Detected external words change, refreshing...');
         forceRefresh();
       }
     };
@@ -24,7 +23,6 @@ export const useOptimizedWords = () => {
     window.addEventListener('storage', handleStorageChange);
     
     const handleCustomRefresh = () => {
-      console.log('📦 useOptimizedWords: Custom refresh triggered');
       forceRefresh();
     };
     
@@ -50,11 +48,10 @@ export const useOptimizedWords = () => {
   const forceRefresh = useCallback(() => {
     try {
       const updatedWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
-      console.log('📦 Force refreshing with', updatedWords.length, 'words');
       setWords(updatedWords);
       setRefreshTrigger(prev => prev + 1);
     } catch (error) {
-      console.error('Error in force refresh:', error);
+      // Silently handle errors
     }
   }, [setWords]);
 
@@ -82,14 +79,11 @@ export const useOptimizedWords = () => {
         map[`english_${word.english.toLowerCase()}`] = word;
       }
     });
-    console.log('📦 WordMap updated with', words.length, 'words');
     return map;
   }, [words, refreshTrigger]);
 
   // ⭐ FIXED: Batch word operations with immediate localStorage sync
   const batchUpdateWords = useCallback((updateFn) => {
-    console.log('📦 Starting batch update...');
-    
     setWords(prevWords => {
       const newWords = updateFn(prevWords);
       const sortedWords = newWords.sort((a, b) => a.english.localeCompare(b.english));
@@ -98,9 +92,8 @@ export const useOptimizedWords = () => {
       try {
         localStorage.setItem('vocabularyWords', JSON.stringify(sortedWords));
         localStorage.setItem('vocabularyWords_lastUpdate', Date.now().toString());
-        console.log('📦 Batch updated and synced to localStorage:', sortedWords.length, 'words');
       } catch (error) {
-        console.error('❌ Failed to sync to localStorage:', error);
+        // Silently handle errors
       }
       
       return sortedWords;
@@ -112,8 +105,6 @@ export const useOptimizedWords = () => {
 
   // ⭐ FIXED: Enhanced add word with better duplicate checking and editing logic
   const addWord = useCallback((wordData) => {
-    console.log('📝 addWord called with:', wordData, 'editingWord:', editingWord);
-    
     if (!wordData.english?.trim() || !wordData.italian?.trim()) {
       throw new Error('English word and Italian translation are required');
     }
@@ -130,7 +121,6 @@ export const useOptimizedWords = () => {
     batchUpdateWords(prevWords => {
       if (editingWord) {
         // ⭐ FIXED: Editing mode - ensure we find and update the correct word
-        console.log('📝 Editing word with ID:', editingWord.id);
         
         const updatedWords = prevWords.map(word => {
           if (word.id === editingWord.id) {
@@ -141,7 +131,6 @@ export const useOptimizedWords = () => {
               english: wordData.english.trim(),
               italian: wordData.italian.trim()
             };
-            console.log('📝 Updated word:', updatedWord);
             return updatedWord;
           }
           return word;
@@ -150,7 +139,6 @@ export const useOptimizedWords = () => {
         // ⭐ VERIFICATION: Check if update actually happened
         const foundUpdated = updatedWords.find(w => w.id === editingWord.id);
         if (!foundUpdated) {
-          console.error('❌ Failed to find word to update with ID:', editingWord.id);
           throw new Error('Failed to update word - word not found');
         }
         
@@ -168,7 +156,6 @@ export const useOptimizedWords = () => {
           learned: Boolean(wordData.learned),
           difficult: Boolean(wordData.difficult)
         };
-        console.log('➕ Adding new word:', newWord.english, 'with ID:', newWord.id);
         return [...prevWords, newWord];
       }
     });
@@ -179,19 +166,15 @@ export const useOptimizedWords = () => {
 
   // ⭐ FIXED: Enhanced toggle functions with proper ID validation
   const toggleWordLearned = useCallback((id) => {
-    console.log('📚 Toggling learned status for ID:', id);
-    
     // ⭐ VERIFICATION: Check if word exists before toggle
     const existingWord = wordMap[id];
     if (!existingWord) {
-      console.error('❌ Word not found for learned toggle, ID:', id);
       throw new Error('Word not found');
     }
     
     batchUpdateWords(prevWords =>
       prevWords.map(word => {
         if (word.id === id) {
-          console.log('📚 Toggling learned for:', word.english, 'from', word.learned, 'to', !word.learned);
           return { ...word, learned: !word.learned };
         }
         return word;
@@ -201,19 +184,15 @@ export const useOptimizedWords = () => {
 
   // ⭐ FIXED: Enhanced toggle difficult with proper validation
   const toggleWordDifficult = useCallback((id) => {
-    console.log('⭐ Toggling difficult status for ID:', id);
-    
     // ⭐ VERIFICATION: Check if word exists before toggle
     const existingWord = wordMap[id];
     if (!existingWord) {
-      console.error('❌ Word not found for difficult toggle, ID:', id);
       throw new Error('Word not found');
     }
     
     batchUpdateWords(prevWords =>
       prevWords.map(word => {
         if (word.id === id) {
-          console.log('⭐ Toggling difficult for:', word.english, 'from', word.difficult, 'to', !word.difficult);
           return { ...word, difficult: !word.difficult };
         }
         return word;
@@ -223,18 +202,14 @@ export const useOptimizedWords = () => {
 
   // ⭐ FIXED: Enhanced remove word with proper validation
   const removeWord = useCallback((id) => {
-    console.log('🗑️ Removing word with ID:', id);
-    
     // ⭐ VERIFICATION: Check if word exists before removal
     const existingWord = wordMap[id];
     if (!existingWord) {
-      console.error('❌ Word not found for removal, ID:', id);
       throw new Error('Word not found');
     }
     
     batchUpdateWords(prevWords => {
       const filteredWords = prevWords.filter(word => word.id !== id);
-      console.log('🗑️ Removed word, remaining:', filteredWords.length);
       return filteredWords;
     });
     
@@ -297,10 +272,8 @@ export const useOptimizedWords = () => {
         detail: { count: newWords.length, total: allWords.length }
       }));
       
-      console.log('📥 Imported', newWords.length, 'new words. Total:', allWords.length);
       return newWords.length;
     } catch (error) {
-      console.error('Import error:', error);
       throw error;
     }
   }, [setWords]);
@@ -334,7 +307,6 @@ export const useOptimizedWords = () => {
 
   // ⭐ FIXED: Clear all words with proper cleanup
   const clearAllWords = useCallback(() => {
-    console.log('🧹 Clearing all words');
     setWords(EMPTY_ARRAY);
     setEditingWord(null);
     localStorage.setItem('vocabularyWords_lastUpdate', Date.now().toString());

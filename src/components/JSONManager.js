@@ -98,11 +98,9 @@ const JSONManager = ({ words, onImportWords }) => {
       if (Array.isArray(parsedData)) {
         // Direct array of words
         wordsToImport = parsedData;
-        console.log('📥 Importing direct array format:', wordsToImport.length, 'words');
-      } else if (parsedData.words && Array.isArray(parsedData.words)) {
+        } else if (parsedData.words && Array.isArray(parsedData.words)) {
         // Export format with metadata
         wordsToImport = parsedData.words;
-        console.log('📥 Importing export format:', wordsToImport.length, 'words');
         
         if (parsedData.metadata) {
           showSuccess(`📊 Rilevato backup ${parsedData.version || 'legacy'} del ${new Date(parsedData.exportDate).toLocaleDateString()}`);

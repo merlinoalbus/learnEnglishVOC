@@ -49,11 +49,6 @@ export const AppProvider = ({ children }) => {
   
   // ⭐ ENHANCED: Test API with proper stats callback
   const testAPI = useOptimizedTest((testStats, testWords, wrongWords) => {
-    console.log('🔗 AppContext: Test completed, calling handleTestComplete with:', {
-      testStats,
-      testWordsCount: testWords.length,
-      wrongWordsCount: wrongWords.length
-    });
     
     // ⭐ CRITICAL: Pass enhanced stats including hints and timing
     statsAPI.handleTestComplete(testStats, testWords, wrongWords);
@@ -66,11 +61,6 @@ export const AppProvider = ({ children }) => {
 
   // ⭐ DEBUG: Log quando le funzioni stats sono disponibili
   useEffect(() => {
-    console.log('📊 StatsAPI functions available:', {
-      getAllWordsPerformance: !!statsAPI.getAllWordsPerformance,
-      getWordAnalysis: !!statsAPI.getWordAnalysis,
-      wordPerformance: !!statsAPI.wordPerformance
-    });
   }, [statsAPI.getAllWordsPerformance, statsAPI.getWordAnalysis, statsAPI.wordPerformance]);
 
   const value = {
@@ -113,14 +103,6 @@ export const AppProvider = ({ children }) => {
     getWordAnalysis: statsAPI.getWordAnalysis,
     recordWordPerformance: statsAPI.recordWordPerformance
   };
-
-  // ⭐ DEBUG: Final context value check
-  console.log('🔗 AppContext value includes word functions:', {
-    getAllWordsPerformance: !!value.getAllWordsPerformance,
-    getWordAnalysis: !!value.getWordAnalysis,
-    wordPerformance: !!value.wordPerformance,
-    forceRefresh: !!value.forceRefresh // ⭐ NEW
-  });
 
   return (
     <AppContext.Provider value={value}>

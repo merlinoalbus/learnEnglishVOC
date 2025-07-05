@@ -14,9 +14,7 @@ export const ResultsView = React.memo(() => {
   const getTestResultData = () => {
     // Get the enhanced summary with all timing and hints data
     const summary = getTestSummary && getTestSummary();
-    
-    console.log('🎯 ResultsView - Using getTestSummary data:', summary);
-    
+        
     if (summary && (summary.correct >= 0 || summary.incorrect >= 0)) {
       // ⭐ ENHANCED: Extract all available data from summary
       const enhancedData = {
@@ -35,7 +33,6 @@ export const ResultsView = React.memo(() => {
         percentage: summary.percentage || 0
       };
       
-      console.log('✅ ResultsView - Enhanced data prepared:', enhancedData);
       return enhancedData;
     }
     
@@ -53,7 +50,6 @@ export const ResultsView = React.memo(() => {
         totalRecordedTime: 0
       };
       
-      console.log('⚠️ ResultsView - Using fallback from wrongWords:', fallbackData);
       return fallbackData;
     }
     
@@ -69,13 +65,11 @@ export const ResultsView = React.memo(() => {
       totalRecordedTime: 0
     };
     
-    console.log('❌ ResultsView - Using default data:', defaultData);
     return defaultData;
   };
 
   const finalTestData = getTestResultData();
 
-  console.log('🎯 ResultsView - Final data being passed to TestResults:', finalTestData);
 
   return (
     <TestResults
