@@ -1,15 +1,11 @@
-// /src/components/TestCard.js
-// This file contains the TestCard component, which displays a vocabulary word card that can be flipped to show its meaning.
-// It includes the word in English, its Italian translation, an example sentence, and any notes associated with the word.
-// The card has a front and back side, with animations for flipping. It also includes category styling based on the word's group.
-// The component is designed to be interactive, allowing users to click to flip the card and view the translation and additional information.
-// The TestCard component is used in the vocabulary testing feature of the application, providing a visually appealing and functional way to learn vocabulary words.
-// It is styled using Tailwind CSS for a modern and responsive design.
+// =====================================================
+// 📁 components/TestCard.js - FIXED suggerimento in alto
+// =====================================================
 
 import { getCategoryStyle } from '../utils/categoryUtils';
 import { formatNotes } from '../utils/textUtils';
 
-const TestCard = ({ word, showMeaning, onFlip }) => {
+const TestCard = ({ word, showMeaning, onFlip, showHint, hintUsed }) => {
   return (
     <div 
       className="relative cursor-pointer transform transition-transform duration-300 hover:scale-105"
@@ -31,7 +27,28 @@ const TestCard = ({ word, showMeaning, onFlip }) => {
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500"></div>
           <div className="absolute inset-0 bg-black/20"></div>
           <div className="relative h-full flex flex-col items-center justify-center text-white p-8">
-            <div className="text-center space-y-6">
+            
+            {/* ⭐ FIXED: Suggerimento spostato in alto */}
+            {showHint && word.sentence && (
+              <div className="absolute top-6 left-6 right-6">
+                <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/30 animate-fade-in">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">💡</span>
+                    <span className="text-sm font-bold text-white/90">Suggerimento:</span>
+                    {hintUsed && (
+                      <span className="text-xs bg-orange-400/80 text-white px-2 py-1 rounded-full">
+                        Conteggiato
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm italic text-white/90 leading-relaxed">
+                    "{word.sentence}"
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
               <div className="text-5xl font-bold drop-shadow-lg">
                 {word.english}
               </div>
@@ -68,6 +85,16 @@ const TestCard = ({ word, showMeaning, onFlip }) => {
               <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow-lg">
                 <span>{getCategoryStyle(word.group).icon}</span>
                 <span>{word.group}</span>
+              </div>
+            </div>
+          )}
+          
+          {/* ⭐ ENHANCED: Hint indicator sul retro se usato */}
+          {hintUsed && (
+            <div className="absolute top-4 left-4 z-10">
+              <div className="bg-orange-500/80 backdrop-blur-sm text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow-lg">
+                <span>💡</span>
+                <span>Aiuto usato</span>
               </div>
             </div>
           )}

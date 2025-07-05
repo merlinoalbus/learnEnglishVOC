@@ -1,3 +1,7 @@
+// =====================================================
+// 📁 src/App.js - VERSIONE PULITA (Dual-System Rimosso)
+// =====================================================
+
 import React from 'react';
 import { AppProvider } from './contexts/AppContext';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -6,6 +10,9 @@ import { AppRouter } from './components/AppRouter';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './App.css';
 
+// =====================================================
+// 🧹 CLEANED: App Component (Dual-System Rimosso)
+// =====================================================
 const VocabularyApp = () => {
   return (
     <ErrorBoundary>

@@ -4,7 +4,6 @@ import { MainView } from '../views/MainView';
 import { TestView } from '../views/TestView';
 import { ResultsView } from '../views/ResultsView';
 import { StatsView } from '../views/StatsView';
-import { StatsManagerView } from '../views/StatsManagerView';
 
 export const AppRouter = () => {
   const { currentView, testMode, showResults } = useAppContext();
@@ -23,8 +22,6 @@ export const AppRouter = () => {
   switch (currentView) {
     case 'stats':
       return <StatsView />;
-    case 'stats-manager':
-      return <StatsManagerView />;
     case 'main':
     default:
       return <MainView />;
