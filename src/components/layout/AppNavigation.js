@@ -2,10 +2,10 @@ import React from 'react';
 import { useAppContext } from '../../contexts/AppContext';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { Brain, BarChart3, Settings } from 'lucide-react';
+import { Brain, BarChart3 } from 'lucide-react';
 
 export const AppNavigation = React.memo(() => {
-  const { currentView, dispatch, testHistory, stats } = useAppContext();
+  const { currentView, dispatch, testHistory } = useAppContext();
 
   const navItems = [
     {
@@ -16,17 +16,10 @@ export const AppNavigation = React.memo(() => {
     },
     {
       id: 'stats',
-      label: 'Statistiche',
+      label: 'Statistiche Complete',
       icon: BarChart3,
       color: 'from-purple-500 to-pink-600',
       badge: testHistory.length > 0 ? testHistory.length : null
-    },
-    {
-      id: 'stats-manager',
-      label: 'Gestisci Stats',
-      icon: Settings,
-      color: 'from-emerald-500 to-teal-600',
-      badge: stats.testsCompleted > 0 ? stats.testsCompleted : null
     }
   ];
 

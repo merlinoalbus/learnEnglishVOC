@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppContext } from '../contexts/AppContext'; // ✅ Fixed: named export
-import StatsOverview from '../components/StatsOverview'; // ✅ Fixed: default import
+import StatsOverview from '../components/stats/StatsOverview'; // ✅ Fixed: default import
 
 export const StatsView = React.memo(() => {
   const {

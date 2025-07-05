@@ -397,19 +397,24 @@ export const useOptimizedStats = () => {
     showSuccess(`✅ Test completato! Risultato: ${updates.testHistory[0].percentage}%`);
   }, [stats, testHistory, calculateStreak, performBatchUpdate, showSuccess, recordWordPerformance]);
 
-  // ⭐ EXPORT/IMPORT FUNCTIONS (enhanced)
+  // ⭐ FIXED: Export with WORDS included
   const exportStats = useCallback(() => {
     try {
+      // ⭐ CRITICAL: Get words from localStorage - they're managed by useOptimizedWords
+      const words = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
+      
       const exportData = {
+        words, // ⭐ CRITICAL: Include actual words!
         stats,
         testHistory,
         wordPerformance, // ⭐ NEW: Include word performance
         exportDate: new Date().toISOString(),
-        version: '2.1', // ⭐ Updated version
-        dataTypes: ['stats', 'testHistory', 'wordPerformance'],
+        version: '2.2', // ⭐ Updated version
+        dataTypes: ['words', 'stats', 'testHistory', 'wordPerformance'], // ⭐ Updated
         totalTests: testHistory.length,
-        totalWords: Object.keys(wordPerformance).length,
-        description: 'Backup completo v2.1: statistiche avanzate + cronologia test + performance parole'
+        totalWords: words.length, // ⭐ FIXED: Count actual words, not performance
+        totalWordPerformance: Object.keys(wordPerformance).length,
+        description: 'Backup completo v2.2: parole + statistiche + cronologia test + performance parole'
       };
       
       const dataStr = JSON.stringify(exportData, null, 2);
@@ -418,18 +423,19 @@ export const useOptimizedStats = () => {
       
       const link = document.createElement('a');
       link.href = url;
-      link.download = `vocabulary-complete-backup-v2.1-${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `vocabulary-complete-backup-v2.2-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      showSuccess(`✅ Backup v2.1 esportato! (${testHistory.length} test + ${Object.keys(wordPerformance).length} parole)`);
+      showSuccess(`✅ Backup v2.2 esportato! (${words.length} parole + ${testHistory.length} test + ${Object.keys(wordPerformance).length} performance)`);
     } catch (error) {
       showError(error, 'Export');
     }
   }, [stats, testHistory, wordPerformance, showSuccess, showError]);
 
+  // ⭐ FIXED: Import with WORDS support
   const importStats = useCallback((file) => {
     return new Promise((resolve, reject) => {
       if (optimizationState.isProcessing) {
@@ -444,37 +450,70 @@ export const useOptimizedStats = () => {
           setOptimizationState(prev => ({ ...prev, isProcessing: true }));
           const importedData = JSON.parse(e.target.result);
           
-          const isEnhancedBackup = importedData.version === '2.1' && importedData.wordPerformance;
+          // ⭐ IMPROVED: Better validation
+          const hasWords = importedData.words && Array.isArray(importedData.words);
+          const hasStats = importedData.stats && typeof importedData.stats === 'object';
+          const hasHistory = importedData.testHistory && Array.isArray(importedData.testHistory);
+          const hasWordPerformance = importedData.wordPerformance && typeof importedData.wordPerformance === 'object';
           
-          if (!importedData.stats && !importedData.testHistory) {
-            throw new Error('Dati non validi');
+          if (!hasWords && !hasStats && !hasHistory) {
+            throw new Error('File non contiene dati validi (parole, statistiche o cronologia)');
           }
           
-          const shouldOverwrite = window.confirm(
-            isEnhancedBackup 
-              ? `Backup Enhanced v2.1 rilevato (${importedData.testHistory?.length || 0} test + ${Object.keys(importedData.wordPerformance || {}).length} parole).\nOK = Sostituisci tutto | Annulla = Combina`
-              : `Backup standard rilevato.\nOK = Sostituisci | Annulla = Combina`
-          );
+          const isNewFormat = importedData.version === '2.2' && hasWords;
+          const isEnhancedBackup = importedData.version === '2.1' && hasWordPerformance;
           
+          let confirmMessage = '';
+          if (isNewFormat) {
+            confirmMessage = `Backup Completo v2.2 rilevato (${importedData.words?.length || 0} parole + ${importedData.testHistory?.length || 0} test + ${Object.keys(importedData.wordPerformance || {}).length} performance).\nOK = Sostituisci tutto | Annulla = Combina`;
+          } else if (isEnhancedBackup) {
+            confirmMessage = `Backup Enhanced v2.1 rilevato (${importedData.testHistory?.length || 0} test + ${Object.keys(importedData.wordPerformance || {}).length} performance).\nOK = Sostituisci tutto | Annulla = Combina\n⚠️ ATTENZIONE: Non contiene parole!`;
+          } else {
+            confirmMessage = `Backup standard rilevato.\nOK = Sostituisci | Annulla = Combina`;
+          }
+          
+          const shouldOverwrite = window.confirm(confirmMessage);
+          
+          // ⭐ IMPROVED: Better data handling
           let newStats = stats;
           let newHistory = testHistory;
           let newWordPerformance = wordPerformance;
+          let importedWords = [];
           
-          if (isEnhancedBackup) {
-            if (shouldOverwrite) {
+          if (shouldOverwrite) {
+            // Replace all data
+            if (hasStats) {
               newStats = { ...importedData.stats, migrated: true };
-              newHistory = [...(importedData.testHistory || [])];
+            }
+            if (hasHistory) {
+              newHistory = [...importedData.testHistory];
+            }
+            if (hasWordPerformance) {
               newWordPerformance = { ...importedData.wordPerformance };
-              showSuccess(`✅ Backup Enhanced importato! ${newHistory.length} test + ${Object.keys(newWordPerformance).length} parole`);
-            } else {
-              // Combine data
+            }
+            if (hasWords) {
+              importedWords = [...importedData.words];
+              // ⭐ CRITICAL: Save words to their storage
+              localStorage.setItem('vocabularyWords', JSON.stringify(importedWords));
+            }
+            
+            const components = [];
+            if (hasWords) components.push(`${importedWords.length} parole`);
+            if (hasHistory) components.push(`${newHistory.length} test`);
+            if (hasWordPerformance) components.push(`${Object.keys(newWordPerformance).length} performance`);
+            
+            showSuccess(`✅ Backup ${isNewFormat ? 'v2.2' : isEnhancedBackup ? 'v2.1' : 'standard'} importato! ${components.join(' + ')}`);
+          } else {
+            // Merge data
+            if (hasHistory) {
               const existingIds = new Set(testHistory.map(test => test.id));
-              const newTests = (importedData.testHistory || []).filter(test => !existingIds.has(test.id));
+              const newTests = importedData.testHistory.filter(test => !existingIds.has(test.id));
               newHistory = [...testHistory, ...newTests].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-              
-              // Merge word performance
+            }
+            
+            if (hasWordPerformance) {
               newWordPerformance = { ...wordPerformance };
-              Object.entries(importedData.wordPerformance || {}).forEach(([wordId, data]) => {
+              Object.entries(importedData.wordPerformance).forEach(([wordId, data]) => {
                 if (newWordPerformance[wordId]) {
                   // Merge attempts
                   const existingAttempts = newWordPerformance[wordId].attempts || [];
@@ -486,19 +525,54 @@ export const useOptimizedStats = () => {
                   newWordPerformance[wordId] = data;
                 }
               });
-              
-              showSuccess(`✅ Dati combinati! +${newTests.length} test, ${Object.keys(importedData.wordPerformance || {}).length} parole performance`);
             }
+            
+            if (hasWords) {
+              // ⭐ IMPROVED: Merge words intelligently
+              const currentWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
+              const existingEnglish = new Set(currentWords.map(w => w.english.toLowerCase()));
+              const newWords = importedData.words.filter(word => 
+                !existingEnglish.has(word.english.toLowerCase())
+              );
+              
+              if (newWords.length > 0) {
+                importedWords = [...currentWords, ...newWords];
+                localStorage.setItem('vocabularyWords', JSON.stringify(importedWords));
+              } else {
+                importedWords = currentWords;
+              }
+            }
+            
+            const components = [];
+            if (hasWords) components.push(`+${importedWords.length - JSON.parse(localStorage.getItem('vocabularyWords') || '[]').length} nuove parole`);
+            if (hasHistory) components.push(`+${newHistory.length - testHistory.length} test`);
+            if (hasWordPerformance) components.push(`${Object.keys(importedData.wordPerformance).length} performance`);
+            
+            showSuccess(`✅ Dati combinati! ${components.join(', ')}`);
           }
           
+          // ⭐ IMPROVED: Update all data
           performBatchUpdate({ 
             stats: newStats, 
             testHistory: newHistory,
             wordPerformance: newWordPerformance
           });
-          resolve({ newStats, newHistory, newWordPerformance });
+          
+          // ⭐ IMPORTANT: Trigger words refresh if words were imported
+          if (hasWords) {
+            // Signal that words have changed by updating localStorage timestamp
+            localStorage.setItem('vocabularyWords_lastUpdate', Date.now().toString());
+          }
+          
+          resolve({ 
+            newStats, 
+            newHistory, 
+            newWordPerformance, 
+            importedWords: hasWords ? importedWords : null 
+          });
           
         } catch (error) {
+          console.error('Import error:', error);
           showError(error, 'Import');
           reject(error);
         } finally {
@@ -572,13 +646,17 @@ export const useOptimizedStats = () => {
     }, [optimizationState.isProcessing, performBatchUpdate, showError]),
     
     resetStats: useCallback(() => {
-      if (window.confirm('⚠️ Cancellare tutto?')) {
+      if (window.confirm('⚠️ Cancellare tutto (parole, test, statistiche)?')) {
+        // ⭐ ENHANCED: Also clear words
+        localStorage.removeItem('vocabularyWords');
+        localStorage.removeItem('vocabularyWords_lastUpdate');
+        
         performBatchUpdate({
           stats: { ...INITIAL_STATS, migrated: true },
           testHistory: EMPTY_ARRAY,
           wordPerformance: INITIAL_WORD_PERFORMANCE
         });
-        showSuccess('✅ Tutti i dati cancellati!');
+        showSuccess('✅ Tutti i dati cancellati (parole, test, statistiche)!');
       }
     }, [performBatchUpdate, showSuccess]),
     

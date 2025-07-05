@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 
 const EMPTY_ARRAY = [];
@@ -6,6 +6,60 @@ const EMPTY_ARRAY = [];
 export const useOptimizedWords = () => {
   const [words, setWords] = useLocalStorage('vocabularyWords', EMPTY_ARRAY);
   const [editingWord, setEditingWord] = useState(null);
+  
+  // ⭐ FIXED: Listen for external changes (like imports)
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // ⭐ FIXED: Listen for import changes
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'vocabularyWords' || e.key === 'vocabularyWords_lastUpdate') {
+        console.log('📦 useOptimizedWords: Detected external words change, refreshing...');
+        setRefreshTrigger(prev => prev + 1);
+        
+        // Force refresh words from localStorage
+        try {
+          const updatedWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
+          setWords(updatedWords);
+        } catch (error) {
+          console.error('Error refreshing words after import:', error);
+        }
+      }
+    };
+
+    // Listen for storage changes (from other tabs/imports)
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom event (from same tab imports)
+    const handleCustomRefresh = () => {
+      console.log('📦 useOptimizedWords: Custom refresh triggered');
+      setRefreshTrigger(prev => prev + 1);
+      try {
+        const updatedWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
+        setWords(updatedWords);
+      } catch (error) {
+        console.error('Error in custom refresh:', error);
+      }
+    };
+    
+    window.addEventListener('wordsImported', handleCustomRefresh);
+
+    // Check for timestamp changes (import detection)
+    let lastCheck = localStorage.getItem('vocabularyWords_lastUpdate');
+    const checkInterval = setInterval(() => {
+      const currentCheck = localStorage.getItem('vocabularyWords_lastUpdate');
+      if (currentCheck && currentCheck !== lastCheck) {
+        lastCheck = currentCheck;
+        handleCustomRefresh();
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('wordsImported', handleCustomRefresh);
+      clearInterval(checkInterval);
+    };
+  }, [setWords]);
 
   // ⭐ MEMOIZED COMPUTATIONS - Enhanced with difficult words
   const wordStats = useMemo(() => ({
@@ -16,7 +70,7 @@ export const useOptimizedWords = () => {
     normal: words.filter(w => !w.difficult && !w.learned).length,
     chapters: [...new Set(words.map(w => w.chapter).filter(Boolean))].sort(),
     groups: [...new Set(words.map(w => w.group).filter(Boolean))].sort()
-  }), [words]);
+  }), [words, refreshTrigger]); // ⭐ Added refreshTrigger dependency
 
   // ⭐ MEMOIZED WORD MAP
   const wordMap = useMemo(() => {
@@ -25,13 +79,18 @@ export const useOptimizedWords = () => {
       map[word.english.toLowerCase()] = word;
       return map;
     }, {});
-  }, [words]);
+  }, [words, refreshTrigger]); // ⭐ Added refreshTrigger dependency
 
   // ⭐ BATCH WORD OPERATIONS
   const batchUpdateWords = useCallback((updateFn) => {
     setWords(prevWords => {
       const newWords = updateFn(prevWords);
-      return newWords.sort((a, b) => a.english.localeCompare(b.english));
+      const sortedWords = newWords.sort((a, b) => a.english.localeCompare(b.english));
+      
+      // ⭐ FIXED: Update timestamp for import detection
+      localStorage.setItem('vocabularyWords_lastUpdate', Date.now().toString());
+      
+      return sortedWords;
     });
   }, [setWords]);
 
@@ -98,7 +157,7 @@ export const useOptimizedWords = () => {
         normal: chapterWords.filter(w => !w.difficult && !w.learned).length
       };
     }
-  }), [words]);
+  }), [words, refreshTrigger]); // ⭐ Added refreshTrigger dependency
 
   return {
     words,
@@ -132,6 +191,7 @@ export const useOptimizedWords = () => {
     clearAllWords: useCallback(() => {
       setWords(EMPTY_ARRAY);
       setEditingWord(null);
+      localStorage.setItem('vocabularyWords_lastUpdate', Date.now().toString());
     }, [setWords]),
 
     importWords: useCallback((jsonText) => {
@@ -165,6 +225,10 @@ export const useOptimizedWords = () => {
       }
 
       batchUpdateWords(prevWords => [...prevWords, ...newWords]);
+      
+      // ⭐ FIXED: Trigger refresh event for other components
+      window.dispatchEvent(new CustomEvent('wordsImported'));
+      
       return newWords.length;
     }, [words, batchUpdateWords]),
 

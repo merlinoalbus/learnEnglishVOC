@@ -16,7 +16,7 @@ if (-not (Test-Path -Path $SourcePath)) {
 $SourcePath = Resolve-Path -Path $SourcePath
 
 # Definisce le estensioni di file da processare
-$TargetExtensions = @('.js', '.css', '.json', '.conf', '.md', '.yml', '.yaml')
+$TargetExtensions = @('.js', '.json', '.conf', '.md', '.yml', '.yaml')
 
 # Definisce le cartelle da escludere
 $ExcludedFolders = @('.idea', '.github', 'node_modules')

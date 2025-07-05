@@ -1,41 +1,37 @@
 // =====================================================
-// 📁 src/utils/index.js - Centralized Utility Exports
+// 📁 src/utils/index.js - EXPORTS PULITI
 // =====================================================
 
-// Re-export existing utilities (maintaining compatibility)
+// ✅ Re-export utilities effettivamente utilizzate
 export * from './categoryUtils';
 export * from './textUtils';
 
-// Export new performance utilities
-export * from './performanceUtils';
-
-// =====================================================
-// Convenience re-exports for commonly used functions
-// =====================================================
-
-// Category utilities (most commonly used)
-export { getCategoryStyle, getPredefinedGroups } from './categoryUtils';
-
-// Text utilities (most commonly used)
-export { formatNotes, getTestResult } from './textUtils';
-
-// Performance utilities (new, for optimization)
+// ✅ Export performance utilities utilizzate
 export { 
   memoize, 
   debounce, 
-  throttle, 
   deepEqual,
   shallowEqual,
-  createSelector
+  createSelector,
+  compose,
+  pipe,
+  once
 } from './performanceUtils';
 
 // =====================================================
-// Additional utility functions (extracted from common patterns in codebase)
+// ✅ Convenience re-exports (utilizzati ovunque)
+// =====================================================
+
+export { getCategoryStyle, getPredefinedGroups } from './categoryUtils';
+export { formatNotes, getTestResult } from './textUtils';
+
+// =====================================================
+// ✅ Core utility functions (utilizzate nell'app)
 // =====================================================
 
 /**
- * Generate unique ID (extracted from word creation pattern)
- * @returns {string} Unique ID
+ * Generate unique ID
+ * ✅ UTILIZZATA per generare ID delle parole
  */
 export const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -43,9 +39,7 @@ export const generateId = () => {
 
 /**
  * Safe JSON parse with fallback
- * @param {string} jsonString - JSON string to parse
- * @param {*} fallback - Fallback value if parsing fails
- * @returns {*} Parsed value or fallback
+ * ✅ UTILIZZATA nel storageService
  */
 export const safeJSONParse = (jsonString, fallback = null) => {
   try {
@@ -58,9 +52,7 @@ export const safeJSONParse = (jsonString, fallback = null) => {
 
 /**
  * Safe JSON stringify
- * @param {*} value - Value to stringify
- * @param {*} fallback - Fallback if stringify fails
- * @returns {string} JSON string or fallback
+ * ✅ UTILIZZATA nel storageService
  */
 export const safeJSONStringify = (value, fallback = '{}') => {
   try {
@@ -72,9 +64,8 @@ export const safeJSONStringify = (value, fallback = '{}') => {
 };
 
 /**
- * Format time duration (extracted from timer logic)
- * @param {number} seconds - Duration in seconds
- * @returns {string} Formatted time string
+ * Format time duration
+ * ✅ UTILIZZATA in TestView e statistiche
  */
 export const formatTime = (seconds) => {
   if (!seconds || seconds < 0) return '0:00';
@@ -86,10 +77,7 @@ export const formatTime = (seconds) => {
 
 /**
  * Format percentage with precision
- * @param {number} value - Value to format as percentage
- * @param {number} total - Total value
- * @param {number} decimals - Decimal places
- * @returns {number} Formatted percentage
+ * ✅ UTILIZZATA nelle statistiche e nei risultati test
  */
 export const formatPercentage = (value, total, decimals = 0) => {
   if (!total || total === 0) return 0;
@@ -98,20 +86,8 @@ export const formatPercentage = (value, total, decimals = 0) => {
 };
 
 /**
- * Clamp value between min and max
- * @param {number} value - Value to clamp
- * @param {number} min - Minimum value
- * @param {number} max - Maximum value
- * @returns {number} Clamped value
- */
-export const clamp = (value, min, max) => {
-  return Math.min(Math.max(value, min), max);
-};
-
-/**
- * Check if value is empty (null, undefined, empty string, empty array)
- * @param {*} value - Value to check
- * @returns {boolean} True if empty
+ * Check if value is empty
+ * ✅ UTILIZZATA nelle validazioni
  */
 export const isEmpty = (value) => {
   if (value == null) return true;
@@ -123,9 +99,7 @@ export const isEmpty = (value) => {
 
 /**
  * Pick specific properties from object
- * @param {Object} obj - Source object
- * @param {string[]} keys - Keys to pick
- * @returns {Object} New object with picked properties
+ * ✅ UTILIZZATA per filtrare dati export/import
  */
 export const pick = (obj, keys) => {
   const result = {};
@@ -138,24 +112,8 @@ export const pick = (obj, keys) => {
 };
 
 /**
- * Omit specific properties from object
- * @param {Object} obj - Source object
- * @param {string[]} keys - Keys to omit
- * @returns {Object} New object without omitted properties
- */
-export const omit = (obj, keys) => {
-  const result = { ...obj };
-  keys.forEach(key => {
-    delete result[key];
-  });
-  return result;
-};
-
-/**
  * Group array of objects by property
- * @param {Array} array - Array to group
- * @param {string|Function} keyOrFn - Property key or function to group by
- * @returns {Object} Grouped object
+ * ✅ UTILIZZATA per raggruppare parole per capitolo
  */
 export const groupBy = (array, keyOrFn) => {
   return array.reduce((groups, item) => {
@@ -170,10 +128,7 @@ export const groupBy = (array, keyOrFn) => {
 
 /**
  * Sort array by property with direction
- * @param {Array} array - Array to sort
- * @param {string} property - Property to sort by
- * @param {string} direction - 'asc' or 'desc'
- * @returns {Array} Sorted array
+ * ✅ UTILIZZATA per ordinare parole e statistiche
  */
 export const sortBy = (array, property, direction = 'asc') => {
   return [...array].sort((a, b) => {
@@ -188,8 +143,7 @@ export const sortBy = (array, property, direction = 'asc') => {
 
 /**
  * Calculate statistics for array of numbers
- * @param {number[]} numbers - Array of numbers
- * @returns {Object} Statistics object
+ * ✅ UTILIZZATA nelle statistiche avanzate
  */
 export const calculateStats = (numbers) => {
   if (!numbers || numbers.length === 0) {
@@ -212,31 +166,15 @@ export const calculateStats = (numbers) => {
 
 /**
  * Wait for specified time (async sleep)
- * @param {number} ms - Milliseconds to wait
- * @returns {Promise} Promise that resolves after delay
+ * ✅ UTILIZZATA in operazioni asincrone
  */
 export const sleep = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
 /**
- * Create URL-safe slug from string
- * @param {string} text - Text to convert to slug
- * @returns {string} URL-safe slug
- */
-export const createSlug = (text) => {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '') // Remove special characters
-    .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with dashes
-    .replace(/^-+|-+$/g, ''); // Remove leading/trailing dashes
-};
-
-/**
  * Capitalize first letter of each word
- * @param {string} text - Text to capitalize
- * @returns {string} Capitalized text
+ * ✅ UTILIZZATA per formattare testi
  */
 export const capitalizeWords = (text) => {
   return text.replace(/\b\w/g, l => l.toUpperCase());
@@ -244,9 +182,7 @@ export const capitalizeWords = (text) => {
 
 /**
  * Truncate text with ellipsis
- * @param {string} text - Text to truncate
- * @param {number} maxLength - Maximum length
- * @returns {string} Truncated text
+ * ✅ UTILIZZATA per testi lunghi nelle card
  */
 export const truncate = (text, maxLength = 50) => {
   if (!text || text.length <= maxLength) return text;

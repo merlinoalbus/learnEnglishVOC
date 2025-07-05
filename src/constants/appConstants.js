@@ -1,5 +1,5 @@
 // =====================================================
-// 📁 src/constants/appConstants.js - Centralized Configuration
+// 📁 src/constants/appConstants.js - VERSIONE SEMPLIFICATA
 // =====================================================
 
 // App Metadata
@@ -9,18 +9,9 @@ export const APP_CONFIG = {
   description: 'La tua app intelligente per imparare l\'inglese'
 };
 
-// AI Configuration (estratto da AddWordForm.js)
-export const AI_CONFIG = {
-  apiKey: 'AIzaSyCHftv0ACPTtX7unUKg6y_eqb09mBobTAM',
-  baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-  timeout: 30000,
-  maxRetries: 3,
-  retryDelay: 1000
-};
-
-// Test Configuration (estratto da vari componenti)
+// Test Configuration
 export const TEST_CONFIG = {
-  // Timer settings (da TestView.js)
+  // Timer settings
   warningThresholds: {
     slow: 25,      // seconds - quando mostrare warning "tempo lungo"
     verySlow: 40   // seconds - quando mostrare "molto lento"
@@ -31,19 +22,15 @@ export const TEST_CONFIG = {
   hintCooldown: 3000,     // ms between hint requests
   maxHintsPerWord: 1,     // limite aiuti per parola
   
-  // Scoring thresholds (da TestResults.js)
+  // Scoring thresholds
   scoring: {
     excellent: 80,  // % for "excellent" result  
     good: 60,      // % for "good" result
     victory: 80    // % for victory message
-  },
-  
-  // Limits
-  maxWordsPerTest: 200,
-  minWordsPerTest: 1
+  }
 };
 
-// Statistics Configuration (da StatsOverview.js e useOptimizedStats.js)
+// Statistics Configuration
 export const STATS_CONFIG = {
   // Performance thresholds
   performance: {
@@ -51,12 +38,6 @@ export const STATS_CONFIG = {
     good: 75,        // %
     average: 60,     // %
     needsWork: 40    // %
-  },
-  
-  // Streak requirements
-  streak: {
-    minAccuracy: 80,      // % minimum for streak
-    consecutiveDays: 1    // days required for streak
   },
   
   // History limits
@@ -70,25 +51,18 @@ export const STATS_CONFIG = {
   }
 };
 
-// Storage Configuration (da vari punti dell'app)
+// Storage Configuration
 export const STORAGE_CONFIG = {
   keys: {
     words: 'vocabulary_words',
     stats: 'vocabulary_stats', 
     testHistory: 'vocabulary_test_history',
     settings: 'vocabulary_settings',
-    lastBackup: 'vocabulary_last_backup'
-  },
-  
-  // Backup settings
-  backup: {
-    autoInterval: 24 * 60 * 60 * 1000, // 24 hours in ms
-    maxBackups: 10,
-    compressionLevel: 1
+    wordPerformance: 'wordPerformance'
   }
 };
 
-// Word/Vocabulary Configuration (da AddWordForm.js e validazioni)
+// Word/Vocabulary Configuration
 export const WORD_CONFIG = {
   // Field lengths
   maxWordLength: 100,
@@ -99,16 +73,10 @@ export const WORD_CONFIG = {
   
   // Required fields
   requiredFields: ['english', 'italian'],
-  optionalFields: ['group', 'sentence', 'notes', 'chapter', 'learned', 'difficult'],
-  
-  // Validation patterns
-  validation: {
-    englishPattern: /^[a-zA-Z\s\-'.,!?]+$/,
-    chapterPattern: /^[a-zA-Z0-9\s]*$/
-  }
+  optionalFields: ['group', 'sentence', 'notes', 'chapter', 'learned', 'difficult']
 };
 
-// Predefined Categories (da categoryUtils.js)
+// Predefined Categories
 export const CATEGORIES = [
   'VERBI', 
   'VERBI_IRREGOLARI', 
@@ -125,7 +93,7 @@ export const CATEGORIES = [
   'VESTITI'
 ];
 
-// Category Styles (estratto da categoryUtils.js)
+// Category Styles
 export const CATEGORY_STYLES = {
   'VERBI': { 
     color: 'from-red-400 via-red-500 to-red-600', 
@@ -213,7 +181,7 @@ export const CATEGORY_STYLES = {
   }
 };
 
-// UI Configuration
+// UI Configuration (solo elementi utilizzati)
 export const UI_CONFIG = {
   // Animation durations
   animations: {
@@ -226,20 +194,11 @@ export const UI_CONFIG = {
   // Toast notification settings
   notifications: {
     defaultDuration: 3000,
-    maxVisible: 5,
-    position: 'top-right'
-  },
-  
-  // Breakpoints (Tailwind-based)
-  breakpoints: {
-    sm: 640,
-    md: 768, 
-    lg: 1024,
-    xl: 1280
+    maxVisible: 5
   }
 };
 
-// Error Messages (centralizzati per consistency)
+// Error Messages (solo quelli utilizzati)
 export const ERROR_MESSAGES = {
   network: 'Errore di connessione. Controlla la tua connessione internet.',
   ai: 'Servizio AI temporaneamente non disponibile. Riprova più tardi.',
@@ -249,7 +208,6 @@ export const ERROR_MESSAGES = {
   export: 'Errore durante l\'esportazione. Riprova.',
   generic: 'Si è verificato un errore imprevisto.',
   wordNotFound: 'Parola non trovata.',
-  testInProgress: 'Test già in corso.',
   noWordsAvailable: 'Nessuna parola disponibile per il test.'
 };
 
@@ -262,15 +220,4 @@ export const SUCCESS_MESSAGES = {
   dataExported: 'Dati esportati con successo!',
   dataImported: 'Dati importati con successo!',
   settingsSaved: 'Impostazioni salvate!'
-};
-
-// Feature Flags (per future features o A/B testing)
-export const FEATURE_FLAGS = {
-  enableAdvancedStats: true,
-  enableWordPerformanceTracking: true,
-  enableAIAssistant: true,
-  enableDifficultWords: true,
-  enableChapterTests: true,
-  enableTimedTests: true,
-  enableHints: true
 };
