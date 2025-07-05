@@ -1,6 +1,10 @@
+// =====================================================
+// 📁 components/TestResults.js - FIXED estrazione dati enhanced
+// =====================================================
+
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Play, RotateCcw, Check, X, Trophy, Clock, Lightbulb, Target } from 'lucide-react';
+import { Play, RotateCcw, Check, X, Trophy, Clock, Lightbulb, Target, Timer, Zap } from 'lucide-react';
 import { getTestResult } from '../utils/textUtils';
 import { formatNotes } from '../utils/textUtils';
 
@@ -11,45 +15,87 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
     wrongWords: wrongWords?.length || 0
   });
 
-  // ⭐ ENHANCED: Gestione robusta dei dati stats con timing e hints
+  // ⭐ ENHANCED: Gestione robusta dei dati stats con timing e hints completi
   const getCorrectStats = () => {
-    if (stats && typeof stats.correct === 'number' && typeof stats.incorrect === 'number') {
-      return {
-        correct: stats.correct,
-        incorrect: stats.incorrect,
-        hints: stats.hints || 0,
-        totalTime: stats.totalTime || 0,
-        avgTimePerWord: stats.avgTimePerWord || 0
+    // ⭐ PRIORITY 1: Se stats contiene già i dati enhanced, usali direttamente
+    if (stats && typeof stats === 'object') {
+      const enhancedStats = {
+        correct: stats.correct || 0,
+        incorrect: stats.incorrect || 0,
+        hints: stats.hints || 0, // ⭐ CRITICAL: Extract hints
+        totalTime: stats.totalTime || 0, // ⭐ CRITICAL: Extract total time
+        avgTimePerWord: stats.avgTimePerWord || 0, // ⭐ CRITICAL: Extract average time
+        maxTimePerWord: stats.maxTimePerWord || 0, // ⭐ NEW: Extract max time
+        minTimePerWord: stats.minTimePerWord || 0, // ⭐ NEW: Extract min time
+        totalRecordedTime: stats.totalRecordedTime || 0 // ⭐ NEW: Extract recorded time
       };
+      
+      console.log('✅ TestResults - Using enhanced stats directly:', enhancedStats);
+      return enhancedStats;
     }
     
+    // ⭐ FALLBACK: Try legacy format extraction (just in case)
     if (stats) {
       const correct = stats.correct || stats.correctAnswers || stats.right || 0;
       const incorrect = stats.incorrect || stats.incorrectAnswers || stats.wrong || 0;
-      const hints = stats.hints || 0;
-      const totalTime = stats.totalTime || 0;
-      const avgTimePerWord = stats.avgTimePerWord || 0;
+      const hints = stats.hints || stats.hintsUsed || 0; // ⭐ Try multiple hint fields
+      const totalTime = stats.totalTime || stats.timeSpent || 0; // ⭐ Try multiple time fields
+      const avgTimePerWord = stats.avgTimePerWord || stats.averageTime || 0;
+      const maxTimePerWord = stats.maxTimePerWord || 0;
+      const minTimePerWord = stats.minTimePerWord || 0;
+      const totalRecordedTime = stats.totalRecordedTime || 0;
       
       if (correct > 0 || incorrect > 0) {
-        return { correct, incorrect, hints, totalTime, avgTimePerWord };
+        const legacyStats = { 
+          correct, 
+          incorrect, 
+          hints, 
+          totalTime, 
+          avgTimePerWord, 
+          maxTimePerWord, 
+          minTimePerWord, 
+          totalRecordedTime 
+        };
+        
+        console.log('⚠️ TestResults - Using legacy format:', legacyStats);
+        return legacyStats;
       }
     }
     
-    // Fallback: calcola dalla lunghezza delle parole sbagliate
+    // ⭐ FINAL FALLBACK: Calculate from wrongWords
     if (wrongWords && Array.isArray(wrongWords)) {
       const incorrect = wrongWords.length;
       const correct = Math.max(0, (stats?.total || 10) - incorrect);
       
-      return { 
+      const fallbackStats = { 
         correct, 
         incorrect, 
         hints: 0, 
         totalTime: 0, 
-        avgTimePerWord: 0 
+        avgTimePerWord: 0,
+        maxTimePerWord: 0,
+        minTimePerWord: 0,
+        totalRecordedTime: 0
       };
+      
+      console.log('⚠️ TestResults - Using wrongWords fallback:', fallbackStats);
+      return fallbackStats;
     }
     
-    return { correct: 0, incorrect: 0, hints: 0, totalTime: 0, avgTimePerWord: 0 };
+    // ⭐ DEFAULT: Empty stats
+    const defaultStats = { 
+      correct: 0, 
+      incorrect: 0, 
+      hints: 0, 
+      totalTime: 0, 
+      avgTimePerWord: 0,
+      maxTimePerWord: 0,
+      minTimePerWord: 0,
+      totalRecordedTime: 0
+    };
+    
+    console.log('❌ TestResults - Using default stats:', defaultStats);
+    return defaultStats;
   };
 
   const finalStats = getCorrectStats();
@@ -58,7 +104,7 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
     ? Math.round((finalStats.correct / totalAnswers) * 100) 
     : 0;
 
-  console.log('📊 TestResults - Stats calcolate:', {
+  console.log('📊 TestResults - Final processed stats:', {
     finalStats,
     totalAnswers,
     percentage
@@ -70,24 +116,32 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
     total: totalAnswers
   });
 
-  // ⭐ NEW: Format time helper
+  // ⭐ ENHANCED: Format time helper
   const formatTime = (seconds) => {
-    if (!seconds) return '0:00';
+    if (!seconds || seconds <= 0) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // ⭐ NEW: Calculate performance metrics
+  // ⭐ ENHANCED: Calculate performance metrics with ALL timing data
   const performanceMetrics = {
     accuracy: percentage,
     hintsUsed: finalStats.hints,
     hintsPercentage: totalAnswers > 0 ? Math.round((finalStats.hints / totalAnswers) * 100) : 0,
     totalTime: formatTime(finalStats.totalTime),
+    totalTimeSeconds: finalStats.totalTime,
     avgTime: finalStats.avgTimePerWord,
-    speedRating: finalStats.avgTimePerWord <= 10 ? 'Veloce' : 
-                 finalStats.avgTimePerWord <= 20 ? 'Normale' : 'Lento'
+    maxTime: finalStats.maxTimePerWord,
+    minTime: finalStats.minTimePerWord,
+    totalRecordedTime: formatTime(finalStats.totalRecordedTime),
+    speedRating: finalStats.avgTimePerWord <= 8 ? 'Molto veloce' :
+                 finalStats.avgTimePerWord <= 15 ? 'Veloce' : 
+                 finalStats.avgTimePerWord <= 25 ? 'Normale' : 'Lento',
+    efficiency: Math.max(0, percentage - (finalStats.hints / Math.max(1, totalAnswers) * 100))
   };
+
+  console.log('📊 TestResults - Performance metrics calculated:', performanceMetrics);
 
   return (
     <div className="space-y-8">
@@ -111,32 +165,38 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
             {finalStats.correct} corrette su {totalAnswers} domande
           </p>
           
-          {/* ⭐ NEW: Performance summary */}
-          <div className="mt-4 flex justify-center gap-6 text-sm text-gray-600">
+          {/* ⭐ ENHANCED: Performance summary with ALL stats */}
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
             {finalStats.hints > 0 && (
-              <span className="flex items-center gap-1">
+              <div className="flex items-center justify-center gap-1 bg-orange-100 px-3 py-2 rounded-lg">
                 <Lightbulb className="w-4 h-4 text-orange-500" />
-                {finalStats.hints} aiuti ({performanceMetrics.hintsPercentage}%)
-              </span>
+                <span>{finalStats.hints} aiuti ({performanceMetrics.hintsPercentage}%)</span>
+              </div>
             )}
             {finalStats.totalTime > 0 && (
-              <span className="flex items-center gap-1">
+              <div className="flex items-center justify-center gap-1 bg-blue-100 px-3 py-2 rounded-lg">
                 <Clock className="w-4 h-4 text-blue-500" />
-                {performanceMetrics.totalTime} totale
-              </span>
+                <span>{performanceMetrics.totalTime} totale</span>
+              </div>
             )}
             {finalStats.avgTimePerWord > 0 && (
-              <span className="flex items-center gap-1">
+              <div className="flex items-center justify-center gap-1 bg-purple-100 px-3 py-2 rounded-lg">
                 <Target className="w-4 h-4 text-purple-500" />
-                {finalStats.avgTimePerWord}s/parola ({performanceMetrics.speedRating})
-              </span>
+                <span>{finalStats.avgTimePerWord}s media ({performanceMetrics.speedRating})</span>
+              </div>
+            )}
+            {finalStats.maxTimePerWord > 0 && (
+              <div className="flex items-center justify-center gap-1 bg-red-100 px-3 py-2 rounded-lg">
+                <Timer className="w-4 h-4 text-red-500" />
+                <span>{finalStats.maxTimePerWord}s massimo</span>
+              </div>
             )}
           </div>
         </CardHeader>
         
         <CardContent className="relative pb-12">
-          {/* ⭐ ENHANCED: Statistiche con timer e hints */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-8">
+          {/* ⭐ ENHANCED: Statistiche complete con timing dettagliato */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 max-w-6xl mx-auto mb-8">
             <div className="bg-gradient-to-br from-green-500 to-emerald-500 p-6 rounded-2xl text-white text-center shadow-xl transform hover:scale-105 transition-transform">
               <div className="text-3xl font-bold">{finalStats.correct}</div>
               <div className="text-green-100">Corrette</div>
@@ -148,79 +208,123 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
               <X className="w-8 h-8 mx-auto mt-2 opacity-80" />
             </div>
             
-            {/* ⭐ NEW: Hints card */}
+            {/* ⭐ ENHANCED: Hints card con percentuale */}
             <div className="bg-gradient-to-br from-orange-500 to-yellow-500 p-6 rounded-2xl text-white text-center shadow-xl transform hover:scale-105 transition-transform">
               <div className="text-3xl font-bold">{finalStats.hints}</div>
-              <div className="text-orange-100">Aiuti</div>
+              <div className="text-orange-100">Aiuti ({performanceMetrics.hintsPercentage}%)</div>
               <Lightbulb className="w-8 h-8 mx-auto mt-2 opacity-80" />
             </div>
             
-            {/* ⭐ NEW: Time card */}
+            {/* ⭐ ENHANCED: Time card con dettagli */}
             <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-6 rounded-2xl text-white text-center shadow-xl transform hover:scale-105 transition-transform">
               <div className="text-3xl font-bold">{performanceMetrics.totalTime}</div>
-              <div className="text-blue-100">Tempo</div>
+              <div className="text-blue-100">Tempo Totale</div>
               <Clock className="w-8 h-8 mx-auto mt-2 opacity-80" />
+            </div>
+
+            {/* ⭐ ENHANCED: Efficiency card */}
+            <div className="bg-gradient-to-br from-purple-500 to-indigo-500 p-6 rounded-2xl text-white text-center shadow-xl transform hover:scale-105 transition-transform">
+              <div className="text-3xl font-bold">{Math.round(performanceMetrics.efficiency)}%</div>
+              <div className="text-purple-100">Efficienza</div>
+              <Zap className="w-8 h-8 mx-auto mt-2 opacity-80" />
             </div>
           </div>
 
-          {/* ⭐ NEW: Performance Analysis */}
-          {(finalStats.hints > 0 || finalStats.totalTime > 0) && (
+          {/* ⭐ ENHANCED: Detailed Timing Analysis */}
+          {(finalStats.avgTimePerWord > 0 || finalStats.hints > 0) && (
             <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-3xl overflow-hidden shadow-xl mb-8">
               <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
-                <CardTitle className="flex items-center gap-3">
+                <CardTitle className="flex items-center gap-3 text-white">
                   <Target className="w-6 h-6" />
-                  Analisi Performance
+                  Analisi Dettagliata Performance
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  
+                  {/* Timing Stats */}
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-indigo-600 mb-2">{performanceMetrics.accuracy}%</div>
-                    <div className="text-indigo-800 font-medium">Precisione</div>
-                    <div className="text-sm text-indigo-600 mt-1">
-                      {performanceMetrics.accuracy >= 80 ? '🏆 Eccellente!' :
-                       performanceMetrics.accuracy >= 60 ? '👍 Buono' : '📚 Da migliorare'}
+                    <h4 className="font-bold text-indigo-800 mb-3">⏱️ Statistiche Tempo</h4>
+                    <div className="space-y-2">
+                      <div className="bg-white p-3 rounded-lg border border-indigo-200">
+                        <div className="text-lg font-bold text-indigo-600">{performanceMetrics.avgTime}s</div>
+                        <div className="text-indigo-800 text-sm">Tempo Medio</div>
+                      </div>
+                      {finalStats.maxTimePerWord > 0 && (
+                        <div className="bg-white p-3 rounded-lg border border-red-200">
+                          <div className="text-lg font-bold text-red-600">{finalStats.maxTimePerWord}s</div>
+                          <div className="text-red-800 text-sm">Tempo Massimo</div>
+                        </div>
+                      )}
+                      {finalStats.minTimePerWord > 0 && (
+                        <div className="bg-white p-3 rounded-lg border border-green-200">
+                          <div className="text-lg font-bold text-green-600">{finalStats.minTimePerWord}s</div>
+                          <div className="text-green-800 text-sm">Tempo Minimo</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
-                  {finalStats.hints > 0 && (
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-600 mb-2">{performanceMetrics.hintsPercentage}%</div>
-                      <div className="text-orange-800 font-medium">Aiuti Usati</div>
-                      <div className="text-sm text-orange-600 mt-1">
-                        {performanceMetrics.hintsPercentage <= 20 ? '🎯 Ottimo controllo!' :
-                         performanceMetrics.hintsPercentage <= 40 ? '👌 Uso moderato' : '💡 Molti aiuti'}
+                  {/* Accuracy & Hints */}
+                  <div className="text-center">
+                    <h4 className="font-bold text-purple-800 mb-3">🎯 Accuratezza</h4>
+                    <div className="space-y-2">
+                      <div className="bg-white p-3 rounded-lg border border-purple-200">
+                        <div className="text-lg font-bold text-purple-600">{performanceMetrics.accuracy}%</div>
+                        <div className="text-purple-800 text-sm">Precisione</div>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-orange-200">
+                        <div className="text-lg font-bold text-orange-600">{performanceMetrics.hintsPercentage}%</div>
+                        <div className="text-orange-800 text-sm">Aiuti Utilizzati</div>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-indigo-200">
+                        <div className="text-lg font-bold text-indigo-600">{Math.round(performanceMetrics.efficiency)}%</div>
+                        <div className="text-indigo-800 text-sm">Efficienza Netta</div>
                       </div>
                     </div>
-                  )}
+                  </div>
                   
-                  {finalStats.avgTimePerWord > 0 && (
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600 mb-2">{finalStats.avgTimePerWord}s</div>
-                      <div className="text-blue-800 font-medium">Tempo Medio</div>
-                      <div className="text-sm text-blue-600 mt-1">
-                        {performanceMetrics.speedRating === 'Veloce' ? '⚡ Molto veloce!' :
-                         performanceMetrics.speedRating === 'Normale' ? '⏱️ Buon ritmo' : '🐌 Prenditi il tempo'}
+                  {/* Overall Rating */}
+                  <div className="text-center">
+                    <h4 className="font-bold text-green-800 mb-3">🏆 Valutazione</h4>
+                    <div className="space-y-2">
+                      <div className="bg-white p-3 rounded-lg border border-green-200">
+                        <div className="text-lg font-bold text-green-600">{performanceMetrics.speedRating}</div>
+                        <div className="text-green-800 text-sm">Velocità</div>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-blue-200">
+                        <div className="text-lg font-bold text-blue-600">
+                          {performanceMetrics.accuracy >= 80 && performanceMetrics.hintsPercentage <= 20 ? 'Eccellente' :
+                           performanceMetrics.accuracy >= 70 ? 'Molto Buono' :
+                           performanceMetrics.accuracy >= 60 ? 'Buono' : 'Da Migliorare'}
+                        </div>
+                        <div className="text-blue-800 text-sm">Performance</div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
                 
-                {/* ⭐ NEW: Performance tips */}
+                {/* ⭐ ENHANCED: Performance tips */}
                 <div className="mt-6 p-4 bg-white rounded-xl border border-indigo-200">
-                  <h4 className="font-bold text-indigo-800 mb-2">💡 Suggerimenti per migliorare:</h4>
+                  <h4 className="font-bold text-indigo-800 mb-2">💡 Analisi e Suggerimenti:</h4>
                   <div className="text-sm text-indigo-700 space-y-1">
                     {percentage < 60 && (
-                      <p>• Ripassa le parole sbagliate prima del prossimo test</p>
+                      <p>• 📚 Ripassa le parole sbagliate prima del prossimo test</p>
                     )}
                     {performanceMetrics.hintsPercentage > 30 && (
-                      <p>• Prova a ricordare il significato prima di usare gli aiuti</p>
+                      <p>• 💭 Prova a riflettere di più prima di usare gli aiuti (attuale: {performanceMetrics.hintsPercentage}%)</p>
                     )}
                     {finalStats.avgTimePerWord > 25 && (
-                      <p>• Pratica più spesso per migliorare i tempi di risposta</p>
+                      <p>• ⚡ Pratica per migliorare i tempi di risposta (media attuale: {finalStats.avgTimePerWord}s)</p>
                     )}
-                    {percentage >= 80 && performanceMetrics.hintsPercentage <= 20 && (
-                      <p>• 🏆 Ottima performance! Prova test più difficili o aggiungi nuove parole</p>
+                    {finalStats.maxTimePerWord > 60 && (
+                      <p>• ⏰ Alcune parole richiedono troppo tempo (max: {finalStats.maxTimePerWord}s) - ripassa quelle più difficili</p>
+                    )}
+                    {percentage >= 80 && performanceMetrics.hintsPercentage <= 20 && finalStats.avgTimePerWord <= 20 && (
+                      <p>• 🏆 Performance eccellente! Considera di aggiungere parole più difficili al tuo vocabolario</p>
+                    )}
+                    {performanceMetrics.efficiency > 70 && (
+                      <p>• ✨ Ottima efficienza ({Math.round(performanceMetrics.efficiency)}%) - equilibrio perfetto tra precisione e autonomia</p>
                     )}
                   </div>
                 </div>
@@ -247,7 +351,7 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
             </Button>
           </div>
 
-          {/* ⭐ ENHANCED: Parole Sbagliate con info hints */}
+          {/* ⭐ ENHANCED: Parole Sbagliate con info hints e timing */}
           {wrongWords && wrongWords.length > 0 && (
             <div className="mt-12">
               <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 rounded-3xl overflow-hidden shadow-xl">
@@ -274,7 +378,7 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
                               <span className="text-orange-400">→</span>
                               <span className="text-xl text-gray-700">{word.italian}</span>
                               
-                              {/* ⭐ NEW: Hint indicator */}
+                              {/* ⭐ ENHANCED: Hint indicator */}
                               {word.usedHint && (
                                 <span className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium">
                                   <Lightbulb className="w-3 h-3" />

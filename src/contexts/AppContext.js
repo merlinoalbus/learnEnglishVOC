@@ -29,11 +29,11 @@ const appReducer = (state, action) => {
     case 'SET_SHOW_CONFIRM_CLEAR':
       return { ...state, showConfirmClear: action.payload };
     case 'RESET_MODALS':
-      return { 
-        ...state, 
-        confirmDelete: null, 
-        showConfirmClear: false, 
-        showChapterSelector: false 
+      return {
+        ...state,
+        confirmDelete: null,
+        showConfirmClear: false,
+        showChapterSelector: false
       };
     default:
       return state;
@@ -78,7 +78,7 @@ export const AppProvider = ({ children }) => {
     ...state,
     dispatch,
     
-    // API Words - ⭐ ENHANCED: Added difficult toggle
+    // API Words - ⭐ ENHANCED: Added difficult toggle and forceRefresh
     words: wordsAPI.words,
     addWord: wordsAPI.addWord,
     removeWord: wordsAPI.removeWord,
@@ -86,6 +86,7 @@ export const AppProvider = ({ children }) => {
     toggleWordDifficult: wordsAPI.toggleWordDifficult,
     clearAllWords: wordsAPI.clearAllWords,
     importWords: wordsAPI.importWords,
+    forceRefresh: wordsAPI.forceRefresh, // ⭐ NEW: Expose force refresh
     getAvailableChapters: wordsAPI.getAvailableChapters,
     getChapterStats: wordsAPI.getChapterStats,
     wordStats: wordsAPI.wordStats,
@@ -96,7 +97,7 @@ export const AppProvider = ({ children }) => {
     // API Stats - ⭐ FIXED: Properly expose word performance functions
     stats: statsAPI.stats,
     testHistory: statsAPI.testHistory,
-    wordPerformance: statsAPI.wordPerformance, // ⭐ CRITICAL: Expose word performance data
+    wordPerformance: statsAPI.wordPerformance,
     calculatedStats: statsAPI.calculatedStats,
     updateTestStats: statsAPI.updateTestStats,
     addTestToHistory: statsAPI.addTestToHistory,
@@ -108,16 +109,17 @@ export const AppProvider = ({ children }) => {
     importStats: statsAPI.importStats,
     
     // ⭐ CRITICAL: Word performance functions
-    getAllWordsPerformance: statsAPI.getAllWordsPerformance, // ⭐ FIX: Must be exposed
-    getWordAnalysis: statsAPI.getWordAnalysis, // ⭐ FIX: Must be exposed
-    recordWordPerformance: statsAPI.recordWordPerformance // ⭐ FIX: Must be exposed
+    getAllWordsPerformance: statsAPI.getAllWordsPerformance,
+    getWordAnalysis: statsAPI.getWordAnalysis,
+    recordWordPerformance: statsAPI.recordWordPerformance
   };
 
   // ⭐ DEBUG: Final context value check
   console.log('🔗 AppContext value includes word functions:', {
     getAllWordsPerformance: !!value.getAllWordsPerformance,
     getWordAnalysis: !!value.getWordAnalysis,
-    wordPerformance: !!value.wordPerformance
+    wordPerformance: !!value.wordPerformance,
+    forceRefresh: !!value.forceRefresh // ⭐ NEW
   });
 
   return (

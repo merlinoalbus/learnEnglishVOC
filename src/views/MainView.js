@@ -14,8 +14,9 @@ export const MainView = React.memo(() => {
     dispatch,
     addWord,
     toggleWordLearned,
-    toggleWordDifficult, // ⭐ NEW: Difficult toggle
+    toggleWordDifficult,
     importWords,
+    forceRefresh, // ⭐ NEW: Force refresh function
     getAvailableChapters,
     getChapterStats,
     wordStats
@@ -32,8 +33,10 @@ export const MainView = React.memo(() => {
     dispatch({ type: 'SET_SHOW_CHAPTER_SELECTOR', payload: true });
   }, [words, dispatch, showWarning]);
 
+  // ⭐ ENHANCED: Better word addition with validation
   const handleAddWord = React.useCallback((wordData) => {
     try {
+      console.log('MainView: Adding/editing word:', wordData);
       addWord(wordData);
       dispatch({ type: 'SET_EDITING_WORD', payload: null });
       showSuccess(
@@ -42,6 +45,7 @@ export const MainView = React.memo(() => {
           : `✅ Parola "${wordData.english}" aggiunta!`
       );
     } catch (error) {
+      console.error('MainView: Error adding word:', error);
       showError(error, 'Add Word');
     }
   }, [addWord, editingWord, dispatch, showSuccess, showError]);
@@ -65,7 +69,6 @@ export const MainView = React.memo(() => {
     }
   }, [words, toggleWordLearned, showSuccess]);
 
-  // ⭐ NEW: Handle difficult toggle
   const handleToggleWordDifficult = React.useCallback((id) => {
     const word = words.find(w => w.id === id);
     if (word) {
@@ -78,16 +81,67 @@ export const MainView = React.memo(() => {
     }
   }, [words, toggleWordDifficult, showSuccess]);
 
-  const handleImportWords = React.useCallback((jsonText) => {
+  // ⭐ FIXED: Enhanced import with better error handling and force refresh
+  const handleImportWords = React.useCallback(async (jsonText) => {
     try {
-      const count = importWords(jsonText);
+      console.log('MainView: Starting import process...');
+      
+      // Call the import function
+      const count = await importWords(jsonText);
+      
+      // ⭐ CRITICAL: Force refresh to ensure UI synchronization
+      if (forceRefresh) {
+        console.log('MainView: Forcing refresh after import');
+        setTimeout(forceRefresh, 100);
+      }
+      
       showSuccess(`✅ ${count} parole importate con successo!`);
       return count;
     } catch (error) {
-      showError(error, 'Import Words');
+      console.error('MainView: Import error:', error);
+      
+      // ⭐ ENHANCED: Better error messages
+      if (error.message.includes('already exist')) {
+        showWarning('⚠️ Tutte le parole nel JSON sono già presenti nel vocabolario.');
+      } else if (error.message.includes('JSON')) {
+        showError(new Error('❌ File JSON non valido. Controlla la sintassi.'), 'Import Words');
+      } else {
+        showError(error, 'Import Words');
+      }
       throw error;
     }
-  }, [importWords, showSuccess, showError]);
+  }, [importWords, forceRefresh, showSuccess, showError, showWarning]);
+
+  // ⭐ NEW: Handle edit word with better ID validation
+  const handleEditWord = React.useCallback((word) => {
+    console.log('MainView: Editing word:', word);
+    
+    if (!word || !word.id) {
+      showError(new Error('Impossibile modificare: parola non valida'), 'Edit Word');
+      return;
+    }
+    
+    // ⭐ ENHANCED: Validate word exists in current words list
+    const existingWord = words.find(w => w.id === word.id);
+    if (!existingWord) {
+      showError(new Error('Parola non trovata nel vocabolario'), 'Edit Word');
+      console.error('Word not found in words list:', word.id, 'Available IDs:', words.map(w => w.id));
+      
+      // ⭐ RECOVERY: Force refresh and retry
+      if (forceRefresh) {
+        forceRefresh();
+        setTimeout(() => {
+          const refreshedWord = words.find(w => w.english === word.english);
+          if (refreshedWord) {
+            dispatch({ type: 'SET_EDITING_WORD', payload: refreshedWord });
+          }
+        }, 500);
+      }
+      return;
+    }
+    
+    dispatch({ type: 'SET_EDITING_WORD', payload: existingWord });
+  }, [words, dispatch, showError, forceRefresh]);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -113,10 +167,10 @@ export const MainView = React.memo(() => {
 
       <WordsList
         words={words}
-        onEditWord={(word) => dispatch({ type: 'SET_EDITING_WORD', payload: word })}
+        onEditWord={handleEditWord} // ⭐ FIXED: Use enhanced edit handler
         onRemoveWord={handleRemoveWord}
         onToggleLearned={handleToggleWordLearned}
-        onToggleDifficult={handleToggleWordDifficult} // ⭐ NEW: Difficult toggle
+        onToggleDifficult={handleToggleWordDifficult}
         showWordsList={showWordsList}
         setShowWordsList={() => dispatch({ type: 'TOGGLE_WORDS_LIST' })}
       />

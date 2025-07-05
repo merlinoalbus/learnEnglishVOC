@@ -1,3 +1,7 @@
+// =====================================================
+// 📁 hooks/useOptimizedTest.js - FIXED getTestSummary completo
+// =====================================================
+
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 
 export const useOptimizedTest = (onTestComplete) => {
@@ -11,27 +15,26 @@ export const useOptimizedTest = (onTestComplete) => {
   const [testWords, setTestWords] = useState([]);
   const [testSaved, setTestSaved] = useState(false);
   
-  // ⭐ ENHANCED: Timer functionality
+  // ⭐ ENHANCED: Timer e transizioni
   const [wordTimes, setWordTimes] = useState([]);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const testStartTimeRef = useRef(null);
-  const wordStartTimeRef = useRef(null); // ⭐ CRITICAL: Track when word appears
+  const wordStartTimeRef = useRef(null);
   
   // ⭐ ENHANCED: Hint functionality
   const [showHint, setShowHint] = useState(false);
   const [hintUsedForCurrentWord, setHintUsedForCurrentWord] = useState(false);
 
-  // ⭐ CRITICAL FIX: Start timing when word appears and reset meaning state
+  // ⭐ CRITICAL: Start timing when word appears (SOLO quando non in transizione)
   useEffect(() => {
-    if (currentWord && testMode) {
+    if (currentWord && testMode && !isTransitioning) {
       console.log('⏱️ New word appeared, starting timer:', currentWord.english);
       wordStartTimeRef.current = Date.now();
       setHintUsedForCurrentWord(false);
       setShowHint(false);
-      
-      // ⭐ CRITICAL: Reset meaning state for new word
       setShowMeaning(false);
     }
-  }, [currentWord, testMode]);
+  }, [currentWord, testMode, isTransitioning]);
 
   // ⭐ ENHANCED: Record word completion time
   const recordWordTime = useCallback((isCorrect, usedHint = false) => {
@@ -60,7 +63,6 @@ export const useOptimizedTest = (onTestComplete) => {
         return newTimes;
       });
       
-      // Reset timer reference
       wordStartTimeRef.current = null;
     } else {
       console.warn('⚠️ Cannot record time - missing wordStartTimeRef or currentWord');
@@ -81,16 +83,27 @@ export const useOptimizedTest = (onTestComplete) => {
     };
   }, [stats.correct, stats.incorrect, stats.hints, testWords.length]);
 
-  // ⭐ SUMMARY: Enhanced with hints and timing
+  // ⭐ ENHANCED: Summary con TUTTI i dati timing e hints per ResultsView
   const summaryData = useMemo(() => {
     const totalAnswered = stats.correct + stats.incorrect;
     const accuracy = totalAnswered > 0 ? Math.round((stats.correct / totalAnswered) * 100) : 0;
     const totalTestTime = testStartTimeRef.current ? Date.now() - testStartTimeRef.current : 0;
-    const avgTimePerWord = wordTimes.length > 0 
-      ? Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / wordTimes.length / 1000)
-      : 0;
     
-    return {
+    // ⭐ ENHANCED: Calcoli timing più precisi da wordTimes
+    const timingStats = wordTimes.length > 0 ? {
+      avgTimePerWord: Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / wordTimes.length / 1000),
+      maxTimePerWord: Math.round(Math.max(...wordTimes.map(r => r.timeSpent)) / 1000),
+      minTimePerWord: Math.round(Math.min(...wordTimes.map(r => r.timeSpent)) / 1000),
+      totalRecordedTime: Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / 1000)
+    } : {
+      avgTimePerWord: 0,
+      maxTimePerWord: 0,
+      minTimePerWord: 0,
+      totalRecordedTime: 0
+    };
+    
+    // ⭐ CRITICAL: Return COMPLETE summary with ALL enhanced data
+    const completeSummary = {
       current: totalAnswered + 1,
       total: testWords.length,
       percentage: Math.round((totalAnswered / testWords.length) * 100),
@@ -99,10 +112,18 @@ export const useOptimizedTest = (onTestComplete) => {
       accuracy,
       correct: stats.correct,
       incorrect: stats.incorrect,
-      hints: stats.hints,
-      avgTimePerWord,
-      totalTime: Math.round(totalTestTime / 1000)
+      hints: stats.hints, // ⭐ CRITICAL: Include hints count
+      totalTime: Math.round(totalTestTime / 1000), // ⭐ CRITICAL: Include total time
+      ...timingStats, // ⭐ CRITICAL: Include ALL timing stats
+      // ⭐ NEW: Additional enhanced data for results
+      wordTimes: [...wordTimes], // ⭐ Complete word timing data
+      testStartTime: testStartTimeRef.current,
+      hintsPercentage: totalAnswered > 0 ? Math.round((stats.hints / totalAnswered) * 100) : 0,
+      efficiency: totalAnswered > 0 ? Math.max(0, accuracy - Math.round((stats.hints / totalAnswered) * 100)) : 0
     };
+    
+    console.log('📊 useOptimizedTest - Complete summary calculated:', completeSummary);
+    return completeSummary;
   }, [stats.correct, stats.incorrect, stats.hints, testWords.length, wordTimes, testStartTimeRef.current]);
 
   // ⭐ OPTIMIZED RANDOM WORD SELECTION
@@ -119,18 +140,29 @@ export const useOptimizedTest = (onTestComplete) => {
     if (!testSaved && (finalStats.correct > 0 || finalStats.incorrect > 0) && onTestComplete) {
       const finalTestTime = testStartTimeRef.current ? Date.now() - testStartTimeRef.current : 0;
       
-      console.log('💾 Saving test results:', {
+      // ⭐ ENHANCED: Calcoli timing completi
+      const timingStats = wordTimes.length > 0 ? {
+        avgTimePerWord: Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / wordTimes.length / 1000),
+        maxTimePerWord: Math.round(Math.max(...wordTimes.map(r => r.timeSpent)) / 1000),
+        minTimePerWord: Math.round(Math.min(...wordTimes.map(r => r.timeSpent)) / 1000),
+        totalRecordedTime: Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / 1000)
+      } : {
+        avgTimePerWord: 0,
+        maxTimePerWord: 0,
+        minTimePerWord: 0,
+        totalRecordedTime: 0
+      };
+      
+      console.log('💾 Saving test results with complete timing:', {
         finalStats,
         wordTimesCount: wordTimes.length,
-        totalTime: Math.round(finalTestTime / 1000) + 's'
+        timingStats
       });
       
       const enhancedStats = {
         ...finalStats,
         totalTime: Math.round(finalTestTime / 1000),
-        avgTimePerWord: wordTimes.length > 0 
-          ? Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / wordTimes.length / 1000)
-          : 0,
+        ...timingStats, // ⭐ CRITICAL: Include tutti i dati timing
         wordTimes: [...wordTimes] // ⭐ CRITICAL: Pass complete word times array
       };
       
@@ -151,8 +183,9 @@ export const useOptimizedTest = (onTestComplete) => {
     setStats({ correct: 0, incorrect: 0, hints: 0 });
     setUsedWordIds(new Set());
     setWordTimes([]);
+    setIsTransitioning(false);
     testStartTimeRef.current = Date.now();
-    wordStartTimeRef.current = null; // ⭐ Reset word timer
+    wordStartTimeRef.current = null;
     
     const firstWord = getRandomUnusedWord(filteredWords, new Set());
     setCurrentWord(firstWord);
@@ -168,17 +201,26 @@ export const useOptimizedTest = (onTestComplete) => {
     setTestMode(true);
   }, [getRandomUnusedWord]);
 
+  // ⭐ ENHANCED: Next word con transizione corretta
   const nextWord = useCallback(() => {
     const nextRandomWord = getRandomUnusedWord(testWords, usedWordIds);
     
     if (nextRandomWord) {
       console.log('➡️ Moving to next word:', nextRandomWord.english);
-      setCurrentWord(nextRandomWord);
-      setUsedWordIds(prev => new Set([...prev, nextRandomWord.id]));
+      
+      setIsTransitioning(true);
       setShowMeaning(false);
-      setShowHint(false);
-      setHintUsedForCurrentWord(false);
-      // ⭐ Timer will be started by useEffect when currentWord changes
+      
+      setTimeout(() => {
+        setCurrentWord(nextRandomWord);
+        setUsedWordIds(prev => new Set([...prev, nextRandomWord.id]));
+        setShowHint(false);
+        setHintUsedForCurrentWord(false);
+        
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 100);
+      }, 400);
     }
   }, [testWords, usedWordIds, getRandomUnusedWord]);
 
@@ -193,7 +235,7 @@ export const useOptimizedTest = (onTestComplete) => {
     }
   }, [showHint, currentWord]);
 
-  // ⭐ CRITICAL FIX: Answer handling with proper timing
+  // ⭐ CRITICAL: Answer handling con timing corretto
   const handleAnswer = useCallback((isCorrect) => {
     console.log('📝 Handling answer:', { 
       isCorrect, 
@@ -202,7 +244,7 @@ export const useOptimizedTest = (onTestComplete) => {
       timeElapsed: wordStartTimeRef.current ? Math.round((Date.now() - wordStartTimeRef.current) / 1000) + 's' : 'no-timer'
     });
     
-    // ⭐ CRITICAL: Record timing BEFORE any state changes
+    // ⭐ CRITICAL: Record timing IMMEDIATAMENTE
     recordWordTime(isCorrect, hintUsedForCurrentWord);
     
     // ⭐ Update stats with hints properly tracked
@@ -231,31 +273,17 @@ export const useOptimizedTest = (onTestComplete) => {
       isLastQuestion
     });
     
-    if (showMeaning) {
-      setShowMeaning(false);
-      setTimeout(() => {
-        if (isLastQuestion) {
-          console.log('🏁 Test completed, saving results...');
-          saveTestResultsWithStats(newStats);
-          setTestMode(false);
-          setShowResults(true);
-          setCurrentWord(null);
-        } else {
-          nextWord();
-        }
-      }, 800);
+    // ⭐ ENHANCED: Gestione sequenza risposta → fine test o prossima parola
+    if (isLastQuestion) {
+      console.log('🏁 Test completed, saving results...');
+      saveTestResultsWithStats(newStats);
+      setTestMode(false);
+      setShowResults(true);
+      setCurrentWord(null);
     } else {
       setTimeout(() => {
-        if (isLastQuestion) {
-          console.log('🏁 Test completed, saving results...');
-          saveTestResultsWithStats(newStats);
-          setTestMode(false);
-          setShowResults(true);
-          setCurrentWord(null);
-        } else {
-          nextWord();
-        }
-      }, 300);
+        nextWord();
+      }, showMeaning ? 1000 : 600);
     }
   }, [currentWord, showMeaning, stats, testWords.length, hintUsedForCurrentWord, recordWordTime, saveTestResultsWithStats, nextWord]);
 
@@ -278,8 +306,9 @@ export const useOptimizedTest = (onTestComplete) => {
     setTestWords([]);
     setTestSaved(false);
     setWordTimes([]);
+    setIsTransitioning(false);
     testStartTimeRef.current = null;
-    wordStartTimeRef.current = null; // ⭐ Reset word timer
+    wordStartTimeRef.current = null;
   }, [stats, testSaved, saveTestResultsWithStats]);
 
   const startNewTest = useCallback(() => {
@@ -291,6 +320,7 @@ export const useOptimizedTest = (onTestComplete) => {
     setUsedWordIds(new Set());
     setCurrentWord(null);
     setWordTimes([]);
+    setIsTransitioning(false);
     startTest(testWords);
   }, [startTest, testWords]);
 
@@ -304,6 +334,7 @@ export const useOptimizedTest = (onTestComplete) => {
     stats,
     wrongWords,
     testWords,
+    isTransitioning,
     
     // ⭐ ENHANCED: Hint functionality
     showHint,
@@ -318,6 +349,7 @@ export const useOptimizedTest = (onTestComplete) => {
     resetTest,
     startNewTest,
     getTestProgress: useCallback(() => progressData, [progressData]),
+    // ⭐ CRITICAL: Return complete summary with ALL enhanced data
     getTestSummary: useCallback(() => summaryData, [summaryData])
   };
 };

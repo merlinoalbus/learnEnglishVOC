@@ -1154,75 +1154,197 @@ export class ErrorBoundary extends React.Component {
 NOME FILE: components\JSONManager.js
 
 // =====================================================
-// 📁 src/components/JSONManager.js - SOSTITUISCE il file esistente
+// 📁 src/components/JSONManager.js - FIXED Import/Export
 // =====================================================
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { FileDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileDown, ChevronDown, ChevronUp, Upload, Download } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
 
 const JSONManager = ({ words, onImportWords }) => {
   const [jsonText, setJsonText] = useState('');
   const [showSection, setShowSection] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // ⭐ AGGIORNATO: Usa il context invece della prop
   const { showSuccess, showError, showWarning } = useNotification();
 
   const handleExport = () => {
     if (words.length === 0) {
-      // ⭐ AGGIORNATO: Usa showWarning dal context
       showWarning('⚠️ Nessuna parola da esportare!');
       return;
     }
 
     try {
-      const dataStr = JSON.stringify(words, null, 2);
+      setIsProcessing(true);
+      
+      // ⭐ ENHANCED: Create comprehensive export data
+      const exportData = {
+        words: words,
+        exportDate: new Date().toISOString(),
+        totalWords: words.length,
+        version: '2.0',
+        appName: 'Vocabulary Master',
+        metadata: {
+          chapters: [...new Set(words.map(w => w.chapter).filter(Boolean))],
+          groups: [...new Set(words.map(w => w.group).filter(Boolean))],
+          learnedCount: words.filter(w => w.learned).length,
+          difficultCount: words.filter(w => w.difficult).length
+        }
+      };
+
+      const dataStr = JSON.stringify(exportData, null, 2);
       setJsonText(dataStr);
       setShowSection(true);
-      // ⭐ AGGIORNATO: Usa showSuccess dal context
-      showSuccess('✅ Parole esportate con successo!');
+      showSuccess(`✅ ${words.length} parole esportate con successo!`);
     } catch (error) {
-      console.error('Error exporting words:', error);
-      // ⭐ AGGIORNATO: Usa showError dal context per gestione centralizzata
+      console.error('Export error:', error);
       showError(error, 'Export JSON');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleImport = () => {
+  const downloadAsFile = () => {
     if (!jsonText.trim()) {
-      // ⭐ AGGIORNATO: Usa showWarning dal context
+      showWarning('⚠️ Nessun JSON da scaricare! Esporta prima i dati.');
+      return;
+    }
+
+    try {
+      const blob = new Blob([jsonText], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `vocabulary-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      showSuccess('✅ File scaricato con successo!');
+    } catch (error) {
+      console.error('Download error:', error);
+      showError(error, 'Download File');
+    }
+  };
+
+  const handleImport = async () => {
+    if (!jsonText.trim()) {
       showWarning('⚠️ Inserisci del JSON da importare!');
       return;
     }
 
     try {
-      const newWordsCount = onImportWords(jsonText.trim());
+      setIsProcessing(true);
+      
+      // ⭐ FIXED: Better JSON validation and parsing
+      let parsedData;
+      try {
+        parsedData = JSON.parse(jsonText.trim());
+      } catch (parseError) {
+        throw new Error('JSON non valido! Controlla la sintassi.');
+      }
+
+      // ⭐ FIXED: Handle different import formats
+      let wordsToImport;
+      
+      if (Array.isArray(parsedData)) {
+        // Direct array of words
+        wordsToImport = parsedData;
+        console.log('📥 Importing direct array format:', wordsToImport.length, 'words');
+      } else if (parsedData.words && Array.isArray(parsedData.words)) {
+        // Export format with metadata
+        wordsToImport = parsedData.words;
+        console.log('📥 Importing export format:', wordsToImport.length, 'words');
+        
+        if (parsedData.metadata) {
+          showSuccess(`📊 Rilevato backup ${parsedData.version || 'legacy'} del ${new Date(parsedData.exportDate).toLocaleDateString()}`);
+        }
+      } else {
+        throw new Error('Formato JSON non valido. Atteso array di parole o oggetto con campo "words".');
+      }
+
+      // ⭐ FIXED: Validate words structure
+      if (!wordsToImport || wordsToImport.length === 0) {
+        throw new Error('Nessuna parola trovata nel JSON.');
+      }
+
+      // ⭐ FIXED: Validate word structure
+      const validWords = wordsToImport.filter(word => {
+        return word && 
+               typeof word === 'object' && 
+               word.english && 
+               word.italian &&
+               typeof word.english === 'string' &&
+               typeof word.italian === 'string';
+      });
+
+      if (validWords.length === 0) {
+        throw new Error('Nessuna parola valida trovata. Ogni parola deve avere almeno "english" e "italian".');
+      }
+
+      if (validWords.length < wordsToImport.length) {
+        showWarning(`⚠️ ${wordsToImport.length - validWords.length} parole saltate perché non valide.`);
+      }
+
+      // ⭐ FIXED: Call import function and handle response
+      const importedCount = await onImportWords(JSON.stringify(validWords));
+      
+      // ⭐ FIXED: Clear text after successful import
       setJsonText('');
-      // ⭐ AGGIORNATO: Usa showSuccess dal context
-      showSuccess(`✅ ${newWordsCount} parole importate con successo!`);
+      setShowSection(true); // Keep section open to show success
+      
+      showSuccess(`✅ ${importedCount} nuove parole importate con successo!`);
+      
     } catch (error) {
-      console.error('Error importing words:', error);
+      console.error('Import error:', error);
       
-      // ⭐ AGGIORNATO: Gestione errori migliorata con context
-      const errorMessage = error.message.includes('JSON') ? 
-        '❌ JSON non valido! Controlla la sintassi.' : 
-        `❌ ${error.message}`;
-      
-      // Usa showError per errori gravi, showWarning per problemi di formato
-      if (error.message.includes('JSON') || error.message.includes('Invalid')) {
-        showWarning(errorMessage);
+      // ⭐ ENHANCED: Better error handling
+      if (error.message.includes('JSON') || error.message.includes('syntax')) {
+        showError(new Error('❌ JSON non valido! Controlla la sintassi.'), 'Import JSON');
+      } else if (error.message.includes('already exist')) {
+        showWarning('⚠️ Tutte le parole sono già presenti nel vocabolario.');
       } else {
         showError(error, 'Import JSON');
       }
+    } finally {
+      setIsProcessing(false);
     }
+  };
+
+  // ⭐ NEW: Handle file upload
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+      showWarning('⚠️ Seleziona un file JSON valido.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target.result;
+        setJsonText(content);
+        setShowSection(true);
+        showSuccess('📁 File caricato! Verifica il contenuto e clicca "Importa JSON".');
+      } catch (error) {
+        showError(error, 'File Reading');
+      }
+    };
+    reader.onerror = () => {
+      showError(new Error('Errore nella lettura del file'), 'File Reading');
+    };
+    reader.readAsText(file);
   };
 
   return (
     <Card className="backdrop-blur-sm bg-white/90 border-0 shadow-xl rounded-3xl overflow-hidden">
       <CardHeader 
-        className="cursor-pointer hover:bg-gray-50 transition-colors" 
+        className="cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={() => setShowSection(!showSection)}
       >
         <CardTitle className="flex items-center justify-between">
@@ -1237,7 +1359,7 @@ const JSONManager = ({ words, onImportWords }) => {
       </CardHeader>
       {showSection && (
         <CardContent className="animate-fade-in">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="p-4 bg-blue-50 rounded-2xl border border-blue-200">
               <p className="text-blue-800 text-sm flex items-center gap-2">
                 <span className="text-lg">💡</span>
@@ -1245,60 +1367,150 @@ const JSONManager = ({ words, onImportWords }) => {
               </p>
             </div>
             
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleExport} 
-                variant="outline" 
-                disabled={words.length === 0}
-                className="border-2 border-blue-300 hover:border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-600"
+            {/* ⭐ ENHANCED: Action buttons grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <Button
+                onClick={handleExport}
+                disabled={words.length === 0 || isProcessing}
+                className="border-2 border-blue-300 hover:border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center gap-2"
               >
+                <Download className="w-4 h-4" />
                 📤 Esporta JSON
               </Button>
-              <Button 
-                onClick={handleImport} 
-                variant="outline"
-                className="border-2 border-purple-300 hover:border-purple-400 bg-purple-50 hover:bg-purple-100 text-purple-600"
+              
+              <Button
+                onClick={downloadAsFile}
+                disabled={!jsonText.trim() || isProcessing}
+                className="border-2 border-green-300 hover:border-green-400 bg-green-50 hover:bg-green-100 text-green-600 flex items-center justify-center gap-2"
               >
+                <FileDown className="w-4 h-4" />
+                💾 Scarica File
+              </Button>
+              
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={handleFileUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  disabled={isProcessing}
+                />
+                <Button
+                  disabled={isProcessing}
+                  className="w-full border-2 border-orange-300 hover:border-orange-400 bg-orange-50 hover:bg-orange-100 text-orange-600 flex items-center justify-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  📁 Carica File
+                </Button>
+              </div>
+              
+              <Button
+                onClick={handleImport}
+                disabled={!jsonText.trim() || isProcessing}
+                className="border-2 border-purple-300 hover:border-purple-400 bg-purple-50 hover:bg-purple-100 text-purple-600 flex items-center justify-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
                 📥 Importa JSON
               </Button>
             </div>
             
             <Textarea
-              placeholder="Il JSON delle parole apparirà qui dopo 'Esporta JSON', oppure incolla qui il JSON da importare..."
+              placeholder="Il JSON delle parole apparirà qui dopo 'Esporta JSON', oppure incolla/carica qui il JSON da importare..."
               value={jsonText}
               onChange={(e) => setJsonText(e.target.value)}
               rows={12}
               className="font-mono text-sm border-2 border-gray-200 rounded-2xl focus:border-blue-500 transition-colors"
+              disabled={isProcessing}
             />
             
-            {/* ⭐ AGGIUNTO: Info sui formati supportati */}
+            {/* ⭐ ENHANCED: Status indicators */}
             {jsonText && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
-                <p className="text-green-800 text-sm">
-                  💾 <strong>Formato rilevato:</strong> {
-                    (() => {
-                      try {
-                        const parsed = JSON.parse(jsonText);
-                        const isArray = Array.isArray(parsed);
-                        const hasWords = isArray && parsed.length > 0;
-                        const firstItem = hasWords ? parsed[0] : null;
-                        const hasEnglishItalian = firstItem && firstItem.english && firstItem.italian;
-                        
-                        if (hasEnglishItalian) {
-                          return `Array di ${parsed.length} parole (✅ Formato valido)`;
-                        } else if (isArray) {
-                          return `Array con ${parsed.length} elementi (⚠️ Verificare formato)`;
-                        } else {
-                          return 'Oggetto JSON (⚠️ Array richiesto)';
+              <div className="space-y-2">
+                <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
+                  <p className="text-green-800 text-sm">
+                    💾 <strong>Formato rilevato:</strong> {
+                      (() => {
+                        try {
+                          const parsed = JSON.parse(jsonText);
+                          
+                          if (Array.isArray(parsed)) {
+                            const hasWords = parsed.length > 0;
+                            const firstItem = hasWords ? parsed[0] : null;
+                            const hasEnglishItalian = firstItem && firstItem.english && firstItem.italian;
+                            
+                            if (hasEnglishItalian) {
+                              return `Array di ${parsed.length} parole (✅ Formato valido)`;
+                            } else if (hasWords) {
+                              return `Array con ${parsed.length} elementi (⚠️ Verificare formato)`;
+                            } else {
+                              return 'Array vuoto (❌ Nessuna parola)';
+                            }
+                          } else if (parsed.words && Array.isArray(parsed.words)) {
+                            return `Backup Export v${parsed.version || '1.0'} con ${parsed.words.length} parole (✅ Formato valido)`;
+                          } else {
+                            return 'Oggetto JSON (⚠️ Array o campo "words" richiesto)';
+                          }
+                        } catch {
+                          return 'JSON non valido (❌ Errore sintassi)';
                         }
-                      } catch {
-                        return 'JSON non valido (❌ Errore sintassi)';
-                      }
-                    })()
+                      })()
+                    }
+                  </p>
+                </div>
+                
+                {/* ⭐ NEW: Import preview */}
+                {(() => {
+                  try {
+                    const parsed = JSON.parse(jsonText);
+                    let wordsArray = Array.isArray(parsed) ? parsed : parsed.words;
+                    
+                    if (wordsArray && wordsArray.length > 0) {
+                      const sampleWords = wordsArray.slice(0, 3);
+                      return (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                          <p className="text-blue-800 text-sm font-bold mb-2">👀 Anteprima prime parole:</p>
+                          <div className="space-y-1">
+                            {sampleWords.map((word, idx) => (
+                              <div key={idx} className="text-xs text-blue-700 font-mono">
+                                • {word.english} → {word.italian}
+                                {word.chapter && ` (Cap. ${word.chapter})`}
+                                {word.group && ` [${word.group}]`}
+                              </div>
+                            ))}
+                            {wordsArray.length > 3 && (
+                              <div className="text-xs text-blue-600">
+                                ... e altre {wordsArray.length - 3} parole
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                  } catch {
+                    return null;
                   }
-                </p>
+                })()}
               </div>
             )}
+            
+            {/* ⭐ NEW: Processing indicator */}
+            {isProcessing && (
+              <div className="flex items-center justify-center p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                <div className="animate-spin w-5 h-5 border-2 border-yellow-500 border-t-transparent rounded-full mr-3"></div>
+                <span className="text-yellow-800 font-medium">Elaborazione in corso...</span>
+              </div>
+            )}
+            
+            {/* ⭐ ENHANCED: Usage instructions */}
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <h4 className="font-bold text-gray-800 mb-2">📖 Come usare:</h4>
+              <div className="text-sm text-gray-700 space-y-1">
+                <p><strong>1. Esportare:</strong> Clicca "Esporta JSON" per vedere i tuoi dati</p>
+                <p><strong>2. Scaricare:</strong> Clicca "Scarica File" per salvare un file .json</p>
+                <p><strong>3. Importare:</strong> Carica un file .json o incolla il contenuto, poi clicca "Importa JSON"</p>
+                <p><strong>4. Formati supportati:</strong> Array di parole o oggetto con campo "words"</p>
+              </div>
+            </div>
           </div>
         </CardContent>
       )}
@@ -1312,18 +1524,14 @@ export default JSONManager;
 
 NOME FILE: components\TestCard.js
 
-// /src/components/TestCard.js
-// This file contains the TestCard component, which displays a vocabulary word card that can be flipped to show its meaning.
-// It includes the word in English, its Italian translation, an example sentence, and any notes associated with the word.
-// The card has a front and back side, with animations for flipping. It also includes category styling based on the word's group.
-// The component is designed to be interactive, allowing users to click to flip the card and view the translation and additional information.
-// The TestCard component is used in the vocabulary testing feature of the application, providing a visually appealing and functional way to learn vocabulary words.
-// It is styled using Tailwind CSS for a modern and responsive design.
+// =====================================================
+// 📁 components/TestCard.js - FIXED suggerimento in alto
+// =====================================================
 
 import { getCategoryStyle } from '../utils/categoryUtils';
 import { formatNotes } from '../utils/textUtils';
 
-const TestCard = ({ word, showMeaning, onFlip }) => {
+const TestCard = ({ word, showMeaning, onFlip, showHint, hintUsed }) => {
   return (
     <div 
       className="relative cursor-pointer transform transition-transform duration-300 hover:scale-105"
@@ -1345,7 +1553,28 @@ const TestCard = ({ word, showMeaning, onFlip }) => {
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500"></div>
           <div className="absolute inset-0 bg-black/20"></div>
           <div className="relative h-full flex flex-col items-center justify-center text-white p-8">
-            <div className="text-center space-y-6">
+            
+            {/* ⭐ FIXED: Suggerimento spostato in alto */}
+            {showHint && word.sentence && (
+              <div className="absolute top-6 left-6 right-6">
+                <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/30 animate-fade-in">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">💡</span>
+                    <span className="text-sm font-bold text-white/90">Suggerimento:</span>
+                    {hintUsed && (
+                      <span className="text-xs bg-orange-400/80 text-white px-2 py-1 rounded-full">
+                        Conteggiato
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm italic text-white/90 leading-relaxed">
+                    "{word.sentence}"
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
               <div className="text-5xl font-bold drop-shadow-lg">
                 {word.english}
               </div>
@@ -1382,6 +1611,16 @@ const TestCard = ({ word, showMeaning, onFlip }) => {
               <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow-lg">
                 <span>{getCategoryStyle(word.group).icon}</span>
                 <span>{word.group}</span>
+              </div>
+            </div>
+          )}
+          
+          {/* ⭐ ENHANCED: Hint indicator sul retro se usato */}
+          {hintUsed && (
+            <div className="absolute top-4 left-4 z-10">
+              <div className="bg-orange-500/80 backdrop-blur-sm text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow-lg">
+                <span>💡</span>
+                <span>Aiuto usato</span>
               </div>
             </div>
           )}
@@ -1773,9 +2012,13 @@ export default TestHistory;
 
 NOME FILE: components\TestResults.js
 
+// =====================================================
+// 📁 components/TestResults.js - FIXED estrazione dati enhanced
+// =====================================================
+
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Play, RotateCcw, Check, X, Trophy, Clock, Lightbulb, Target } from 'lucide-react';
+import { Play, RotateCcw, Check, X, Trophy, Clock, Lightbulb, Target, Timer, Zap } from 'lucide-react';
 import { getTestResult } from '../utils/textUtils';
 import { formatNotes } from '../utils/textUtils';
 
@@ -1786,45 +2029,87 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
     wrongWords: wrongWords?.length || 0
   });
 
-  // ⭐ ENHANCED: Gestione robusta dei dati stats con timing e hints
+  // ⭐ ENHANCED: Gestione robusta dei dati stats con timing e hints completi
   const getCorrectStats = () => {
-    if (stats && typeof stats.correct === 'number' && typeof stats.incorrect === 'number') {
-      return {
-        correct: stats.correct,
-        incorrect: stats.incorrect,
-        hints: stats.hints || 0,
-        totalTime: stats.totalTime || 0,
-        avgTimePerWord: stats.avgTimePerWord || 0
+    // ⭐ PRIORITY 1: Se stats contiene già i dati enhanced, usali direttamente
+    if (stats && typeof stats === 'object') {
+      const enhancedStats = {
+        correct: stats.correct || 0,
+        incorrect: stats.incorrect || 0,
+        hints: stats.hints || 0, // ⭐ CRITICAL: Extract hints
+        totalTime: stats.totalTime || 0, // ⭐ CRITICAL: Extract total time
+        avgTimePerWord: stats.avgTimePerWord || 0, // ⭐ CRITICAL: Extract average time
+        maxTimePerWord: stats.maxTimePerWord || 0, // ⭐ NEW: Extract max time
+        minTimePerWord: stats.minTimePerWord || 0, // ⭐ NEW: Extract min time
+        totalRecordedTime: stats.totalRecordedTime || 0 // ⭐ NEW: Extract recorded time
       };
+      
+      console.log('✅ TestResults - Using enhanced stats directly:', enhancedStats);
+      return enhancedStats;
     }
     
+    // ⭐ FALLBACK: Try legacy format extraction (just in case)
     if (stats) {
       const correct = stats.correct || stats.correctAnswers || stats.right || 0;
       const incorrect = stats.incorrect || stats.incorrectAnswers || stats.wrong || 0;
-      const hints = stats.hints || 0;
-      const totalTime = stats.totalTime || 0;
-      const avgTimePerWord = stats.avgTimePerWord || 0;
+      const hints = stats.hints || stats.hintsUsed || 0; // ⭐ Try multiple hint fields
+      const totalTime = stats.totalTime || stats.timeSpent || 0; // ⭐ Try multiple time fields
+      const avgTimePerWord = stats.avgTimePerWord || stats.averageTime || 0;
+      const maxTimePerWord = stats.maxTimePerWord || 0;
+      const minTimePerWord = stats.minTimePerWord || 0;
+      const totalRecordedTime = stats.totalRecordedTime || 0;
       
       if (correct > 0 || incorrect > 0) {
-        return { correct, incorrect, hints, totalTime, avgTimePerWord };
+        const legacyStats = { 
+          correct, 
+          incorrect, 
+          hints, 
+          totalTime, 
+          avgTimePerWord, 
+          maxTimePerWord, 
+          minTimePerWord, 
+          totalRecordedTime 
+        };
+        
+        console.log('⚠️ TestResults - Using legacy format:', legacyStats);
+        return legacyStats;
       }
     }
     
-    // Fallback: calcola dalla lunghezza delle parole sbagliate
+    // ⭐ FINAL FALLBACK: Calculate from wrongWords
     if (wrongWords && Array.isArray(wrongWords)) {
       const incorrect = wrongWords.length;
       const correct = Math.max(0, (stats?.total || 10) - incorrect);
       
-      return { 
+      const fallbackStats = { 
         correct, 
         incorrect, 
         hints: 0, 
         totalTime: 0, 
-        avgTimePerWord: 0 
+        avgTimePerWord: 0,
+        maxTimePerWord: 0,
+        minTimePerWord: 0,
+        totalRecordedTime: 0
       };
+      
+      console.log('⚠️ TestResults - Using wrongWords fallback:', fallbackStats);
+      return fallbackStats;
     }
     
-    return { correct: 0, incorrect: 0, hints: 0, totalTime: 0, avgTimePerWord: 0 };
+    // ⭐ DEFAULT: Empty stats
+    const defaultStats = { 
+      correct: 0, 
+      incorrect: 0, 
+      hints: 0, 
+      totalTime: 0, 
+      avgTimePerWord: 0,
+      maxTimePerWord: 0,
+      minTimePerWord: 0,
+      totalRecordedTime: 0
+    };
+    
+    console.log('❌ TestResults - Using default stats:', defaultStats);
+    return defaultStats;
   };
 
   const finalStats = getCorrectStats();
@@ -1833,7 +2118,7 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
     ? Math.round((finalStats.correct / totalAnswers) * 100) 
     : 0;
 
-  console.log('📊 TestResults - Stats calcolate:', {
+  console.log('📊 TestResults - Final processed stats:', {
     finalStats,
     totalAnswers,
     percentage
@@ -1845,24 +2130,32 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
     total: totalAnswers
   });
 
-  // ⭐ NEW: Format time helper
+  // ⭐ ENHANCED: Format time helper
   const formatTime = (seconds) => {
-    if (!seconds) return '0:00';
+    if (!seconds || seconds <= 0) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // ⭐ NEW: Calculate performance metrics
+  // ⭐ ENHANCED: Calculate performance metrics with ALL timing data
   const performanceMetrics = {
     accuracy: percentage,
     hintsUsed: finalStats.hints,
     hintsPercentage: totalAnswers > 0 ? Math.round((finalStats.hints / totalAnswers) * 100) : 0,
     totalTime: formatTime(finalStats.totalTime),
+    totalTimeSeconds: finalStats.totalTime,
     avgTime: finalStats.avgTimePerWord,
-    speedRating: finalStats.avgTimePerWord <= 10 ? 'Veloce' : 
-                 finalStats.avgTimePerWord <= 20 ? 'Normale' : 'Lento'
+    maxTime: finalStats.maxTimePerWord,
+    minTime: finalStats.minTimePerWord,
+    totalRecordedTime: formatTime(finalStats.totalRecordedTime),
+    speedRating: finalStats.avgTimePerWord <= 8 ? 'Molto veloce' :
+                 finalStats.avgTimePerWord <= 15 ? 'Veloce' : 
+                 finalStats.avgTimePerWord <= 25 ? 'Normale' : 'Lento',
+    efficiency: Math.max(0, percentage - (finalStats.hints / Math.max(1, totalAnswers) * 100))
   };
+
+  console.log('📊 TestResults - Performance metrics calculated:', performanceMetrics);
 
   return (
     <div className="space-y-8">
@@ -1886,32 +2179,38 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
             {finalStats.correct} corrette su {totalAnswers} domande
           </p>
           
-          {/* ⭐ NEW: Performance summary */}
-          <div className="mt-4 flex justify-center gap-6 text-sm text-gray-600">
+          {/* ⭐ ENHANCED: Performance summary with ALL stats */}
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
             {finalStats.hints > 0 && (
-              <span className="flex items-center gap-1">
+              <div className="flex items-center justify-center gap-1 bg-orange-100 px-3 py-2 rounded-lg">
                 <Lightbulb className="w-4 h-4 text-orange-500" />
-                {finalStats.hints} aiuti ({performanceMetrics.hintsPercentage}%)
-              </span>
+                <span>{finalStats.hints} aiuti ({performanceMetrics.hintsPercentage}%)</span>
+              </div>
             )}
             {finalStats.totalTime > 0 && (
-              <span className="flex items-center gap-1">
+              <div className="flex items-center justify-center gap-1 bg-blue-100 px-3 py-2 rounded-lg">
                 <Clock className="w-4 h-4 text-blue-500" />
-                {performanceMetrics.totalTime} totale
-              </span>
+                <span>{performanceMetrics.totalTime} totale</span>
+              </div>
             )}
             {finalStats.avgTimePerWord > 0 && (
-              <span className="flex items-center gap-1">
+              <div className="flex items-center justify-center gap-1 bg-purple-100 px-3 py-2 rounded-lg">
                 <Target className="w-4 h-4 text-purple-500" />
-                {finalStats.avgTimePerWord}s/parola ({performanceMetrics.speedRating})
-              </span>
+                <span>{finalStats.avgTimePerWord}s media ({performanceMetrics.speedRating})</span>
+              </div>
+            )}
+            {finalStats.maxTimePerWord > 0 && (
+              <div className="flex items-center justify-center gap-1 bg-red-100 px-3 py-2 rounded-lg">
+                <Timer className="w-4 h-4 text-red-500" />
+                <span>{finalStats.maxTimePerWord}s massimo</span>
+              </div>
             )}
           </div>
         </CardHeader>
         
         <CardContent className="relative pb-12">
-          {/* ⭐ ENHANCED: Statistiche con timer e hints */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-8">
+          {/* ⭐ ENHANCED: Statistiche complete con timing dettagliato */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 max-w-6xl mx-auto mb-8">
             <div className="bg-gradient-to-br from-green-500 to-emerald-500 p-6 rounded-2xl text-white text-center shadow-xl transform hover:scale-105 transition-transform">
               <div className="text-3xl font-bold">{finalStats.correct}</div>
               <div className="text-green-100">Corrette</div>
@@ -1923,79 +2222,123 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
               <X className="w-8 h-8 mx-auto mt-2 opacity-80" />
             </div>
             
-            {/* ⭐ NEW: Hints card */}
+            {/* ⭐ ENHANCED: Hints card con percentuale */}
             <div className="bg-gradient-to-br from-orange-500 to-yellow-500 p-6 rounded-2xl text-white text-center shadow-xl transform hover:scale-105 transition-transform">
               <div className="text-3xl font-bold">{finalStats.hints}</div>
-              <div className="text-orange-100">Aiuti</div>
+              <div className="text-orange-100">Aiuti ({performanceMetrics.hintsPercentage}%)</div>
               <Lightbulb className="w-8 h-8 mx-auto mt-2 opacity-80" />
             </div>
             
-            {/* ⭐ NEW: Time card */}
+            {/* ⭐ ENHANCED: Time card con dettagli */}
             <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-6 rounded-2xl text-white text-center shadow-xl transform hover:scale-105 transition-transform">
               <div className="text-3xl font-bold">{performanceMetrics.totalTime}</div>
-              <div className="text-blue-100">Tempo</div>
+              <div className="text-blue-100">Tempo Totale</div>
               <Clock className="w-8 h-8 mx-auto mt-2 opacity-80" />
+            </div>
+
+            {/* ⭐ ENHANCED: Efficiency card */}
+            <div className="bg-gradient-to-br from-purple-500 to-indigo-500 p-6 rounded-2xl text-white text-center shadow-xl transform hover:scale-105 transition-transform">
+              <div className="text-3xl font-bold">{Math.round(performanceMetrics.efficiency)}%</div>
+              <div className="text-purple-100">Efficienza</div>
+              <Zap className="w-8 h-8 mx-auto mt-2 opacity-80" />
             </div>
           </div>
 
-          {/* ⭐ NEW: Performance Analysis */}
-          {(finalStats.hints > 0 || finalStats.totalTime > 0) && (
+          {/* ⭐ ENHANCED: Detailed Timing Analysis */}
+          {(finalStats.avgTimePerWord > 0 || finalStats.hints > 0) && (
             <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-3xl overflow-hidden shadow-xl mb-8">
               <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
-                <CardTitle className="flex items-center gap-3">
+                <CardTitle className="flex items-center gap-3 text-white">
                   <Target className="w-6 h-6" />
-                  Analisi Performance
+                  Analisi Dettagliata Performance
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  
+                  {/* Timing Stats */}
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-indigo-600 mb-2">{performanceMetrics.accuracy}%</div>
-                    <div className="text-indigo-800 font-medium">Precisione</div>
-                    <div className="text-sm text-indigo-600 mt-1">
-                      {performanceMetrics.accuracy >= 80 ? '🏆 Eccellente!' :
-                       performanceMetrics.accuracy >= 60 ? '👍 Buono' : '📚 Da migliorare'}
+                    <h4 className="font-bold text-indigo-800 mb-3">⏱️ Statistiche Tempo</h4>
+                    <div className="space-y-2">
+                      <div className="bg-white p-3 rounded-lg border border-indigo-200">
+                        <div className="text-lg font-bold text-indigo-600">{performanceMetrics.avgTime}s</div>
+                        <div className="text-indigo-800 text-sm">Tempo Medio</div>
+                      </div>
+                      {finalStats.maxTimePerWord > 0 && (
+                        <div className="bg-white p-3 rounded-lg border border-red-200">
+                          <div className="text-lg font-bold text-red-600">{finalStats.maxTimePerWord}s</div>
+                          <div className="text-red-800 text-sm">Tempo Massimo</div>
+                        </div>
+                      )}
+                      {finalStats.minTimePerWord > 0 && (
+                        <div className="bg-white p-3 rounded-lg border border-green-200">
+                          <div className="text-lg font-bold text-green-600">{finalStats.minTimePerWord}s</div>
+                          <div className="text-green-800 text-sm">Tempo Minimo</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
-                  {finalStats.hints > 0 && (
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-600 mb-2">{performanceMetrics.hintsPercentage}%</div>
-                      <div className="text-orange-800 font-medium">Aiuti Usati</div>
-                      <div className="text-sm text-orange-600 mt-1">
-                        {performanceMetrics.hintsPercentage <= 20 ? '🎯 Ottimo controllo!' :
-                         performanceMetrics.hintsPercentage <= 40 ? '👌 Uso moderato' : '💡 Molti aiuti'}
+                  {/* Accuracy & Hints */}
+                  <div className="text-center">
+                    <h4 className="font-bold text-purple-800 mb-3">🎯 Accuratezza</h4>
+                    <div className="space-y-2">
+                      <div className="bg-white p-3 rounded-lg border border-purple-200">
+                        <div className="text-lg font-bold text-purple-600">{performanceMetrics.accuracy}%</div>
+                        <div className="text-purple-800 text-sm">Precisione</div>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-orange-200">
+                        <div className="text-lg font-bold text-orange-600">{performanceMetrics.hintsPercentage}%</div>
+                        <div className="text-orange-800 text-sm">Aiuti Utilizzati</div>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-indigo-200">
+                        <div className="text-lg font-bold text-indigo-600">{Math.round(performanceMetrics.efficiency)}%</div>
+                        <div className="text-indigo-800 text-sm">Efficienza Netta</div>
                       </div>
                     </div>
-                  )}
+                  </div>
                   
-                  {finalStats.avgTimePerWord > 0 && (
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600 mb-2">{finalStats.avgTimePerWord}s</div>
-                      <div className="text-blue-800 font-medium">Tempo Medio</div>
-                      <div className="text-sm text-blue-600 mt-1">
-                        {performanceMetrics.speedRating === 'Veloce' ? '⚡ Molto veloce!' :
-                         performanceMetrics.speedRating === 'Normale' ? '⏱️ Buon ritmo' : '🐌 Prenditi il tempo'}
+                  {/* Overall Rating */}
+                  <div className="text-center">
+                    <h4 className="font-bold text-green-800 mb-3">🏆 Valutazione</h4>
+                    <div className="space-y-2">
+                      <div className="bg-white p-3 rounded-lg border border-green-200">
+                        <div className="text-lg font-bold text-green-600">{performanceMetrics.speedRating}</div>
+                        <div className="text-green-800 text-sm">Velocità</div>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-blue-200">
+                        <div className="text-lg font-bold text-blue-600">
+                          {performanceMetrics.accuracy >= 80 && performanceMetrics.hintsPercentage <= 20 ? 'Eccellente' :
+                           performanceMetrics.accuracy >= 70 ? 'Molto Buono' :
+                           performanceMetrics.accuracy >= 60 ? 'Buono' : 'Da Migliorare'}
+                        </div>
+                        <div className="text-blue-800 text-sm">Performance</div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
                 
-                {/* ⭐ NEW: Performance tips */}
+                {/* ⭐ ENHANCED: Performance tips */}
                 <div className="mt-6 p-4 bg-white rounded-xl border border-indigo-200">
-                  <h4 className="font-bold text-indigo-800 mb-2">💡 Suggerimenti per migliorare:</h4>
+                  <h4 className="font-bold text-indigo-800 mb-2">💡 Analisi e Suggerimenti:</h4>
                   <div className="text-sm text-indigo-700 space-y-1">
                     {percentage < 60 && (
-                      <p>• Ripassa le parole sbagliate prima del prossimo test</p>
+                      <p>• 📚 Ripassa le parole sbagliate prima del prossimo test</p>
                     )}
                     {performanceMetrics.hintsPercentage > 30 && (
-                      <p>• Prova a ricordare il significato prima di usare gli aiuti</p>
+                      <p>• 💭 Prova a riflettere di più prima di usare gli aiuti (attuale: {performanceMetrics.hintsPercentage}%)</p>
                     )}
                     {finalStats.avgTimePerWord > 25 && (
-                      <p>• Pratica più spesso per migliorare i tempi di risposta</p>
+                      <p>• ⚡ Pratica per migliorare i tempi di risposta (media attuale: {finalStats.avgTimePerWord}s)</p>
                     )}
-                    {percentage >= 80 && performanceMetrics.hintsPercentage <= 20 && (
-                      <p>• 🏆 Ottima performance! Prova test più difficili o aggiungi nuove parole</p>
+                    {finalStats.maxTimePerWord > 60 && (
+                      <p>• ⏰ Alcune parole richiedono troppo tempo (max: {finalStats.maxTimePerWord}s) - ripassa quelle più difficili</p>
+                    )}
+                    {percentage >= 80 && performanceMetrics.hintsPercentage <= 20 && finalStats.avgTimePerWord <= 20 && (
+                      <p>• 🏆 Performance eccellente! Considera di aggiungere parole più difficili al tuo vocabolario</p>
+                    )}
+                    {performanceMetrics.efficiency > 70 && (
+                      <p>• ✨ Ottima efficienza ({Math.round(performanceMetrics.efficiency)}%) - equilibrio perfetto tra precisione e autonomia</p>
                     )}
                   </div>
                 </div>
@@ -2022,7 +2365,7 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
             </Button>
           </div>
 
-          {/* ⭐ ENHANCED: Parole Sbagliate con info hints */}
+          {/* ⭐ ENHANCED: Parole Sbagliate con info hints e timing */}
           {wrongWords && wrongWords.length > 0 && (
             <div className="mt-12">
               <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 rounded-3xl overflow-hidden shadow-xl">
@@ -2049,7 +2392,7 @@ const TestResults = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
                               <span className="text-orange-400">→</span>
                               <span className="text-xl text-gray-700">{word.italian}</span>
                               
-                              {/* ⭐ NEW: Hint indicator */}
+                              {/* ⭐ ENHANCED: Hint indicator */}
                               {word.usedHint && (
                                 <span className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium">
                                   <Lightbulb className="w-3 h-3" />
@@ -6421,11 +6764,11 @@ const appReducer = (state, action) => {
     case 'SET_SHOW_CONFIRM_CLEAR':
       return { ...state, showConfirmClear: action.payload };
     case 'RESET_MODALS':
-      return { 
-        ...state, 
-        confirmDelete: null, 
-        showConfirmClear: false, 
-        showChapterSelector: false 
+      return {
+        ...state,
+        confirmDelete: null,
+        showConfirmClear: false,
+        showChapterSelector: false
       };
     default:
       return state;
@@ -6470,7 +6813,7 @@ export const AppProvider = ({ children }) => {
     ...state,
     dispatch,
     
-    // API Words - ⭐ ENHANCED: Added difficult toggle
+    // API Words - ⭐ ENHANCED: Added difficult toggle and forceRefresh
     words: wordsAPI.words,
     addWord: wordsAPI.addWord,
     removeWord: wordsAPI.removeWord,
@@ -6478,6 +6821,7 @@ export const AppProvider = ({ children }) => {
     toggleWordDifficult: wordsAPI.toggleWordDifficult,
     clearAllWords: wordsAPI.clearAllWords,
     importWords: wordsAPI.importWords,
+    forceRefresh: wordsAPI.forceRefresh, // ⭐ NEW: Expose force refresh
     getAvailableChapters: wordsAPI.getAvailableChapters,
     getChapterStats: wordsAPI.getChapterStats,
     wordStats: wordsAPI.wordStats,
@@ -6488,7 +6832,7 @@ export const AppProvider = ({ children }) => {
     // API Stats - ⭐ FIXED: Properly expose word performance functions
     stats: statsAPI.stats,
     testHistory: statsAPI.testHistory,
-    wordPerformance: statsAPI.wordPerformance, // ⭐ CRITICAL: Expose word performance data
+    wordPerformance: statsAPI.wordPerformance,
     calculatedStats: statsAPI.calculatedStats,
     updateTestStats: statsAPI.updateTestStats,
     addTestToHistory: statsAPI.addTestToHistory,
@@ -6500,16 +6844,17 @@ export const AppProvider = ({ children }) => {
     importStats: statsAPI.importStats,
     
     // ⭐ CRITICAL: Word performance functions
-    getAllWordsPerformance: statsAPI.getAllWordsPerformance, // ⭐ FIX: Must be exposed
-    getWordAnalysis: statsAPI.getWordAnalysis, // ⭐ FIX: Must be exposed
-    recordWordPerformance: statsAPI.recordWordPerformance // ⭐ FIX: Must be exposed
+    getAllWordsPerformance: statsAPI.getAllWordsPerformance,
+    getWordAnalysis: statsAPI.getWordAnalysis,
+    recordWordPerformance: statsAPI.recordWordPerformance
   };
 
   // ⭐ DEBUG: Final context value check
   console.log('🔗 AppContext value includes word functions:', {
     getAllWordsPerformance: !!value.getAllWordsPerformance,
     getWordAnalysis: !!value.getWordAnalysis,
-    wordPerformance: !!value.wordPerformance
+    wordPerformance: !!value.wordPerformance,
+    forceRefresh: !!value.forceRefresh // ⭐ NEW
   });
 
   return (
@@ -7382,6 +7727,10 @@ export { useOptimizedStats as useStats };
 
 NOME FILE: hooks\useOptimizedTest.js
 
+// =====================================================
+// 📁 hooks/useOptimizedTest.js - FIXED getTestSummary completo
+// =====================================================
+
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 
 export const useOptimizedTest = (onTestComplete) => {
@@ -7395,27 +7744,26 @@ export const useOptimizedTest = (onTestComplete) => {
   const [testWords, setTestWords] = useState([]);
   const [testSaved, setTestSaved] = useState(false);
   
-  // ⭐ ENHANCED: Timer functionality
+  // ⭐ ENHANCED: Timer e transizioni
   const [wordTimes, setWordTimes] = useState([]);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const testStartTimeRef = useRef(null);
-  const wordStartTimeRef = useRef(null); // ⭐ CRITICAL: Track when word appears
+  const wordStartTimeRef = useRef(null);
   
   // ⭐ ENHANCED: Hint functionality
   const [showHint, setShowHint] = useState(false);
   const [hintUsedForCurrentWord, setHintUsedForCurrentWord] = useState(false);
 
-  // ⭐ CRITICAL FIX: Start timing when word appears and reset meaning state
+  // ⭐ CRITICAL: Start timing when word appears (SOLO quando non in transizione)
   useEffect(() => {
-    if (currentWord && testMode) {
+    if (currentWord && testMode && !isTransitioning) {
       console.log('⏱️ New word appeared, starting timer:', currentWord.english);
       wordStartTimeRef.current = Date.now();
       setHintUsedForCurrentWord(false);
       setShowHint(false);
-      
-      // ⭐ CRITICAL: Reset meaning state for new word
       setShowMeaning(false);
     }
-  }, [currentWord, testMode]);
+  }, [currentWord, testMode, isTransitioning]);
 
   // ⭐ ENHANCED: Record word completion time
   const recordWordTime = useCallback((isCorrect, usedHint = false) => {
@@ -7444,7 +7792,6 @@ export const useOptimizedTest = (onTestComplete) => {
         return newTimes;
       });
       
-      // Reset timer reference
       wordStartTimeRef.current = null;
     } else {
       console.warn('⚠️ Cannot record time - missing wordStartTimeRef or currentWord');
@@ -7465,16 +7812,27 @@ export const useOptimizedTest = (onTestComplete) => {
     };
   }, [stats.correct, stats.incorrect, stats.hints, testWords.length]);
 
-  // ⭐ SUMMARY: Enhanced with hints and timing
+  // ⭐ ENHANCED: Summary con TUTTI i dati timing e hints per ResultsView
   const summaryData = useMemo(() => {
     const totalAnswered = stats.correct + stats.incorrect;
     const accuracy = totalAnswered > 0 ? Math.round((stats.correct / totalAnswered) * 100) : 0;
     const totalTestTime = testStartTimeRef.current ? Date.now() - testStartTimeRef.current : 0;
-    const avgTimePerWord = wordTimes.length > 0 
-      ? Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / wordTimes.length / 1000)
-      : 0;
     
-    return {
+    // ⭐ ENHANCED: Calcoli timing più precisi da wordTimes
+    const timingStats = wordTimes.length > 0 ? {
+      avgTimePerWord: Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / wordTimes.length / 1000),
+      maxTimePerWord: Math.round(Math.max(...wordTimes.map(r => r.timeSpent)) / 1000),
+      minTimePerWord: Math.round(Math.min(...wordTimes.map(r => r.timeSpent)) / 1000),
+      totalRecordedTime: Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / 1000)
+    } : {
+      avgTimePerWord: 0,
+      maxTimePerWord: 0,
+      minTimePerWord: 0,
+      totalRecordedTime: 0
+    };
+    
+    // ⭐ CRITICAL: Return COMPLETE summary with ALL enhanced data
+    const completeSummary = {
       current: totalAnswered + 1,
       total: testWords.length,
       percentage: Math.round((totalAnswered / testWords.length) * 100),
@@ -7483,10 +7841,18 @@ export const useOptimizedTest = (onTestComplete) => {
       accuracy,
       correct: stats.correct,
       incorrect: stats.incorrect,
-      hints: stats.hints,
-      avgTimePerWord,
-      totalTime: Math.round(totalTestTime / 1000)
+      hints: stats.hints, // ⭐ CRITICAL: Include hints count
+      totalTime: Math.round(totalTestTime / 1000), // ⭐ CRITICAL: Include total time
+      ...timingStats, // ⭐ CRITICAL: Include ALL timing stats
+      // ⭐ NEW: Additional enhanced data for results
+      wordTimes: [...wordTimes], // ⭐ Complete word timing data
+      testStartTime: testStartTimeRef.current,
+      hintsPercentage: totalAnswered > 0 ? Math.round((stats.hints / totalAnswered) * 100) : 0,
+      efficiency: totalAnswered > 0 ? Math.max(0, accuracy - Math.round((stats.hints / totalAnswered) * 100)) : 0
     };
+    
+    console.log('📊 useOptimizedTest - Complete summary calculated:', completeSummary);
+    return completeSummary;
   }, [stats.correct, stats.incorrect, stats.hints, testWords.length, wordTimes, testStartTimeRef.current]);
 
   // ⭐ OPTIMIZED RANDOM WORD SELECTION
@@ -7503,18 +7869,29 @@ export const useOptimizedTest = (onTestComplete) => {
     if (!testSaved && (finalStats.correct > 0 || finalStats.incorrect > 0) && onTestComplete) {
       const finalTestTime = testStartTimeRef.current ? Date.now() - testStartTimeRef.current : 0;
       
-      console.log('💾 Saving test results:', {
+      // ⭐ ENHANCED: Calcoli timing completi
+      const timingStats = wordTimes.length > 0 ? {
+        avgTimePerWord: Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / wordTimes.length / 1000),
+        maxTimePerWord: Math.round(Math.max(...wordTimes.map(r => r.timeSpent)) / 1000),
+        minTimePerWord: Math.round(Math.min(...wordTimes.map(r => r.timeSpent)) / 1000),
+        totalRecordedTime: Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / 1000)
+      } : {
+        avgTimePerWord: 0,
+        maxTimePerWord: 0,
+        minTimePerWord: 0,
+        totalRecordedTime: 0
+      };
+      
+      console.log('💾 Saving test results with complete timing:', {
         finalStats,
         wordTimesCount: wordTimes.length,
-        totalTime: Math.round(finalTestTime / 1000) + 's'
+        timingStats
       });
       
       const enhancedStats = {
         ...finalStats,
         totalTime: Math.round(finalTestTime / 1000),
-        avgTimePerWord: wordTimes.length > 0 
-          ? Math.round(wordTimes.reduce((sum, record) => sum + record.timeSpent, 0) / wordTimes.length / 1000)
-          : 0,
+        ...timingStats, // ⭐ CRITICAL: Include tutti i dati timing
         wordTimes: [...wordTimes] // ⭐ CRITICAL: Pass complete word times array
       };
       
@@ -7535,8 +7912,9 @@ export const useOptimizedTest = (onTestComplete) => {
     setStats({ correct: 0, incorrect: 0, hints: 0 });
     setUsedWordIds(new Set());
     setWordTimes([]);
+    setIsTransitioning(false);
     testStartTimeRef.current = Date.now();
-    wordStartTimeRef.current = null; // ⭐ Reset word timer
+    wordStartTimeRef.current = null;
     
     const firstWord = getRandomUnusedWord(filteredWords, new Set());
     setCurrentWord(firstWord);
@@ -7552,17 +7930,26 @@ export const useOptimizedTest = (onTestComplete) => {
     setTestMode(true);
   }, [getRandomUnusedWord]);
 
+  // ⭐ ENHANCED: Next word con transizione corretta
   const nextWord = useCallback(() => {
     const nextRandomWord = getRandomUnusedWord(testWords, usedWordIds);
     
     if (nextRandomWord) {
       console.log('➡️ Moving to next word:', nextRandomWord.english);
-      setCurrentWord(nextRandomWord);
-      setUsedWordIds(prev => new Set([...prev, nextRandomWord.id]));
+      
+      setIsTransitioning(true);
       setShowMeaning(false);
-      setShowHint(false);
-      setHintUsedForCurrentWord(false);
-      // ⭐ Timer will be started by useEffect when currentWord changes
+      
+      setTimeout(() => {
+        setCurrentWord(nextRandomWord);
+        setUsedWordIds(prev => new Set([...prev, nextRandomWord.id]));
+        setShowHint(false);
+        setHintUsedForCurrentWord(false);
+        
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 100);
+      }, 400);
     }
   }, [testWords, usedWordIds, getRandomUnusedWord]);
 
@@ -7577,7 +7964,7 @@ export const useOptimizedTest = (onTestComplete) => {
     }
   }, [showHint, currentWord]);
 
-  // ⭐ CRITICAL FIX: Answer handling with proper timing
+  // ⭐ CRITICAL: Answer handling con timing corretto
   const handleAnswer = useCallback((isCorrect) => {
     console.log('📝 Handling answer:', { 
       isCorrect, 
@@ -7586,7 +7973,7 @@ export const useOptimizedTest = (onTestComplete) => {
       timeElapsed: wordStartTimeRef.current ? Math.round((Date.now() - wordStartTimeRef.current) / 1000) + 's' : 'no-timer'
     });
     
-    // ⭐ CRITICAL: Record timing BEFORE any state changes
+    // ⭐ CRITICAL: Record timing IMMEDIATAMENTE
     recordWordTime(isCorrect, hintUsedForCurrentWord);
     
     // ⭐ Update stats with hints properly tracked
@@ -7615,31 +8002,17 @@ export const useOptimizedTest = (onTestComplete) => {
       isLastQuestion
     });
     
-    if (showMeaning) {
-      setShowMeaning(false);
-      setTimeout(() => {
-        if (isLastQuestion) {
-          console.log('🏁 Test completed, saving results...');
-          saveTestResultsWithStats(newStats);
-          setTestMode(false);
-          setShowResults(true);
-          setCurrentWord(null);
-        } else {
-          nextWord();
-        }
-      }, 800);
+    // ⭐ ENHANCED: Gestione sequenza risposta → fine test o prossima parola
+    if (isLastQuestion) {
+      console.log('🏁 Test completed, saving results...');
+      saveTestResultsWithStats(newStats);
+      setTestMode(false);
+      setShowResults(true);
+      setCurrentWord(null);
     } else {
       setTimeout(() => {
-        if (isLastQuestion) {
-          console.log('🏁 Test completed, saving results...');
-          saveTestResultsWithStats(newStats);
-          setTestMode(false);
-          setShowResults(true);
-          setCurrentWord(null);
-        } else {
-          nextWord();
-        }
-      }, 300);
+        nextWord();
+      }, showMeaning ? 1000 : 600);
     }
   }, [currentWord, showMeaning, stats, testWords.length, hintUsedForCurrentWord, recordWordTime, saveTestResultsWithStats, nextWord]);
 
@@ -7662,8 +8035,9 @@ export const useOptimizedTest = (onTestComplete) => {
     setTestWords([]);
     setTestSaved(false);
     setWordTimes([]);
+    setIsTransitioning(false);
     testStartTimeRef.current = null;
-    wordStartTimeRef.current = null; // ⭐ Reset word timer
+    wordStartTimeRef.current = null;
   }, [stats, testSaved, saveTestResultsWithStats]);
 
   const startNewTest = useCallback(() => {
@@ -7675,6 +8049,7 @@ export const useOptimizedTest = (onTestComplete) => {
     setUsedWordIds(new Set());
     setCurrentWord(null);
     setWordTimes([]);
+    setIsTransitioning(false);
     startTest(testWords);
   }, [startTest, testWords]);
 
@@ -7688,6 +8063,7 @@ export const useOptimizedTest = (onTestComplete) => {
     stats,
     wrongWords,
     testWords,
+    isTransitioning,
     
     // ⭐ ENHANCED: Hint functionality
     showHint,
@@ -7702,6 +8078,7 @@ export const useOptimizedTest = (onTestComplete) => {
     resetTest,
     startNewTest,
     getTestProgress: useCallback(() => progressData, [progressData]),
+    // ⭐ CRITICAL: Return complete summary with ALL enhanced data
     getTestSummary: useCallback(() => summaryData, [summaryData])
   };
 };
@@ -7722,20 +8099,12 @@ export const useOptimizedWords = () => {
   // ⭐ FIXED: Listen for external changes (like imports)
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // ⭐ FIXED: Listen for import changes
+  // ⭐ FIXED: Better import change detection
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'vocabularyWords' || e.key === 'vocabularyWords_lastUpdate') {
         console.log('📦 useOptimizedWords: Detected external words change, refreshing...');
-        setRefreshTrigger(prev => prev + 1);
-        
-        // Force refresh words from localStorage
-        try {
-          const updatedWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
-          setWords(updatedWords);
-        } catch (error) {
-          console.error('Error refreshing words after import:', error);
-        }
+        forceRefresh();
       }
     };
 
@@ -7745,18 +8114,12 @@ export const useOptimizedWords = () => {
     // Also listen for custom event (from same tab imports)
     const handleCustomRefresh = () => {
       console.log('📦 useOptimizedWords: Custom refresh triggered');
-      setRefreshTrigger(prev => prev + 1);
-      try {
-        const updatedWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
-        setWords(updatedWords);
-      } catch (error) {
-        console.error('Error in custom refresh:', error);
-      }
+      forceRefresh();
     };
     
     window.addEventListener('wordsImported', handleCustomRefresh);
 
-    // Check for timestamp changes (import detection)
+    // ⭐ NEW: Enhanced timestamp checking for imports
     let lastCheck = localStorage.getItem('vocabularyWords_lastUpdate');
     const checkInterval = setInterval(() => {
       const currentCheck = localStorage.getItem('vocabularyWords_lastUpdate');
@@ -7771,6 +8134,18 @@ export const useOptimizedWords = () => {
       window.removeEventListener('wordsImported', handleCustomRefresh);
       clearInterval(checkInterval);
     };
+  }, []);
+
+  // ⭐ NEW: Force refresh function
+  const forceRefresh = useCallback(() => {
+    try {
+      const updatedWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
+      console.log('📦 Force refreshing with', updatedWords.length, 'words');
+      setWords(updatedWords);
+      setRefreshTrigger(prev => prev + 1);
+    } catch (error) {
+      console.error('Error in force refresh:', error);
+    }
   }, [setWords]);
 
   // ⭐ MEMOIZED COMPUTATIONS - Enhanced with difficult words
@@ -7782,16 +8157,24 @@ export const useOptimizedWords = () => {
     normal: words.filter(w => !w.difficult && !w.learned).length,
     chapters: [...new Set(words.map(w => w.chapter).filter(Boolean))].sort(),
     groups: [...new Set(words.map(w => w.group).filter(Boolean))].sort()
-  }), [words, refreshTrigger]); // ⭐ Added refreshTrigger dependency
+  }), [words, refreshTrigger]);
 
-  // ⭐ MEMOIZED WORD MAP
+  // ⭐ FIXED: Better word map generation with proper ID handling
   const wordMap = useMemo(() => {
-    return words.reduce((map, word) => {
-      map[word.id] = word;
-      map[word.english.toLowerCase()] = word;
-      return map;
-    }, {});
-  }, [words, refreshTrigger]); // ⭐ Added refreshTrigger dependency
+    const map = {};
+    words.forEach(word => {
+      // Map by ID (primary key)
+      if (word.id) {
+        map[word.id] = word;
+      }
+      // Map by english word (for duplicate checking)
+      if (word.english) {
+        map[word.english.toLowerCase()] = word;
+      }
+    });
+    console.log('📦 WordMap updated with', Object.keys(map).length / 2, 'words');
+    return map;
+  }, [words, refreshTrigger]);
 
   // ⭐ BATCH WORD OPERATIONS
   const batchUpdateWords = useCallback((updateFn) => {
@@ -7799,14 +8182,15 @@ export const useOptimizedWords = () => {
       const newWords = updateFn(prevWords);
       const sortedWords = newWords.sort((a, b) => a.english.localeCompare(b.english));
       
-      // ⭐ FIXED: Update timestamp for import detection
+      // ⭐ FIXED: Always update timestamp for import detection
       localStorage.setItem('vocabularyWords_lastUpdate', Date.now().toString());
       
+      console.log('📦 Batch updated to', sortedWords.length, 'words');
       return sortedWords;
     });
   }, [setWords]);
 
-  // ⭐ OPTIMIZED ADD WORD - Enhanced with difficult flag
+  // ⭐ FIXED: Enhanced add word with better ID and duplicate handling
   const addWord = useCallback((wordData) => {
     if (!wordData.english?.trim() || !wordData.italian?.trim()) {
       throw new Error('English word and Italian translation are required');
@@ -7814,20 +8198,30 @@ export const useOptimizedWords = () => {
 
     const englishWord = wordData.english.trim().toLowerCase();
     
-    if (!editingWord && wordMap[englishWord]) {
+    // ⭐ FIXED: Better duplicate checking - exclude current editing word
+    if (!editingWord && wordMap[englishWord] && wordMap[englishWord].id !== editingWord?.id) {
       throw new Error('Word already exists');
     }
     
     batchUpdateWords(prevWords => {
       if (editingWord) {
-        return prevWords.map(word => 
-          word.id === editingWord.id 
-            ? { ...word, ...wordData, id: editingWord.id }
+        // ⭐ FIXED: Editing mode - preserve original ID and update
+        console.log('📝 Editing word:', editingWord.english, '→', wordData.english);
+        return prevWords.map(word =>
+          word.id === editingWord.id
+            ? { 
+                ...word, 
+                ...wordData, 
+                id: editingWord.id, // ⭐ CRITICAL: Preserve original ID
+                english: wordData.english.trim(),
+                italian: wordData.italian.trim()
+              }
             : word
         );
       } else {
+        // ⭐ FIXED: Adding new word - generate consistent ID
         const newWord = {
-          id: Date.now() + Math.random(),
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9), // ⭐ Better ID generation
           english: wordData.english.trim(),
           italian: wordData.italian.trim(),
           group: wordData.group?.trim() || null,
@@ -7835,14 +8229,76 @@ export const useOptimizedWords = () => {
           notes: wordData.notes?.trim() || null,
           chapter: wordData.chapter?.trim() || null,
           learned: wordData.learned || false,
-          difficult: wordData.difficult || false // ⭐ NEW: Difficult flag
+          difficult: wordData.difficult || false
         };
+        console.log('➕ Adding new word:', newWord.english, 'with ID:', newWord.id);
         return [...prevWords, newWord];
       }
     });
     
     setEditingWord(null);
   }, [editingWord, wordMap, batchUpdateWords]);
+
+  // ⭐ FIXED: Enhanced import with better ID and validation handling
+  const importWords = useCallback((jsonText) => {
+    try {
+      const importedWords = JSON.parse(jsonText.trim());
+      
+      if (!Array.isArray(importedWords) || importedWords.length === 0) {
+        throw new Error('Invalid JSON data - expected array of words');
+      }
+
+      // ⭐ FIXED: Better word validation and ID generation
+      const validWords = importedWords
+        .filter(word => word?.english && word?.italian)
+        .map(word => ({
+          id: word.id || (Date.now().toString() + Math.random().toString(36).substr(2, 9)), // ⭐ Ensure unique ID
+          english: String(word.english).trim(),
+          italian: String(word.italian).trim(),
+          group: word.group ? String(word.group).trim() : null,
+          sentence: word.sentence ? String(word.sentence).trim() : null,
+          notes: word.notes ? String(word.notes).trim() : null,
+          chapter: word.chapter ? String(word.chapter).trim() : null,
+          learned: Boolean(word.learned),
+          difficult: Boolean(word.difficult)
+        }));
+
+      if (validWords.length === 0) {
+        throw new Error('No valid words found in JSON data');
+      }
+
+      // ⭐ FIXED: Better duplicate checking using current words state
+      const currentWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
+      const existingEnglish = new Set(currentWords.map(w => w.english.toLowerCase()));
+      const newWords = validWords.filter(word =>
+        !existingEnglish.has(word.english.toLowerCase())
+      );
+
+      if (newWords.length === 0) {
+        throw new Error('All words already exist in your vocabulary');
+      }
+
+      // ⭐ FIXED: Direct localStorage update + state update for immediate sync
+      const allWords = [...currentWords, ...newWords];
+      localStorage.setItem('vocabularyWords', JSON.stringify(allWords));
+      localStorage.setItem('vocabularyWords_lastUpdate', Date.now().toString());
+      
+      // Update state immediately
+      setWords(allWords);
+      setRefreshTrigger(prev => prev + 1);
+      
+      // ⭐ FIXED: Trigger refresh event for other components
+      window.dispatchEvent(new CustomEvent('wordsImported', { 
+        detail: { count: newWords.length, total: allWords.length }
+      }));
+      
+      console.log('📥 Imported', newWords.length, 'new words. Total:', allWords.length);
+      return newWords.length;
+    } catch (error) {
+      console.error('Import error:', error);
+      throw error;
+    }
+  }, [setWords]);
 
   // ⭐ FILTERED GETTERS - Enhanced with difficult words
   const getters = useMemo(() => ({
@@ -7869,7 +8325,7 @@ export const useOptimizedWords = () => {
         normal: chapterWords.filter(w => !w.difficult && !w.learned).length
       };
     }
-  }), [words, refreshTrigger]); // ⭐ Added refreshTrigger dependency
+  }), [words, refreshTrigger]);
 
   return {
     words,
@@ -7879,13 +8335,15 @@ export const useOptimizedWords = () => {
     addWord,
     
     removeWord: useCallback((id) => {
+      console.log('🗑️ Removing word with ID:', id);
       batchUpdateWords(prevWords => prevWords.filter(word => word.id !== id));
       if (editingWord?.id === id) setEditingWord(null);
     }, [editingWord?.id, batchUpdateWords]),
 
     toggleWordLearned: useCallback((id) => {
-      batchUpdateWords(prevWords => 
-        prevWords.map(word => 
+      console.log('📚 Toggling learned status for ID:', id);
+      batchUpdateWords(prevWords =>
+        prevWords.map(word =>
           word.id === id ? { ...word, learned: !word.learned } : word
         )
       );
@@ -7893,57 +8351,24 @@ export const useOptimizedWords = () => {
 
     // ⭐ NEW: Toggle difficult status
     toggleWordDifficult: useCallback((id) => {
-      batchUpdateWords(prevWords => 
-        prevWords.map(word => 
+      console.log('⭐ Toggling difficult status for ID:', id);
+      batchUpdateWords(prevWords =>
+        prevWords.map(word =>
           word.id === id ? { ...word, difficult: !word.difficult } : word
         )
       );
     }, [batchUpdateWords]),
 
     clearAllWords: useCallback(() => {
+      console.log('🧹 Clearing all words');
       setWords(EMPTY_ARRAY);
       setEditingWord(null);
       localStorage.setItem('vocabularyWords_lastUpdate', Date.now().toString());
     }, [setWords]),
 
-    importWords: useCallback((jsonText) => {
-      const importedWords = JSON.parse(jsonText.trim());
-      
-      if (!Array.isArray(importedWords) || importedWords.length === 0) {
-        throw new Error('Invalid JSON data');
-      }
-
-      const validWords = importedWords
-        .filter(word => word?.english && word?.italian)
-        .map(word => ({
-          id: word.id || Date.now() + Math.random(),
-          english: word.english,
-          italian: word.italian,
-          group: word.group || null,
-          sentence: word.sentence || null,
-          notes: word.notes || null,
-          chapter: word.chapter || null,
-          learned: word.learned || false,
-          difficult: word.difficult || false // ⭐ NEW: Import difficult flag
-        }));
-
-      const existingEnglish = new Set(words.map(w => w.english.toLowerCase()));
-      const newWords = validWords.filter(word => 
-        !existingEnglish.has(word.english.toLowerCase())
-      );
-
-      if (newWords.length === 0) {
-        throw new Error('All words already exist');
-      }
-
-      batchUpdateWords(prevWords => [...prevWords, ...newWords]);
-      
-      // ⭐ FIXED: Trigger refresh event for other components
-      window.dispatchEvent(new CustomEvent('wordsImported'));
-      
-      return newWords.length;
-    }, [words, batchUpdateWords]),
-
+    importWords,
+    forceRefresh, // ⭐ NEW: Expose force refresh function
+    
     ...getters
   };
 };
@@ -9433,8 +9858,9 @@ export const MainView = React.memo(() => {
     dispatch,
     addWord,
     toggleWordLearned,
-    toggleWordDifficult, // ⭐ NEW: Difficult toggle
+    toggleWordDifficult,
     importWords,
+    forceRefresh, // ⭐ NEW: Force refresh function
     getAvailableChapters,
     getChapterStats,
     wordStats
@@ -9451,8 +9877,10 @@ export const MainView = React.memo(() => {
     dispatch({ type: 'SET_SHOW_CHAPTER_SELECTOR', payload: true });
   }, [words, dispatch, showWarning]);
 
+  // ⭐ ENHANCED: Better word addition with validation
   const handleAddWord = React.useCallback((wordData) => {
     try {
+      console.log('MainView: Adding/editing word:', wordData);
       addWord(wordData);
       dispatch({ type: 'SET_EDITING_WORD', payload: null });
       showSuccess(
@@ -9461,6 +9889,7 @@ export const MainView = React.memo(() => {
           : `✅ Parola "${wordData.english}" aggiunta!`
       );
     } catch (error) {
+      console.error('MainView: Error adding word:', error);
       showError(error, 'Add Word');
     }
   }, [addWord, editingWord, dispatch, showSuccess, showError]);
@@ -9484,7 +9913,6 @@ export const MainView = React.memo(() => {
     }
   }, [words, toggleWordLearned, showSuccess]);
 
-  // ⭐ NEW: Handle difficult toggle
   const handleToggleWordDifficult = React.useCallback((id) => {
     const word = words.find(w => w.id === id);
     if (word) {
@@ -9497,16 +9925,67 @@ export const MainView = React.memo(() => {
     }
   }, [words, toggleWordDifficult, showSuccess]);
 
-  const handleImportWords = React.useCallback((jsonText) => {
+  // ⭐ FIXED: Enhanced import with better error handling and force refresh
+  const handleImportWords = React.useCallback(async (jsonText) => {
     try {
-      const count = importWords(jsonText);
+      console.log('MainView: Starting import process...');
+      
+      // Call the import function
+      const count = await importWords(jsonText);
+      
+      // ⭐ CRITICAL: Force refresh to ensure UI synchronization
+      if (forceRefresh) {
+        console.log('MainView: Forcing refresh after import');
+        setTimeout(forceRefresh, 100);
+      }
+      
       showSuccess(`✅ ${count} parole importate con successo!`);
       return count;
     } catch (error) {
-      showError(error, 'Import Words');
+      console.error('MainView: Import error:', error);
+      
+      // ⭐ ENHANCED: Better error messages
+      if (error.message.includes('already exist')) {
+        showWarning('⚠️ Tutte le parole nel JSON sono già presenti nel vocabolario.');
+      } else if (error.message.includes('JSON')) {
+        showError(new Error('❌ File JSON non valido. Controlla la sintassi.'), 'Import Words');
+      } else {
+        showError(error, 'Import Words');
+      }
       throw error;
     }
-  }, [importWords, showSuccess, showError]);
+  }, [importWords, forceRefresh, showSuccess, showError, showWarning]);
+
+  // ⭐ NEW: Handle edit word with better ID validation
+  const handleEditWord = React.useCallback((word) => {
+    console.log('MainView: Editing word:', word);
+    
+    if (!word || !word.id) {
+      showError(new Error('Impossibile modificare: parola non valida'), 'Edit Word');
+      return;
+    }
+    
+    // ⭐ ENHANCED: Validate word exists in current words list
+    const existingWord = words.find(w => w.id === word.id);
+    if (!existingWord) {
+      showError(new Error('Parola non trovata nel vocabolario'), 'Edit Word');
+      console.error('Word not found in words list:', word.id, 'Available IDs:', words.map(w => w.id));
+      
+      // ⭐ RECOVERY: Force refresh and retry
+      if (forceRefresh) {
+        forceRefresh();
+        setTimeout(() => {
+          const refreshedWord = words.find(w => w.english === word.english);
+          if (refreshedWord) {
+            dispatch({ type: 'SET_EDITING_WORD', payload: refreshedWord });
+          }
+        }, 500);
+      }
+      return;
+    }
+    
+    dispatch({ type: 'SET_EDITING_WORD', payload: existingWord });
+  }, [words, dispatch, showError, forceRefresh]);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -9532,17 +10011,16 @@ export const MainView = React.memo(() => {
 
       <WordsList
         words={words}
-        onEditWord={(word) => dispatch({ type: 'SET_EDITING_WORD', payload: word })}
+        onEditWord={handleEditWord} // ⭐ FIXED: Use enhanced edit handler
         onRemoveWord={handleRemoveWord}
         onToggleLearned={handleToggleWordLearned}
-        onToggleDifficult={handleToggleWordDifficult} // ⭐ NEW: Difficult toggle
+        onToggleDifficult={handleToggleWordDifficult}
         showWordsList={showWordsList}
         setShowWordsList={() => dispatch({ type: 'TOGGLE_WORDS_LIST' })}
       />
     </div>
   );
 });
-
 
 ================================================================================
 
@@ -9557,103 +10035,75 @@ export const ResultsView = React.memo(() => {
     wrongWords,
     startNewTest,
     resetTest,
-    // ⭐ PROVA TUTTE LE POSSIBILI PROPRIETÀ DEL TEST CORRENTE
-    testCounters,
-    getTestSummary,
-    currentTestResults,
-    lastTestStats,
-    testResults,
-    currentTestStats,
-    finalTestResults
+    getTestSummary // ⭐ CRITICAL: Use this function that contains all enhanced data
   } = useAppContext();
 
-  // ⭐ DEBUG: Vediamo tutti i dati disponibili (ESCLUDENDO stats generali)
-  console.log('🎯 ResultsView - Dati test corrente:', {
-    testCounters,
-    getTestSummary: getTestSummary ? getTestSummary() : null,
-    currentTestResults,
-    lastTestStats,
-    testResults,
-    currentTestStats,
-    finalTestResults,
-    wrongWords: wrongWords?.length || 0
-  });
-
-  // ⭐ LOGICA: Trova SOLO i dati del test appena completato (NON stats generali)
+  // ⭐ FIXED: Get test results directly from getTestSummary which contains enhanced data
   const getTestResultData = () => {
-    // 1. Prova testCounters (che funzionava durante il test)
-    if (testCounters && (testCounters.correct >= 0 && testCounters.incorrect >= 0)) {
-      console.log('✅ Usando testCounters:', testCounters);
-      return testCounters;
-    }
-    
-    // 2. Prova getTestSummary
+    // Get the enhanced summary with all timing and hints data
     const summary = getTestSummary && getTestSummary();
-    if (summary && (summary.correct >= 0 && summary.incorrect >= 0)) {
-      console.log('✅ Usando summary:', summary);
-      return {
-        correct: summary.correct,
-        incorrect: summary.incorrect
+    
+    console.log('🎯 ResultsView - Using getTestSummary data:', summary);
+    
+    if (summary && (summary.correct >= 0 || summary.incorrect >= 0)) {
+      // ⭐ ENHANCED: Extract all available data from summary
+      const enhancedData = {
+        correct: summary.correct || 0,
+        incorrect: summary.incorrect || 0,
+        hints: summary.hints || 0, // ⭐ CRITICAL: Include hints count
+        totalTime: summary.totalTime || 0, // ⭐ CRITICAL: Include total time
+        avgTimePerWord: summary.avgTimePerWord || 0, // ⭐ CRITICAL: Include average time
+        maxTimePerWord: summary.maxTimePerWord || 0, // ⭐ NEW: Include max time
+        minTimePerWord: summary.minTimePerWord || 0, // ⭐ NEW: Include min time
+        totalRecordedTime: summary.totalRecordedTime || 0, // ⭐ NEW: Include recorded time
+        // Additional summary data
+        total: summary.total || (summary.correct + summary.incorrect),
+        answered: summary.answered || (summary.correct + summary.incorrect),
+        accuracy: summary.accuracy || 0,
+        percentage: summary.percentage || 0
       };
+      
+      console.log('✅ ResultsView - Enhanced data prepared:', enhancedData);
+      return enhancedData;
     }
     
-    // 3. Prova currentTestResults
-    if (currentTestResults && (currentTestResults.correct >= 0 || currentTestResults.incorrect >= 0)) {
-      console.log('✅ Usando currentTestResults:', currentTestResults);
-      return currentTestResults;
-    }
-    
-    // 4. Prova lastTestStats
-    if (lastTestStats && (lastTestStats.correct >= 0 || lastTestStats.incorrect >= 0)) {
-      console.log('✅ Usando lastTestStats:', lastTestStats);
-      return lastTestStats;
-    }
-    
-    // 5. Prova testResults
-    if (testResults && (testResults.correct >= 0 || testResults.incorrect >= 0)) {
-      console.log('✅ Usando testResults:', testResults);
-      return testResults;
-    }
-    
-    // 6. Prova currentTestStats
-    if (currentTestStats && (currentTestStats.correct >= 0 || currentTestStats.incorrect >= 0)) {
-      console.log('✅ Usando currentTestStats:', currentTestStats);
-      return currentTestStats;
-    }
-    
-    // 7. Prova finalTestResults
-    if (finalTestResults && (finalTestResults.correct >= 0 || finalTestResults.incorrect >= 0)) {
-      console.log('✅ Usando finalTestResults:', finalTestResults);
-      return finalTestResults;
-    }
-    
-    // 8. ULTIMO TENTATIVO: Calcola dalle parole sbagliate
+    // ⭐ FALLBACK: Calculate from wrongWords if summary not available
     if (wrongWords && Array.isArray(wrongWords)) {
-      // Se ho 5 parole sbagliate su un totale di parole del test...
-      // Dovrei avere anche il totale del test da qualche parte
       const incorrect = wrongWords.length;
+      const fallbackData = { 
+        correct: 0, 
+        incorrect, 
+        hints: 0, 
+        totalTime: 0, 
+        avgTimePerWord: 0,
+        maxTimePerWord: 0,
+        minTimePerWord: 0,
+        totalRecordedTime: 0
+      };
       
-      // Prova a vedere se c'è un totale nelle funzioni
-      const summary = getTestSummary && getTestSummary();
-      if (summary && summary.total) {
-        const correct = summary.total - incorrect;
-        console.log('✅ Calcolato da wrongWords + summary.total:', { correct, incorrect });
-        return { correct, incorrect };
-      }
-      
-      // Fallback estremo: assumo che sia un test piccolo
-      console.log('⚠️ Usando fallback da wrongWords:', { correct: 0, incorrect });
-      return { correct: 0, incorrect };
+      console.log('⚠️ ResultsView - Using fallback from wrongWords:', fallbackData);
+      return fallbackData;
     }
     
-    // FALLBACK FINALE: nessun dato trovato
-    console.log('❌ Nessun dato del test trovato, usando default');
-    return { correct: 0, incorrect: 0 };
+    // ⭐ FINAL FALLBACK
+    const defaultData = { 
+      correct: 0, 
+      incorrect: 0, 
+      hints: 0, 
+      totalTime: 0, 
+      avgTimePerWord: 0,
+      maxTimePerWord: 0,
+      minTimePerWord: 0,
+      totalRecordedTime: 0
+    };
+    
+    console.log('❌ ResultsView - Using default data:', defaultData);
+    return defaultData;
   };
 
   const finalTestData = getTestResultData();
 
-  console.log('🎯 ResultsView - Dati finali scelti:', finalTestData);
+  console.log('🎯 ResultsView - Final data being passed to TestResults:', finalTestData);
 
   return (
     <TestResults
@@ -9697,6 +10147,10 @@ export const StatsView = React.memo(() => {
 
 NOME FILE: views\TestView.js
 
+// =====================================================
+// 📁 views/TestView.js - FIXED timer continuo e interfaccia
+// =====================================================
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { Card } from '../components/ui/card';
@@ -9715,18 +10169,20 @@ export const TestView = React.memo(() => {
     getTestSummary,
     showHint,
     toggleHint,
-    hintUsed
+    hintUsed,
+    isTransitioning // ⭐ NEW: Stato transizione
   } = useAppContext();
 
-  // ⭐ FIXED: Local timer management for UI display
+  // ⭐ FIXED: Timer continuo che NON si ferma al flip
   const [currentWordTime, setCurrentWordTime] = useState(0);
+  const [isAnswering, setIsAnswering] = useState(false); // ⭐ NEW: Stato risposta
   const timerRef = useRef(null);
   const wordStartTimeRef = useRef(null);
 
   const progress = getTestProgress();
   const summary = getTestSummary();
 
-  // ⭐ FIXED: Proper timer effect that starts when word appears
+  // ⭐ CRITICAL: Timer che continua SEMPRE fino alla risposta
   useEffect(() => {
     // Clear any existing timer
     if (timerRef.current) {
@@ -9734,20 +10190,20 @@ export const TestView = React.memo(() => {
       timerRef.current = null;
     }
 
-    // Start timer when word appears and meaning is not shown
-    if (currentWord && !showMeaning) {
+    // Start timer when word appears, continues until answer is given
+    if (currentWord && !isTransitioning && !isAnswering) {
       console.log('🕐 Starting UI timer for word:', currentWord.english);
       setCurrentWordTime(0);
       wordStartTimeRef.current = Date.now();
       
       timerRef.current = setInterval(() => {
-        if (wordStartTimeRef.current) {
+        if (wordStartTimeRef.current && !isAnswering) {
           const elapsed = Math.floor((Date.now() - wordStartTimeRef.current) / 1000);
           setCurrentWordTime(elapsed);
         }
       }, 1000);
-    } else {
-      // Reset timer when showing meaning or no word
+    } else if (!currentWord) {
+      // Reset timer when no word
       setCurrentWordTime(0);
       wordStartTimeRef.current = null;
     }
@@ -9759,7 +10215,7 @@ export const TestView = React.memo(() => {
         timerRef.current = null;
       }
     };
-  }, [currentWord, showMeaning]);
+  }, [currentWord, isTransitioning, isAnswering]); // ⭐ REMOVED showMeaning dependency
 
   // ⭐ FIXED: Stop timer when component unmounts or test ends
   useEffect(() => {
@@ -9770,11 +10226,13 @@ export const TestView = React.memo(() => {
     };
   }, []);
 
-  // ⭐ ENHANCED: Handle answer with proper timer cleanup
+  // ⭐ ENHANCED: Handle answer with proper timer management
   const handleAnswerWithTimer = (isCorrect) => {
     console.log('📝 Answer given, stopping timer at:', currentWordTime, 'seconds');
     
-    // Stop the timer immediately
+    // ⭐ CRITICAL: Set answering state and stop timer
+    setIsAnswering(true);
+    
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -9782,6 +10240,11 @@ export const TestView = React.memo(() => {
     
     // Call the original handler
     handleAnswer(isCorrect);
+    
+    // Reset answering state after delay
+    setTimeout(() => {
+      setIsAnswering(false);
+    }, 1000);
   };
 
   // ⭐ NEW: Format time helper
@@ -9793,14 +10256,14 @@ export const TestView = React.memo(() => {
 
   return (
     <>
-      {/* ⭐ ENHANCED: Test Header with Fixed Timer */}
+      {/* ⭐ ENHANCED: Test Header */}
       <Card className="backdrop-blur-sm bg-white/90 border-0 shadow-xl rounded-2xl overflow-hidden">
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-1">
           <div className="bg-white rounded-2xl p-6">
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Test in Corso
+                  Test in Corso {isTransitioning && '🔄'}
                 </h2>
                 <p className="text-gray-600">Parola {progress.current} di {progress.total}</p>
                 <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
@@ -9818,6 +10281,17 @@ export const TestView = React.memo(() => {
                       Totale: {formatTime(summary.totalTime)}
                     </span>
                   )}
+                  {/* ⭐ NEW: Show avg and max time if available */}
+                  {summary.avgTimePerWord > 0 && (
+                    <span className="flex items-center gap-1 text-blue-600">
+                      📊 Media: {summary.avgTimePerWord}s
+                    </span>
+                  )}
+                  {summary.maxTimePerWord > 0 && (
+                    <span className="flex items-center gap-1 text-red-600">
+                      ⏱️ Max: {summary.maxTimePerWord}s
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="text-right">
@@ -9830,16 +10304,18 @@ export const TestView = React.memo(() => {
                     <div className="text-2xl font-bold text-red-600">{summary.incorrect}</div>
                     <div className="text-sm text-red-700">Sbagliate</div>
                   </div>
-                  {/* ⭐ FIXED: Current word timer display */}
+                  {/* ⭐ FIXED: Current word timer (continua sempre) */}
                   <div className="text-center">
                     <div className={`text-2xl font-bold flex items-center gap-1 transition-colors ${
                       currentWordTime > 30 ? 'text-red-600' : 
                       currentWordTime > 15 ? 'text-orange-600' : 'text-blue-600'
                     }`}>
-                      <Clock className="w-6 h-6" />
+                      <Clock className={`w-6 h-6 ${isAnswering ? 'animate-pulse' : ''}`} />
                       {formatTime(currentWordTime)}
                     </div>
-                    <div className="text-sm text-blue-700">Tempo Parola</div>
+                    <div className="text-sm text-blue-700">
+                      {isAnswering ? 'Elaborando...' : 'Tempo Parola'}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -9868,64 +10344,49 @@ export const TestView = React.memo(() => {
         </div>
       </Card>
 
-      {/* ⭐ ENHANCED: Hint Display */}
-      {showHint && currentWord?.sentence && (
-        <Card className="backdrop-blur-sm bg-orange-50 border-2 border-orange-200 shadow-xl rounded-2xl overflow-hidden animate-fade-in">
-          <div className="bg-gradient-to-r from-orange-400 to-yellow-400 p-1">
-            <div className="bg-white rounded-2xl p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <Lightbulb className="w-6 h-6 text-orange-600" />
-                <h3 className="text-lg font-bold text-orange-800">💡 Suggerimento</h3>
-                <span className="text-sm bg-orange-100 text-orange-700 px-3 py-1 rounded-full">
-                  Frase di contesto
-                </span>
-              </div>
-              <div className="text-lg italic text-orange-900 bg-orange-50 p-4 rounded-xl border border-orange-200">
-                "{currentWord.sentence}"
-              </div>
-              <p className="text-sm text-orange-600 mt-2 text-center">
-                ⚠️ Questo aiuto verrà conteggiato nelle statistiche
-              </p>
-            </div>
-          </div>
-        </Card>
-      )}
+      {/* ⭐ REMOVED: External hint display - now integrated in card */}
 
       {/* Test Card Area */}
-      {currentWord && (
+      {currentWord && !isTransitioning && (
         <div className="relative min-h-[80vh] flex items-center justify-center">
           <TestCard 
             word={currentWord}
             showMeaning={showMeaning}
             onFlip={() => setShowMeaning(!showMeaning)}
+            showHint={showHint} // ⭐ NEW: Pass hint state to card
+            hintUsed={hintUsed} // ⭐ NEW: Pass hint used state
           />
 
-          {/* ⭐ FIXED: Answer Buttons with timer cleanup */}
+          {/* ⭐ ENHANCED: Answer Buttons con nuovo stato */}
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-full max-w-2xl">
             <div className="flex justify-center space-x-6 mb-6">
               {showMeaning ? (
                 <>
                   <Button
                     onClick={() => handleAnswerWithTimer(true)}
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 text-lg rounded-2xl shadow-2xl transform transition-all duration-200 hover:scale-105 border-0"
+                    disabled={isAnswering}
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 text-lg rounded-2xl shadow-2xl transform transition-all duration-200 hover:scale-105 border-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     <Check className="w-6 h-6 mr-3" />
-                    Sapevo la risposta!
+                    {isAnswering ? 'Registrando...' : 'Sapevo la risposta!'}
                   </Button>
                   <Button
                     onClick={() => handleAnswerWithTimer(false)}
-                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 text-lg rounded-2xl shadow-2xl transform transition-all duration-200 hover:scale-105 border-0"
+                    disabled={isAnswering}
+                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 text-lg rounded-2xl shadow-2xl transform transition-all duration-200 hover:scale-105 border-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     <X className="w-6 h-6 mr-3" />
-                    Non la sapevo
+                    {isAnswering ? 'Registrando...' : 'Non la sapevo'}
                   </Button>
                 </>
               ) : (
                 <div className="text-center space-y-4">
                   <p className="text-xl text-gray-700 font-medium">🎯 Clicca la carta per vedere la traduzione</p>
-                  <p className="text-sm text-gray-500">Cerca di ricordare il significato prima di girare</p>
+                  <p className="text-sm text-gray-500">
+                    {showHint ? '💡 Suggerimento visibile nella carta' : 'Cerca di ricordare il significato prima di girare'}
+                  </p>
                   
-                  {/* ⭐ ENHANCED: Hint Button with timer awareness */}
+                  {/* ⭐ ENHANCED: Hint Button */}
                   {currentWord?.sentence && (
                     <div className="flex justify-center">
                       <Button
@@ -9938,24 +10399,25 @@ export const TestView = React.memo(() => {
                               ? 'bg-gray-400 cursor-not-allowed'
                               : 'bg-gradient-to-r from-orange-400 to-yellow-400 hover:from-orange-500 hover:to-yellow-500'
                         } text-white px-6 py-3 text-base rounded-xl shadow-lg transform transition-all duration-200 hover:scale-105 border-0 disabled:transform-none disabled:hover:scale-100`}
-                        title={hintUsed ? "Aiuto già utilizzato per questa parola" : "Mostra frase di contesto"}
+                        title={hintUsed ? "Aiuto già utilizzato per questa parola" : "Mostra frase di contesto nella carta"}
                       >
                         <HelpCircle className="w-5 h-5 mr-2" />
-                        {showHint ? '🔍 Nascondi Aiuto' : hintUsed ? '✅ Aiuto Usato' : '💡 Chiedi Aiuto'}
+                        {showHint ? '🔍 Nascondi Suggerimento' : hintUsed ? '✅ Aiuto Usato' : '💡 Mostra Suggerimento'}
                       </Button>
                     </div>
                   )}
                   
-                  {/* ⭐ NEW: Timer indicator for user */}
+                  {/* ⭐ ENHANCED: Timer indicator for user */}
                   <div className="mt-4 text-center">
                     <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
                       currentWordTime > 30 ? 'bg-red-100 text-red-700' : 
                       currentWordTime > 15 ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
                     }`}>
-                      <Clock className="w-4 h-4" />
+                      <Clock className={`w-4 h-4 ${isAnswering ? 'animate-pulse' : ''}`} />
                       <span className="font-mono font-bold">{formatTime(currentWordTime)}</span>
                       <span className="text-sm">
-                        {currentWordTime > 30 ? 'Tempo lungo!' : 
+                        {isAnswering ? 'Elaborando...' :
+                         currentWordTime > 30 ? 'Tempo lungo!' : 
                          currentWordTime > 15 ? 'Continua a riflettere...' : 'Tempo di riflessione'}
                       </span>
                     </div>
@@ -9966,16 +10428,28 @@ export const TestView = React.memo(() => {
           </div>
         </div>
       )}
+
+      {/* ⭐ NEW: Transition indicator */}
+      {isTransitioning && (
+        <div className="min-h-[80vh] flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-6xl mb-4 animate-spin">🔄</div>
+            <p className="text-xl text-gray-700 font-medium">Preparando la prossima parola...</p>
+            <p className="text-sm text-gray-500">La carta sta ruotando</p>
+          </div>
+        </div>
+      )}
       
       {/* End Test Button */}
       <div className="flex justify-center">
         <Button 
           onClick={resetTest} 
           variant="outline"
-          className="bg-white/80 backdrop-blur-sm border border-gray-200 hover:bg-white/90 rounded-xl px-6 py-3 shadow-lg"
+          disabled={isAnswering}
+          className="bg-white/80 backdrop-blur-sm border border-gray-200 hover:bg-white/90 rounded-xl px-6 py-3 shadow-lg disabled:opacity-50"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
-          Termina Test
+          {isAnswering ? 'Attendere...' : 'Termina Test'}
         </Button>
       </div>
     </>
