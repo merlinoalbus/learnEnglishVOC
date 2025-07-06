@@ -51,8 +51,11 @@ ENV REACT_APP_GEMINI_API_KEY=$REACT_APP_GEMINI_API_KEY \
 # ====== OPTIMIZATION 4: Copy source DOPO deps install ======
 COPY . .
 
-# ====== OPTIMIZATION 5: Build con flags ottimizzazione ======
-RUN npm run build
+# ====== DEBUG + BUILD ======
+RUN echo "=== DEBUG ENV VARS ===" && \
+    env | grep REACT_APP && \
+    echo "=== END DEBUG ===" && \
+    npm run build
 
 # =====================================================
 # Production Stage (semplificato e funzionante)
