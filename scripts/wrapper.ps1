@@ -1,6 +1,18 @@
 # Definisce il percorso della cartella di configurazione
 $configFolder = ".\config_txt"
 
+# Definisce l'elenco dei percorsi gestiti separatamente
+$specificPaths = @(
+    "src\views",
+    "src\utils",
+    "src\services",
+    "src\layouts",
+    "src\hooks",
+    "src\contexts",
+    "src\constants",
+    "src\components"
+)
+
 # Crea la cartella 'config' se non esiste
 if (-not (Test-Path -Path $configFolder -PathType Container)) {
     New-Item -Path $configFolder -ItemType Directory
@@ -9,11 +21,12 @@ if (-not (Test-Path -Path $configFolder -PathType Container)) {
 # Cancella tutti i file .txt nella cartella 'config'
 Remove-Item -Path "$configFolder\*.txt" -ErrorAction SilentlyContinue
 
-# Esegue gli script di estrazione e salva l'output nella cartella 'config'
+# Esegue gli script di estrazione
 
-# 👇 UNICA MODIFICA QUI: Aggiunto -NoRecurse per analizzare solo i file nella root
-.\extract.ps1 -SourcePath ".\" -OutputFile "$configFolder\root.txt" -NoRecurse
+# Chiamata alla root, ricorsiva, ma saltando i percorsi specifici
+.\extract.ps1 -SourcePath ".\" -OutputFile "$configFolder\root.txt" -PathsToSkip $specificPaths
 
+# Chiamate specifiche
 .\extract.ps1 -SourcePath ".\src\views" -OutputFile "$configFolder\views.txt"
 .\extract.ps1 -SourcePath ".\src\utils" -OutputFile "$configFolder\utils.txt"
 .\extract.ps1 -SourcePath ".\src\services" -OutputFile "$configFolder\services.txt"
