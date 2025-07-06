@@ -3,7 +3,10 @@ param(
     [string]$SourcePath,
     
     [Parameter(Mandatory=$false)]
-    [string]$OutputFile = "extracted_files_content.txt"
+    [string]$OutputFile = "extracted_files_content.txt",
+
+    [Parameter(Mandatory=$false)]
+    [switch]$NoRecurse
 )
 
 # Verifica che il path esista
@@ -12,84 +15,80 @@ if (-not (Test-Path -Path $SourcePath)) {
     exit 1
 }
 
-# Converte il path in formato assoluto per evitare problemi
+# Converte il path in formato assoluto
 $SourcePath = Resolve-Path -Path $SourcePath
 
 # Definisce le estensioni di file da processare
-$TargetExtensions = @('.js', '.json', '.conf', '.md', '.yml', '.yaml')
+$TargetExtensions = @('.js', '.json', '.conf', '.md', '.yml', '.yaml','.txt', '.html', '.css', '.ts', '.tsx', '.vue', '.scss', '.less', '.xml', '.properties')
 
-# Definisce le cartelle da escludere
-$ExcludedFolders = @('.idea', '.github', 'node_modules')
+# Lista di esclusione SEMPLIFICATA
+$ExcludedFolders = @('.idea', '.gitignore','config_txt','.github', 'node_modules', 'dist', 'build', 'vendor', 'coverage', 'test', 'tests', 'tmp', 'temp')
 
-# Crea o svuota il file di output
+# Svuota il file di output prima di iniziare
 if (Test-Path -Path $OutputFile) {
-    Write-Host "Il file di output esiste già. Verrà utilizzato in modalità append." -ForegroundColor Yellow
+    Clear-Content -Path $OutputFile
 } else {
     New-Item -Path $OutputFile -ItemType File -Force | Out-Null
-    Write-Host "Creato nuovo file di output: $OutputFile" -ForegroundColor Green
 }
 
-Write-Host "Inizio scansione del path: $SourcePath" -ForegroundColor Cyan
-Write-Host "File di output: $OutputFile" -ForegroundColor Cyan
+Write-Host "Inizio scansione del path: $SourcePath (Ricorsione: $(!$NoRecurse))" -ForegroundColor Cyan
 
-# Contatori per statistiche
+# Contatori
 $ProcessedFiles = 0
 $SkippedFiles = 0
 
 try {
-    # Ottiene tutti i file ricorsivamente
-    $AllFiles = Get-ChildItem -Path $SourcePath -Recurse -File
+    # Ottiene i file in base al flag -NoRecurse
+    if ($NoRecurse) {
+        $AllFiles = Get-ChildItem -Path $SourcePath -File
+    } else {
+        $AllFiles = Get-ChildItem -Path $SourcePath -Recurse -File
+    }
     
     foreach ($File in $AllFiles) {
+        $RelativePath = $File.FullName.Substring($SourcePath.FullName.Length).TrimStart('\')
+        if ([string]::IsNullOrEmpty($RelativePath)) { $RelativePath = $File.Name }
+
         # Verifica se il file è in una cartella esclusa
         $IsExcluded = $false
+        $ExclusionReason = ""
         foreach ($ExcludedFolder in $ExcludedFolders) {
             if ($File.DirectoryName -like "*\$ExcludedFolder" -or $File.DirectoryName -like "*\$ExcludedFolder\*") {
                 $IsExcluded = $true
+                $ExclusionReason = $ExcludedFolder
                 break
             }
         }
         
         if ($IsExcluded) {
+            Write-Host "🟡 Saltato (In cartella esclusa '$ExclusionReason'): $RelativePath" -ForegroundColor Yellow
             $SkippedFiles++
             continue
         }
         
-        # Verifica se il file ha un'estensione target o è un Dockerfile
+        # Verifica l'estensione o se è un Dockerfile
         $ShouldProcess = $false
-        
-        # Controlla le estensioni
-        if ($File.Extension -in $TargetExtensions) {
-            $ShouldProcess = $true
-        }
-        
-        # Controlla se è un Dockerfile (senza estensione)
-        if ($File.Name -eq "Dockerfile" -or $File.Name -like "Dockerfile.*") {
+        if (($File.Extension -in $TargetExtensions) -or ($File.Name -eq "Dockerfile") -or ($File.Name -like "Dockerfile.*")) {
             $ShouldProcess = $true
         }
         
         if (-not $ShouldProcess) {
+            Write-Host "🟡 Saltato (Tipo di file non valido): $RelativePath" -ForegroundColor Yellow
             $SkippedFiles++
             continue
         }
         
         try {
-            # Calcola il percorso relativo in modo più robusto
-            # Assicura che il SourcePath finisca con un backslash
-            $NormalizedSourcePath = $SourcePath.TrimEnd('\') + '\'
-            $RelativePath = $File.FullName.Substring($NormalizedSourcePath.Length)
+            Write-Host "⚙️ Processando: $RelativePath" -ForegroundColor Gray
+            $FileContent = Get-Content -Path $File.FullName -Raw -ErrorAction Stop -Encoding UTF8
             
-            Write-Host "Processando: $RelativePath" -ForegroundColor Gray
+            # <<< MODIFICA: Sostituisce tutti gli "a capo" (Windows e Unix) con uno spazio
+            $FileContent = $FileContent -replace "\r?\n", " "
             
-            # Legge il contenuto del file
-            $FileContent = Get-Content -Path $File.FullName -Raw -Encoding UTF8
-            
-            # Se il file è vuoto, gestisce il caso
             if ([string]::IsNullOrEmpty($FileContent)) {
                 $FileContent = "[FILE VUOTO]"
             }
             
-            # Prepara il contenuto da scrivere
             $OutputContent = @"
 NOME FILE: $RelativePath
 
@@ -99,7 +98,6 @@ $FileContent
 
 "@
             
-            # Scrive nel file di output
             Add-Content -Path $OutputFile -Value $OutputContent -Encoding UTF8
             $ProcessedFiles++
             
@@ -110,7 +108,7 @@ $FileContent
     }
     
     # Statistiche finali
-    Write-Host "`n=== STATISTICHE ===" -ForegroundColor Green
+    Write-Host "`n=== STATISTICHE ($SourcePath) ===" -ForegroundColor Green
     Write-Host "File processati: $ProcessedFiles" -ForegroundColor Green
     Write-Host "File saltati: $SkippedFiles" -ForegroundColor Yellow
     Write-Host "Output salvato in: $OutputFile" -ForegroundColor Green
@@ -120,4 +118,4 @@ $FileContent
     exit 1
 }
 
-Write-Host "`nScript completato con successo!" -ForegroundColor Green
+Write-Host "`nCompletato per $SourcePath`n" -ForegroundColor Green

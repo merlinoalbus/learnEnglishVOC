@@ -9,6 +9,16 @@ export const APP_CONFIG = {
   description: 'La tua app intelligente per imparare l\'inglese'
 };
 
+// AI Assistant Configuration
+export const AI_CONFIG = {
+  // NOTA: Per sicurezza, questa chiave andrebbe gestita tramite variabili d'ambiente
+  apiKey: 'AIzaSyCHftv0ACPTtX7unUKg6y_eqb09mBobTAM',
+  baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+  timeout: 15000,     // 15 secondi
+  maxRetries: 3,      // Numero massimo di tentativi
+  retryDelay: 1000    // 1 secondo di attesa base tra i tentativi
+};
+
 // Test Configuration
 export const TEST_CONFIG = {
   // Timer settings

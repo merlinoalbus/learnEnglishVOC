@@ -1,5 +1,5 @@
 // =====================================================
-// 📁 src/components/AddWordForm.js - VERSIONE ENHANCED con campo "Difficile"
+// 📁 src/components/AddWordForm.js - VERSIONE REFACTORED con aiService
 // =====================================================
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -9,6 +9,7 @@ import { Textarea } from './ui/textarea';
 import { Plus, Edit3, Check, Sparkles, Loader2, Wand2, AlertTriangle } from 'lucide-react';
 import { getPredefinedGroups, getCategoryStyle } from '../utils/categoryUtils';
 import { useNotification } from '../contexts/NotificationContext';
+import { aiService } from '../services/aiService';
 
 const AddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
   const [formData, setFormData] = useState({
@@ -26,64 +27,6 @@ const AddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
 
   const { showNotification, showError, showWarning, showSuccess } = useNotification();
 
-  // Gemini API Configuration
-  const GEMINI_API_KEY = 'AIzaSyCHftv0ACPTtX7unUKg6y_eqb09mBobTAM';
-  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-  // Funzione di fallback per categorizzare le parole
-  const categorizeWordFallback = (word) => {
-    const wordLower = word.toLowerCase();
-    
-    // Pattern per verbi comuni
-    if (wordLower.match(/^(go|come|run|walk|eat|drink|sleep|work|play|study|read|write|speak|listen|watch|see|look|think|know|understand|love|like|hate|want|need|have|get|give|take|make|do|say|tell|ask|answer|help|try|start|stop|finish|continue|learn|teach|buy|sell|pay|cost|travel|visit)$/)) {
-      return 'VERBI';
-    }
-    
-    // Pattern per verbi irregolari comuni
-    if (wordLower.match(/^(be|have|do|say|get|make|go|know|take|see|come|think|look|want|give|use|find|tell|ask|seem|feel|try|leave|call|put|mean|become|show|hear|let|begin|keep|start|grow|open|walk|win|talk|turn|move|live|believe|bring|happen|write|sit|stand|lose|pay|meet|run|drive|break|speak|eat|fall|catch|buy|cut|rise|send|choose|build|draw|kill|wear|beat|hide|shake|hang|strike|throw|fly|steal|lie|lay|bet|bite|blow|burn|burst|cost|deal|dig|dive|fight|fit|flee|forget|forgive|freeze|hurt|kneel|lead|lend|light|quit|ride|ring|seek|sell|shoot|shut|sing|sink|slide|spin|split|spread|spring|stick|sting|stink|strike|swear|sweep|swim|swing|tear|wake|weep|wind)$/)) {
-      return 'VERBI_IRREGOLARI';
-    }
-    
-    // Pattern per aggettivi
-    if (wordLower.match(/^.*(ful|less|ous|ive|able|ible|ant|ent|ing|ed|er|est|ly)$/) || 
-        wordLower.match(/^(good|bad|big|small|new|old|young|beautiful|ugly|happy|sad|angry|excited|tired|hungry|thirsty|hot|cold|warm|cool|fast|slow|easy|difficult|hard|soft|loud|quiet|bright|dark|clean|dirty|rich|poor|healthy|sick|strong|weak|tall|short|fat|thin|heavy|light|full|empty|open|close)$/)) {
-      return 'AGGETTIVI';
-    }
-    
-    // Pattern per tecnologia
-    if (wordLower.match(/^(computer|phone|internet|website|email|software|app|technology|digital|online|smartphone|laptop|tablet|keyboard|mouse|screen|monitor|camera|video|audio|wifi|bluetooth|data|file|download|upload|social|media|network|server|database|code|programming|artificial|intelligence|robot|smart|virtual|cloud|cyber|tech|device|gadget|electronic|battery|charge|wireless)$/)) {
-      return 'TECNOLOGIA';
-    }
-    
-    // Pattern per famiglia
-    if (wordLower.match(/^(mother|father|mom|dad|parent|child|children|son|daughter|brother|sister|family|grandmother|grandfather|grandma|grandpa|uncle|aunt|cousin|nephew|niece|husband|wife|spouse|baby|toddler|teenager|adult|relative|generation)$/)) {
-      return 'FAMIGLIA';
-    }
-    
-    // Pattern per emozioni positive
-    if (wordLower.match(/^(happy|joy|love|excited|cheerful|delighted|pleased|satisfied|content|glad|grateful|optimistic|positive|hopeful|confident|proud|amazed|wonderful|fantastic|excellent|great|awesome|brilliant|perfect|beautiful|amazing|incredible|outstanding|superb|marvelous|terrific)$/)) {
-      return 'EMOZIONI_POSITIVE';
-    }
-    
-    // Pattern per emozioni negative
-    if (wordLower.match(/^(sad|angry|mad|furious|upset|disappointed|frustrated|worried|anxious|nervous|scared|afraid|terrified|depressed|lonely|jealous|envious|guilty|ashamed|embarrassed|confused|stressed|tired|exhausted|bored|annoyed|irritated|disgusted|horrible|terrible|awful|bad|worst|hate|dislike)$/)) {
-      return 'EMOZIONI_NEGATIVE';
-    }
-    
-    // Pattern per lavoro
-    if (wordLower.match(/^(job|work|career|profession|office|business|company|manager|employee|boss|colleague|team|meeting|project|task|salary|money|contract|interview|resume|skill|experience|training|promotion|department|client|customer|service|industry|market|economy|trade|commerce)$/)) {
-      return 'LAVORO';
-    }
-    
-    // Pattern per vestiti
-    if (wordLower.match(/^(shirt|pants|dress|skirt|jacket|coat|sweater|hoodie|jeans|shorts|socks|shoes|boots|sneakers|sandals|hat|cap|gloves|scarf|belt|tie|suit|uniform|clothes|clothing|fashion|style|wear|outfit|underwear|pajamas|swimsuit)$/)) {
-      return 'VESTITI';
-    }
-    
-    // Default: prova a determinare se è un sostantivo
-    return 'SOSTANTIVI';
-  };
-
   useEffect(() => {
     if (editingWord) {
       setFormData({
@@ -100,86 +43,6 @@ const AddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
     }
   }, [editingWord]);
 
-  const callGeminiAPI = async (englishWord) => {
-    const availableGroups = getPredefinedGroups();
-    const groupsList = availableGroups.join(', ');
-    
-    const prompt = `
-Analizza la parola inglese "${englishWord}" e fornisci le seguenti informazioni in formato JSON:
-
-{
-  "italian": "traduzione principale in italiano (solo la traduzione più comune)",
-  "group": "DEVE essere esattamente una di queste categorie: ${groupsList}. Scegli quella più appropriata per la parola.",
-  "sentence": "frase d'esempio in inglese che usa la parola",
-  "notes": "note aggiuntive con altre traduzioni, sinonimi, forme irregolari, etc. Formatta come: 'Altri Significati: ... Sinonimi: ... Verbo Irregolare: ... etc.'",
-  "chapter": "lascia vuoto, sarà compilato dall'utente"
-}
-
-REGOLE IMPORTANTI:
-- Rispondi SOLO con il JSON valido, nessun altro testo
-- Il campo "group" DEVE essere esattamente una di queste opzioni: ${groupsList}
-- Per i verbi irregolari, usa "VERBI_IRREGOLARI" e specifica le forme nel campo notes
-- Per verbi regolari, usa "VERBI"
-- Includi sempre almeno 2-3 significati alternativi nelle note se esistono
-- La frase deve essere semplice e chiara
-- Il campo "chapter" deve rimanere vuoto (stringa vuota)
-- Se la parola non si adatta perfettamente a nessuna categoria, scegli quella più vicina
-
-ESEMPI:
-- "run" → group: "VERBI_IRREGOLARI" 
-- "beautiful" → group: "AGGETTIVI"
-- "computer" → group: "TECNOLOGIA"
-- "father" → group: "FAMIGLIA"
-- "happy" → group: "EMOZIONI_POSITIVE"
-`;
-
-    try {
-      const response = await fetch(GEMINI_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }]
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!content) {
-        throw new Error('Nessuna risposta dall\'AI');
-      }
-
-      // Extract JSON from the response (remove any markdown formatting)
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('Formato risposta non valido');
-      }
-
-      const parsedData = JSON.parse(jsonMatch[0]);
-      
-      // Validazione categoria: deve essere una delle categorie predefinite
-      const availableGroups = getPredefinedGroups();
-      if (parsedData.group && !availableGroups.includes(parsedData.group)) {
-        console.warn(`Categoria AI "${parsedData.group}" non valida. Uso categoria di fallback.`);
-        parsedData.group = categorizeWordFallback(englishWord);
-      }
-      
-      return parsedData;
-
-    } catch (error) {
-      console.error('Gemini API Error:', error);
-      throw error;
-    }
-  };
-
   const handleAiAssist = async () => {
     if (!formData.english.trim()) {
       showWarning('⚠️ Inserisci prima una parola inglese!');
@@ -191,11 +54,7 @@ ESEMPI:
     try {
       showNotification('🤖 L\'AI sta analizzando la parola...', 'info');
       
-      const aiData = await callGeminiAPI(formData.english.trim());
-      
-      if (!aiData.italian) {
-        throw new Error('L\'AI non ha fornito una traduzione valida');
-      }
+      const aiData = await aiService.analyzeWord(formData.english.trim());
       
       setFormData(prev => ({
         ...prev,
@@ -208,13 +67,7 @@ ESEMPI:
       }));
 
       setShowAdvancedForm(true);
-      
-      const availableGroups = getPredefinedGroups();
-      if (aiData.group && !availableGroups.includes(aiData.group)) {
-        showSuccess('✨ Dati compilati! (Categoria corretta automaticamente)');
-      } else {
-        showSuccess('✨ Dati compilati dall\'AI con successo!');
-      }
+      showSuccess('✨ Dati compilati dall\'AI con successo!');
       
     } catch (error) {
       console.error('AI Assist Error:', error);

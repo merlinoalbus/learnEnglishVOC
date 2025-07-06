@@ -1,27 +1,15 @@
-// =====================================================
-// 📁 src/components/stats/components/WordDetailSection.js - FIXED Timeline con Date Reali
-// =====================================================
+// ===================================================== 
+// 📁 src/components/stats/components/WordDetailSection.js - REFACTORED Clean Data Flow
+// =====================================================  
 
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Bar } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'; 
+import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Bar } from 'recharts'; 
 import { Award, TrendingUp, Target } from 'lucide-react';
 
-const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, localRefresh }) => {
+const WordDetailSection = ({ wordId, getWordAnalysis, testHistory, wordInfo, localRefresh }) => {
+  // ⭐ REFACTORED: Use ONLY data from props - no localStorage access
   const wordAnalysis = getWordAnalysis ? getWordAnalysis(wordId) : null;
-  
-  // ⭐ CRITICAL: Force fresh data from localStorage every time
-  const getFreshTestHistory = () => {
-    try {
-      // Read directly from localStorage to get the most up-to-date data
-      const freshTestHistory = JSON.parse(localStorage.getItem('testHistory') || '[]');
-      return freshTestHistory;
-    } catch (error) {
-      return getTestHistory ? getTestHistory() : [];
-    }
-  };
-  
-  const testHistory = getFreshTestHistory();
-  
+   
   if (!wordAnalysis) {
     return (
       <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
@@ -33,7 +21,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
     );
   }
 
-  // ⭐ CRITICAL: Get word information from the passed prop
+  // ⭐ REFACTORED: Get word information from props only
   const getWordInfoFromProps = () => {
     // First try to get from passed wordInfo prop
     if (wordInfo) {
@@ -43,7 +31,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
         chapter: wordInfo.chapter || null
       };
     }
-    
+     
     // Fallback to wordAnalysis
     if (wordAnalysis?.english) {
       return {
@@ -61,22 +49,22 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
 
   const finalWordInfo = getWordInfoFromProps();
 
-  // ⭐ FIXED: Ricostruisci timeline dai dati reali della testHistory
+  // ⭐ REFACTORED: Build timeline from testHistory prop instead of localStorage
   const buildTimelineFromHistory = () => {
     const attempts = [];
-        
-    // ⭐ CRITICAL: Use ALL testHistory, not filtered subset
+     
+    // ⭐ REFACTORED: Use testHistory from props instead of localStorage
     const allTests = testHistory || [];
-    
+     
     // ⭐ FIXED: Sort from oldest to newest (opposite of what was before)
     const sortedTests = [...allTests].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        
+     
     sortedTests.forEach((test, testIndex) => {
       let wasInTest = false;
       let wasCorrect = false;
       let usedHint = false;
       let timeSpent = 0;
-      
+       
       // ⭐ PRIORITY 1: Check wrongWords first (most reliable)
       if (test.wrongWords && Array.isArray(test.wrongWords)) {
         const wrongWord = test.wrongWords.find(w => w.id === wordId);
@@ -88,7 +76,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
           timeSpent = test.totalTime ? Math.floor((test.totalTime * 1000) / test.totalWords) : 0;
         }
       }
-      
+       
       // ⭐ PRIORITY 2: Check wordTimes for specific data (preferred but often empty)
       if (!wasInTest && test.wordTimes && Array.isArray(test.wordTimes)) {
         const wordTime = test.wordTimes.find(wt => wt.wordId === wordId);
@@ -99,19 +87,19 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
           timeSpent = wordTime.timeSpent || 0;
         }
       }
-      
+       
       // ⭐ PRIORITY 3: Infer from chapter inclusion (if word wasn't in wrongWords, it was correct)
       if (!wasInTest && test.testParameters?.selectedChapters && finalWordInfo.chapter) {
         if (test.testParameters.selectedChapters.includes(finalWordInfo.chapter)) {
           // ⭐ IMPORTANT: If test included the chapter but word is not in wrongWords, it was correct
           wasInTest = true;
           wasCorrect = true; // Wasn't wrong, so must have been correct
-          
+           
           // ⭐ NEW: Estimate data for correct answers from test totals
           const totalWordsInTest = test.totalWords || 1;
           const avgTimePerWord = test.totalTime ? (test.totalTime * 1000) / totalWordsInTest : 0;
           timeSpent = avgTimePerWord + (Math.random() * 2000 - 1000); // Add some variation ±1s
-          
+           
           // ⭐ NEW: Distribute hints proportionally among correct words
           if (test.hintsUsed > 0) {
             const correctWordsInTest = test.correctWords || 1;
@@ -120,7 +108,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
           }
         }
       }
-      
+       
       // Add attempt if word was in test
       if (wasInTest) {
         attempts.push({
@@ -130,17 +118,15 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
           timeSpent: Math.max(timeSpent, 0), // Ensure non-negative
           testId: test.id
         });
-      } else {
       }
     });
-    
+     
     return attempts;
   };
 
-  // ⭐ CRITICAL: Use ONLY rebuilt data, ignore wordAnalysis.attempts if they're incorrect
+  // ⭐ REFACTORED: Use ONLY rebuilt data from props, ignore wordAnalysis.attempts if they're incorrect
   const actualAttempts = buildTimelineFromHistory();
-
-
+  
   // ⭐ EARLY RETURN: Se non ci sono tentativi, mostra messaggio appropriato
   if (actualAttempts.length === 0) {
     return (
@@ -168,14 +154,14 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
     const attemptsUpToHere = actualAttempts.slice(0, index + 1);
     const correctUpToHere = attemptsUpToHere.filter(a => a.correct).length;
     const cumulativePrecision = Math.round((correctUpToHere / attemptsUpToHere.length) * 100);
-    
+     
     // ⭐ FIXED: Use real date for X-axis instead of attempt numbers
     const attemptDate = new Date(attempt.timestamp);
-    const shortDate = attemptDate.toLocaleDateString('it-IT', { 
-      day: '2-digit', 
-      month: '2-digit' 
+    const shortDate = attemptDate.toLocaleDateString('it-IT', {
+      day: '2-digit',
+      month: '2-digit'
     });
-    
+     
     return {
       // ⭐ CRITICAL: Use actual date instead of attempt number
       attempt: shortDate,
@@ -294,7 +280,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
           Ultimi {chartData.length} tentativi • Precisione ricostruita: {Math.round((actualAttempts.filter(a => a.correct).length / actualAttempts.length) * 100)}% • Totale tentativi: {actualAttempts.length}
         </p>
       </CardHeader>
-      
+       
       <CardContent className="p-6">
         {/* ⭐ ENHANCED: Quick stats overview */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
@@ -329,14 +315,14 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
               <TrendingUp className="w-5 h-5" />
               Andamento Temporale ({chartData.length} tentativi recenti)
             </h4>
-            
+             
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <ComposedChart data={chartData} key={`word-chart-${wordId}-${localRefresh}`}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e4e7" />
                   <XAxis 
-                    dataKey="attempt" 
-                    tick={{ fontSize: 11 }} 
+                    dataKey="attempt"
+                    tick={{ fontSize: 11 }}
                     interval={0}
                     angle={-45}
                     textAnchor="end"
@@ -345,8 +331,8 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
                   />
                   <YAxis 
                     yAxisId="left"
-                    domain={[0, 100]} 
-                    tick={{ fontSize: 12 }} 
+                    domain={[0, 100]}
+                    tick={{ fontSize: 12 }}
                     label={{ value: 'Percentuale (%)', angle: -90, position: 'insideLeft' }}
                   />
                   <YAxis 
@@ -356,9 +342,9 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
                     tick={{ fontSize: 12 }}
                     label={{ value: 'Tempo (s)', angle: 90, position: 'insideRight' }}
                   />
-                  
+                   
                   <Tooltip content={<CustomTooltip />} />
-                  
+                   
                   {/* ⭐ CRITICAL: Precisione Globale (cumulative) - PRIMARY LINE */}
                   <Line
                     yAxisId="left"
@@ -370,7 +356,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
                     dot={{ fill: '#2563eb', strokeWidth: 2, r: 6 }}
                     connectNulls={false}
                   />
-                  
+                   
                   {/* ⭐ Individual success/failure points */}
                   <Line
                     yAxisId="left"
@@ -383,7 +369,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
                     dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
                     connectNulls={false}
                   />
-                  
+                   
                   {/* ⭐ Hints as bars */}
                   <Bar
                     yAxisId="left"
@@ -392,7 +378,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
                     fillOpacity={0.6}
                     name="Aiuto Utilizzato"
                   />
-                  
+                   
                   {/* ⭐ Time as secondary line */}
                   <Line
                     yAxisId="right"
@@ -414,7 +400,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
             )}
 
             {/* ⭐ ENHANCED: Legend explanation */}
-            <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-1 bg-blue-600 rounded"></div>
                 <span>Precisione Globale (linea principale)</span>
@@ -433,7 +419,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
               </div>
             </div>
 
-            {/* ⭐ NEW: Always visible timeline info for troubleshooting */}
+            {/* ⭐ REFACTORED: Timeline info using props data */}
             <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <h5 className="font-semibold text-sm text-blue-800 mb-2">📋 Informazioni Timeline</h5>
               <div className="text-xs text-blue-700 space-y-1">
@@ -456,10 +442,10 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
                     </span></div>
                   </>
                 )}
-                
+                 
                 <div className="flex gap-2 mt-2">
                 </div>
-                
+                 
                 {testHistory.length > 0 && (
                   <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
                     <div className="font-semibold">Ultimi 3 test ID:</div>
@@ -485,14 +471,14 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
               </div>
             )}
           </div>
-
+           
           {/* ⭐ ENHANCED: Detailed Statistics (rest of the component remains the same) */}
           <div>
             <h4 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
               <Target className="w-5 h-5" />
               Statistiche Dettagliate
             </h4>
-            
+             
             <div className="space-y-4">
               {/* Current Status */}
               <div className="p-4 bg-gray-50 rounded-xl">
@@ -516,7 +502,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
                   </div>
                 </div>
               </div>
-
+               
               {/* Performance Analysis */}
               <div className="p-4 bg-blue-50 rounded-xl">
                 <h5 className="font-bold text-blue-800 mb-3">🎯 Analisi Performance</h5>
@@ -543,7 +529,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
                   </div>
                 </div>
               </div>
-
+               
               {/* Status Badge */}
               <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
                 <h5 className="font-bold text-indigo-800 mb-2">🏷️ Stato Parola (Ricostruito)</h5>
@@ -561,14 +547,14 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
                      recalculatedStats.accuracy < 80 ? '🔵 Buona' :
                      recalculatedStats.currentStreak >= 3 ? '✅ Consolidata' : '🟢 Ottima'}
                   </span>
-                  
+                   
                   {recentStats.trend !== 0 && (
                     <span className={`text-sm font-medium ${recentStats.trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {recentStats.trend > 0 ? '📈' : '📉'} 
                       {recentStats.trend > 0 ? '+' : ''}{recentStats.trend}% trend
                     </span>
                   )}
-                  
+                   
                   {wordAnalysis?.status && (
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
                       Originale: {wordAnalysis.status}
@@ -576,7 +562,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, getTestHistory, wordInfo, 
                   )}
                 </div>
               </div>
-
+               
               {/* Recommendations */}
               <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
                 <h5 className="font-bold text-yellow-800 mb-2">💡 Raccomandazioni</h5>

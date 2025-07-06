@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useLocalStorage } from './useLocalStorage';
+import { useState, useEffect, useCallback, useMemo } from 'react'; 
+import { useLocalStorage } from './useLocalStorage'; 
 import { useNotification } from '../contexts/NotificationContext';
 
 const INITIAL_STATS = {
@@ -33,7 +33,7 @@ export const useOptimizedStats = () => {
   const [stats, setStats] = useLocalStorage('vocabularyStats', INITIAL_STATS);
   const [wordPerformance, setWordPerformance] = useLocalStorage('wordPerformance', INITIAL_WORD_PERFORMANCE); // ⭐ NEW
   const { showSuccess, showError } = useNotification();
-  
+   
   const [optimizationState, setOptimizationState] = useState({
     isProcessing: false,
     lastUpdate: Date.now(),
@@ -78,7 +78,7 @@ export const useOptimizedStats = () => {
     const correctAttempts = attempts.filter(a => a.correct).length;
     const hintsUsed = attempts.filter(a => a.usedHint).length;
     const lastAttempt = attempts[attempts.length - 1];
-    
+     
     // Calculate streak
     let currentStreak = 0;
     for (let i = attempts.length - 1; i >= 0; i--) {
@@ -119,6 +119,205 @@ export const useOptimizedStats = () => {
       attempts: attempts.slice(-10) // Last 10 attempts for trend
     };
   }, [wordPerformance]);
+
+  // ⭐ NEW: ENHANCED Word detailed analysis for WordDetailSection
+  const getWordDetailedAnalysis = useCallback((wordId) => {
+    // Get basic analysis first
+    const wordAnalysis = getWordAnalysis(wordId);
+    if (!wordAnalysis) return null;
+
+    // Get word info from wordPerformance
+    const wordData = wordPerformance[wordId];
+    const wordInfo = {
+      english: wordData?.english || 'N/A',
+      italian: wordData?.italian || 'N/A',
+      chapter: wordData?.chapter || null
+    };
+
+    // ⭐ MOVED: Timeline reconstruction logic from WordDetailSection
+    const buildTimelineFromHistory = () => {
+      const attempts = [];
+      
+      // Sort tests chronologically (oldest to newest)
+      const sortedTests = [...testHistory].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      
+      sortedTests.forEach((test, testIndex) => {
+        let wasInTest = false;
+        let wasCorrect = false;
+        let usedHint = false;
+        let timeSpent = 0;
+        
+        // PRIORITY 1: Check wrongWords first (most reliable)
+        if (test.wrongWords && Array.isArray(test.wrongWords)) {
+          const wrongWord = test.wrongWords.find(w => w.id === wordId);
+          if (wrongWord) {
+            wasInTest = true;
+            wasCorrect = false; // Was wrong
+            usedHint = (test.hintsUsed > 0) && Math.random() > 0.7; // 30% chance if hints were used in test
+            timeSpent = test.totalTime ? Math.floor((test.totalTime * 1000) / test.totalWords) : 0;
+          }
+        }
+        
+        // PRIORITY 2: Check wordTimes for specific data (preferred but often empty)
+        if (!wasInTest && test.wordTimes && Array.isArray(test.wordTimes)) {
+          const wordTime = test.wordTimes.find(wt => wt.wordId === wordId);
+          if (wordTime) {
+            wasInTest = true;
+            wasCorrect = wordTime.isCorrect;
+            usedHint = wordTime.usedHint || false;
+            timeSpent = wordTime.timeSpent || 0;
+          }
+        }
+        
+        // PRIORITY 3: Infer from chapter inclusion (if word wasn't in wrongWords, it was correct)
+        if (!wasInTest && test.testParameters?.selectedChapters && wordInfo.chapter) {
+          if (test.testParameters.selectedChapters.includes(wordInfo.chapter)) {
+            wasInTest = true;
+            wasCorrect = true; // Wasn't wrong, so must have been correct
+            
+            // Estimate data for correct answers from test totals
+            const totalWordsInTest = test.totalWords || 1;
+            const avgTimePerWord = test.totalTime ? (test.totalTime * 1000) / totalWordsInTest : 0;
+            timeSpent = avgTimePerWord + (Math.random() * 2000 - 1000); // Add some variation ±1s
+            
+            // Distribute hints proportionally among correct words
+            if (test.hintsUsed > 0) {
+              const correctWordsInTest = test.correctWords || 1;
+              const hintProbability = Math.min(test.hintsUsed / correctWordsInTest, 1);
+              usedHint = Math.random() < hintProbability;
+            }
+          }
+        }
+        
+        // Add attempt if word was in test
+        if (wasInTest) {
+          attempts.push({
+            timestamp: test.timestamp,
+            correct: wasCorrect,
+            usedHint: usedHint,
+            timeSpent: Math.max(timeSpent, 0), // Ensure non-negative
+            testId: test.id
+          });
+        }
+      });
+      
+      return attempts;
+    };
+
+    // Build actual attempts from test history
+    const actualAttempts = buildTimelineFromHistory();
+    
+    if (actualAttempts.length === 0) {
+      return {
+        wordInfo,
+        hasData: false,
+        totalAttempts: 0,
+        message: `La parola "${wordInfo.english}" non è ancora stata testata.`
+      };
+    }
+
+    // ⭐ MOVED: Timeline data calculation logic from WordDetailSection
+    const timelineData = actualAttempts.map((attempt, index) => {
+      // Calculate cumulative precision up to this attempt
+      const attemptsUpToHere = actualAttempts.slice(0, index + 1);
+      const correctUpToHere = attemptsUpToHere.filter(a => a.correct).length;
+      const cumulativePrecision = Math.round((correctUpToHere / attemptsUpToHere.length) * 100);
+      
+      // Use real date for X-axis instead of attempt numbers
+      const attemptDate = new Date(attempt.timestamp);
+      const shortDate = attemptDate.toLocaleDateString('it-IT', {
+        day: '2-digit',
+        month: '2-digit'
+      });
+      
+      return {
+        // Use actual date instead of attempt number
+        attempt: shortDate,
+        attemptNumber: index + 1,
+        // Individual attempt result (0 or 100 for visualization)
+        success: attempt.correct ? 100 : 0,
+        // This is the cumulative precision (Precisione Globale)
+        globalPrecision: cumulativePrecision,
+        // Hint usage
+        hint: attempt.usedHint ? 50 : 0,
+        // Time in seconds
+        time: Math.round((attempt.timeSpent || 0) / 1000),
+        // Full date for tooltip
+        fullDate: attemptDate.toLocaleDateString('it-IT', {
+          day: '2-digit',
+          month: '2-digit', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        // Raw data for analysis
+        isCorrect: attempt.correct,
+        usedHint: attempt.usedHint,
+        timestamp: attempt.timestamp
+      };
+    });
+
+    // Take only last 10 attempts for the chart (most recent) - CORRECTLY ORDERED
+    const chartData = timelineData.slice(-10).map((data, index, array) => ({
+      ...data,
+      // Recalculate cumulative precision for just the visible attempts
+      globalPrecision: (() => {
+        const visibleAttempts = array.slice(0, index + 1);
+        const correctInVisible = visibleAttempts.filter(a => a.isCorrect).length;
+        return Math.round((correctInVisible / visibleAttempts.length) * 100);
+      })()
+    }));
+
+    // ⭐ MOVED: Statistics calculation from WordDetailSection
+    const recalculatedStats = {
+      totalAttempts: actualAttempts.length,
+      correctAttempts: actualAttempts.filter(a => a.correct).length,
+      accuracy: actualAttempts.length > 0 ? Math.round((actualAttempts.filter(a => a.correct).length / actualAttempts.length) * 100) : 0,
+      hintsUsed: actualAttempts.filter(a => a.usedHint).length,
+      hintsPercentage: actualAttempts.length > 0 ? Math.round((actualAttempts.filter(a => a.usedHint).length / actualAttempts.length) * 100) : 0,
+      avgTime: actualAttempts.length > 0 ? Math.round(actualAttempts.reduce((sum, a) => sum + (a.timeSpent || 0), 0) / actualAttempts.length / 1000) : 0,
+      currentStreak: (() => {
+        let streak = 0;
+        for (let i = actualAttempts.length - 1; i >= 0; i--) {
+          if (actualAttempts[i].correct) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+        return streak;
+      })()
+    };
+
+    // Additional statistics
+    const recentStats = {
+      totalAttempts: recalculatedStats.totalAttempts,
+      recentAttempts: chartData.length,
+      currentAccuracy: recalculatedStats.accuracy,
+      trend: chartData.length >= 2 
+        ? chartData[chartData.length - 1].globalPrecision - chartData[0].globalPrecision
+        : 0,
+      recentHints: chartData.filter(d => d.usedHint).length,
+      avgRecentTime: chartData.length > 0 
+        ? Math.round(chartData.reduce((sum, d) => sum + d.time, 0) / chartData.length)
+        : 0
+    };
+
+    return {
+      wordInfo,
+      hasData: true,
+      chartData,
+      timelineData,
+      actualAttempts,
+      recalculatedStats,
+      recentStats,
+      // Additional info for debugging
+      debugInfo: {
+        testHistoryLength: testHistory.length,
+        originalAnalysis: wordAnalysis
+      }
+    };
+  }, [getWordAnalysis, wordPerformance, testHistory]);
 
   // ⭐ NEW: Get all words with their performance
   const getAllWordsPerformance = useCallback(() => {
@@ -174,7 +373,7 @@ export const useOptimizedStats = () => {
       date.setDate(date.getDate() - i);
       return date.toISOString().split('T')[0];
     });
-    
+     
     return last7Days.map(date => ({
       date,
       tests: stats.dailyProgress[date]?.tests || 0,
@@ -188,12 +387,12 @@ export const useOptimizedStats = () => {
   const calculateStreak = useCallback((dailyProgress) => {
     const today = new Date();
     let streak = 0;
-    
+     
     for (let i = 0; i < 365; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-      
+       
       if (dailyProgress[dateStr]?.tests > 0) {
         streak++;
       } else if (i === 0) {
@@ -201,17 +400,17 @@ export const useOptimizedStats = () => {
       } else {
         break;
       }
-      
+       
       if (i > 30 && streak === 0) break;
     }
-    
+     
     return streak;
   }, []);
 
   // ⭐ BATCH OPERATIONS
   const performBatchUpdate = useCallback((updates) => {
     setOptimizationState(prev => ({ ...prev, isProcessing: true }));
-    
+     
     try {
       if (updates.stats) {
         setStats(updates.stats);
@@ -222,14 +421,14 @@ export const useOptimizedStats = () => {
       if (updates.wordPerformance) {
         setWordPerformance(updates.wordPerformance);
       }
-      
+       
       setOptimizationState(prev => ({
         ...prev,
         lastUpdate: Date.now(),
         forceUpdate: prev.forceUpdate + 1,
         isProcessing: false
       }));
-      
+       
     } catch (error) {
       console.error('❌ Batch update error:', error);
       showError(error, 'Batch Update');
@@ -257,7 +456,7 @@ export const useOptimizedStats = () => {
         acc.dailyProgress[testDate].correct += test.correctWords || 0;
         acc.dailyProgress[testDate].incorrect += test.incorrectWords || 0;
         acc.dailyProgress[testDate].hints += test.hintsUsed || 0; // ⭐ NEW
-        
+         
         if (!acc.lastStudyDate || testDate > acc.lastStudyDate) {
           acc.lastStudyDate = testDate;
         }
@@ -313,7 +512,7 @@ export const useOptimizedStats = () => {
     testWords.forEach(word => {
       const analysis = getWordAnalysisFunc(word.id);
       const status = analysis ? analysis.status : 'new';
-      
+       
       if (['critical', 'inconsistent', 'struggling'].includes(status)) {
         categories.hard.push({ word, status, analysis });
       } else if (['promising', 'new'].includes(status)) {
@@ -381,16 +580,15 @@ export const useOptimizedStats = () => {
         consolidated: categories.easy.filter(item => item.status === 'consolidated').length
       }
     };
-
-    
+      
     return { difficulty, difficultyAnalysis };
   }, []);
 
   // ⭐ ENHANCED: Test completion with smart difficulty calculation
   const handleTestComplete = useCallback((testStats, testWordsUsed, wrongWordsArray) => {
-    
+     
     const usedChapters = [...new Set(testWordsUsed.map(word => word.chapter || 'Senza Capitolo'))];
-    
+     
     const chapterStats = {};
     usedChapters.forEach(chapter => {
       const chapterWords = testWordsUsed.filter(word => 
@@ -399,13 +597,13 @@ export const useOptimizedStats = () => {
       const chapterWrongWords = wrongWordsArray.filter(word => 
         (word.chapter || 'Senza Capitolo') === chapter
       );
-      
+       
       // ⭐ NEW: Calculate hints for this chapter
       const chapterHints = testStats.wordTimes ? 
         testStats.wordTimes
           .filter(wt => chapterWords.some(cw => cw.id === wt.wordId))
           .filter(wt => wt.usedHint).length : 0;
-      
+       
       chapterStats[chapter] = {
         totalWords: chapterWords.length,
         correctWords: chapterWords.length - chapterWrongWords.length,
@@ -451,11 +649,11 @@ export const useOptimizedStats = () => {
             totalAvailableWords: testWordsUsed.length
           },
           testType: usedChapters.length === 1 ? 'selective' : 'complete',
-          
+           
           // ⭐ NEW: Smart proportional difficulty system
           difficulty, // Smart calculated difficulty
           difficultyAnalysis, // Detailed analysis for stats/debugging
-          
+           
           // ⭐ LEGACY: Keep old system for comparison
           legacyDifficulty: testWordsUsed.length < 10 ? 'easy' : testWordsUsed.length < 25 ? 'medium' : 'hard'
         },
@@ -469,7 +667,7 @@ export const useOptimizedStats = () => {
     updates.stats.incorrectAnswers += testStats.incorrect;
     updates.stats.hintsUsed += testStats.hints || 0; // ⭐ NEW
     updates.stats.timeSpent += testStats.totalTime || (Math.round(Math.random() * 10) + 5);
-    
+     
     const totalAnswers = updates.stats.correctAnswers + updates.stats.incorrectAnswers;
     updates.stats.averageScore = (updates.stats.correctAnswers / totalAnswers) * 100;
 
@@ -481,7 +679,7 @@ export const useOptimizedStats = () => {
     updates.stats.dailyProgress[today].correct += testStats.correct;
     updates.stats.dailyProgress[today].incorrect += testStats.incorrect;
     updates.stats.dailyProgress[today].hints += testStats.hints || 0; // ⭐ NEW
-    
+     
     updates.stats.lastStudyDate = today;
     updates.stats.streakDays = calculateStreak(updates.stats.dailyProgress);
 
@@ -494,7 +692,7 @@ export const useOptimizedStats = () => {
     try {
       // ⭐ CRITICAL: Get words from localStorage - they're managed by useOptimizedWords
       const words = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
-      
+       
       const exportData = {
         words, // ⭐ CRITICAL: Include actual words!
         stats,
@@ -508,11 +706,11 @@ export const useOptimizedStats = () => {
         totalWordPerformance: Object.keys(wordPerformance).length,
         description: 'Backup completo v2.3: parole + statistiche + cronologia test + performance parole + difficoltà intelligente'
       };
-      
+       
       const dataStr = JSON.stringify(exportData, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      
+       
       const link = document.createElement('a');
       link.href = url;
       link.download = `vocabulary-complete-backup-v2.3-${new Date().toISOString().split('T')[0]}.json`;
@@ -520,7 +718,7 @@ export const useOptimizedStats = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+       
       showSuccess(`✅ Backup v2.3 esportato! (${words.length} parole + ${testHistory.length} test + ${Object.keys(wordPerformance).length} performance)`);
     } catch (error) {
       showError(error, 'Export');
@@ -536,25 +734,25 @@ export const useOptimizedStats = () => {
       }
 
       const reader = new FileReader();
-      
+       
       reader.onload = (e) => {
         try {
           setOptimizationState(prev => ({ ...prev, isProcessing: true }));
           const importedData = JSON.parse(e.target.result);
-          
+           
           // ⭐ IMPROVED: Better validation
           const hasWords = importedData.words && Array.isArray(importedData.words);
           const hasStats = importedData.stats && typeof importedData.stats === 'object';
           const hasHistory = importedData.testHistory && Array.isArray(importedData.testHistory);
           const hasWordPerformance = importedData.wordPerformance && typeof importedData.wordPerformance === 'object';
-          
+           
           if (!hasWords && !hasStats && !hasHistory) {
             throw new Error('File non contiene dati validi (parole, statistiche o cronologia)');
           }
-          
+           
           const isNewFormat = importedData.version === '2.3' && hasWords;
           const isEnhancedBackup = importedData.version === '2.2' && hasWordPerformance;
-          
+           
           let confirmMessage = '';
           if (isNewFormat) {
             confirmMessage = `Backup Completo v2.3 rilevato (${importedData.words?.length || 0} parole + ${importedData.testHistory?.length || 0} test + ${Object.keys(importedData.wordPerformance || {}).length} performance).\nOK = Sostituisci tutto | Annulla = Combina`;
@@ -563,15 +761,15 @@ export const useOptimizedStats = () => {
           } else {
             confirmMessage = `Backup standard rilevato.\nOK = Sostituisci | Annulla = Combina`;
           }
-          
+           
           const shouldOverwrite = window.confirm(confirmMessage);
-          
+           
           // ⭐ IMPROVED: Better data handling
           let newStats = stats;
           let newHistory = testHistory;
           let newWordPerformance = wordPerformance;
           let importedWords = [];
-          
+           
           if (shouldOverwrite) {
             // Replace all data
             if (hasStats) {
@@ -588,12 +786,12 @@ export const useOptimizedStats = () => {
               // ⭐ CRITICAL: Save words to their storage
               localStorage.setItem('vocabularyWords', JSON.stringify(importedWords));
             }
-            
+             
             const components = [];
             if (hasWords) components.push(`${importedWords.length} parole`);
             if (hasHistory) components.push(`${newHistory.length} test`);
             if (hasWordPerformance) components.push(`${Object.keys(newWordPerformance).length} performance`);
-            
+             
             showSuccess(`✅ Backup ${isNewFormat ? 'v2.3' : isEnhancedBackup ? 'v2.2' : 'standard'} importato! ${components.join(' + ')}`);
           } else {
             // Merge data
@@ -602,7 +800,7 @@ export const useOptimizedStats = () => {
               const newTests = importedData.testHistory.filter(test => !existingIds.has(test.id));
               newHistory = [...testHistory, ...newTests].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             }
-            
+             
             if (hasWordPerformance) {
               newWordPerformance = { ...wordPerformance };
               Object.entries(importedData.wordPerformance).forEach(([wordId, data]) => {
@@ -618,7 +816,7 @@ export const useOptimizedStats = () => {
                 }
               });
             }
-            
+             
             if (hasWords) {
               // ⭐ IMPROVED: Merge words intelligently
               const currentWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
@@ -626,7 +824,7 @@ export const useOptimizedStats = () => {
               const newWords = importedData.words.filter(word => 
                 !existingEnglish.has(word.english.toLowerCase())
               );
-              
+               
               if (newWords.length > 0) {
                 importedWords = [...currentWords, ...newWords];
                 localStorage.setItem('vocabularyWords', JSON.stringify(importedWords));
@@ -634,35 +832,35 @@ export const useOptimizedStats = () => {
                 importedWords = currentWords;
               }
             }
-            
+             
             const components = [];
             if (hasWords) components.push(`+${importedWords.length - JSON.parse(localStorage.getItem('vocabularyWords') || '[]').length} nuove parole`);
             if (hasHistory) components.push(`+${newHistory.length - testHistory.length} test`);
             if (hasWordPerformance) components.push(`${Object.keys(importedData.wordPerformance).length} performance`);
-            
+             
             showSuccess(`✅ Dati combinati! ${components.join(', ')}`);
           }
-          
+           
           // ⭐ IMPROVED: Update all data
           performBatchUpdate({ 
             stats: newStats, 
             testHistory: newHistory,
             wordPerformance: newWordPerformance
           });
-          
+           
           // ⭐ IMPORTANT: Trigger words refresh if words were imported
           if (hasWords) {
             // Signal that words have changed by updating localStorage timestamp
             localStorage.setItem('vocabularyWords_lastUpdate', Date.now().toString());
           }
-          
+           
           resolve({ 
             newStats, 
             newHistory, 
-            newWordPerformance, 
+            newWordPerformance,
             importedWords: hasWords ? importedWords : null 
           });
-          
+           
         } catch (error) {
           console.error('Import error:', error);
           showError(error, 'Import');
@@ -671,14 +869,14 @@ export const useOptimizedStats = () => {
           setOptimizationState(prev => ({ ...prev, isProcessing: false }));
         }
       };
-      
+       
       reader.onerror = () => {
         setOptimizationState(prev => ({ ...prev, isProcessing: false }));
         const error = new Error('Errore lettura file');
         showError(error, 'File Reading');
         reject(error);
       };
-      
+       
       reader.readAsText(file);
     });
   }, [stats, testHistory, wordPerformance, performBatchUpdate, showSuccess, showError, optimizationState.isProcessing]);
@@ -695,7 +893,7 @@ export const useOptimizedStats = () => {
   // ⭐ AUTO-MIGRATION
   useEffect(() => {
     const shouldMigrate = !stats.migrated && testHistory.length > 0 && !optimizationState.isProcessing;
-    
+     
     if (shouldMigrate) {
       const timeoutId = setTimeout(optimizedMigration, 500);
       return () => clearTimeout(timeoutId);
@@ -707,26 +905,27 @@ export const useOptimizedStats = () => {
     testHistory,
     wordPerformance, // ⭐ NEW
     calculatedStats: computedStats,
-    
+     
     handleTestComplete,
     addTestToHistory: useCallback((testResult) => {
       const updatedHistory = [testResult, ...testHistory];
       performBatchUpdate({ testHistory: updatedHistory });
     }, [testHistory, performBatchUpdate]),
-    
+     
     // ⭐ NEW: Word performance functions
     getWordAnalysis,
+    getWordDetailedAnalysis, // ⭐ NEW: Enhanced analysis for WordDetailSection
     getAllWordsPerformance,
     recordWordPerformance,
-    
+     
     refreshData: useCallback(() => {
       if (optimizationState.isProcessing) return;
-      
+       
       try {
         const freshHistory = JSON.parse(localStorage.getItem('testHistory') || '[]');
         const freshStats = JSON.parse(localStorage.getItem('vocabularyStats') || JSON.stringify(INITIAL_STATS));
         const freshWordPerformance = JSON.parse(localStorage.getItem('wordPerformance') || '{}');
-        
+         
         performBatchUpdate({
           stats: freshStats,
           testHistory: freshHistory,
@@ -736,13 +935,13 @@ export const useOptimizedStats = () => {
         showError(error, 'Refresh');
       }
     }, [optimizationState.isProcessing, performBatchUpdate, showError]),
-    
+     
     resetStats: useCallback(() => {
       if (window.confirm('⚠️ Cancellare tutto (parole, test, statistiche)?')) {
         // ⭐ ENHANCED: Also clear words
         localStorage.removeItem('vocabularyWords');
         localStorage.removeItem('vocabularyWords_lastUpdate');
-        
+         
         performBatchUpdate({
           stats: { ...INITIAL_STATS, migrated: true },
           testHistory: EMPTY_ARRAY,
@@ -751,7 +950,7 @@ export const useOptimizedStats = () => {
         showSuccess('✅ Tutti i dati cancellati (parole, test, statistiche)!');
       }
     }, [performBatchUpdate, showSuccess]),
-    
+     
     clearHistoryOnly: useCallback(() => {
       if (window.confirm(`Cancellare ${testHistory.length} test?`)) {
         performBatchUpdate({ testHistory: EMPTY_ARRAY });
@@ -761,7 +960,7 @@ export const useOptimizedStats = () => {
 
     exportStats,
     importStats,
-    
+     
     ...computedStats
   };
 };
