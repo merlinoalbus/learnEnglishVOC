@@ -476,7 +476,7 @@ export const progressiveTimeout = (baseTimeout, attempt, maxTimeout = baseTimeou
   return Math.min(baseTimeout * Math.pow(1.5, attempt - 1), maxTimeout);
 };
 
-export default {
+const retryUtilsExport = {
   retryWithBackoff,
   withTimeout,
   smartRetryAI,
@@ -486,6 +486,7 @@ export default {
   OperationManager,
   globalOperationManager,
   debouncedRetry,
-  batchRetry,
   progressiveTimeout
 };
+
+export default retryUtilsExport;

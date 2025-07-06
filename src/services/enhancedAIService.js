@@ -470,4 +470,5 @@ ESEMPI:
 const enhancedAIService = new EnhancedAIService();
 
 export { enhancedAIService };
-export default { enhancedAIService };
+const enhancedAIServiceExport = { enhancedAIService };
+export default enhancedAIServiceExport;
