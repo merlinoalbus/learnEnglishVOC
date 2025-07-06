@@ -11,8 +11,11 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Prima di npm ci
+RUN apk add --no-cache python3 make g++
+
 # Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy source code
 COPY . .

@@ -3,7 +3,7 @@ import { useAppContext } from '../contexts/AppContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { ControlPanel } from '../components/main/ControlPanel';
 import JSONManager from '../components/JSONManager';
-import AddWordForm from '../components/AddWordForm';
+import EnhancedAddWordForm from '../components/EnhancedAddWordForm';
 import WordsList from '../components/WordsList';
 
 export const MainView = React.memo(() => {
@@ -157,7 +157,7 @@ export const MainView = React.memo(() => {
         onImportWords={handleImportWords}
       />
 
-      <AddWordForm
+      <EnhancedAddWordForm
         onAddWord={handleAddWord}
         editingWord={editingWord}
         onClearForm={() => dispatch({ type: 'SET_EDITING_WORD', payload: null })}

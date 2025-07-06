@@ -19,7 +19,7 @@ if (-not (Test-Path -Path $SourcePath)) {
 $resolvedSourcePath = Resolve-Path -Path $SourcePath
 
 # Definisce le estensioni di file da processare
-$TargetExtensions = @('.js','.conf', '.md', '.yml', '.yaml', '.html', '.css', '.ts', '.tsx', '.vue', '.scss', '.less', '.properties','')
+$TargetExtensions = @('.js','.conf', '.yml', '.yaml', '.html', '.css', '.ts', '.tsx', '.vue', '.scss', '.properties', '.sh', '.ps1')
 
 # Lista di esclusione per cartelle di sistema/build
 $ExcludedFolders = @('.idea', '.gitignore','config_txt','.github', 'node_modules', 'dist', 'build', 'vendor', 'coverage', 'test', 'tests', 'tmp', 'temp')
@@ -33,6 +33,21 @@ if (Test-Path -Path $OutputFile) {
 
 Write-Host "Inizio scansione del path: $($resolvedSourcePath.Path) (Ricorsiva)" -ForegroundColor Cyan
 
+# Converte i percorsi da saltare in percorsi assoluti
+$ResolvedPathsToSkip = @()
+if ($null -ne $PathsToSkip -and $PathsToSkip.Count -gt 0) {
+    foreach ($path in $PathsToSkip) {
+        try {
+            # Risolve il percorso relativo in assoluto
+            $absolutePath = Resolve-Path -Path $path -ErrorAction Stop
+            $ResolvedPathsToSkip += $absolutePath.Path
+            Write-Host "Percorso da saltare risolto: $($absolutePath.Path)" -ForegroundColor DarkYellow
+        } catch {
+            Write-Warning "Impossibile risolvere il percorso da saltare: $path"
+        }
+    }
+}
+
 # Contatori
 $ProcessedFiles = 0
 $SkippedFiles = 0
@@ -41,20 +56,18 @@ try {
     $AllFiles = Get-ChildItem -Path $resolvedSourcePath.Path -Recurse -File
     
     foreach ($File in $AllFiles) {
-        # === PRIMA CORREZIONE QUI ===
-        # Usa .Path invece di .FullName per calcolare il percorso relativo
+        # Calcola il percorso relativo
         $RelativePath = $File.FullName.Substring($resolvedSourcePath.Path.Length).TrimStart('\')
         if ([string]::IsNullOrEmpty($RelativePath)) { $RelativePath = $File.Name }
 
         # Controlla se il file appartiene a un percorso da saltare
         $isPathManuallySkipped = $false
-        if ($null -ne $PathsToSkip) {
-            foreach ($path in $PathsToSkip) {
-                # === SECONDA CORREZIONE QUI ===
-                # Usa .Path invece di .FullName per costruire il percorso da saltare
-                $absolutePathToSkip = Join-Path -Path $resolvedSourcePath.Path -ChildPath $path
+        if ($ResolvedPathsToSkip.Count -gt 0) {
+            foreach ($absolutePathToSkip in $ResolvedPathsToSkip) {
+                # Confronta i percorsi assoluti
                 if ($File.FullName.StartsWith($absolutePathToSkip, [System.StringComparison]::OrdinalIgnoreCase)) {
                     $isPathManuallySkipped = $true
+                    Write-Host "Saltato (Percorso escluso manualmente): $RelativePath" -ForegroundColor Red
                     break
                 }
             }
@@ -77,7 +90,6 @@ try {
         }
         
         if ($isFolderExcluded) {
-            #Write-Host "🟡 Saltato (In cartella esclusa '$ExclusionReason'): $RelativePath" -ForegroundColor Yellow
             $SkippedFiles++
             continue
         }
@@ -89,13 +101,13 @@ try {
         }
         
         if (-not $ShouldProcess) {
-            Write-Host "🟡 Saltato (Tipo di file non valido): $RelativePath" -ForegroundColor Yellow
+            Write-Host "Saltato (Tipo di file non valido): $RelativePath" -ForegroundColor Yellow
             $SkippedFiles++
             continue
         }
         
         try {
-            Write-Host "⚙️ Processando: $RelativePath" -ForegroundColor Gray
+            Write-Host "Processando: $RelativePath" -ForegroundColor Gray
             $FileContent = Get-Content -Path $File.FullName -Raw -ErrorAction Stop -Encoding UTF8
             $FileContent = $FileContent -replace "\r?\n", " "
             

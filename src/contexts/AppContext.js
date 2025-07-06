@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useOptimizedWords } from '../hooks/useOptimizedWords';
 import { useOptimizedTest } from '../hooks/useOptimizedTest';
-import { useOptimizedStats } from '../hooks/useOptimizedStats';
+import { useEnhancedStats } from '../hooks/useEnhancedStats';
 
 const AppContext = createContext();
 
@@ -45,7 +45,7 @@ export const AppProvider = ({ children }) => {
   
   // Hook centralizzati
   const wordsAPI = useOptimizedWords();
-  const statsAPI = useOptimizedStats();
+  const statsAPI = useEnhancedStats();
   
   // ⭐ ENHANCED: Test API with proper stats callback
   const testAPI = useOptimizedTest((testStats, testWords, wrongWords) => {

@@ -1,7 +1,6 @@
 # 📚 Vocabulary Master - Architettura Sicura e Ottimizzata
 
 ## 🎯 Panoramica
-
 **Vocabulary Master** è un'applicazione web modulare e performante per l'apprendimento del vocabolario inglese. Questa versione è stata completamente refattorizzata per garantire massima sicurezza, manutenibilità e scalabilità, introducendo un sistema di configurazione basato su environment variables, statistiche avanzate e una gestione dello stato ottimizzata tramite custom hooks e Context API.
 
 L'architettura separa nettamente la logica di business (hooks), la UI (componenti) e le funzioni di utilità, rendendo l'applicazione robusta e pronta per future espansioni.
