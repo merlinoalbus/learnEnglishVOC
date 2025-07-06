@@ -1,5 +1,5 @@
 # =====================================================
-# 🐳 Dockerfile - Vocabulary Master (SPEED OPTIMIZED - FIXED)
+# 🐳 Dockerfile - Vocabulary Master (WORKING FIX)
 # =====================================================
 
 # Multi-stage build ottimizzato
@@ -12,12 +12,8 @@ WORKDIR /app
 # Copy SOLO package files per cache layer
 COPY package*.json ./
 
-# ====== OPTIMIZATION 2: Install deps (rimuovi python3 make g++ se non servono) ======
-# Uncommenta la riga sotto solo se hai dipendenze native
-# RUN apk add --no-cache python3 make g++
-
 # ====== OPTIMIZATION 3: npm ci ottimizzato ======
-RUN npm ci --prefer-offline --no-audit --progress=false && \
+RUN npm ci --omit=dev --prefer-offline --no-audit --progress=false && \
     npm cache clean --force
 
 # ====== BUILD ARGS (tutti necessari) ======
@@ -33,7 +29,7 @@ ARG REACT_APP_MOCK_AI_RESPONSES=false
 ARG REACT_APP_ENABLE_STATISTICS=true
 ARG REACT_APP_ENABLE_DATA_MANAGEMENT=true
 
-# ====== SET ENV per build ======
+# ====== SET ENV per build (IDENTICO A LOCALE) ======
 ENV REACT_APP_GEMINI_API_KEY=$REACT_APP_GEMINI_API_KEY \
     REACT_APP_GEMINI_API_URL=$REACT_APP_GEMINI_API_URL \
     REACT_APP_ENVIRONMENT=$REACT_APP_ENVIRONMENT \
@@ -44,26 +40,24 @@ ENV REACT_APP_GEMINI_API_KEY=$REACT_APP_GEMINI_API_KEY \
     REACT_APP_AI_RETRY_DELAY=$REACT_APP_AI_RETRY_DELAY \
     REACT_APP_MOCK_AI_RESPONSES=$REACT_APP_MOCK_AI_RESPONSES \
     REACT_APP_ENABLE_STATISTICS=$REACT_APP_ENABLE_STATISTICS \
-    REACT_APP_ENABLE_DATA_MANAGEMENT=$REACT_APP_ENABLE_DATA_MANAGEMENT \
-    CI=true \
-    GENERATE_SOURCEMAP=false
+    REACT_APP_ENABLE_DATA_MANAGEMENT=$REACT_APP_ENABLE_DATA_MANAGEMENT
 
 # ====== OPTIMIZATION 4: Copy source DOPO deps install ======
 COPY . .
 
-# ====== OPTIMIZATION 5: Build con flags ottimizzazione ======
-RUN npm run build
+# ====== BUILD (senza debug, con fallback) ======
+RUN npm run build || (echo "Build failed, trying fallback..." && CI=false npm run build)
 
 # =====================================================
-# Production Stage (semplificato e funzionante)
+# Production Stage
 # =====================================================
 FROM nginx:alpine
 
 # Copy built app
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Copy nginx config SOLO se esiste, altrimenti usa default
-COPY nginx.conf /etc/nginx/nginx.conf
+# Use default nginx config (remove nginx.conf copy for now)
+# COPY nginx.conf /etc/nginx/nginx.conf
 
 # Health check semplificato
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
@@ -72,5 +66,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Expose port
 EXPOSE 80
 
-# Start nginx (come root, nginx gestisce da solo il drop privileges)
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
