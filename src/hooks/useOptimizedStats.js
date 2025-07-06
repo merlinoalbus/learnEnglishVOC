@@ -687,25 +687,30 @@ export const useOptimizedStats = () => {
     showSuccess(`✅ Test completato! Risultato: ${updates.testHistory[0].percentage}% (Difficoltà: ${difficulty})`);
   }, [stats, testHistory, calculateStreak, performBatchUpdate, showSuccess, recordWordPerformance, calculateSmartTestDifficulty, getWordAnalysis]);
 
-  // ⭐ FIXED: Export with WORDS included
+  // ⭐ CENTRALIZED: Export Data Creation Function
+  const createExportData = useCallback(() => {
+    // ⭐ CRITICAL: Get words from localStorage - they're managed by useOptimizedWords
+    const words = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
+     
+    return {
+      words, // ⭐ CRITICAL: Include actual words!
+      stats,
+      testHistory,
+      wordPerformance, // ⭐ NEW: Include word performance
+      exportDate: new Date().toISOString(),
+      version: '2.3', // ⭐ Updated version for smart difficulty
+      dataTypes: ['words', 'stats', 'testHistory', 'wordPerformance'], // ⭐ Updated
+      totalTests: testHistory.length,
+      totalWords: words.length, // ⭐ FIXED: Count actual words, not performance
+      totalWordPerformance: Object.keys(wordPerformance).length,
+      description: 'Backup completo v2.3: parole + statistiche + cronologia test + performance parole + difficoltà intelligente'
+    };
+  }, [stats, testHistory, wordPerformance]);
+
+  // ⭐ UPDATED: Export using centralized function
   const exportStats = useCallback(() => {
     try {
-      // ⭐ CRITICAL: Get words from localStorage - they're managed by useOptimizedWords
-      const words = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
-       
-      const exportData = {
-        words, // ⭐ CRITICAL: Include actual words!
-        stats,
-        testHistory,
-        wordPerformance, // ⭐ NEW: Include word performance
-        exportDate: new Date().toISOString(),
-        version: '2.3', // ⭐ Updated version for smart difficulty
-        dataTypes: ['words', 'stats', 'testHistory', 'wordPerformance'], // ⭐ Updated
-        totalTests: testHistory.length,
-        totalWords: words.length, // ⭐ FIXED: Count actual words, not performance
-        totalWordPerformance: Object.keys(wordPerformance).length,
-        description: 'Backup completo v2.3: parole + statistiche + cronologia test + performance parole + difficoltà intelligente'
-      };
+      const exportData = createExportData();
        
       const dataStr = JSON.stringify(exportData, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
@@ -719,11 +724,11 @@ export const useOptimizedStats = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
        
-      showSuccess(`✅ Backup v2.3 esportato! (${words.length} parole + ${testHistory.length} test + ${Object.keys(wordPerformance).length} performance)`);
+      showSuccess(`✅ Backup v2.3 esportato! (${exportData.totalWords} parole + ${exportData.totalTests} test + ${exportData.totalWordPerformance} performance)`);
     } catch (error) {
       showError(error, 'Export');
     }
-  }, [stats, testHistory, wordPerformance, showSuccess, showError]);
+  }, [createExportData, showSuccess, showError]);
 
   // ⭐ FIXED: Import with WORDS support
   const importStats = useCallback((file) => {
@@ -958,6 +963,8 @@ export const useOptimizedStats = () => {
       }
     }, [testHistory.length, performBatchUpdate, showSuccess]),
 
+    // ⭐ CENTRALIZED: Export functions
+    createExportData, // ⭐ NEW: For reuse in emergency export
     exportStats,
     importStats,
      
