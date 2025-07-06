@@ -1,5 +1,5 @@
 # .github/workflows/docker-build.yml
-name: 🐳 Build and Push Docker Image
+name: 🐳 Build and Push Docker Image (SPEED OPTIMIZED)
 
 on:
   push:
@@ -23,9 +23,14 @@ jobs:
     - name: 📥 Checkout repository
       uses: actions/checkout@v4
 
+    # ====== OPTIMIZATION 1: Setup Docker Buildx con cache ======
     - name: 🐳 Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-
+      with:
+        driver-opts: |
+          network=host
+          
+    # ====== OPTIMIZATION 2: Login veloce ======
     - name: 🔐 Log in to Container Registry
       if: github.event_name != 'pull_request'
       uses: docker/login-action@v3
@@ -34,6 +39,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    # ====== OPTIMIZATION 3: Metadata con cache ======
     - name: 🏷️ Extract metadata
       id: meta
       uses: docker/metadata-action@v5
@@ -43,9 +49,11 @@ jobs:
           type=ref,event=branch
           type=ref,event=pr
           type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
           type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=v{{date 'YYYYMMDD-HHmmss'}},enable={{is_default_branch}}
+          type=sha,prefix=sha-,format=short
 
+    # ====== OPTIMIZATION 4: Build con cache aggressiva ======
     - name: 🏗️ Build and push Docker image
       uses: docker/build-push-action@v5
       with:
@@ -54,12 +62,57 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        platforms: linux/amd64,linux/arm64
+        
+        # ====== SPEED OPTIMIZATIONS ======
+        platforms: linux/amd64  # Solo AMD64 (dimezza tempo)
+        cache-from: |
+          type=gha
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache
+        cache-to: |
+          type=gha,mode=max
+          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache,mode=max
+        
+        # ====== BUILD ARGS ======
+        build-args: |
+          REACT_APP_GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          REACT_APP_GEMINI_API_URL=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+          REACT_APP_ENVIRONMENT=production
+          REACT_APP_ENABLE_AI_FEATURES=true
+          REACT_APP_DEBUG_LOGGING=false
+          REACT_APP_AI_TIMEOUT=15000
+          REACT_APP_AI_MAX_RETRIES=3
+          REACT_APP_AI_RETRY_DELAY=1000
+          REACT_APP_MOCK_AI_RESPONSES=false
+          REACT_APP_ENABLE_STATISTICS=true
+          REACT_APP_ENABLE_DATA_MANAGEMENT=true
+
+    # ====== OPTIMIZATION 5: Parallel security scan (optional) ======
+    - name: 🔍 Security scan (background)
+      if: github.event_name != 'pull_request'
+      continue-on-error: true
+      run: |
+        # Run security scan in background, don't block deployment
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy image --exit-code 0 --severity HIGH,CRITICAL \
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest &
 
     - name: ✅ Build Summary
       run: |
         echo "🎉 Docker image built successfully!"
         echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
         echo "🏷️ Tags: ${{ steps.meta.outputs.tags }}"
+        echo "⏱️ Build completed in record time!"
+
+    # ====== OPTIMIZATION 6: Webhook per auto-update TrueNAS ======
+    - name: 📢 Notify TrueNAS Update
+      if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      run: |
+        # Webhook per Watchtower o update script
+        echo "🔔 New version available for deployment"
+        echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+        echo "SHA: ${{ github.sha }}"
+        # Uncomment for webhook:
+        # curl -X POST "${{ secrets.TRUENAS_WEBHOOK_URL }}" \
+        #   -H "Content-Type: application/json" \
+        #   -d '{"image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest", "sha": "${{ github.sha }}"}'

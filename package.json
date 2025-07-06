@@ -14,6 +14,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "build:fast": "CI=true GENERATE_SOURCEMAP=false INLINE_RUNTIME_CHUNK=false react-scripts build",
+    "build:docker": "CI=true GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test --watchAll=false --coverage=false",
     "eject": "react-scripts eject",
     "build:analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'",
@@ -23,9 +25,11 @@
     "security:check": "npm audit && node scripts/security-check.js",
     "config:status": "node scripts/config-status.js",
     "docker:build": "docker build -t vocabulary-app .",
+    "docker:build:fast": "docker build --target builder -t vocabulary-app-dev .",
     "docker:run": "docker run -p 3000:80 vocabulary-app",
     "docker:dev": "docker-compose --profile dev up",
     "docker:prod": "docker-compose up",
+    "docker:clean": "docker system prune -f && docker builder prune -f",
     "dev": "npm run setup:env && npm start",
     "deploy:vercel": "npm run build && vercel deploy --prod",
     "deploy:netlify": "npm run build && netlify deploy --prod --dir=build"
