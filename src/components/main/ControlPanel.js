@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardTitle } from '../ui/card';
+import { Card, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Play, RefreshCw, BookOpen, AlertTriangle } from 'lucide-react';
 
@@ -8,8 +8,7 @@ export const ControlPanel = React.memo(({
   onClearAllWords, 
   words, 
   wordStats,
-  getAvailableChapters, 
-  getChapterStats 
+  getAvailableChapters
 }) => {
   const availableWords = words.filter(word => !word.learned);
   const chapters = getAvailableChapters();

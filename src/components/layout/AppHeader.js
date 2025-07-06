@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardHeader, CardTitle } from '../ui/card';
 import { Brain, Sparkles } from 'lucide-react';
 
 export const AppHeader = React.memo(() => (
