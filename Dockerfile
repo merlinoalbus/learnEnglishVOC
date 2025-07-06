@@ -1,5 +1,5 @@
 # =====================================================
-# 🐳 Dockerfile - Vocabulary Master (WORKING FIX)
+# 🐳 Dockerfile - Vocabulary Master (SPEED OPTIMIZED - FIXED)
 # =====================================================
 
 # Multi-stage build ottimizzato
@@ -12,8 +12,12 @@ WORKDIR /app
 # Copy SOLO package files per cache layer
 COPY package*.json ./
 
+# ====== OPTIMIZATION 2: Install deps (rimuovi python3 make g++ se non servono) ======
+# Uncommenta la riga sotto solo se hai dipendenze native
+# RUN apk add --no-cache python3 make g++
+
 # ====== OPTIMIZATION 3: npm ci ottimizzato ======
-RUN npm ci --omit=dev --prefer-offline --no-audit --progress=false && \
+RUN npm ci --prefer-offline --no-audit --progress=false && \
     npm cache clean --force
 
 # ====== BUILD ARGS (tutti necessari) ======
@@ -29,7 +33,7 @@ ARG REACT_APP_MOCK_AI_RESPONSES=false
 ARG REACT_APP_ENABLE_STATISTICS=true
 ARG REACT_APP_ENABLE_DATA_MANAGEMENT=true
 
-# ====== SET ENV per build (CON FIX ESLINT E TERSER) ======
+# ====== SET ENV per build ======
 ENV REACT_APP_GEMINI_API_KEY=$REACT_APP_GEMINI_API_KEY \
     REACT_APP_GEMINI_API_URL=$REACT_APP_GEMINI_API_URL \
     REACT_APP_ENVIRONMENT=$REACT_APP_ENVIRONMENT \
@@ -42,27 +46,24 @@ ENV REACT_APP_GEMINI_API_KEY=$REACT_APP_GEMINI_API_KEY \
     REACT_APP_ENABLE_STATISTICS=$REACT_APP_ENABLE_STATISTICS \
     REACT_APP_ENABLE_DATA_MANAGEMENT=$REACT_APP_ENABLE_DATA_MANAGEMENT \
     CI=true \
-    GENERATE_SOURCEMAP=true \
-    ESLINT_NO_DEV_ERRORS=true \
-    DISABLE_ESLINT_PLUGIN=true \
-    DISABLE_NEW_JSX_TRANSFORM=true
+    GENERATE_SOURCEMAP=false
 
 # ====== OPTIMIZATION 4: Copy source DOPO deps install ======
 COPY . .
 
-# ====== BUILD (senza debug, con fallback) ======
-RUN npm run build || (echo "Build failed, trying fallback..." && CI=false npm run build)
+# ====== OPTIMIZATION 5: Build con flags ottimizzazione ======
+RUN npm run build
 
 # =====================================================
-# Production Stage
+# Production Stage (semplificato e funzionante)
 # =====================================================
 FROM nginx:alpine
 
 # Copy built app
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Use default nginx config (remove nginx.conf copy for now)
-# COPY nginx.conf /etc/nginx/nginx.conf
+# Copy nginx config SOLO se esiste, altrimenti usa default
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Health check semplificato
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
@@ -71,5 +72,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Expose port
 EXPOSE 80
 
-# Start nginx
+# Start nginx (come root, nginx gestisce da solo il drop privileges)
 CMD ["nginx", "-g", "daemon off;"]
