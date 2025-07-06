@@ -1,47 +1,55 @@
-# Multi-stage build per ottimizzare dimensioni e sicurezza
+# =====================================================
+# 🐳 Dockerfile - Vocabulary Master (Secure Build)
+# =====================================================
+
+# Multi-stage build per ottimizzazione
 FROM node:18-alpine AS builder
 
-# Imposta working directory
+# Set working directory
 WORKDIR /app
 
-# Installa dipendenze di sistema necessarie
-RUN apk add --no-cache git python3 make g++
-
-# Copia package files per sfruttare cache Docker
+# Copy package files
 COPY package*.json ./
 
-# Installa dipendenze in modo più robusto
-RUN npm install --silent && npm cache clean --force
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
 
-# Copia tutto il codice sorgente
+# Copy source code
 COPY . .
 
-# Build dell'applicazione React
+# Build args per environment variables (opzionali per build-time)
+ARG REACT_APP_ENVIRONMENT=production
+ARG REACT_APP_ENABLE_AI_FEATURES=true
+ARG REACT_APP_DEBUG_LOGGING=false
+
+# Set environment variables per build
+ENV REACT_APP_ENVIRONMENT=$REACT_APP_ENVIRONMENT
+ENV REACT_APP_ENABLE_AI_FEATURES=$REACT_APP_ENABLE_AI_FEATURES
+ENV REACT_APP_DEBUG_LOGGING=$REACT_APP_DEBUG_LOGGING
+
+# IMPORTANTE: NON includere REACT_APP_GEMINI_API_KEY qui!
+# Sarà passata a runtime tramite docker run o docker-compose
+
+# Build the app
 RUN npm run build
 
-# ==========================================
-# Stage 2: Production con Nginx
-# ==========================================
-FROM nginx:alpine AS production
+# =====================================================
+# Production Stage
+# =====================================================
+FROM nginx:alpine
 
-# Installa wget per health check
-RUN apk add --no-cache wget
-
-# Copia i file build dalla stage precedente
+# Copy built app
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Copia configurazione Nginx custom
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Crea cartella per logs
-RUN mkdir -p /var/log/nginx
-
-# Esponi porta 80
+# Expose port
 EXPOSE 80
 
-# Health check per verificare che l'app funzioni
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost/health || exit 1
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/ || exit 1
 
-# Avvia Nginx
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

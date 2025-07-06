@@ -1,92 +1,14 @@
 // =====================================================
-// 📁 src/constants/appConstants.js - VERSIONE SEMPLIFICATA
+// 📁 src/constants/appConstants.js - VERSIONE SICURA (no API key hardcoddata)
 // =====================================================
 
-// App Metadata
-export const APP_CONFIG = {
-  name: 'Vocabulary Master',
-  version: '2.0.0',
-  description: 'La tua app intelligente per imparare l\'inglese'
-};
+// ====== IMPORT CONFIGURAZIONE SICURA ======
+import AppConfig, { 
+  ERROR_MESSAGES as CONFIG_ERROR_MESSAGES,
+  SUCCESS_MESSAGES as CONFIG_SUCCESS_MESSAGES 
+} from '../config/appConfig';
 
-// AI Assistant Configuration
-export const AI_CONFIG = {
-  // NOTA: Per sicurezza, questa chiave andrebbe gestita tramite variabili d'ambiente
-  apiKey: 'AIzaSyCHftv0ACPTtX7unUKg6y_eqb09mBobTAM',
-  baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-  timeout: 15000,     // 15 secondi
-  maxRetries: 3,      // Numero massimo di tentativi
-  retryDelay: 1000    // 1 secondo di attesa base tra i tentativi
-};
-
-// Test Configuration
-export const TEST_CONFIG = {
-  // Timer settings
-  warningThresholds: {
-    slow: 25,      // seconds - quando mostrare warning "tempo lungo"
-    verySlow: 40   // seconds - quando mostrare "molto lento"
-  },
-  
-  // Test flow settings
-  autoAdvanceDelay: 1500, // ms after answer before next question
-  hintCooldown: 3000,     // ms between hint requests
-  maxHintsPerWord: 1,     // limite aiuti per parola
-  
-  // Scoring thresholds
-  scoring: {
-    excellent: 80,  // % for "excellent" result  
-    good: 60,      // % for "good" result
-    victory: 80    // % for victory message
-  }
-};
-
-// Statistics Configuration
-export const STATS_CONFIG = {
-  // Performance thresholds
-  performance: {
-    excellent: 90,    // %
-    good: 75,        // %
-    average: 60,     // %
-    needsWork: 40    // %
-  },
-  
-  // History limits
-  maxHistorySize: 1000,   // max test history entries
-  maxRecentTests: 20,     // tests shown in timeline
-  
-  // Chart settings
-  charts: {
-    maxTimelinePoints: 20,
-    defaultChartHeight: 300
-  }
-};
-
-// Storage Configuration
-export const STORAGE_CONFIG = {
-  keys: {
-    words: 'vocabulary_words',
-    stats: 'vocabulary_stats', 
-    testHistory: 'vocabulary_test_history',
-    settings: 'vocabulary_settings',
-    wordPerformance: 'wordPerformance'
-  }
-};
-
-// Word/Vocabulary Configuration
-export const WORD_CONFIG = {
-  // Field lengths
-  maxWordLength: 100,
-  maxTranslationLength: 200, 
-  maxNotesLength: 1000,
-  maxSentenceLength: 300,
-  maxChapterLength: 20,
-  
-  // Required fields
-  requiredFields: ['english', 'italian'],
-  optionalFields: ['group', 'sentence', 'notes', 'chapter', 'learned', 'difficult']
-};
-
-// Predefined Categories
+// ====== PREDEFINED CATEGORIES (identiche alle tue) ======
 export const CATEGORIES = [
   'VERBI', 
   'VERBI_IRREGOLARI', 
@@ -103,7 +25,7 @@ export const CATEGORIES = [
   'VESTITI'
 ];
 
-// Category Styles
+// ====== CATEGORY STYLES (identici ai tuoi) ======
 export const CATEGORY_STYLES = {
   'VERBI': { 
     color: 'from-red-400 via-red-500 to-red-600', 
@@ -191,43 +113,42 @@ export const CATEGORY_STYLES = {
   }
 };
 
-// UI Configuration (solo elementi utilizzati)
-export const UI_CONFIG = {
-  // Animation durations
-  animations: {
-    fast: 150,
-    normal: 300,
-    slow: 500,
-    cardFlip: 700
-  },
-  
-  // Toast notification settings
-  notifications: {
-    defaultDuration: 3000,
-    maxVisible: 5
+// ====== BACKWARD COMPATIBILITY EXPORTS ======
+// NOTA: Questi mantengono la compatibilità con il tuo codice esistente
+// MA ora importano da configurazione sicura (senza API key hardcoddata)
+
+export const APP_CONFIG = AppConfig.app;
+export const AI_CONFIG = AppConfig.ai;           // ← ORA SICURO (no hardcoded key)
+export const TEST_CONFIG = AppConfig.test;
+export const STATS_CONFIG = AppConfig.stats;
+export const STORAGE_CONFIG = AppConfig.storage;
+export const WORD_CONFIG = AppConfig.word;
+export const UI_CONFIG = AppConfig.ui;
+
+// Re-export messages
+export const ERROR_MESSAGES = CONFIG_ERROR_MESSAGES;
+export const SUCCESS_MESSAGES = CONFIG_SUCCESS_MESSAGES;
+
+// ====== MIGRATION NOTE ======
+/**
+ * 🔐 SICUREZZA: API key rimossa da questo file!
+ * 
+ * LA TUA API KEY ERA: [RIMOSSA PER SICUREZZA]
+ * 
+ * COSA FARE:
+ * 1. Copia questo file: cp .env.example .env.local
+ * 2. Modifica .env.local e aggiungi la tua API key vera
+ * 3. Riavvia npm start
+ * 
+ * Il tuo codice esistente continuerà a funzionare identico!
+ * AI_CONFIG.apiKey ora viene da environment variable invece che hardcodato.
+ */
+
+if (AppConfig.app.environment === 'development') {
+  if (!AppConfig.ai.apiKey) {
+    console.error(
+      '🔴 SETUP REQUIRED: Aggiungi la tua API key in .env.local\n' +
+      'REACT_APP_GEMINI_API_KEY=your_api_key_here'
+    );
   }
-};
-
-// Error Messages (solo quelli utilizzati)
-export const ERROR_MESSAGES = {
-  network: 'Errore di connessione. Controlla la tua connessione internet.',
-  ai: 'Servizio AI temporaneamente non disponibile. Riprova più tardi.',
-  storage: 'Errore nel salvataggio dei dati. Controlla lo spazio disponibile.',
-  validation: 'Dati non validi. Controlla i campi obbligatori.',
-  import: 'Errore durante l\'importazione. Verifica il formato del file.',
-  export: 'Errore durante l\'esportazione. Riprova.',
-  generic: 'Si è verificato un errore imprevisto.',
-  wordNotFound: 'Parola non trovata.',
-  noWordsAvailable: 'Nessuna parola disponibile per il test.'
-};
-
-// Success Messages (per consistency UI)
-export const SUCCESS_MESSAGES = {
-  wordAdded: 'Parola aggiunta con successo!',
-  wordUpdated: 'Parola modificata con successo!', 
-  wordDeleted: 'Parola eliminata con successo!',
-  testCompleted: 'Test completato!',
-  dataExported: 'Dati esportati con successo!',
-  dataImported: 'Dati importati con successo!',
-  settingsSaved: 'Impostazioni salvate!'
-};
+}

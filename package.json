@@ -1,6 +1,6 @@
 {
   "name": "vocabulary-learning-app",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "App per lo studio del vocabolario inglese con AI Assistant e statistiche avanzate",
   "private": true,
   "homepage": ".",
@@ -18,10 +18,17 @@
     "eject": "react-scripts eject",
     "build:analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'",
     "serve": "npx serve -s build -l 3000",
+    "setup:env": "cp .env.example .env.local && echo 'Created .env.local - Please add your API keys!'",
+    "check:env": "node scripts/check-env.js",
+    "security:check": "npm audit && node scripts/security-check.js",
+    "config:status": "node scripts/config-status.js",
     "docker:build": "docker build -t vocabulary-app .",
     "docker:run": "docker run -p 3000:80 vocabulary-app",
     "docker:dev": "docker-compose --profile dev up",
-    "docker:prod": "docker-compose up"
+    "docker:prod": "docker-compose up",
+    "dev": "npm run setup:env && npm start",
+    "deploy:vercel": "npm run build && vercel deploy --prod",
+    "deploy:netlify": "npm run build && netlify deploy --prod --dir=build"
   },
   "eslintConfig": {
     "extends": [
@@ -30,7 +37,8 @@
     ],
     "rules": {
       "react-hooks/exhaustive-deps": "warn",
-      "no-unused-vars": "warn"
+      "no-unused-vars": "warn",
+      "no-console": "off"
     }
   },
   "browserslist": {
@@ -64,11 +72,23 @@
     "english",
     "react",
     "ai-assistant",
-    "education"
+    "education",
+    "gemini-ai",
+    "secure-configuration"
   ],
   "author": "merlinoalbus",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/merlinoalbus/learnEnglishVOC/issues"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run security:check"
+    }
   }
 }

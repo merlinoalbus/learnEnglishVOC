@@ -1,1 +1,219 @@
-node_modules
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =====================================================
+# 🔐 SECURITY: Environment Variables & Credentials
+# =====================================================
+
+# Environment files with sensitive data
+.env
+.env.*
+!.env.example
+
+# API Keys and credentials (backup security)
+**/config/credentials.*
+**/config/secrets.*
+**/*-secrets.*
+**/*-credentials.*
+
+# Backup files that might contain credentials
+*.backup
+*.bak
+*.old
+config.local.*
+settings.local.*
+
+# IDE and editor files that might contain credentials
+.vscode/settings.json
+.idea/workspace.xml
+*.swp
+*.swo
+*~
+
+# =====================================================
+# Development & Build
+# =====================================================
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# rollup.js default build output
+dist/
+
+# Uncomment the public line in if your project uses Gatsby
+# https://nextjs.org/blog/next-9-1#public-directory-support
+# https://create-react-app.dev/docs/using-the-public-folder/#docsNav
+# public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# =====================================================
+# OS Generated files
+# =====================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.nfs*
+
+# =====================================================
+# Docker & DevOps
+# =====================================================
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Kubernetes
+*.kubeconfig
+
+# =====================================================
+# Logs & Temporary files
+# =====================================================
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Temporary folders
+tmp/
+temp/
+.tmp/
+
+# =====================================================
+# Package Managers
+# =====================================================
+
+# npm
+node_modules/
+.npm
+.node_repl_history
+
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# pnpm
+.pnpm-debug.log*
+
+# =====================================================
+# Testing & Coverage
+# =====================================================
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+.nyc_output
+
+# Jest
+.jest/
+
+# =====================================================
+# IMPORTANT SECURITY REMINDERS
+# =====================================================
+
+# NEVER commit:
+# - API keys or tokens
+# - Database passwords
+# - SSL certificates
+# - SSH keys
+# - Service account files
+# - Any .env files except .env.example
+
+# If you accidentally commit sensitive data:
+# 1. Remove it from the repository immediately
+# 2. Revoke/regenerate the exposed credentials
+# 3. Consider using git-filter-branch or BFG Repo-Cleaner
+# 4. Force push the cleaned history

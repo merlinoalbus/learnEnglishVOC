@@ -1,0 +1,24 @@
+# =====================================================
+# 🐳 Dockerfile.dev - Development Environment
+# =====================================================
+
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies for development
+COPY package*.json ./
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Create .env.local if it doesn't exist (for container)
+RUN if [ ! -f .env.local ]; then cp .env.example .env.local; fi
+
+# Expose port
+EXPOSE 3000
+
+# Start development server
+CMD ["npm", "start"]
