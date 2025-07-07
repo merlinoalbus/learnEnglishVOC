@@ -1,6 +1,7 @@
 // =====================================================
 // 📁 src/components/JSONManager.js - FIXED Import/Export
 // =====================================================
+import React from 'react';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';

@@ -1,7 +1,7 @@
 // ===================================================== 
 // 📁 src/components/stats/components/WordDetailSection.js - REFACTORED Clean Data Flow
 // =====================================================  
-
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'; 
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Bar } from 'recharts'; 
 import { Award, TrendingUp, Target } from 'lucide-react';

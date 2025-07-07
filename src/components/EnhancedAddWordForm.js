@@ -1,7 +1,7 @@
 // =====================================================
 // 📁 src/components/EnhancedAddWordForm.js - NO AUTO PING VERSION
 // =====================================================
-
+import React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';

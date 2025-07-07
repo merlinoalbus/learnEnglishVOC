@@ -1,7 +1,7 @@
 // =====================================================
 // 📁 components/TestResults.js - FIXED estrazione dati enhanced
 // =====================================================
-
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Play, RotateCcw, Check, X, Trophy, Clock, Lightbulb, Target, Timer, Zap } from 'lucide-react';

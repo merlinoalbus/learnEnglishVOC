@@ -49,7 +49,6 @@ export const AppProvider = ({ children }) => {
   
   // ⭐ ENHANCED: Test API with proper stats callback
   const testAPI = useOptimizedTest((testStats, testWords, wrongWords) => {
-    
     // ⭐ CRITICAL: Pass enhanced stats including hints and timing
     statsAPI.handleTestComplete(testStats, testWords, wrongWords);
   });
@@ -57,11 +56,21 @@ export const AppProvider = ({ children }) => {
   // Sincronizzazione con editing word globale
   useEffect(() => {
     wordsAPI.setEditingWord(state.editingWord);
-  }, [state.editingWord]);
+  }, [state.editingWord, wordsAPI]);
 
   // ⭐ DEBUG: Log quando le funzioni stats sono disponibili
   useEffect(() => {
-  }, [statsAPI.getAllWordsPerformance, statsAPI.getWordAnalysis, statsAPI.wordPerformance]);
+    console.log('🔍 statsAPI functions available:', {
+      exportData: typeof statsAPI.exportData,
+      importData: typeof statsAPI.importData,
+      clearTestHistory: typeof statsAPI.clearTestHistory,
+      clearHistoryOnly: typeof statsAPI.clearHistoryOnly,
+      refreshData: typeof statsAPI.refreshData,
+      getAllWordsPerformance: typeof statsAPI.getAllWordsPerformance,
+      getWordAnalysis: typeof statsAPI.getWordAnalysis,
+      recordWordPerformance: typeof statsAPI.recordWordPerformance
+    });
+  }, [statsAPI]);
 
   const value = {
     // Stato UI
@@ -84,24 +93,39 @@ export const AppProvider = ({ children }) => {
     // API Test - ⭐ ENHANCED: With timer and hints
     ...testAPI,
     
-    // API Stats - ⭐ FIXED: Properly expose word performance functions
+    // ⭐ FIXED: API Stats - Properly mapped to useEnhancedStats functions
     stats: statsAPI.stats,
     testHistory: statsAPI.testHistory,
     wordPerformance: statsAPI.wordPerformance,
     calculatedStats: statsAPI.calculatedStats,
-    updateTestStats: statsAPI.updateTestStats,
-    addTestToHistory: statsAPI.addTestToHistory,
-    clearHistoryOnly: statsAPI.clearHistoryOnly,
-    refreshData: statsAPI.refreshData,
-    forceUpdate: statsAPI.forceUpdate,
-    resetStats: statsAPI.resetStats,
-    exportStats: statsAPI.exportStats,
-    importStats: statsAPI.importStats,
     
-    // ⭐ CRITICAL: Word performance functions
+    // ⭐ FIXED: Core functions mapped correctly
+    refreshData: statsAPI.refreshData,
+    resetStats: statsAPI.resetStats,              // ✅ Maps to resetStats (clears everything)
+    exportStats: statsAPI.exportData,             // ✅ Maps to exportData
+    importStats: statsAPI.importData,             // ✅ Maps to importData (accepts JSON string)
+    
+    // ⭐ FIXED: Additional stats functions
+    handleTestComplete: statsAPI.handleTestComplete,
+    clearHistoryOnly: statsAPI.clearHistoryOnly,  // ✅ Clear only test history
+    addTestToHistory: statsAPI.addTestToHistory,
+    
+    // ⭐ CRITICAL: Word performance functions properly exposed
     getAllWordsPerformance: statsAPI.getAllWordsPerformance,
     getWordAnalysis: statsAPI.getWordAnalysis,
-    recordWordPerformance: statsAPI.recordWordPerformance
+    recordWordPerformance: statsAPI.recordWordPerformance,
+    
+    // ⭐ NEW: Loading and processing states
+    isProcessing: statsAPI.isLoading || statsAPI.isProcessing || false,
+    isInitialized: statsAPI.isInitialized,
+    
+    // ⭐ NEW: Enhanced computed stats
+    totalTests: statsAPI.totalTests || 0,
+    totalAnswers: statsAPI.totalAnswers || 0,
+    accuracyRate: statsAPI.accuracyRate || 0,
+    hintsRate: statsAPI.hintsRate || 0,
+    weeklyProgress: statsAPI.weeklyProgress || [],
+    isMigrated: statsAPI.isMigrated || false
   };
 
   return (

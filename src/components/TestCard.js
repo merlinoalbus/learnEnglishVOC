@@ -1,7 +1,7 @@
 // =====================================================
 // 📁 components/TestCard.js - FIXED suggerimento in alto
 // =====================================================
-
+import React from 'react';
 import { getCategoryStyle } from '../utils/categoryUtils';
 import { formatNotes } from '../utils/textUtils';
 
