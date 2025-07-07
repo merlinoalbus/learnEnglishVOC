@@ -89,7 +89,7 @@ export const AppConfig = {
   // Storage Configuration (identico al tuo STORAGE_CONFIG)
   storage: {
     keys: {
-      words: 'vocabulary_words',
+      words: 'vocabularyWords',
       stats: 'vocabulary_stats',
       testHistory: 'vocabulary_test_history', 
       settings: 'vocabulary_settings',
