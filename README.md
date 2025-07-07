@@ -12,9 +12,9 @@ L'architettura separa nettamente la logica di business (hooks), la UI (component
 L'applicazione segue una struttura modulare e ben definita per facilitare lo sviluppo e la manutenzione.
 
 ### Albero Completo dei File
-.
+. 
 ├── docker-compose.yml
-├── Dockerfile
+├── Dockerfile 
 ├── Dockerfile.dev
 ├── nginx.conf
 ├── postcss.config.js
@@ -22,7 +22,7 @@ L'applicazione segue una struttura modulare e ben definita per facilitare lo svi
 ├── public/
 │   └── index.html
 ├── scripts/
-│   ├── config-status.js
+│   ├── config-status.js 
 │   └── security-check.js
 └── src/
 ├── App.css
