@@ -12,7 +12,10 @@ L'architettura separa nettamente la logica di business (hooks), la UI (component
 L'applicazione segue una struttura modulare e ben definita per facilitare lo sviluppo e la manutenzione.
 
 ### Albero Completo dei File
-. 
+**Albero Completo dei File**
+
+```
+.
 ├── docker-compose.yml
 ├── Dockerfile 
 ├── Dockerfile.dev
@@ -25,81 +28,81 @@ L'applicazione segue una struttura modulare e ben definita per facilitare lo svi
 │   ├── config-status.js 
 │   └── security-check.js
 └── src/
-├── App.css
-├── App.js
-├── index.css
-├── index.js
-├── components/
-│   ├── AppRouter.js
-│   ├── AddWordForm.js
-│   ├── ChapterTestSelector.js
-│   ├── ErrorBoundary.js
-│   ├── JSONManager.js
-│   ├── TestCard.js
-│   ├── TestHistory.js
-│   ├── TestResults.js
-│   ├── WordsList.js
-│   ├── layout/
-│   │   ├── AppHeader.js
-│   │   └── AppNavigation.js
-│   ├── main/
-│   │   └── ControlPanel.js
-│   ├── modals/
-│   │   └── GlobalModals.js
-│   ├── stats/
-│   │   ├── DataManagementPanel.js
-│   │   ├── StatsHeader.js
-│   │   ├── StatsNavigation.js
-│   │   ├── StatsOverview.js
-│   │   ├── components/
-│   │   │   ├── EmptyState.js
-│   │   │   ├── StatisticCard.js
-│   │   │   ├── WordDetailSection.js
-│   │   │   └── WordPerformanceCard.js
-│   │   ├── hooks/
-│   │   │   ├── useDataManagement.js
-│   │   │   └── useStatsData.js
-│   │   └── sections/
-│   │       ├── ChaptersSection.js
-│   │       ├── OverviewSection.js
-│   │       ├── PerformanceSection.js
-│   │       ├── TrendsSection.js
-│   │       └── WordsSection.js
-│   └── ui/
-│       ├── BackgroundParticles.js
-│       ├── NotificationToast.js
-│       ├── button.js
-│       ├── card.js
-│       ├── input.js
-│       ├── modal.js
-│       └── textarea.js
-├── config/
-│   └── appConfig.js
-├── constants/
-│   └── appConstants.js
-├── contexts/
-│   ├── AppContext.js
-│   └── NotificationContext.js
-├── hooks/
-│   ├── useLocalStorage.js
-│   ├── useNotification.js
-│   ├── useOptimizedStats.js
-│   ├── useOptimizedTest.js
-│   └── useOptimizedWords.js
-├── services/
-│   ├── aiService.js
-│   └── storageService.js
-├── utils/
-│   ├── categoryUtils.js
-│   ├── index.js
-│   ├── performanceUtils.js
-│   └── textUtils.js
-└── views/
-├── MainView.js
-├── ResultsView.js
-├── StatsView.js
-└── TestView.js
-
+    ├── App.css
+    ├── App.js
+    ├── index.css
+    ├── index.js
+    ├── components/
+    │   ├── AppRouter.js
+    │   ├── AddWordForm.js
+    │   ├── ChapterTestSelector.js
+    │   ├── ErrorBoundary.js
+    │   ├── JSONManager.js
+    │   ├── TestCard.js
+    │   ├── TestHistory.js
+    │   ├── TestResults.js
+    │   ├── WordsList.js
+    │   ├── layout/
+    │   │   ├── AppHeader.js
+    │   │   └── AppNavigation.js
+    │   ├── main/
+    │   │   └── ControlPanel.js
+    │   ├── modals/
+    │   │   └── GlobalModals.js
+    │   ├── stats/
+    │   │   ├── DataManagementPanel.js
+    │   │   ├── StatsHeader.js
+    │   │   ├── StatsNavigation.js
+    │   │   ├── StatsOverview.js
+    │   │   ├── components/
+    │   │   │   ├── EmptyState.js
+    │   │   │   ├── StatisticCard.js
+    │   │   │   ├── WordDetailSection.js
+    │   │   │   └── WordPerformanceCard.js
+    │   │   ├── hooks/
+    │   │   │   ├── useDataManagement.js
+    │   │   │   └── useStatsData.js
+    │   │   └── sections/
+    │   │       ├── ChaptersSection.js
+    │   │       ├── OverviewSection.js
+    │   │       ├── PerformanceSection.js
+    │   │       ├── TrendsSection.js
+    │   │       └── WordsSection.js
+    │   └── ui/
+    │       ├── BackgroundParticles.js
+    │       ├── NotificationToast.js
+    │       ├── button.js
+    │       ├── card.js
+    │       ├── input.js
+    │       ├── modal.js
+    │       └── textarea.js
+    ├── config/
+    │   └── appConfig.js
+    ├── constants/
+    │   └── appConstants.js
+    ├── contexts/
+    │   ├── AppContext.js
+    │   └── NotificationContext.js
+    ├── hooks/
+    │   ├── useLocalStorage.js
+    │   ├── useNotification.js
+    │   ├── useOptimizedStats.js
+    │   ├── useOptimizedTest.js
+    │   └── useOptimizedWords.js
+    ├── services/
+    │   ├── aiService.js
+    │   └── storageService.js
+    ├── utils/
+    │   ├── categoryUtils.js
+    │   ├── index.js
+    │   ├── performanceUtils.js
+    │   └── textUtils.js
+    └── views/
+        ├── MainView.js
+        ├── ResultsView.js
+        ├── StatsView.js
+        └── TestView.js
+```
 
 ### Descrizione Dettagliata
 
