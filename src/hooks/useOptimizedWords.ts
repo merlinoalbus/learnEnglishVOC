@@ -1,31 +1,37 @@
 // =====================================================
-// 📁 hooks/useOptimizedWords.js - FIXED MAJOR ISSUES
+// 📁 src/hooks/useOptimizedWords.ts - Type-Safe Words Management Hook
 // =====================================================
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type {
+  ChapterStats,
+  Word,
+  WordInput,
+  WordStats
+} from '../types/global';
+import type { OptimizedWordsReturn } from '../types/hooks';
 import { useLocalStorage } from './useLocalStorage';
 
-const EMPTY_ARRAY = [];
+const EMPTY_ARRAY: Word[] = [];
 
-export const useOptimizedWords = () => {
+export const useOptimizedWords = (): OptimizedWordsReturn => {
   const [words, setWords] = useLocalStorage('vocabularyWords', EMPTY_ARRAY);
-  const [editingWord, setEditingWord] = useState(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [editingWord, setEditingWord] = useState<Word | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   // ⭐ FIXED: Better import change detection
   useEffect(() => {
-    const handleStorageChange = (e) => {
+    const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'vocabularyWords' || e.key === 'vocabularyWords_lastUpdate') {
         forceRefresh();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    
     const handleCustomRefresh = () => {
       forceRefresh();
     };
     
+    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('wordsImported', handleCustomRefresh);
 
     let lastCheck = localStorage.getItem('vocabularyWords_lastUpdate');
@@ -45,9 +51,9 @@ export const useOptimizedWords = () => {
   }, []);
 
   // ⭐ NEW: Force refresh function
-  const forceRefresh = useCallback(() => {
+  const forceRefresh = useCallback((): void => {
     try {
-      const updatedWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
+      const updatedWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]') as Word[];
       setWords(updatedWords);
       setRefreshTrigger(prev => prev + 1);
     } catch (error) {
@@ -56,20 +62,20 @@ export const useOptimizedWords = () => {
   }, [setWords]);
 
   // ⭐ ENHANCED: Word stats with difficult words
-  const wordStats = useMemo(() => ({
+  const wordStats = useMemo((): WordStats => ({
     total: words.length,
-    learned: words.filter(w => w.learned).length,
-    unlearned: words.filter(w => !w.learned).length,
-    difficult: words.filter(w => w.difficult).length,
-    normal: words.filter(w => !w.difficult && !w.learned).length,
-    chapters: [...new Set(words.map(w => w.chapter).filter(Boolean))].sort(),
-    groups: [...new Set(words.map(w => w.group).filter(Boolean))].sort()
+    learned: words.filter((w: Word) => w.learned).length,
+    unlearned: words.filter((w: Word) => !w.learned).length,
+    difficult: words.filter((w: Word) => w.difficult).length,
+    normal: words.filter((w: Word) => !w.difficult && !w.learned).length,
+    chapters: [...new Set(words.map((w: Word) => w.chapter).filter(Boolean))].sort() as string[],
+    groups: [...new Set(words.map((w: Word) => w.group).filter(Boolean))].sort() as string[]
   }), [words, refreshTrigger]);
 
   // ⭐ FIXED: Better word map generation with proper ID handling
-  const wordMap = useMemo(() => {
-    const map = {};
-    words.forEach(word => {
+  const wordMap = useMemo((): Record<string, Word> => {
+    const map: Record<string, Word> = {};
+    words.forEach((word: Word) => {
       // Map by ID (primary key)
       if (word.id) {
         map[word.id] = word;
@@ -83,8 +89,8 @@ export const useOptimizedWords = () => {
   }, [words, refreshTrigger]);
 
   // ⭐ FIXED: Batch word operations with immediate localStorage sync
-  const batchUpdateWords = useCallback((updateFn) => {
-    setWords(prevWords => {
+  const batchUpdateWords = useCallback((updateFn: (prevWords: Word[]) => Word[]): void => {
+    setWords((prevWords: Word[]) => {
       const newWords = updateFn(prevWords);
       const sortedWords = newWords.sort((a, b) => a.english.localeCompare(b.english));
       
@@ -104,7 +110,7 @@ export const useOptimizedWords = () => {
   }, [setWords]);
 
   // ⭐ FIXED: Enhanced add word with better duplicate checking and editing logic
-  const addWord = useCallback((wordData) => {
+  const addWord = useCallback(async (wordData: WordInput): Promise<void> => {
     if (!wordData.english?.trim() || !wordData.italian?.trim()) {
       throw new Error('English word and Italian translation are required');
     }
@@ -121,15 +127,16 @@ export const useOptimizedWords = () => {
     batchUpdateWords(prevWords => {
       if (editingWord) {
         // ⭐ FIXED: Editing mode - ensure we find and update the correct word
-        
         const updatedWords = prevWords.map(word => {
           if (word.id === editingWord.id) {
-            const updatedWord = { 
+            const updatedWord: Word = { 
               ...word, 
               ...wordData, 
               id: editingWord.id, // ⭐ CRITICAL: Preserve original ID
               english: wordData.english.trim(),
-              italian: wordData.italian.trim()
+              italian: wordData.italian.trim(),
+              learned: wordData.learned ?? false,
+              difficult: wordData.difficult ?? false
             };
             return updatedWord;
           }
@@ -145,7 +152,7 @@ export const useOptimizedWords = () => {
         return updatedWords;
       } else {
         // ⭐ FIXED: Adding new word with guaranteed unique ID
-        const newWord = {
+        const newWord: Word = {
           id: `word_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           english: wordData.english.trim(),
           italian: wordData.italian.trim(),
@@ -165,7 +172,7 @@ export const useOptimizedWords = () => {
   }, [editingWord, wordMap, batchUpdateWords]);
 
   // ⭐ FIXED: Enhanced toggle functions with proper ID validation
-  const toggleWordLearned = useCallback((id) => {
+  const toggleWordLearned = useCallback((id: string): void => {
     // ⭐ VERIFICATION: Check if word exists before toggle
     const existingWord = wordMap[id];
     if (!existingWord) {
@@ -183,7 +190,7 @@ export const useOptimizedWords = () => {
   }, [wordMap, batchUpdateWords]);
 
   // ⭐ FIXED: Enhanced toggle difficult with proper validation
-  const toggleWordDifficult = useCallback((id) => {
+  const toggleWordDifficult = useCallback((id: string): void => {
     // ⭐ VERIFICATION: Check if word exists before toggle
     const existingWord = wordMap[id];
     if (!existingWord) {
@@ -201,7 +208,7 @@ export const useOptimizedWords = () => {
   }, [wordMap, batchUpdateWords]);
 
   // ⭐ FIXED: Enhanced remove word with proper validation
-  const removeWord = useCallback((id) => {
+  const removeWord = useCallback((id: string): void => {
     // ⭐ VERIFICATION: Check if word exists before removal
     const existingWord = wordMap[id];
     if (!existingWord) {
@@ -220,16 +227,16 @@ export const useOptimizedWords = () => {
   }, [editingWord?.id, wordMap, batchUpdateWords]);
 
   // ⭐ FIXED: Enhanced import with better validation and sync
-  const importWords = useCallback((jsonText) => {
+  const importWords = useCallback((jsonText: string): number => {
     try {
-      const importedWords = JSON.parse(jsonText.trim());
+      const importedWords = JSON.parse(jsonText.trim()) as any[];
       
       if (!Array.isArray(importedWords) || importedWords.length === 0) {
         throw new Error('Invalid JSON data - expected array of words');
       }
 
       // ⭐ FIXED: Better word validation and ID generation
-      const validWords = importedWords
+      const validWords: Word[] = importedWords
         .filter(word => word?.english && word?.italian)
         .map(word => ({
           id: word.id || `word_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -248,7 +255,7 @@ export const useOptimizedWords = () => {
       }
 
       // ⭐ FIXED: Better duplicate checking using current words state
-      const currentWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]');
+      const currentWords = JSON.parse(localStorage.getItem('vocabularyWords') || '[]') as Word[];
       const existingEnglish = new Set(currentWords.map(w => w.english.toLowerCase()));
       const newWords = validWords.filter(word =>
         !existingEnglish.has(word.english.toLowerCase())
@@ -280,11 +287,15 @@ export const useOptimizedWords = () => {
 
   // ⭐ ENHANCED: Getters with proper filtering
   const getters = useMemo(() => ({
-    getWordsByChapter: (chapter) => words.filter(word => word.chapter === chapter),
-    getDifficultWordsByChapter: (chapter) => words.filter(word => word.chapter === chapter && word.difficult),
-    getAvailableChapters: () => {
-      const chapters = new Set();
-      words.forEach(word => {
+    getWordsByChapter: (chapter: string): Word[] => 
+      words.filter((word: Word) => word.chapter === chapter),
+      
+    getDifficultWordsByChapter: (chapter: string): Word[] => 
+      words.filter((word: Word) => word.chapter === chapter && word.difficult),
+      
+    getAvailableChapters: (): string[] => {
+      const chapters = new Set<string>();
+      words.forEach((word: Word) => {
         if (word.chapter) chapters.add(word.chapter);
       });
       return Array.from(chapters).sort((a, b) => {
@@ -293,26 +304,26 @@ export const useOptimizedWords = () => {
         return !isNaN(aNum) && !isNaN(bNum) ? aNum - bNum : a.localeCompare(b);
       });
     },
-    getChapterStats: (chapter) => {
-      const chapterWords = words.filter(word => word.chapter === chapter);
+    
+    getChapterStats: (chapter: string): ChapterStats => {
+      const chapterWords = words.filter((word: Word) => word.chapter === chapter);
       return {
         total: chapterWords.length,
-        learned: chapterWords.filter(w => w.learned).length,
-        unlearned: chapterWords.filter(w => !w.learned).length,
-        difficult: chapterWords.filter(w => w.difficult).length,
-        normal: chapterWords.filter(w => !w.difficult && !w.learned).length
+        learned: chapterWords.filter((w: Word) => w.learned).length,
+        unlearned: chapterWords.filter((w: Word) => !w.learned).length,
+        difficult: chapterWords.filter((w: Word) => w.difficult).length,
+        normal: chapterWords.filter((w: Word) => !w.difficult && !w.learned).length
       };
     }
   }), [words, refreshTrigger]);
 
   // ⭐ FIXED: Clear all words with proper cleanup
-  const clearAllWords = useCallback(() => {
+  const clearAllWords = useCallback((): void => {
     setWords(EMPTY_ARRAY);
     setEditingWord(null);
     localStorage.setItem('vocabularyWords_lastUpdate', Date.now().toString());
     setRefreshTrigger(prev => prev + 1);
   }, [setWords]);
-
   return {
     words,
     editingWord,

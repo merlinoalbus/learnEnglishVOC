@@ -1,14 +1,24 @@
 // =====================================================
-// 📁 src/hooks/useLoadingState.js - Advanced Loading State Hook
+// 📁 src/hooks/useLoadingState.ts - Type-Safe Advanced Loading State Hook
 // =====================================================
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNotification } from '../contexts/NotificationContext';
+import type {
+    LoadingOptions,
+    LoadingState
+} from '../types/global';
+import type {
+    AILoadingReturn,
+    LoadingStateReturn,
+    NetworkLoadingReturn,
+    StorageLoadingReturn
+} from '../types/hooks';
 
 // =====================================================
 // 🎯 MAIN LOADING STATE HOOK
 // =====================================================
-export const useLoadingState = (options = {}) => {
+export const useLoadingState = (options: LoadingOptions = {}): LoadingStateReturn => {
   const {
     timeout = 30000,
     retryAttempts = 3,
@@ -17,7 +27,7 @@ export const useLoadingState = (options = {}) => {
     showRetryNotifications = true
   } = options;
 
-  const [state, setState] = useState({
+  const [state, setState] = useState<LoadingState>({
     isLoading: false,
     error: null,
     retryCount: 0,
@@ -25,11 +35,11 @@ export const useLoadingState = (options = {}) => {
     operation: null
   });
 
-  const timeoutRef = useRef(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { showWarning, showError, showSuccess } = useNotification();
 
   // ⭐ START LOADING
-  const startLoading = useCallback((operationName = 'Operation') => {
+  const startLoading = useCallback((operationName: string = 'Operation'): void => {
     setState(prev => ({
       ...prev,
       isLoading: true,
@@ -46,7 +56,7 @@ export const useLoadingState = (options = {}) => {
   }, [timeout, showTimeoutWarning, showWarning]);
 
   // ⭐ STOP LOADING
-  const stopLoading = useCallback((successMessage) => {
+  const stopLoading = useCallback((successMessage?: string): void => {
     setState(prev => {
       const duration = prev.startTime ? Date.now() - prev.startTime : 0;
       
@@ -71,7 +81,7 @@ export const useLoadingState = (options = {}) => {
   }, [showSuccess]);
 
   // ⭐ SET ERROR
-  const setError = useCallback((error, canRetry = true) => {
+  const setError = useCallback((error: Error, canRetry: boolean = true): void => {
     setState(prev => {
       const newRetryCount = prev.retryCount + 1;
       const shouldRetry = canRetry && newRetryCount <= retryAttempts;
@@ -97,7 +107,7 @@ export const useLoadingState = (options = {}) => {
   }, [retryAttempts, showRetryNotifications, showWarning, showError]);
 
   // ⭐ RETRY OPERATION
-  const retry = useCallback(async (operation) => {
+  const retry = useCallback(async <T>(operation: () => Promise<T>): Promise<T | false> => {
     if (state.retryCount >= retryAttempts) {
       showError(new Error('Numero massimo tentativi raggiunto'), 'Retry');
       return false;
@@ -106,12 +116,12 @@ export const useLoadingState = (options = {}) => {
     await new Promise(resolve => setTimeout(resolve, retryDelay * state.retryCount));
     
     try {
-      startLoading(state.operation);
+      startLoading(state.operation || 'Retry Operation');
       const result = await operation();
       stopLoading();
       return result;
     } catch (error) {
-      setError(error, true);
+      setError(error as Error, true);
       return false;
     }
   }, [state.retryCount, state.operation, retryAttempts, retryDelay, startLoading, stopLoading, setError, showError]);
@@ -139,7 +149,7 @@ export const useLoadingState = (options = {}) => {
 // =====================================================
 // 🤖 AI LOADING HOOK
 // =====================================================
-export const useAILoading = () => {
+export const useAILoading = (): AILoadingReturn => {
   const loadingState = useLoadingState({
     timeout: 45000,
     retryAttempts: 2,
@@ -147,11 +157,14 @@ export const useAILoading = () => {
     showTimeoutWarning: true
   });
 
-  const executeAIOperation = useCallback(async (operation, operationName = 'AI Analysis') => {
+  const executeAIOperation = useCallback(async <T>(
+    operation: () => Promise<T>, 
+    operationName: string = 'AI Analysis'
+  ): Promise<T> => {
     try {
       loadingState.startLoading(operationName);
       
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('AI service timeout')), 45000);
       });
       
@@ -160,14 +173,15 @@ export const useAILoading = () => {
       loadingState.stopLoading(`✨ ${operationName} completata`);
       return result;
     } catch (error) {
-      if (error.message.includes('timeout')) {
+      const err = error as Error;
+      if (err.message.includes('timeout')) {
         loadingState.setError(new Error('🤖 AI timeout. Riprova o usa modalità manuale.'), true);
-      } else if (error.message.includes('API')) {
+      } else if (err.message.includes('API')) {
         loadingState.setError(new Error('🔑 Problema API key.'), false);
-      } else if (error.message.includes('quota')) {
+      } else if (err.message.includes('quota')) {
         loadingState.setError(new Error('🚫 Limite API raggiunto.'), false);
       } else {
-        loadingState.setError(error, true);
+        loadingState.setError(err, true);
       }
       throw error;
     }
@@ -182,7 +196,7 @@ export const useAILoading = () => {
 // =====================================================
 // 💾 STORAGE LOADING HOOK
 // =====================================================
-export const useStorageLoading = () => {
+export const useStorageLoading = (): StorageLoadingReturn => {
   const loadingState = useLoadingState({
     timeout: 10000,
     retryAttempts: 3,
@@ -190,19 +204,23 @@ export const useStorageLoading = () => {
     showTimeoutWarning: false
   });
 
-  const executeStorageOperation = useCallback(async (operation, operationName = 'Storage Operation') => {
+  const executeStorageOperation = useCallback(async <T>(
+    operation: () => Promise<T>, 
+    operationName: string = 'Storage Operation'
+  ): Promise<T> => {
     try {
       loadingState.startLoading(operationName);
       const result = await operation();
       loadingState.stopLoading();
       return result;
     } catch (error) {
-      if (error.message.includes('quota') || error.message.includes('QuotaExceededError')) {
+      const err = error as Error;
+      if (err.message.includes('quota') || err.message.includes('QuotaExceededError')) {
         loadingState.setError(new Error('💽 Spazio esaurito. Elimina dati vecchi.'), false);
-      } else if (error.message.includes('localStorage')) {
+      } else if (err.message.includes('localStorage')) {
         loadingState.setError(new Error('🔒 Accesso negato storage.'), true);
       } else {
-        loadingState.setError(error, true);
+        loadingState.setError(err, true);
       }
       throw error;
     }
@@ -217,7 +235,7 @@ export const useStorageLoading = () => {
 // =====================================================
 // 🌐 NETWORK LOADING HOOK
 // =====================================================
-export const useNetworkLoading = () => {
+export const useNetworkLoading = (): NetworkLoadingReturn => {
   const loadingState = useLoadingState({
     timeout: 20000,
     retryAttempts: 3,
@@ -225,23 +243,27 @@ export const useNetworkLoading = () => {
     showTimeoutWarning: true
   });
 
-  const executeNetworkOperation = useCallback(async (operation, operationName = 'Network Request') => {
+  const executeNetworkOperation = useCallback(async <T>(
+    operation: () => Promise<T>, 
+    operationName: string = 'Network Request'
+  ): Promise<T> => {
     try {
       loadingState.startLoading(operationName);
       const result = await operation();
       loadingState.stopLoading();
       return result;
     } catch (error) {
-      if (error.message.includes('fetch') || error.message.includes('network')) {
+      const err = error as Error;
+      if (err.message.includes('fetch') || err.message.includes('network')) {
         loadingState.setError(new Error('📡 Nessuna connessione.'), true);
-      } else if (error.message.includes('timeout')) {
+      } else if (err.message.includes('timeout')) {
         loadingState.setError(new Error('⏱️ Timeout rete.'), true);
-      } else if (error.message.includes('404')) {
+      } else if (err.message.includes('404')) {
         loadingState.setError(new Error('🔍 Risorsa non trovata.'), false);
-      } else if (error.message.includes('500')) {
+      } else if (err.message.includes('500')) {
         loadingState.setError(new Error('🔧 Errore server.'), true);
       } else {
-        loadingState.setError(error, true);
+        loadingState.setError(err, true);
       }
       throw error;
     }

@@ -1,15 +1,22 @@
 // =====================================================
-// 📁 src/constants/appConstants.js - VERSIONE SICURA (no API key hardcoddata)
+// 📁 src/constants/appConstants.ts - Type-Safe Constants
 // =====================================================
 
-// ====== IMPORT CONFIGURAZIONE SICURA ======
+import type { WordCategory, CategoryStyle } from '../types/global';
+import type { 
+  ApplicationConfig,
+  ErrorMessages,
+  SuccessMessages
+} from '../types/config';
+
+// Import the type-safe configuration
 import AppConfig, { 
   ERROR_MESSAGES as CONFIG_ERROR_MESSAGES,
   SUCCESS_MESSAGES as CONFIG_SUCCESS_MESSAGES 
 } from '../config/appConfig';
 
-// ====== PREDEFINED CATEGORIES (identiche alle tue) ======
-export const CATEGORIES = [
+// ====== PREDEFINED CATEGORIES (with type safety) ======
+export const CATEGORIES: readonly WordCategory[] = [
   'VERBI', 
   'VERBI_IRREGOLARI', 
   'SOSTANTIVI', 
@@ -23,10 +30,10 @@ export const CATEGORIES = [
   'FAMIGLIA', 
   'TECNOLOGIA', 
   'VESTITI'
-];
+] as const;
 
-// ====== CATEGORY STYLES (identici ai tuoi) ======
-export const CATEGORY_STYLES = {
+// ====== CATEGORY STYLES (with complete type safety) ======
+export const CATEGORY_STYLES: Record<WordCategory | 'DEFAULT', CategoryStyle> = {
   'VERBI': { 
     color: 'from-red-400 via-red-500 to-red-600', 
     icon: '⚡', 
@@ -111,40 +118,87 @@ export const CATEGORY_STYLES = {
     bgColor: 'bg-emerald-500',
     bgGradient: 'bg-gradient-to-br from-emerald-500 to-cyan-600'
   }
+} as const;
+
+// ====== TYPE-SAFE CONFIGURATION EXPORTS ======
+// These maintain backward compatibility with existing code
+// but now import from type-safe configuration
+
+export const APP_CONFIG: ApplicationConfig['app'] = AppConfig.app;
+export const AI_CONFIG: ApplicationConfig['ai'] = AppConfig.ai;
+export const TEST_CONFIG: ApplicationConfig['test'] = AppConfig.test;
+export const STATS_CONFIG: ApplicationConfig['stats'] = AppConfig.stats;
+export const STORAGE_CONFIG: ApplicationConfig['storage'] = AppConfig.storage;
+export const WORD_CONFIG: ApplicationConfig['word'] = AppConfig.word;
+export const UI_CONFIG: ApplicationConfig['ui'] = AppConfig.ui;
+
+// Re-export messages with type safety
+export const ERROR_MESSAGES: ErrorMessages = CONFIG_ERROR_MESSAGES;
+export const SUCCESS_MESSAGES: SuccessMessages = CONFIG_SUCCESS_MESSAGES;
+
+// ====== TYPE GUARDS ======
+
+/**
+ * Type guard to check if a string is a valid WordCategory
+ */
+export const isValidCategory = (category: string): category is WordCategory => {
+  return (CATEGORIES as readonly string[]).includes(category);
 };
 
-// ====== BACKWARD COMPATIBILITY EXPORTS ======
-// NOTA: Questi mantengono la compatibilità con il tuo codice esistente
-// MA ora importano da configurazione sicura (senza API key hardcoddata)
-
-export const APP_CONFIG = AppConfig.app;
-export const AI_CONFIG = AppConfig.ai;           // ← ORA SICURO (no hardcoded key)
-export const TEST_CONFIG = AppConfig.test;
-export const STATS_CONFIG = AppConfig.stats;
-export const STORAGE_CONFIG = AppConfig.storage;
-export const WORD_CONFIG = AppConfig.word;
-export const UI_CONFIG = AppConfig.ui;
-
-// Re-export messages
-export const ERROR_MESSAGES = CONFIG_ERROR_MESSAGES;
-export const SUCCESS_MESSAGES = CONFIG_SUCCESS_MESSAGES;
-
-// ====== MIGRATION NOTE ======
 /**
- * 🔐 SICUREZZA: API key rimossa da questo file!
+ * Type guard to check if a category style exists
+ */
+export const hasCategoryStyle = (category: string): category is keyof typeof CATEGORY_STYLES => {
+  return category in CATEGORY_STYLES;
+};
+
+// ====== UTILITY TYPES ======
+
+/**
+ * Union type of all available category keys
+ */
+export type AvailableCategoryKey = keyof typeof CATEGORY_STYLES;
+
+/**
+ * Union type of all category icons
+ */
+export type CategoryIcon = typeof CATEGORY_STYLES[keyof typeof CATEGORY_STYLES]['icon'];
+
+// ====== MIGRATION NOTE WITH TYPE SAFETY ======
+/**
+ * 🔐 SECURITY: API key removed from this file!
  * 
- * LA TUA API KEY ERA: [RIMOSSA PER SICUREZZA]
+ * MIGRATION TO TYPESCRIPT COMPLETE ✅
  * 
- * COSA FARE:
- * 1. Copia questo file: cp .env.example .env.local
- * 2. Modifica .env.local e aggiungi la tua API key vera
- * 3. Riavvia npm start
+ * CHANGES:
+ * 1. ✅ Full type safety for all constants
+ * 2. ✅ Type guards for runtime validation
+ * 3. ✅ Readonly arrays to prevent mutations
+ * 4. ✅ Const assertions for literal types
+ * 5. ✅ API key now from environment variable
+ * 6. ✅ Backward compatibility maintained
  * 
- * Il tuo codice esistente continuerà a funzionare identico!
- * AI_CONFIG.apiKey ora viene da environment variable invece che hardcodato.
+ * SETUP REQUIRED:
+ * 1. Copy: cp .env.example .env.local
+ * 2. Add your API key to .env.local
+ * 3. Restart: npm start
+ * 
+ * Your existing code will work identically, but now with type safety!
  */
 
+// Development type checking
 if (AppConfig.app.environment === 'development') {
+  // Type checking verification
+  const _typeTest: WordCategory = 'VERBI'; // This will error if type is wrong
+  const _styleTest: CategoryStyle = CATEGORY_STYLES.VERBI; // This will error if type is wrong
+  
+  console.log('✅ TypeScript constants loaded successfully:', {
+    categoriesCount: CATEGORIES.length,
+    stylesCount: Object.keys(CATEGORY_STYLES).length,
+    apiConfigured: !!AppConfig.ai.apiKey,
+    typeChecking: 'Active'
+  });
+  
   if (!AppConfig.ai.apiKey) {
     console.error(
       '🔴 SETUP REQUIRED: Aggiungi la tua API key in .env.local\n' +

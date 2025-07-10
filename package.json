@@ -5,6 +5,7 @@
   "private": true,
   "homepage": ".",
   "dependencies": {
+    "firebase": "^11.10.0",
     "lucide-react": "^0.263.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -12,8 +13,6 @@
     "recharts": "^2.15.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "build:fast": "CI=true GENERATE_SOURCEMAP=false INLINE_RUNTIME_CHUNK=false react-scripts build",
     "build:docker": "CI=true GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test --watchAll=false --coverage=false",
@@ -32,7 +31,11 @@
     "docker:clean": "docker system prune -f && docker builder prune -f",
     "dev": "npm run setup:env && npm start",
     "deploy:vercel": "npm run build && vercel deploy --prod",
-    "deploy:netlify": "npm run build && netlify deploy --prod --dir=build"
+    "deploy:netlify": "npm run build && netlify deploy --prod --dir=build",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
+    "build": "react-scripts build && npm run type-check",
+    "start": "react-scripts start"
   },
   "eslintConfig": {
     "extends": [
@@ -58,9 +61,14 @@
     ]
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.10",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "typescript": "^4.9.5"
   },
   "engines": {
     "node": ">=16.0.0",

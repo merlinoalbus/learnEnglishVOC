@@ -1,29 +1,41 @@
 // =====================================================
-// 📁 hooks/useOptimizedTest.js - CLEANED VERSION
+// 📁 src/hooks/useOptimizedTest.ts - Type-Safe Test Management Hook
 // =====================================================
 
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type {
+    EnhancedTestStats,
+    TestStats,
+    Word,
+    WordTimeRecord
+} from '../types/global';
+import type {
+    OptimizedTestReturn,
+    TestCompleteCallback,
+    TestProgress,
+    TestSummary
+} from '../types/hooks';
 
-export const useOptimizedTest = (onTestComplete) => {
-  const [currentWord, setCurrentWord] = useState(null);
-  const [usedWordIds, setUsedWordIds] = useState(new Set());
-  const [showMeaning, setShowMeaning] = useState(false);
-  const [testMode, setTestMode] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const [stats, setStats] = useState({ correct: 0, incorrect: 0, hints: 0 });
-  const [wrongWords, setWrongWords] = useState([]);
-  const [testWords, setTestWords] = useState([]);
-  const [testSaved, setTestSaved] = useState(false);
+export const useOptimizedTest = (onTestComplete: TestCompleteCallback): OptimizedTestReturn => {
+  const [currentWord, setCurrentWord] = useState<Word | null>(null);
+  const [usedWordIds, setUsedWordIds] = useState<Set<string>>(new Set());
+  const [showMeaning, setShowMeaning] = useState<boolean>(false);
+  const [testMode, setTestMode] = useState<boolean>(false);
+  const [showResults, setShowResults] = useState<boolean>(false);
+  const [stats, setStats] = useState<TestStats>({ correct: 0, incorrect: 0, hints: 0 });
+  const [wrongWords, setWrongWords] = useState<Word[]>([]);
+  const [testWords, setTestWords] = useState<Word[]>([]);
+  const [testSaved, setTestSaved] = useState<boolean>(false);
   
   // Enhanced: Timer e transizioni
-  const [wordTimes, setWordTimes] = useState([]);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const testStartTimeRef = useRef(null);
-  const wordStartTimeRef = useRef(null);
+  const [wordTimes, setWordTimes] = useState<WordTimeRecord[]>([]);
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
+  const testStartTimeRef = useRef<number | null>(null);
+  const wordStartTimeRef = useRef<number | null>(null);
   
   // Enhanced: Hint functionality
-  const [showHint, setShowHint] = useState(false);
-  const [hintUsedForCurrentWord, setHintUsedForCurrentWord] = useState(false);
+  const [showHint, setShowHint] = useState<boolean>(false);
+  const [hintUsedForCurrentWord, setHintUsedForCurrentWord] = useState<boolean>(false);
 
   // Start timing when word appears (SOLO quando non in transizione)
   useEffect(() => {
@@ -36,15 +48,15 @@ export const useOptimizedTest = (onTestComplete) => {
   }, [currentWord, testMode, isTransitioning]);
 
   // Enhanced: Record word completion time
-  const recordWordTime = useCallback((isCorrect, usedHint = false) => {
+  const recordWordTime = useCallback((isCorrect: boolean, usedHint: boolean = false): void => {
     if (wordStartTimeRef.current && currentWord) {
       const timeSpent = Date.now() - wordStartTimeRef.current;
       
-      const wordRecord = {
+      const wordRecord: WordTimeRecord = {
         wordId: currentWord.id,
         english: currentWord.english,
         italian: currentWord.italian,
-        chapter: currentWord.chapter,
+        chapter: currentWord.chapter || '',
         timeSpent,
         isCorrect,
         usedHint,
@@ -57,7 +69,7 @@ export const useOptimizedTest = (onTestComplete) => {
   }, [currentWord]);
 
   // Progress: Enhanced with hints
-  const progressData = useMemo(() => {
+  const progressData = useMemo((): TestProgress => {
     if (testWords.length === 0) return { current: 0, total: 0, percentage: 0, hints: 0 };
     
     const answered = stats.correct + stats.incorrect;
@@ -71,7 +83,7 @@ export const useOptimizedTest = (onTestComplete) => {
   }, [stats.correct, stats.incorrect, stats.hints, testWords.length]);
 
   // Enhanced: Summary con TUTTI i dati timing e hints per ResultsView
-  const summaryData = useMemo(() => {
+  const summaryData = useMemo((): TestSummary => {
     const totalAnswered = stats.correct + stats.incorrect;
     const accuracy = totalAnswered > 0 ? Math.round((stats.correct / totalAnswered) * 100) : 0;
     const totalTestTime = testStartTimeRef.current ? Date.now() - testStartTimeRef.current : 0;
@@ -90,7 +102,7 @@ export const useOptimizedTest = (onTestComplete) => {
     };
     
     // Return COMPLETE summary with ALL enhanced data
-    const completeSummary = {
+    const completeSummary: TestSummary = {
       current: totalAnswered + 1,
       total: testWords.length,
       percentage: Math.round((totalAnswered / testWords.length) * 100),
@@ -113,7 +125,7 @@ export const useOptimizedTest = (onTestComplete) => {
   }, [stats.correct, stats.incorrect, stats.hints, testWords.length, wordTimes, testStartTimeRef.current]);
 
   // Optimized random word selection
-  const getRandomUnusedWord = useCallback((wordList, usedIds) => {
+  const getRandomUnusedWord = useCallback((wordList: Word[], usedIds: Set<string>): Word | null => {
     const unusedWords = wordList.filter(word => !usedIds.has(word.id));
     if (unusedWords.length === 0) return null;
     
@@ -122,8 +134,17 @@ export const useOptimizedTest = (onTestComplete) => {
   }, []);
 
   // Enhanced: Save test results with complete stats
-  const saveTestResultsWithStats = useCallback((finalStats) => {
+  const saveTestResultsWithStats = useCallback((finalStats: TestStats): void => {
     if (!testSaved && (finalStats.correct > 0 || finalStats.incorrect > 0) && onTestComplete) {
+
+    // 🐛 DEBUG START
+    console.log('💾 SALVANDO TEST RESULTS:', {
+      finalStats: finalStats,
+      wrongWordsCount: wrongWords.length,
+      wrongWordsArray: wrongWords.map(w => ({id: w.id, english: w.english, chapter: w.chapter})),
+      testWordsCount: testWords.length
+    });
+    // 🐛 DEBUG END
       const finalTestTime = testStartTimeRef.current ? Date.now() - testStartTimeRef.current : 0;
       
       // Enhanced: Calcoli timing completi
@@ -139,7 +160,7 @@ export const useOptimizedTest = (onTestComplete) => {
         totalRecordedTime: 0
       };
       
-      const enhancedStats = {
+      const enhancedStats: EnhancedTestStats = {
         ...finalStats,
         totalTime: Math.round(finalTestTime / 1000),
         ...timingStats,
@@ -151,7 +172,7 @@ export const useOptimizedTest = (onTestComplete) => {
     }
   }, [testWords, wrongWords, testSaved, onTestComplete, wordTimes]);
 
-  const startTest = useCallback((filteredWords = []) => {
+  const startTest = useCallback((filteredWords: Word[] = []): void => {
     if (filteredWords.length === 0) return;
     
     setTestWords(filteredWords);
@@ -178,7 +199,7 @@ export const useOptimizedTest = (onTestComplete) => {
   }, [getRandomUnusedWord]);
 
   // Enhanced: Next word con transizione corretta
-  const nextWord = useCallback(() => {
+  const nextWord = useCallback((): void => {
     const nextRandomWord = getRandomUnusedWord(testWords, usedWordIds);
     
     if (nextRandomWord) {
@@ -199,7 +220,7 @@ export const useOptimizedTest = (onTestComplete) => {
   }, [testWords, usedWordIds, getRandomUnusedWord]);
 
   // Enhanced: Hint functionality
-  const toggleHint = useCallback(() => {
+  const toggleHint = useCallback((): void => {
     if (!showHint && currentWord?.sentence) {
       setShowHint(true);
       setHintUsedForCurrentWord(true);
@@ -209,12 +230,20 @@ export const useOptimizedTest = (onTestComplete) => {
   }, [showHint, currentWord]);
 
   // Answer handling con timing corretto
-  const handleAnswer = useCallback((isCorrect) => {
+  const handleAnswer = useCallback((isCorrect: boolean): void => {
     // Record timing IMMEDIATAMENTE
+    // 🐛 DEBUG START
+  console.log('🔴 RISPOSTA:', {
+    parola: currentWord?.english,
+    capitolo: currentWord?.chapter,
+    isCorrect: isCorrect,
+    wrongWordsBefore: wrongWords.length
+  });
+  // 🐛 DEBUG END
     recordWordTime(isCorrect, hintUsedForCurrentWord);
     
     // Update stats with hints properly tracked
-    const newStats = {
+    const newStats: TestStats = {
       correct: stats.correct + (isCorrect ? 1 : 0),
       incorrect: stats.incorrect + (isCorrect ? 0 : 1),
       hints: stats.hints + (hintUsedForCurrentWord ? 1 : 0)
@@ -224,7 +253,17 @@ export const useOptimizedTest = (onTestComplete) => {
     
     // Track wrong words with hint info
     if (!isCorrect && currentWord) {
-      const wrongWord = { ...currentWord, usedHint: hintUsedForCurrentWord };
+
+        // 🐛 DEBUG START
+  console.log('🔴 AGGIUNTA A WRONG WORDS:', {
+    parolaAggiunta: currentWord.english,
+    capitolo: currentWord.chapter
+  });
+  // 🐛 DEBUG END
+      const wrongWord: Word & { usedHint?: boolean } = { 
+        ...currentWord, 
+        usedHint: hintUsedForCurrentWord 
+      };
       setWrongWords(prev => [...prev, wrongWord]);
     }
     
@@ -244,7 +283,7 @@ export const useOptimizedTest = (onTestComplete) => {
     }
   }, [currentWord, showMeaning, stats, testWords.length, hintUsedForCurrentWord, recordWordTime, saveTestResultsWithStats, nextWord]);
 
-  const resetTest = useCallback(() => {
+  const resetTest = useCallback((): void => {
     if (!testSaved && (stats.correct > 0 || stats.incorrect > 0)) {
       saveTestResultsWithStats(stats);
     }
@@ -266,7 +305,7 @@ export const useOptimizedTest = (onTestComplete) => {
     wordStartTimeRef.current = null;
   }, [stats, testSaved, saveTestResultsWithStats]);
 
-  const startNewTest = useCallback(() => {
+  const startNewTest = useCallback((): void => {
     setShowResults(false);
     setWrongWords([]);
     setTestSaved(false);

@@ -1,0 +1,93 @@
+{
+  "compilerOptions": {
+    // ===== TARGET & MODULE =====
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    
+    // ===== JSX =====
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    
+    // ===== COMPILATION =====
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": false,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "removeComments": false,
+    "noEmit": true,
+    "isolatedModules": true,
+    
+    // ===== STRICT TYPE CHECKING =====
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    
+    // ===== ADDITIONAL CHECKS =====
+    "noUnusedLocals": false,          // Set to false during migration
+    "noUnusedParameters": false,      // Set to false during migration
+    "exactOptionalPropertyTypes": false, // Set to false for easier migration
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    
+    // ===== MODULE RESOLUTION =====
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@/components/*": ["components/*"],
+      "@/hooks/*": ["hooks/*"],
+      "@/services/*": ["services/*"],
+      "@/utils/*": ["utils/*"],
+      "@/types/*": ["types/*"],
+      "@/constants/*": ["constants/*"],
+      "@/contexts/*": ["contexts/*"],
+      "@/config/*": ["config/*"]
+    },
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    
+    // ===== ADVANCED =====
+    "skipLibCheck": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/.tsbuildinfo",
+    "useDefineForClassFields": true
+  },
+  
+  "include": [
+    "src/**/*",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "*.ts",
+    "*.tsx"
+  ],
+  
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "public",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ],
+  
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  }
+}

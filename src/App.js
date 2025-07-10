@@ -1,14 +1,19 @@
 // =====================================================
-// 📁 src/App.js - ALTERNATIVA: Lazy Import
+// 📁 src/App.js - REACT IMPORT FORZATO
 // =====================================================
 
+// ⭐ IMPORT PROTETTO che VS Code NON PUÒ RIMUOVERE
 import React, { useEffect } from 'react';
+// Questo uso esplicito impedisce la rimozione automatica:
+const ReactVersion = React.version;
+console.log('React loaded:', ReactVersion);
+
+import './App.css';
+import { AppRouter } from './components/AppRouter';
+import { ErrorTracker, MainAppErrorBoundary } from './components/ErrorBoundaries';
 import { AppProvider } from './contexts/AppContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { AppLayout } from './layouts/AppLayout';
-import { AppRouter } from './components/AppRouter';
-import { MainAppErrorBoundary, ErrorTracker } from './components/ErrorBoundaries';
-import './App.css';
 
 const VocabularyApp = () => {
   // 🆘 EMERGENCY EXPORT SENZA HOOK (import diretto localStorage)
@@ -54,12 +59,21 @@ const VocabularyApp = () => {
       }
     };
 
+    // ⭐ AGGIUNGI FORCE MIGRATION per testing
+    const handleForceMigration = () => {
+      // Trigger re-check migrazione nel router
+      window.location.hash = '#migration';
+      window.location.reload();
+    };
+
     window.addEventListener('emergencyExport', handleEmergencyExport);
     window.addEventListener('forceExport', handleEmergencyExport);
+    window.addEventListener('forceMigration', handleForceMigration);
 
     return () => {
       window.removeEventListener('emergencyExport', handleEmergencyExport);
       window.removeEventListener('forceExport', handleEmergencyExport);
+      window.removeEventListener('forceMigration', handleForceMigration);
     };
   }, []);
 
