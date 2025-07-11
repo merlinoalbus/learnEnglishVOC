@@ -1,0 +1,94 @@
+# =====================================================
+# 📁 .dockerignore - Esclude file dal Docker build context
+# =====================================================
+
+# ====== SECURITY: Credenziali e file sensibili ======
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+secrets/
+credentials/
+
+# ====== Development files ======
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.node_repl_history
+
+# ====== Build outputs ======
+build/
+dist/
+coverage/
+.nyc_output/
+
+# ====== Git e Version Control ======
+.git/
+.gitignore
+.gitattributes
+*.md
+!README.md
+
+# ====== IDE e Editor files ======
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ====== Testing e Development ======
+.coverage/
+jest/
+__tests__/
+*.test.js
+*.spec.js
+cypress/
+
+# ====== Docker files ======
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# ====== CI/CD ======
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+
+# ====== Documentation ======
+docs/
+SECURITY_SETUP.md
+INTEGRATION_GUIDE.md
+DOCKER_DEPLOYMENT.md
+
+# ====== Temporary files ======
+tmp/
+temp/
+*.tmp
+*.log
+
+# ====== OS generated files ======
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ====== Package manager files ======
+# NON escludere package-lock.json (necessario per npm ci)
+yarn.lock
+.pnpm-debug.log*
+
+# ====== Scripts di sviluppo ======
+scripts/
+!scripts/config-status.js
+
+# =====================================================
+# NOTA: Questo file riduce drasticamente la dimensione 
+# del build context e migliora la sicurezza escludendo
+# file sensibili dal container Docker
+# =====================================================
