@@ -12,7 +12,7 @@
 # - Networking: Crea network isolati per container
 # - Volume Management: Gestisce persistenza dati
 
-version: '3.8'
+version: "3.8"
 # SCOPO: Versione schema Docker Compose
 # 3.8: Supporta tutte le funzionalità moderne (2019+)
 # COMPATIBILITY: Richiede Docker Engine 19.03.0+
@@ -36,154 +36,164 @@ services:
   learnenglishvoc:
     # SCOPO: Servizio production-ready per deployment
     # CARATTERISTICHE: Ottimizzato, sicuro, monitorato
-    
+
     container_name: learnenglishvoc
     # SCOPO: Nome fisso container (invece di auto-generated)
     # BENEFICIO: Riferimenti facili, logging consistente
     # ATTENZIONE: Impedisce multiple istanze stesso servizio
-    
+
     image: ghcr.io/merlinoalbus/learnenglishvoc:latest
     # SCOPO: Immagine pre-built dal GitHub Container Registry
     # FORMATO: ghcr.io/USERNAME/REPOSITORY:TAG
     # PROCESSO:
     # 1. GitHub Actions builda immagine da Dockerfile
-    # 2. Push su GitHub Container Registry  
+    # 2. Push su GitHub Container Registry
     # 3. Docker Compose puller immagine già pronta
     # BENEFICIO: Deploy veloce, nessun build locale
-    
+
     # ====== ENVIRONMENT VARIABLES ======
     environment:
       # VARIABILI PASSATE AL CONTAINER AL RUNTIME
-      
+
       # 🔑 CRITICAL: API KEY MANAGEMENT
       - REACT_APP_GEMINI_API_KEY=${REACT_APP_GEMINI_API_KEY}
       # SCOPO: API key Gemini passata da environment host
       # SICUREZZA: Valore letto da variabile host, non hardcoded
       # SETUP: export REACT_APP_GEMINI_API_KEY=your_key
       # PROCESSO: Host env var → Docker container env var → React app
-      
+
       # 🏭 PRODUCTION CONFIGURATION
       - REACT_APP_ENVIRONMENT=production
       # SCOPO: Identifica ambiente come production
       # EFFETTI: Disabilita debug, abilita ottimizzazioni
-      
+
       - REACT_APP_DEBUG_LOGGING=false
       # SCOPO: Disabilita logging dettagliato in production
       # BENEFICIO: Performance migliori, meno noise nei log
-      
+
       - REACT_APP_ENABLE_AI_FEATURES=true
       # SCOPO: Abilita funzionalità AI in production
       # DIPENDENZA: Richiede API key valida
-      
+
       - REACT_APP_AI_TIMEOUT=15000
       # SCOPO: Timeout richieste AI (15 secondi)
       # BILANCIAMENTO: Abbastanza per richieste complesse
-      
+
       - REACT_APP_AI_MAX_RETRIES=3
       # SCOPO: Massimo 3 tentativi per richieste fallite
       # RESILIENZA: Gestisce errori temporanei di rete
-      
+
       - REACT_APP_MOCK_AI_RESPONSES=false
       # SCOPO: Usa API reali, non responses mock
       # PRODUCTION: Sempre false per funzionalità complete
-    
+
     # ====== RESOURCE LIMITS ======
     deploy:
       # SCOPO: Configurazione deployment per production
       resources:
         limits:
           # LIMITI MASSIMI RISORSE
-          cpus: '0.5'        # Massimo 0.5 CPU cores
-          memory: 512M       # Massimo 512MB RAM
+          cpus: "0.5" # Massimo 0.5 CPU cores
+          memory: 512M # Massimo 512MB RAM
           # BENEFICIO: Previene resource hogging, garantisce stabilità
-          
+
         reservations:
           # RISORSE GARANTITE MINIME
-          cpus: '0.1'        # Minimo 0.1 CPU cores
-          memory: 128M       # Minimo 128MB RAM
+          cpus: "0.1" # Minimo 0.1 CPU cores
+          memory: 128M # Minimo 128MB RAM
           # BENEFICIO: Garantisce performance minime
-    
+
     # ====== NETWORKING & PORTS ======
     networks:
       - learnenglishvoc_network
       # SCOPO: Connette container al network custom
       # BENEFICIO: Isolamento e comunicazione sicura
-      
+
     ports:
-      - '12345:80'
+      - "12345:80"
       # SCOPO: Port mapping host → container
       # FORMATO: 'HOST_PORT:CONTAINER_PORT'
       # ACCESSO: http://localhost:12345 → container porta 80
       # NGINX: Container serve su porta 80 (standard HTTP)
-    
+
     # ====== RELIABILITY ======
     restart: unless-stopped
     # SCOPO: Policy restart automatico
     # unless-stopped: Riavvia sempre tranne stop manuale
     # ALTERNATIVE: no, always, on-failure
     # BENEFICIO: Alta disponibilità, recovery automatico
-    
+
     # ====== HEALTH CHECK ======
     healthcheck:
       # SCOPO: Monitoring salute container
-      test: ["CMD", "curl", "-f", "http://localhost/health", "||", "curl", "-f", "http://localhost/"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost/health",
+          "||",
+          "curl",
+          "-f",
+          "http://localhost/",
+        ]
       # TEST: Prova endpoint /health, fallback a homepage
       # COMANDO: curl con fail flag (-f) per error su HTTP error
-      
-      interval: 30s      # Controllo ogni 30 secondi
-      timeout: 10s       # Timeout singolo check
-      retries: 3         # 3 fallimenti consecutivi = unhealthy  
-      start_period: 40s  # Grace period durante avvio
+
+      interval: 30s # Controllo ogni 30 secondi
+      timeout: 10s # Timeout singolo check
+      retries: 3 # 3 fallimenti consecutivi = unhealthy
+      start_period: 40s # Grace period durante avvio
       # BENEFICIO: Auto-restart se container unhealthy
-  
+
   # ====== DEVELOPMENT SERVICE ======
   learnenglishvoc-dev:
     # SCOPO: Environment development con hot reload
     # CARATTERISTICHE: Debug, modifiche real-time, sviluppo locale
-    
+
     profiles: ["dev"]
     # SCOPO: Profile Docker Compose per activazione selettiva
     # UTILIZZO: docker-compose --profile dev up
     # BENEFICIO: Servizi specifici per ambiente
-    
+
     container_name: learnenglishvoc-dev
-    
+
     build:
       # SCOPO: Build immagine da Dockerfile locale
-      context: .                 # Directory build (root progetto)
-      dockerfile: Dockerfile.dev  # Dockerfile specifico development
+      context: . # Directory build (root progetto)
+      dockerfile: Dockerfile.dev # Dockerfile specifico development
       # PROCESSO: Build real-time da source code
       # BENEFICIO: Modifiche immediate, debugging completo
-    
+
     environment:
       # DEVELOPMENT-SPECIFIC CONFIGURATION
       - REACT_APP_GEMINI_API_KEY=${REACT_APP_GEMINI_API_KEY}
       - REACT_APP_ENVIRONMENT=development
-      - REACT_APP_DEBUG_LOGGING=true    # Debug abilitato
+      - REACT_APP_DEBUG_LOGGING=true # Debug abilitato
       - REACT_APP_ENABLE_AI_FEATURES=true
       - REACT_APP_MOCK_AI_RESPONSES=false
-    
+
     env_file:
       # SCOPO: Carica variabili da file .env.local
       - .env.local
       # BENEFICIO: Configuration locale sviluppatore
       # PRECEDENZA: env_file < environment (environment ha priorità)
-    
+
     ports:
-      - '3000:3000'
+      - "3000:3000"
       # SCOPO: Porta standard React development server
       # ACCESSO: http://localhost:3000
-    
+
     volumes:
       # SCOPO: Mount source code per hot reload
-      - .:/app                    # Source code host → container
-      - /app/node_modules         # Exclude node_modules (usa container)
+      - .:/app # Source code host → container
+      - /app/node_modules # Exclude node_modules (usa container)
       # BENEFICIO: Modifiche file immediate nel container
       # PERFORMANCE: node_modules separato evita overhead
-    
+
     networks:
       - learnenglishvoc_network
-    
+
     command: npm start
     # SCOPO: Comando override per development server
     # DEFAULT: Dockerfile.dev potrebbe avere comando diverso
@@ -193,56 +203,55 @@ services:
   learnenglishvoc-staging:
     # SCOPO: Environment staging per testing pre-production
     # CARATTERISTICHE: Production-like ma con debug
-    
+
     profiles: ["staging"]
     # UTILIZZO: docker-compose --profile staging up -d
-    
+
     container_name: learnenglishvoc-staging
     image: ghcr.io/merlinoalbus/learnenglishvoc:latest
     # NOTA: Stessa immagine production ma configurazione diversa
-    
+
     environment:
       # STAGING-SPECIFIC CONFIGURATION
       - REACT_APP_GEMINI_API_KEY=${REACT_APP_GEMINI_API_KEY}
       - REACT_APP_ENVIRONMENT=staging
-      - REACT_APP_DEBUG_LOGGING=true     # Debug per troubleshooting
+      - REACT_APP_DEBUG_LOGGING=true # Debug per troubleshooting
       - REACT_APP_ENABLE_AI_FEATURES=true
       - REACT_APP_AI_TIMEOUT=15000
       - REACT_APP_AI_MAX_RETRIES=3
-    
+
     deploy:
       # RISORSE RIDOTTE PER STAGING
       resources:
         limits:
-          cpus: '0.3'        # Meno CPU di production
-          memory: 256M       # Meno RAM di production
+          cpus: "0.3" # Meno CPU di production
+          memory: 256M # Meno RAM di production
         reservations:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 64M
-    
+
     networks:
       - learnenglishvoc_network
-    
+
     ports:
-      - '8080:80'
+      - "8080:80"
       # PORTA DIVERSA: Staging su 8080, production su 12345
       # BENEFICIO: Possono coesistere sullo stesso host
-    
+
     restart: unless-stopped
-    
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
       timeout: 10s
       retries: 3
-
 # ====== DEPLOYMENT INSTRUCTIONS ======
 # 📋 ISTRUZIONI DEPLOYMENT COMPLETE
 
 # 🏭 PRODUCTION (existing service):
 # STEP 1: Configura API key
 # export REACT_APP_GEMINI_API_KEY=your_production_api_key
-# 
+#
 # STEP 2: Avvia servizio production
 # docker-compose up -d learnenglishvoc
 #
@@ -319,7 +328,7 @@ services:
 # ====== MONITORING E MAINTENANCE ======
 # 📊 MONITORING:
 # - docker stats: Resource usage real-time
-# - docker-compose logs -f: Log streaming  
+# - docker-compose logs -f: Log streaming
 # - Health checks: Automatic container restart
 # - External monitoring: Uptime, performance
 
