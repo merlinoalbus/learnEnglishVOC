@@ -1,0 +1,36 @@
+/* =====================================================
+ * 📁 src/styles/index.css - MAIN ENTRY POINT
+ * ===================================================== */
+
+/* TAILWIND CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* DESIGN SYSTEM */
+@import './variables.css';
+
+/* GLOBAL STYLES */
+@import './globals.css';
+
+/* LAYOUTS */
+@import './layouts/header.css';
+@import './layouts/navigation.css';
+@import './layouts/main-layout.css';
+@import './layouts/footer.css';
+
+/* COMPONENTS */
+@import './components/buttons.css';
+
+/* PAGES */
+@import './pages/start-test.css';
+
+/* UTILITIES */
+@import './utilities/animations.css';
+
+/* TAILWIND CUSTOM UTILITIES */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

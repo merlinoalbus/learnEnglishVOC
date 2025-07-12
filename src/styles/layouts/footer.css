@@ -1,0 +1,50 @@
+/* =====================================================
+ * 📁 src/styles/layouts/footer.css - FOOTER STYLES
+ * ===================================================== */
+
+.app-footer {
+  background: var(--gradient-header);
+  color: white;
+  padding: var(--space-lg) var(--space-xl);
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.footer-info p {
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+.footer-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+}
+
+.footer-stats span {
+  white-space: nowrap;
+}
+
+/* RESPONSIVE FOOTER */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    gap: var(--space-sm);
+    text-align: center;
+  }
+  
+  .footer-stats {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

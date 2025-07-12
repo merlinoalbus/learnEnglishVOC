@@ -24,13 +24,16 @@
     "paths": {
       "@/*": ["*"],
       "@components/*": ["components/*"],
-      "@hooks/*": ["hooks/*"],
-      "@contexts/*": ["contexts/*"],
-      "@utils/*": ["utils/*"],
-      "@services/*": ["services/*"],
+      "@config/*": ["config/*"],
       "@constants/*": ["constants/*"],
-      "@views/*": ["views/*"],
-      "@layouts/*": ["layouts/*"]
+      "@contexts/*": ["contexts/*"],
+      "@hooks/*": ["hooks/*"],
+      "@layouts/*": ["layouts/*"],
+      "@routing/*": ["routing/*"],
+      "@services/*": ["services/*"],
+      "@styles/*": ["styles/*"],
+      "@utils/*": ["utils/*"],
+      "@views/*": ["views/*"]
     }
   },
   "include": [

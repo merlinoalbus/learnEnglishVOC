@@ -1,156 +1,416 @@
 # =====================================================
-# 📁 scripts/extract.ps1 - SCRIPT ESTRAZIONE CODICE DOCUMENTATO COMPLETO
+# 📁 scripts/extract.ps1 - ESTRAZIONE CODICE SENZA COMMENTI
 # =====================================================
 
 <#
-**SCOPO DELLO SCRIPT:**
+**SCOPO DELLO SCRIPT AGGIORNATO:**
 Questo script PowerShell estrae il contenuto di tutti i file di codice da una cartella
-e li combina in un singolo file di testo. È molto utile per:
-- Analizzare la struttura di un progetto
-- Creare documentazione automatica  
-- Fare backup del codice in formato testo
-- Permettere ad AI/ChatGPT di analizzare tutto il codice insieme
+e li combina in un singolo file di testo RIMUOVENDO AUTOMATICAMENTE TUTTI I COMMENTI.
 
-**QUANDO USARLO:**
-- Quando vuoi vedere tutto il codice di un progetto in un file solo
-- Per creare input per analisi AI del codice
-- Per documentazione o archivio
-- Per debug di problemi complessi che coinvolgono più file
+**NUOVA FUNZIONALITÀ:**
+- Rimuove commenti JavaScript (// e /* */)
+- Rimuove commenti CSS (/* */)
+- Rimuove commenti HTML (<!-- -->)
+- Rimuove commenti Python (#)
+- Rimuove commenti PowerShell (#)
+- Rimuove commenti JSDoc (/** */)
+- Rimuove commenti TypeScript (// e /* */)
+- Preserva stringhe con caratteri di commento al loro interno
 
-**COME FUNZIONA:**
-1. Scansiona ricorsivamente una cartella (e sottocartelle)
-2. Filtra solo i file di codice (js, css, html, etc.)
-3. Esclude cartelle di sistema (node_modules, build, etc.)
-4. Combina tutto il contenuto in un file di output
-5. Aggiunge header per identificare ogni file
-
-**ESEMPI DI USO:**
-.\extract.ps1 -SourcePath ".\src" -OutputFile "codice_src.txt"
-.\extract.ps1 -SourcePath ".\..\" -OutputFile "tutto_progetto.txt" -PathsToSkip @("..\node_modules", "..\build")
+**VANTAGGI:**
+- Output più pulito e conciso
+- Focus sul codice effettivo
+- Riduce dimensione file di output
+- Migliore per analisi AI (meno token sprecati)
 #>
 
 # =====================================================
 # DEFINIZIONE PARAMETRI SCRIPT
 # =====================================================
 
-# **param():** Definisce i parametri che possono essere passati allo script
 param(
-    # **SourcePath:** La cartella da scansionare (OBBLIGATORIO)
-    # [Parameter(Mandatory=$true)] = PowerShell chiederà questo parametro se manca
     [Parameter(Mandatory=$true)]
     [string]$SourcePath,
     
-    # **OutputFile:** Il file dove salvare tutto il codice estratto (OPZIONALE)
-    # Se non specificato, usa "extracted_files_content.txt" come default
     [Parameter(Mandatory=$false)]
     [string]$OutputFile = "extracted_files_content.txt",
 
-    # **PathsToSkip:** Array di percorsi da saltare (OPZIONALE)
-    # Es: @("node_modules", "build") per saltare queste cartelle
     [Parameter(Mandatory=$false)]
-    [string[]]$PathsToSkip
+    [string[]]$PathsToSkip,
+
+    # **NUOVO PARAMETRO:** Opzione per mantenere commenti
+    [Parameter(Mandatory=$false)]
+    [switch]$KeepComments = $false
 )
 
 # =====================================================
 # VALIDAZIONE INPUT
 # =====================================================
 
-# **Test-Path:** Controlla se un percorso esiste nel filesystem
-# -not inverte il risultato: se il path NON esiste, esegui il blocco
 if (-not (Test-Path -Path $SourcePath)) {
-    # Write-Error stampa un messaggio di errore e ferma lo script
     Write-Error "Il path specificato non esiste: $SourcePath"
-    # exit 1 = termina lo script con codice di errore
     exit 1
 }
 
-# **Resolve-Path:** Converte un percorso relativo in assoluto
-# Es: ".\src" diventa "C:\Projects\MyApp\src"
-# Questo è importante per confronti accurati dei percorsi
 $resolvedSourcePath = Resolve-Path -Path $SourcePath
 
 # =====================================================
 # CONFIGURAZIONE FILTRI FILE
 # =====================================================
 
-# **ESTENSIONI TARGET:** Array delle estensioni di file da processare
-# Questi sono i tipi di file di codice che ci interessano
 $TargetExtensions = @(
     '.js',          # JavaScript
-    '.conf',        # File di configurazione  
-    '.yml',         # YAML (configurazione)
-    '.yaml',        # YAML alternativo
-    '.html',        # HTML
-    '.css',         # CSS (stili)
+    '.jsx',         # React JavaScript
     '.ts',          # TypeScript
     '.tsx',         # TypeScript React
+    '.css',         # CSS
+    '.scss',        # SCSS
+    '.html',        # HTML
+    '.htm',         # HTML alternativo
     '.vue',         # Vue.js
-    '.scss',        # SCSS (CSS avanzato)
-    '.properties',  # File properties (Java/config)
-    '.sh',          # Script Bash (Linux/Mac)
-    '.ps1'          # Script PowerShell
+    '.conf',        # Configurazione
+    '.yml',         # YAML
+    '.yaml',        # YAML alternativo
+    '.json',        # JSON (senza commenti, ma per completezza)
+    '.properties',  # File properties
+    '.sh',          # Script Bash
+    '.ps1',         # Script PowerShell
+    '.py',          # Python
+    '.php'          # PHP
 )
 
-# **CARTELLE ESCLUSE:** Array di cartelle da ignorare automaticamente
-# Queste cartelle contengono file generati o librerie esterne
 $ExcludedFolders = @(
-    '.idea',        # IntelliJ IDEA settings
-    '.gitignore',   # Git ignore file
-    'config_txt',   # Cartella output di questo stesso script
-    '.github',      # GitHub workflows/config
-    'node_modules', # Librerie JavaScript (ENORME, da evitare)
-    'dist',         # File distribuibili compilati
-    'build',        # File build compilati
-    'vendor',       # Librerie esterne (PHP/altro)
-    'coverage',     # Report copertura test
-    'test',         # Cartella test (opzionale escludere)
-    'tests',        # Cartella test alternativa
-    'tmp',          # File temporanei
-    'temp'          # File temporanei alternativi
+    '.idea',
+    '.gitignore',
+    'config_txt',
+    '.github',
+    '.vscode',
+    'public',
+    'scripts',
+    'node_modules',
+    'dist',
+    'build',
+    'vendor',
+    'coverage',
+    'test',
+    'tests',
+    'tmp',
+    'temp',
+    '.next',
+    '.nuxt',
+    '.output'
 )
+
+# =====================================================
+# FUNZIONI RIMOZIONE COMMENTI
+# =====================================================
+
+function Remove-Comments {
+    param(
+        [string]$Content,
+        [string]$FileExtension
+    )
+
+    if ($KeepComments) {
+        return $Content
+    }
+
+    switch ($FileExtension.ToLower()) {
+        {$_ -in @('.js', '.jsx', '.ts', '.tsx')} {
+            return Remove-JavaScriptComments $Content
+        }
+        {$_ -in @('.css', '.scss')} {
+            return Remove-CSSComments $Content
+        }
+        {$_ -in @('.html', '.htm')} {
+            return Remove-HTMLComments $Content
+        }
+        '.vue' {
+            # Vue files hanno mix di HTML, CSS e JS
+            $Content = Remove-HTMLComments $Content
+            $Content = Remove-CSSComments $Content
+            $Content = Remove-JavaScriptComments $Content
+            return $Content
+        }
+        '.py' {
+            return Remove-PythonComments $Content
+        }
+        '.php' {
+            return Remove-PHPComments $Content
+        }
+        {$_ -in @('.ps1', '.sh')} {
+            return Remove-ShellComments $Content
+        }
+        {$_ -in @('.yml', '.yaml')} {
+            return Remove-YAMLComments $Content
+        }
+        default {
+            return $Content
+        }
+    }
+}
+
+# =====================================================
+# FUNZIONI SPECIFICHE PER LINGUAGGIO
+# =====================================================
+
+function Remove-JavaScriptComments {
+    param([string]$Content)
+    
+    $lines = $Content -split "`n"
+    $result = @()
+    $inBlockComment = $false
+    
+    foreach ($line in $lines) {
+        $cleanLine = $line
+        $inString = $false
+        $stringChar = $null
+        $i = 0
+        
+        while ($i -lt $cleanLine.Length) {
+            $char = $cleanLine[$i]
+            
+            # Gestione stringhe (per non rimuovere // dentro stringhe)
+            if (($char -eq '"' -or $char -eq "'") -and -not $inString) {
+                $inString = $true
+                $stringChar = $char
+            }
+            elseif ($char -eq $stringChar -and $inString) {
+                # Controlla se non è escaped
+                $backslashCount = 0
+                for ($j = $i - 1; $j -ge 0 -and $cleanLine[$j] -eq '\'; $j--) {
+                    $backslashCount++
+                }
+                if ($backslashCount % 2 -eq 0) {
+                    $inString = $false
+                    $stringChar = $null
+                }
+            }
+            
+            # Gestione commenti se non siamo in una stringa
+            if (-not $inString) {
+                # Fine commento a blocco
+                if ($inBlockComment -and $i -lt $cleanLine.Length - 1 -and 
+                    $cleanLine[$i] -eq '*' -and $cleanLine[$i + 1] -eq '/') {
+                    $inBlockComment = $false
+                    $cleanLine = $cleanLine.Substring($i + 2)
+                    $i = -1
+                    continue
+                }
+                
+                # Inizio commento a blocco
+                if (-not $inBlockComment -and $i -lt $cleanLine.Length - 1 -and 
+                    $cleanLine[$i] -eq '/' -and $cleanLine[$i + 1] -eq '*') {
+                    $inBlockComment = $true
+                    $cleanLine = $cleanLine.Substring(0, $i)
+                    break
+                }
+                
+                # Commento linea singola
+                if (-not $inBlockComment -and $i -lt $cleanLine.Length - 1 -and 
+                    $cleanLine[$i] -eq '/' -and $cleanLine[$i + 1] -eq '/') {
+                    $cleanLine = $cleanLine.Substring(0, $i)
+                    break
+                }
+            }
+            
+            $i++
+        }
+        
+        # Aggiungi la riga solo se non siamo in un commento a blocco
+        if (-not $inBlockComment) {
+            $trimmedLine = $cleanLine.Trim()
+            if ($trimmedLine -ne '') {
+                $result += $trimmedLine
+            }
+        }
+    }
+    
+    return ($result -join " ")
+}
+
+function Remove-CSSComments {
+    param([string]$Content)
+    
+    # Rimuove commenti CSS /* */
+    $Content = $Content -replace '/\*[\s\S]*?\*/', ''
+    
+    # Rimuove righe vuote multiple
+    $Content = $Content -replace '\s+', ' '
+    
+    return $Content.Trim()
+}
+
+function Remove-HTMLComments {
+    param([string]$Content)
+    
+    # Rimuove commenti HTML <!-- -->
+    $Content = $Content -replace '<!--[\s\S]*?-->', ''
+    
+    # Rimuove spazi multipli
+    $Content = $Content -replace '\s+', ' '
+    
+    return $Content.Trim()
+}
+
+function Remove-PythonComments {
+    param([string]$Content)
+    
+    $lines = $Content -split "`n"
+    $result = @()
+    $inTripleQuote = $false
+    $quoteType = $null
+    
+    foreach ($line in $lines) {
+        $cleanLine = $line
+        $inString = $false
+        $stringChar = $null
+        
+        # Gestione triple quotes (docstrings)
+        if ($cleanLine -match '"""' -or $cleanLine -match "'''") {
+            if ($cleanLine -match '"""') {
+                if (-not $inTripleQuote) {
+                    $inTripleQuote = $true
+                    $quoteType = '"""'
+                } elseif ($quoteType -eq '"""') {
+                    $inTripleQuote = $false
+                    $quoteType = $null
+                }
+            }
+            if ($cleanLine -match "'''") {
+                if (-not $inTripleQuote) {
+                    $inTripleQuote = $true
+                    $quoteType = "'''"
+                } elseif ($quoteType -eq "'''") {
+                    $inTripleQuote = $false
+                    $quoteType = $null
+                }
+            }
+        }
+        
+        if ($inTripleQuote) {
+            continue
+        }
+        
+        # Rimuove commenti # (gestendo stringhe)
+        $commentIndex = -1
+        for ($i = 0; $i -lt $cleanLine.Length; $i++) {
+            $char = $cleanLine[$i]
+            
+            if (($char -eq '"' -or $char -eq "'") -and -not $inString) {
+                $inString = $true
+                $stringChar = $char
+            }
+            elseif ($char -eq $stringChar -and $inString) {
+                $inString = $false
+                $stringChar = $null
+            }
+            elseif ($char -eq '#' -and -not $inString) {
+                $commentIndex = $i
+                break
+            }
+        }
+        
+        if ($commentIndex -ge 0) {
+            $cleanLine = $cleanLine.Substring(0, $commentIndex)
+        }
+        
+        $trimmedLine = $cleanLine.Trim()
+        if ($trimmedLine -ne '') {
+            $result += $trimmedLine
+        }
+    }
+    
+    return ($result -join " ")
+}
+
+function Remove-PHPComments {
+    param([string]$Content)
+    
+    # Rimuove commenti PHP // e /* */
+    $Content = Remove-JavaScriptComments $Content
+    
+    # Rimuove anche commenti # style
+    $lines = $Content -split " "
+    $result = @()
+    
+    foreach ($line in $lines) {
+        if ($line -notmatch '^\s*#') {
+            $hashIndex = $line.IndexOf('#')
+            if ($hashIndex -gt 0) {
+                $line = $line.Substring(0, $hashIndex).Trim()
+            }
+            if ($line -ne '') {
+                $result += $line
+            }
+        }
+    }
+    
+    return ($result -join " ")
+}
+
+function Remove-ShellComments {
+    param([string]$Content)
+    
+    $lines = $Content -split "`n"
+    $result = @()
+    
+    foreach ($line in $lines) {
+        # Salta righe che iniziano con #
+        if ($line -match '^\s*#') {
+            continue
+        }
+        
+        # Rimuove commenti inline #
+        $commentIndex = $line.IndexOf('#')
+        if ($commentIndex -ge 0) {
+            $line = $line.Substring(0, $commentIndex)
+        }
+        
+        $trimmedLine = $line.Trim()
+        if ($trimmedLine -ne '') {
+            $result += $trimmedLine
+        }
+    }
+    
+    return ($result -join " ")
+}
+
+function Remove-YAMLComments {
+    param([string]$Content)
+    
+    return Remove-ShellComments $Content  # YAML usa stesso stile di commenti
+}
 
 # =====================================================
 # PREPARAZIONE FILE OUTPUT
 # =====================================================
 
-# **PULIZIA FILE OUTPUT:**
-# Se il file esiste già, svuotalo; altrimenti crealo nuovo
 if (Test-Path -Path $OutputFile) {
-    # Clear-Content svuota un file esistente mantenendolo
     Clear-Content -Path $OutputFile
 } else {
-    # New-Item crea un nuovo file
-    # -ItemType File = tipo file (non cartella)
-    # -Force = crea anche le cartelle parent se non esistono
-    # | Out-Null = nasconde l'output del comando
     New-Item -Path $OutputFile -ItemType File -Force | Out-Null
 }
 
-# **MESSAGGIO DI INIZIO:**
-# Write-Host stampa messaggi colorati nella console
-# -ForegroundColor Cyan = testo ciano/azzurro
-Write-Host "Inizio scansione del path: $($resolvedSourcePath.Path) (Ricorsiva)" -ForegroundColor Cyan
+if ($KeepComments) {
+    Write-Host "Inizio scansione del path: $($resolvedSourcePath.Path) (MANTENENDO commenti)" -ForegroundColor Cyan
+} else {
+    Write-Host "Inizio scansione del path: $($resolvedSourcePath.Path) (RIMUOVENDO commenti)" -ForegroundColor Cyan
+}
 
 # =====================================================
 # PROCESSAMENTO PERCORSI DA SALTARE
 # =====================================================
 
-# **RISOLUZIONE PERCORSI DA ESCLUDERE:**
-# Converte tutti i percorsi relativi in assoluti per confronti accurati
 $ResolvedPathsToSkip = @()
 
-# Controlla se sono stati specificati percorsi da saltare
 if ($null -ne $PathsToSkip -and $PathsToSkip.Count -gt 0) {
-    # Processa ogni percorso specificato
     foreach ($path in $PathsToSkip) {
         try {
-            # Resolve-Path con -ErrorAction Stop = ferma se il path non esiste
             $absolutePath = Resolve-Path -Path $path -ErrorAction Stop
-            # Aggiungi il percorso assoluto all'array
             $ResolvedPathsToSkip += $absolutePath.Path
             Write-Host "Percorso da saltare risolto: $($absolutePath.Path)" -ForegroundColor DarkYellow
         } catch {
-            # Se il percorso non esiste, avvisa ma continua
             Write-Warning "Impossibile risolvere il percorso da saltare: $path"
         }
     }
@@ -160,233 +420,146 @@ if ($null -ne $PathsToSkip -and $PathsToSkip.Count -gt 0) {
 # INIZIALIZZAZIONE CONTATORI
 # =====================================================
 
-# **CONTATORI STATISTICHE:**
-# Tengono traccia di quanti file vengono processati vs saltati
-$ProcessedFiles = 0  # File che elaboriamo con successo
-$SkippedFiles = 0    # File che saltiamo per vari motivi
+$ProcessedFiles = 0
+$SkippedFiles = 0
+$CommentLinesRemoved = 0
 
 # =====================================================
 # SCANSIONE E PROCESSAMENTO FILE
 # =====================================================
 
 try {
-    # **GET-CHILDITEM:** Il comando principale per scansionare file
-    # -Path = cartella da scansionare
-    # -Recurse = incluди sottocartelle (scansione ricorsiva)  
-    # -File = solo file (non cartelle)
     $AllFiles = Get-ChildItem -Path $resolvedSourcePath.Path -Recurse -File
     
-    # **LOOP PRINCIPALE:** Processa ogni file trovato
     foreach ($File in $AllFiles) {
         
-        # =====================================================
         # CALCOLO PERCORSO RELATIVO
-        # =====================================================
-        
-        # **PERCORSO RELATIVO:** Rimuove la parte iniziale del path per avere un path relativo
-        # Es: "C:\Project\src\components\App.js" → "src\components\App.js"
         $RelativePath = $File.FullName.Substring($resolvedSourcePath.Path.Length).TrimStart('\')
         
-        # Se il percorso relativo è vuoto (file nella root), usa solo il nome
         if ([string]::IsNullOrEmpty($RelativePath)) { 
             $RelativePath = $File.Name 
         }
 
-        # =====================================================
         # CONTROLLO ESCLUSIONI MANUALI
-        # =====================================================
-        
-        # **CONTROLLO PERCORSI MANUALI DA SALTARE:**
         $isPathManuallySkipped = $false
         
         if ($ResolvedPathsToSkip.Count -gt 0) {
             foreach ($absolutePathToSkip in $ResolvedPathsToSkip) {
-                # **StartsWith:** Controlla se il percorso del file inizia con il percorso da saltare
-                # [System.StringComparison]::OrdinalIgnoreCase = confronto case-insensitive
                 if ($File.FullName.StartsWith($absolutePathToSkip, [System.StringComparison]::OrdinalIgnoreCase)) {
                     $isPathManuallySkipped = $true
                     Write-Host "Saltato (Percorso escluso manualmente): $RelativePath" -ForegroundColor Red
-                    break  # Esce dal loop interno
+                    break
                 }
             }
         }
         
-        # Se il file è in un percorso da saltare manualmente, passa al prossimo
         if ($isPathManuallySkipped) {
             $SkippedFiles++
-            continue  # Salta alla prossima iterazione del loop
+            continue
         }
         
-        # =====================================================
-        # CONTROLLO CARTELLE ESCLUSE AUTOMATICAMENTE
-        # =====================================================
-        
-        # **CONTROLLO CARTELLE ESCLUSE:**
+        # CONTROLLO CARTELLE ESCLUSE
         $isFolderExcluded = $false
         
         foreach ($ExcludedFolder in $ExcludedFolders) {
-            # **CONTROLLO PATTERN:** Verifica se il file è dentro una cartella esclusa
-            # -like supporta wildcard come *
-            # *\node_modules = qualsiasi path che finisce con \node_modules
-            # *\node_modules\* = qualsiasi path che contiene \node_modules\
             if ($File.DirectoryName -like "*\$ExcludedFolder" -or $File.DirectoryName -like "*\$ExcludedFolder\*") {
                 $isFolderExcluded = $true
                 break
             }
         }
         
-        # Se il file è in una cartella esclusa, saltalo
         if ($isFolderExcluded) {
             $SkippedFiles++
             continue
         }
         
-        # =====================================================
         # CONTROLLO ESTENSIONE FILE
-        # =====================================================
-        
-        # **CONTROLLO TIPO FILE:**
         $ShouldProcess = $false
         
-        # Controlla se l'estensione è nella lista target
         if (($File.Extension -in $TargetExtensions) -or 
             ($File.Name -eq "Dockerfile") -or 
             ($File.Name -like "Dockerfile.*")) {
             $ShouldProcess = $true
         }
         
-        # Se il file non è di un tipo che ci interessa, saltalo
         if (-not $ShouldProcess) {
             Write-Host "Saltato (Tipo di file non valido): $RelativePath" -ForegroundColor Yellow
             $SkippedFiles++
             continue
         }
         
-        # =====================================================
         # LETTURA E PROCESSAMENTO FILE
-        # =====================================================
-        
         try {
-            # **MESSAGGIO PROCESSING:**
             Write-Host "Processando: $RelativePath" -ForegroundColor Gray
             
-            # **GET-CONTENT:** Legge tutto il contenuto del file
-            # -Path = file da leggere
-            # -Raw = legge come stringa unica (non array di righe)
-            # -ErrorAction Stop = ferma se c'è errore
-            # -Encoding UTF8 = gestisce caratteri speciali correttamente
             $FileContent = Get-Content -Path $File.FullName -Raw -ErrorAction Stop -Encoding UTF8
             
-            # **NORMALIZZAZIONE NEWLINE:** 
-            # Sostituisce tutte le combinazioni di newline con spazi
-            # \r\n (Windows) e \n (Unix/Mac) → spazio singolo
-            # Questo rende il testo più compatto nel file output
-            $FileContent = $FileContent -replace "\r?\n", " "
+            # **RIMOZIONE COMMENTI:**
+            $OriginalLength = $FileContent.Length
+            $CleanContent = Remove-Comments -Content $FileContent -FileExtension $File.Extension
+            $NewLength = $CleanContent.Length
             
-            # **CONTROLLO FILE VUOTO:**
-            # Se il file è vuoto o contiene solo spazi, aggiungi un placeholder
-            if ([string]::IsNullOrEmpty($FileContent.Trim())) {
-                $FileContent = "[FILE VUOTO]"
+            if ($NewLength -lt $OriginalLength) {
+                $CommentLinesRemoved += ($OriginalLength - $NewLength)
             }
             
-            # =====================================================
-            # CREAZIONE OUTPUT FORMATTATO
-            # =====================================================
+            # Normalizza newlines e spazi
+            $CleanContent = $CleanContent -replace "\r?\n", " "
+            $CleanContent = $CleanContent -replace "\s+", " "
             
-            # **TEMPLATE OUTPUT:** Crea il blocco formattato per questo file
-            # @"..."@ è un here-string PowerShell per testo multi-linea
+            if ([string]::IsNullOrEmpty($CleanContent.Trim())) {
+                $CleanContent = "[FILE VUOTO DOPO RIMOZIONE COMMENTI]"
+            }
+            
+            # CREAZIONE OUTPUT FORMATTATO
             $OutputContent = @"
 NOME FILE: $RelativePath
 
-$FileContent
+$($CleanContent.Trim())
 
 ================================================================================
 
 "@
             
-            # **APPEND AL FILE OUTPUT:**
-            # Add-Content aggiunge il contenuto al file senza sovrascriverlo
-            # -Encoding UTF8 = mantiene caratteri speciali
             Add-Content -Path $OutputFile -Value $OutputContent -Encoding UTF8
-            
-            # Incrementa contatore successi
             $ProcessedFiles++
             
         } catch {
-            # **GESTIONE ERRORI LETTURA FILE:**
-            # Se non riusciamo a leggere il file (permessi, corruzione, etc.)
             Write-Warning "Errore durante la lettura del file: $($File.FullName) - $($_.Exception.Message)"
             $SkippedFiles++
         }
     }
     
-    # =====================================================
     # STATISTICHE FINALI
-    # =====================================================
-    
-    # **REPORT FINALE:** Mostra quanti file sono stati processati
     Write-Host "`n=== STATISTICHE ($($resolvedSourcePath.Path)) ===" -ForegroundColor Green
     Write-Host "File processati: $ProcessedFiles" -ForegroundColor Green
     Write-Host "File saltati: $SkippedFiles" -ForegroundColor Yellow
+    if (-not $KeepComments) {
+        Write-Host "Caratteri rimossi (commenti): $CommentLinesRemoved" -ForegroundColor Magenta
+    }
     Write-Host "Output salvato in: $OutputFile" -ForegroundColor Green
     
 } catch {
-    # **GESTIONE ERRORI GENERALI:**
-    # Se c'è un errore durante la scansione principale
     Write-Error "Errore durante l'esecuzione dello script: $($_.Exception.Message)"
     exit 1
 }
 
-# **MESSAGGIO COMPLETAMENTO:**
 Write-Host "`nCompletato per $($resolvedSourcePath.Path)`n" -ForegroundColor Green
 
 # =====================================================
-# ESEMPI DI UTILIZZO PRATICO:
+# ESEMPI DI UTILIZZO AGGIORNATI:
 # =====================================================
 
 <#
-**ESEMPIO 1 - Estrai solo cartella src:**
-.\extract.ps1 -SourcePath ".\src" -OutputFile "codice_src.txt"
+**ESEMPIO 1 - Estrai senza commenti (default):**
+.\extract.ps1 -SourcePath ".\src" -OutputFile "codice_pulito.txt"
 
-**ESEMPIO 2 - Estrai tutto il progetto escludendo specifiche cartelle:**
-.\extract.ps1 -SourcePath ".\" -OutputFile "progetto_completo.txt" -PathsToSkip @(".\node_modules", ".\build", ".\dist")
+**ESEMPIO 2 - Estrai mantenendo commenti:**
+.\extract.ps1 -SourcePath ".\src" -OutputFile "codice_con_commenti.txt" -KeepComments
 
-**ESEMPIO 3 - Estrai per analisi AI:**
-.\extract.ps1 -SourcePath ".\src" -OutputFile "per_chatgpt.txt"
-# Poi copia il contenuto di per_chatgpt.txt e incollalo in ChatGPT per analisi
+**ESEMPIO 3 - Estrai progetto completo pulito:**
+.\extract.ps1 -SourcePath ".\" -OutputFile "progetto_pulito.txt" -PathsToSkip @(".\node_modules", ".\build")
 
-**ESEMPIO 4 - Backup codice:**
-.\extract.ps1 -SourcePath ".\" -OutputFile "backup_$(Get-Date -Format 'yyyy-MM-dd').txt"
-#>
-
-# =====================================================
-# NOTE TECNICHE AVANZATE:
-# =====================================================
-
-<#
-**GESTIONE MEMORIA:**
-- Get-ChildItem -Recurse può usare molta memoria su progetti grandi
-- PowerShell carica tutto in memoria, quindi attento con progetti enormi
-
-**ENCODING:**
-- UTF8 gestisce caratteri speciali, emoji, caratteri accentati
-- Importante per codice internazionale o con commenti non-inglesi
-
-**PERFORMANCE:**
-- Il filtro per estensione avviene DOPO la scansione completa
-- Per progetti enormi, considera di filtrare durante Get-ChildItem
-
-**COMPATIBILITÀ:**
-- Script compatibile con PowerShell 5.1+ (Windows)
-- Funziona anche su PowerShell Core (Linux/Mac) ma path potrebbero differire
-
-**LIMITAZIONI:**
-- Non gestisce file binari (immagini, video, etc.)
-- File molto grandi potrebbero causare problemi di memoria
-- Alcuni caratteri speciali potrebbero non essere gestiti perfettamente
-
-**DEBUG:**
-- Se lo script si blocca, controlla cartelle enormi come node_modules
-- Aggiungi più ExcludedFolders se necessario
-- Use Write-Host per debug intermedi
+**ESEMPIO 4 - Solo JavaScript/TypeScript pulito:**
+.\extract.ps1 -SourcePath ".\src" -OutputFile "solo_js_pulito.txt"
 #>
