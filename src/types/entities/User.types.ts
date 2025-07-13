@@ -17,34 +17,95 @@
  * Preparata per: Firebase Auth integration
  * Basata su: standard Firebase User properties
  */
+
+export type UserRole = "admin" | "user";
+export interface UserPermissions {
+  canViewOwnData: boolean;
+  canEditOwnData: boolean;
+  canManageUsers: boolean;
+  canExportData: boolean;
+  canImportData: boolean;
+  canResetPasswords: boolean;
+  canBlockUsers: boolean;
+  canDeleteUsers: boolean;
+}
+
+export interface AdminOperation {
+  type:
+    | "password_reset"
+    | "block_user"
+    | "unblock_user"
+    | "delete_user"
+    | "export_data"
+    | "import_data";
+  targetUserId: string;
+  performedBy: string;
+  timestamp: Date;
+  metadata?: Record<string, any>;
+}
+
+export interface UserManagementFilters {
+  role?: UserRole;
+  isActive?: boolean;
+  emailVerified?: boolean;
+  registrationMethod?: "email" | "google";
+  searchTerm?: string;
+}
+
+export interface UserExportData {
+  profile: User;
+  words: any[];
+  testHistory: any[];
+  statistics: any[];
+  exportedAt: Date;
+  exportedBy: string;
+}
+
 export interface User {
   /** ID univoco utente - Firebase UID */
   id: string;
-
-  /** Email utente - da Firebase Auth */
   email: string;
-
-  /** Nome display - opzionale da Firebase Auth */
   displayName?: string;
-
-  /** URL foto profilo - opzionale da Firebase Auth */
   photoURL?: string;
-
-  /** Flag email verificata - da Firebase Auth */
   emailVerified: boolean;
-
-  /** Provider autenticazione (google, email, etc.) */
   providerId: string;
-
-  /** Timestamp creazione account */
   createdAt: Date;
-
-  /** Timestamp ultimo accesso */
   lastLoginAt: Date;
-
+  role: UserRole;
+  isActive: boolean;
+  metadata?: {
+    registrationMethod: "email" | "google";
+    createdBy?: string;
+    notes?: string;
+  };
   /** Metadata Firestore - usa FirestoreDocMetadata generic */
   firestoreMetadata?: import("../infrastructure/Firestore.types").FirestoreDocMetadata;
 }
+
+// ======= COSTANTI PER PERMESSI =======
+
+export const DEFAULT_PERMISSIONS: Record<UserRole, UserPermissions> = {
+  admin: {
+    canViewOwnData: true,
+    canEditOwnData: true,
+    canManageUsers: true,
+    canExportData: true,
+    canImportData: true,
+    canResetPasswords: true,
+    canBlockUsers: true,
+    canDeleteUsers: true,
+  },
+  user: {
+    canViewOwnData: true,
+    canEditOwnData: true,
+    canManageUsers: false,
+    canExportData: false,
+    canImportData: false,
+    canResetPasswords: false,
+    canBlockUsers: false,
+    canDeleteUsers: false,
+  },
+};
 
 /**
  * Profilo utente esteso
@@ -252,7 +313,23 @@ export interface DisplayPreferences {
   /** Mostra statistiche avanzate */
   showAdvancedStats: boolean;
 }
+export function getUserPermissions(role: UserRole): UserPermissions {
+  return DEFAULT_PERMISSIONS[role];
+}
 
+export function isAdmin(user: User | null): boolean {
+  return user?.role === "admin";
+}
+
+export function isUser(user: User | null): boolean {
+  return user?.role === "user";
+}
+
+export function canPerformAdminOperation(user: User | null): boolean {
+  return (
+    isAdmin(user) && user?.isActive === true && user?.emailVerified === true
+  );
+}
 /**
  * Dimensioni font disponibili
  * Per: accessibilità e customizzazione

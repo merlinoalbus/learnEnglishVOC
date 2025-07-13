@@ -4,3 +4,9 @@ import React from "react"; import { useAppContext } from "../contexts/AppContext
 
 ================================================================================
 
+NOME FILE: AuthLayout.tsx
+
+import React from "react"; import { Card, CardContent, CardHeader, CardTitle, } from "../components/ui/card"; import { Brain, Sparkles } from "lucide-react"; interface AuthLayoutProps { children: React.ReactNode; title: string; subtitle?: string; showLogo?: boolean; } export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitle, showLogo = true, }) => { return ( <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-purple-50"> } {showLogo && ( <div className="text-center mb-8"> <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50"> <Brain className="w-8 h-8 text-blue-600" /> <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> Vocabulary Master </span> <Sparkles className="w-6 h-6 text-purple-600" /> </div> </div> )} } <div className="text-center mt-6"> <p className="text-sm text-gray-500"> Vocabulary Master - La tua app intelligente per imparare l'inglese </p> </div> </div> </div> ); };
+
+================================================================================
+

@@ -2,28 +2,11 @@
 // 📁 services/authService.ts - FIXED: SOLO AUTENTICAZIONE
 // =====================================================
 
-/**
- * CORREZIONE PRINCIPALE:
- * ✅ RIMOSSO tutto il codice Firestore (spostato in firestoreService.ts)
- * ✅ MANTIENE solo operazioni Firebase Auth
- * ✅ ALLINEATO con User.types.ts e Auth.types.ts
- * ✅ ELIMINA responsabilità mescolate
- * ✅ TYPE-SAFE per tutte le operazioni auth
- *
- * RESPONSABILITÀ RIMASTE:
- * - Login/Logout/Register con Firebase Auth
- * - Gestione sessioni utente
- * - Password reset
- * - Profile update AUTH (non Firestore)
- * - Auth state monitoring
- */
-
 // ===== IMPORTS =====
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  sendPasswordResetEmail,
   updateProfile,
   updatePassword,
   reauthenticateWithCredential,
@@ -49,6 +32,30 @@ import type {
   UpdateProfileInput,
   UpdatePasswordInput,
 } from "../types/infrastructure/Auth.types";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  serverTimestamp,
+  writeBatch,
+} from "firebase/firestore";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { db } from "../config/firebase";
+import {
+  UserRole,
+  UserPermissions,
+  AdminOperation,
+  UserManagementFilters,
+  UserExportData,
+  DEFAULT_PERMISSIONS,
+} from "../types/entities/User.types";
 
 import type {
   User,
@@ -57,10 +64,401 @@ import type {
   SignInInput,
   AuthOperationResult as UserAuthOperationResult,
 } from "../types/entities/User.types";
+export const getUserProfile = async (userId: string): Promise<User | null> => {
+  try {
+    const userDoc = await getDoc(doc(db, USERS_COLLECTION, userId));
 
+    if (!userDoc.exists()) {
+      return null;
+    }
+
+    const data = userDoc.data();
+    return {
+      ...data,
+      id: userDoc.id,
+      createdAt: data.createdAt?.toDate() || new Date(),
+      lastLoginAt: data.lastLoginAt?.toDate(),
+    } as User;
+  } catch (error) {
+    console.error("Error getting user profile:", error);
+    throw new Error("Failed to get user profile");
+  }
+};
+
+export const initializeUserProfile = async (
+  authUser: User,
+  registrationMethod: "email" | "google" = "email",
+  isNewUser: boolean = true
+): Promise<User> => {
+  try {
+    const userProfileRef = doc(db, USERS_COLLECTION, authUser.id);
+
+    // Check if profile already exists
+    const existingProfile = await getDoc(userProfileRef);
+
+    if (existingProfile.exists() && !isNewUser) {
+      // Update last login time for existing users
+      await setDoc(
+        userProfileRef,
+        {
+          lastLoginAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      const profileData = existingProfile.data() as User;
+      return {
+        ...profileData,
+        id: authUser.id,
+        lastLoginAt: new Date(),
+      };
+    }
+
+    // Create new profile for new users
+    const defaultRole: UserRole = "user";
+
+    // Check if this is the first user (should be admin)
+    const isFirstUser = await checkIfFirstUser();
+    const role: UserRole = isFirstUser ? "admin" : defaultRole;
+
+    const newProfile: Partial<User> = {
+      id: authUser.id,
+      email: authUser.email,
+      displayName: authUser.displayName || undefined,
+      photoURL: authUser.photoURL || undefined,
+      emailVerified: authUser.emailVerified,
+      providerId: authUser.providerId,
+      role,
+      isActive: true,
+      createdAt: new Date(),
+      lastLoginAt: new Date(),
+      metadata: {
+        registrationMethod,
+        notes: isNewUser ? "Auto-created profile" : undefined,
+      },
+    };
+
+    // Save to Firestore
+    await setDoc(userProfileRef, {
+      ...newProfile,
+      createdAt: serverTimestamp(),
+      lastLoginAt: serverTimestamp(),
+    });
+
+    return newProfile as User;
+  } catch (error) {
+    console.error("Error initializing user profile:", error);
+    throw new Error("Failed to initialize user profile");
+  }
+};
+export const getAllUsers = async (
+  filters?: UserManagementFilters
+): Promise<User[]> => {
+  try {
+    let q = query(
+      collection(db, USERS_COLLECTION),
+      orderBy("createdAt", "desc")
+    );
+
+    // Apply filters
+    if (filters?.role) {
+      q = query(q, where("role", "==", filters.role));
+    }
+    if (filters?.isActive !== undefined) {
+      q = query(q, where("isActive", "==", filters.isActive));
+    }
+    if (filters?.emailVerified !== undefined) {
+      q = query(q, where("emailVerified", "==", filters.emailVerified));
+    }
+
+    const snapshot = await getDocs(q);
+
+    let users = snapshot.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id,
+      createdAt: doc.data().createdAt?.toDate() || new Date(),
+      lastLoginAt: doc.data().lastLoginAt?.toDate(),
+    })) as User[];
+
+    // Apply client-side filters
+    if (filters?.searchTerm) {
+      const term = filters.searchTerm.toLowerCase();
+      users = users.filter(
+        (user) =>
+          user.email.toLowerCase().includes(term) ||
+          user.displayName?.toLowerCase().includes(term) ||
+          user.id.includes(term)
+      );
+    }
+
+    return users;
+  } catch (error) {
+    console.error("Error getting all users:", error);
+    throw new Error("Failed to get users");
+  }
+};
+
+export const toggleUserStatus = async (
+  userId: string,
+  isActive: boolean,
+  adminId: string
+): Promise<boolean> => {
+  try {
+    const batch = writeBatch(db);
+
+    // Update user status
+    const userRef = doc(db, USERS_COLLECTION, userId);
+    batch.update(userRef, {
+      isActive,
+      updatedAt: serverTimestamp(),
+    });
+
+    // Log admin operation
+    const operationRef = doc(collection(db, ADMIN_OPERATIONS_COLLECTION));
+    const operation: AdminOperation = {
+      type: isActive ? "unblock_user" : "block_user",
+      targetUserId: userId,
+      performedBy: adminId,
+      timestamp: new Date(),
+      metadata: { isActive },
+    };
+    batch.set(operationRef, {
+      ...operation,
+      timestamp: serverTimestamp(),
+    });
+
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error("Error toggling user status:", error);
+    return false;
+  }
+};
+
+export const resetUserPassword = async (
+  userEmail: string,
+  adminId: string
+): Promise<boolean> => {
+  try {
+    await sendPasswordResetEmail(auth, userEmail);
+
+    // Log admin operation
+    const operationRef = doc(collection(db, ADMIN_OPERATIONS_COLLECTION));
+    const operation: AdminOperation = {
+      type: "password_reset",
+      targetUserId: userEmail,
+      performedBy: adminId,
+      timestamp: new Date(),
+      metadata: { email: userEmail },
+    };
+    await setDoc(operationRef, {
+      ...operation,
+      timestamp: serverTimestamp(),
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error sending password reset:", error);
+    return false;
+  }
+};
+
+export const deleteUserData = async (
+  userId: string,
+  adminId: string
+): Promise<boolean> => {
+  try {
+    const batch = writeBatch(db);
+
+    // Delete user profile
+    const userRef = doc(db, USERS_COLLECTION, userId);
+    batch.delete(userRef);
+
+    // Delete user's data collections
+    const userDataCollections = ["words", "test_history", "statistics"];
+
+    for (const collectionName of userDataCollections) {
+      const userDataQuery = query(
+        collection(db, collectionName),
+        where("userId", "==", userId)
+      );
+      const userDataSnapshot = await getDocs(userDataQuery);
+
+      userDataSnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+    }
+
+    // Log admin operation
+    const operationRef = doc(collection(db, ADMIN_OPERATIONS_COLLECTION));
+    const operation: AdminOperation = {
+      type: "delete_user",
+      targetUserId: userId,
+      performedBy: adminId,
+      timestamp: new Date(),
+    };
+    batch.set(operationRef, {
+      ...operation,
+      timestamp: serverTimestamp(),
+    });
+
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return false;
+  }
+};
+
+export const exportUserData = async (
+  userId: string,
+  adminId: string
+): Promise<UserExportData | null> => {
+  try {
+    // Get user profile
+    const userProfile = await getUserProfile(userId);
+    if (!userProfile) {
+      throw new Error("User not found");
+    }
+
+    // Get user's data from collections
+    const collections = ["words", "test_history", "statistics"];
+    const userData: Record<string, any[]> = {};
+
+    for (const collectionName of collections) {
+      const userDataQuery = query(
+        collection(db, collectionName),
+        where("userId", "==", userId)
+      );
+      const snapshot = await getDocs(userDataQuery);
+      userData[collectionName] = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+    }
+
+    const exportData: UserExportData = {
+      profile: userProfile,
+      words: userData.words || [],
+      testHistory: userData.test_history || [],
+      statistics: userData.statistics || [],
+      exportedAt: new Date(),
+      exportedBy: adminId,
+    };
+
+    // Log admin operation
+    const operationRef = doc(collection(db, ADMIN_OPERATIONS_COLLECTION));
+    const operation: AdminOperation = {
+      type: "export_data",
+      targetUserId: userId,
+      performedBy: adminId,
+      timestamp: new Date(),
+      metadata: {
+        wordsCount: exportData.words.length,
+        testHistoryCount: exportData.testHistory.length,
+        statisticsCount: exportData.statistics.length,
+      },
+    };
+    await setDoc(operationRef, {
+      ...operation,
+      timestamp: serverTimestamp(),
+    });
+
+    return exportData;
+  } catch (error) {
+    console.error("Error exporting user data:", error);
+    return null;
+  }
+};
+
+export const importUserData = async (
+  userId: string,
+  importData: Partial<UserExportData>,
+  adminId: string
+): Promise<boolean> => {
+  try {
+    const batch = writeBatch(db);
+
+    // Import data to collections
+    const collections = {
+      words: importData.words || [],
+      test_history: importData.testHistory || [],
+      statistics: importData.statistics || [],
+    };
+
+    for (const [collectionName, items] of Object.entries(collections)) {
+      items.forEach((item: any) => {
+        const docRef = doc(collection(db, collectionName));
+        batch.set(docRef, {
+          ...item,
+          userId,
+          importedAt: serverTimestamp(),
+        });
+      });
+    }
+
+    // Log admin operation
+    const operationRef = doc(collection(db, ADMIN_OPERATIONS_COLLECTION));
+    const operation: AdminOperation = {
+      type: "import_data",
+      targetUserId: userId,
+      performedBy: adminId,
+      timestamp: new Date(),
+      metadata: {
+        wordsCount: collections.words.length,
+        testHistoryCount: collections.test_history.length,
+        statisticsCount: collections.statistics.length,
+      },
+    };
+    batch.set(operationRef, {
+      ...operation,
+      timestamp: serverTimestamp(),
+    });
+
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error("Error importing user data:", error);
+    return false;
+  }
+};
+
+export const getAdminOperations = async (
+  limit_count: number = 50
+): Promise<AdminOperation[]> => {
+  try {
+    const q = query(
+      collection(db, ADMIN_OPERATIONS_COLLECTION),
+      orderBy("timestamp", "desc")
+      // Note: limit() would go here but we'll handle it client-side for now
+    );
+
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.slice(0, limit_count).map((doc) => ({
+      ...doc.data(),
+      timestamp: doc.data().timestamp?.toDate() || new Date(),
+    })) as AdminOperation[];
+  } catch (error) {
+    console.error("Error getting admin operations:", error);
+    throw new Error("Failed to get admin operations");
+  }
+};
+export const checkIfFirstUser = async (): Promise<boolean> => {
+  try {
+    const usersQuery = query(collection(db, USERS_COLLECTION));
+    const snapshot = await getDocs(usersQuery);
+    return snapshot.size === 0;
+  } catch (error) {
+    console.error("Error checking if first user:", error);
+    return false;
+  }
+};
 // =====================================================
 // 🔧 SERVICE CONFIGURATION
 // =====================================================
+const USERS_COLLECTION = "users";
+const ADMIN_OPERATIONS_COLLECTION = "admin_operations";
 
 const AUTH_SERVICE_CONFIG = {
   // Session configuration
@@ -129,6 +527,8 @@ const convertToUserEntity = (authUser: AuthUser): User => {
     providerId: authUser.providerData[0]?.providerId || "email",
     createdAt: authUser.metadata.creationTime,
     lastLoginAt: authUser.metadata.lastSignInTime,
+    role: "user" as UserRole, // AGGIUNGI
+    isActive: true,
   };
 };
 

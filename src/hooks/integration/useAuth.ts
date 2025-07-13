@@ -1,32 +1,27 @@
-// =====================================================
-// 📁 hooks/integration/useAuth.ts - FIXED: SOLO AUTH STATE
-// =====================================================
-
-/**
- * CORREZIONE PRINCIPALE:
- * ✅ RIMOSSO tutto il codice Firestore operations
- * ✅ MANTIENE solo gestione auth state e operations
- * ✅ USA authService.ts per operazioni auth
- * ✅ INTEGRATO con FirebaseContext per auth ready state
- * ✅ TYPE-SAFE per tutto l'auth flow
- * ✅ ELIMINA responsabilità database
- *
- * RESPONSABILITÀ:
- * - Auth state management (login, logout, user corrente)
- * - Auth operations via authService
- * - Session tracking
- * - Loading states per auth operations
- * - Error handling auth-specific
- * - Integration con FirebaseContext
- */
-
-// ===== IMPORTS =====
-import { useState, useEffect, useCallback, useRef } from "react";
-
-// Import Firebase context
+import { useState, useEffect, useRef, useCallback } from "react";
+import type {
+  User,
+  AuthError,
+  SignUpInput,
+  SignInInput,
+  ResetPasswordInput,
+  UpdateProfileInput,
+  UserRole,
+  UserPermissions,
+} from "../../types/entities/User.types";
+import {
+  DEFAULT_PERMISSIONS,
+  getUserPermissions,
+  isAdmin,
+  isUser,
+  canPerformAdminOperation,
+} from "../../types/entities/User.types";
+import type {
+  AuthUser,
+  AuthSession,
+  UpdatePasswordInput,
+} from "../../types/infrastructure/Auth.types";
 import { useFirebase } from "../../contexts/FirebaseContext";
-
-// Import auth service (FIXED - solo auth)
 import {
   signUp,
   signIn,
@@ -43,65 +38,28 @@ import {
   validateSession,
   validateEmail,
   validatePassword,
+  getUserProfile,
+  initializeUserProfile,
 } from "../../services/authService";
 
-// Import dei types SOLO AUTH (no Firestore)
-import type {
-  User,
-  AuthState,
-  AuthError,
-  SignUpInput,
-  SignInInput,
-  ResetPasswordInput,
-  UpdateProfileInput,
-  AuthOperationResult,
-  UserSession,
-} from "../../types/entities/User.types";
-
-import type {
-  AuthUser,
-  AuthSession,
-  UpdatePasswordInput,
-} from "../../types/infrastructure/Auth.types";
-
-// =====================================================
-// 🔧 HOOK CONFIGURATION
-// =====================================================
-
 const AUTH_HOOK_CONFIG = {
-  // Session management
-  sessionUpdateInterval: 60000, // 1 minute
-  sessionValidationInterval: 300000, // 5 minutes
-
-  // Retry configuration
+  sessionUpdateInterval: 60000,
+  sessionValidationInterval: 300000,
   maxRetries: 3,
   retryDelay: 1000,
-
-  // Debug configuration
   enableDebugLogging: process.env.NODE_ENV === "development",
 };
 
-// =====================================================
-// 🔄 UTILITY FUNCTIONS
-// =====================================================
-
-/**
- * Debug logger per auth hook
- */
 const debugLog = (message: string, data?: any) => {
   if (AUTH_HOOK_CONFIG.enableDebugLogging) {
     console.log(`🔐 [useAuth] ${message}`, data || "");
   }
 };
 
-/**
- * Converte AuthError in formato consistente
- */
 const normalizeAuthError = (error: any): AuthError => {
   if (error && typeof error === "object" && "code" in error) {
     return error as AuthError;
   }
-
   return {
     code: "unknown",
     message: error?.message || "Errore di autenticazione sconosciuto",
@@ -110,23 +68,14 @@ const normalizeAuthError = (error: any): AuthError => {
   };
 };
 
-// =====================================================
-// 📊 HOOK STATE INTERFACE
-// =====================================================
-
-/**
- * Stato interno hook auth
- */
 interface AuthHookState {
-  // Auth state
   user: User | null;
   authUser: AuthUser | null;
-
-  // Loading states
+  userProfile: User | null;
+  role: UserRole | null;
+  permissions: UserPermissions;
   loading: boolean;
   initializing: boolean;
-
-  // Operation loading states
   operationLoading: {
     signIn: boolean;
     signUp: boolean;
@@ -135,14 +84,8 @@ interface AuthHookState {
     updateProfile: boolean;
     updatePassword: boolean;
   };
-
-  // Error state
   error: AuthError | null;
-
-  // Session state
   session: AuthSession | null;
-
-  // Metadata
   lastOperation?: {
     type: string;
     timestamp: Date;
@@ -150,30 +93,14 @@ interface AuthHookState {
   };
 }
 
-// =====================================================
-// 🎯 MAIN AUTH HOOK
-// =====================================================
-
-/**
- * Hook principale per gestione autenticazione
- * RESPONSABILITÀ SOLO AUTH:
- * - User state management
- * - Auth operations (login, logout, register)
- * - Session tracking
- * - Loading states
- * - Error handling auth-specific
- */
 export const useAuth = () => {
-  // ===== EXTERNAL DEPENDENCIES =====
-
-  // Firebase context per ready state
   const { isReady: firebaseReady, error: firebaseError } = useFirebase();
-
-  // ===== STATE MANAGEMENT =====
-
   const [state, setState] = useState<AuthHookState>({
     user: null,
     authUser: null,
+    userProfile: null,
+    role: null,
+    permissions: DEFAULT_PERMISSIONS.user,
     loading: false,
     initializing: true,
     operationLoading: {
@@ -188,17 +115,29 @@ export const useAuth = () => {
     session: null,
   });
 
-  // ===== REFS per CLEANUP =====
-
   const authUnsubscribeRef = useRef<(() => void) | null>(null);
   const sessionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
 
-  // ===== HELPER FUNCTIONS =====
+  // DEBUG: Log dello stato ogni volta che cambia
+  useEffect(() => {
+    debugLog("State update", {
+      firebaseReady,
+      initializing: state.initializing,
+      loading: state.loading,
+      hasUser: !!state.user,
+      hasAuthUser: !!state.authUser,
+      error: state.error?.message,
+    });
+  }, [
+    firebaseReady,
+    state.initializing,
+    state.loading,
+    state.user,
+    state.authUser,
+    state.error,
+  ]);
 
-  /**
-   * Safe state update - evita warnings su component unmounted
-   */
   const safeSetState = useCallback(
     (updater: (prev: AuthHookState) => AuthHookState) => {
       if (isMountedRef.current) {
@@ -208,9 +147,36 @@ export const useAuth = () => {
     []
   );
 
-  /**
-   * Set operation loading state
-   */
+  const loadUserProfile = useCallback(
+    async (userId: string) => {
+      try {
+        debugLog("Loading user profile", { userId });
+        const profile = await getUserProfile(userId);
+        safeSetState((prev) => ({
+          ...prev,
+          userProfile: profile,
+          role: profile?.role || null,
+          permissions: profile?.role
+            ? getUserPermissions(profile.role)
+            : DEFAULT_PERMISSIONS.user,
+        }));
+        debugLog("User profile loaded successfully", {
+          role: profile?.role,
+          email: profile?.email,
+        });
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+        safeSetState((prev) => ({
+          ...prev,
+          userProfile: null,
+          role: null,
+          permissions: DEFAULT_PERMISSIONS.user,
+        }));
+      }
+    },
+    [safeSetState]
+  );
+
   const setOperationLoading = useCallback(
     (operation: keyof AuthHookState["operationLoading"], loading: boolean) => {
       safeSetState((prev) => ({
@@ -224,9 +190,6 @@ export const useAuth = () => {
     [safeSetState]
   );
 
-  /**
-   * Update last operation metadata
-   */
   const updateLastOperation = useCallback(
     (type: string, success: boolean) => {
       safeSetState((prev) => ({
@@ -241,23 +204,15 @@ export const useAuth = () => {
     [safeSetState]
   );
 
-  // ===== SESSION MANAGEMENT =====
-
-  /**
-   * Start session for authenticated user
-   */
   const startSession = useCallback(
     (authUser: AuthUser) => {
       const session = createUserSession(authUser);
-
       safeSetState((prev) => ({
         ...prev,
         session,
       }));
-
       debugLog("Session started", { sessionId: session.sessionId });
 
-      // Setup session update timer
       if (sessionTimerRef.current) {
         clearInterval(sessionTimerRef.current);
       }
@@ -269,7 +224,6 @@ export const useAuth = () => {
 
             const updatedSession = updateSessionActivity(prev.session);
 
-            // Validate session
             if (!validateSession(updatedSession)) {
               debugLog("Session expired, signing out");
               handleSignOut();
@@ -287,28 +241,91 @@ export const useAuth = () => {
     [safeSetState]
   );
 
-  /**
-   * End current session
-   */
   const endSession = useCallback(() => {
     if (sessionTimerRef.current) {
       clearInterval(sessionTimerRef.current);
       sessionTimerRef.current = null;
     }
-
     safeSetState((prev) => ({
       ...prev,
       session: null,
     }));
-
     debugLog("Session ended");
   }, [safeSetState]);
 
-  // ===== AUTH OPERATIONS =====
+  // AUTH STATE LISTENER - QUESTO È CRITICO
+  useEffect(() => {
+    if (!firebaseReady) {
+      debugLog("Firebase not ready, skipping auth state listener setup");
+      return;
+    }
 
-  /**
-   * SIGN UP operation
-   */
+    debugLog("Setting up auth state listener");
+
+    const unsubscribe = onAuthStateChange((user) => {
+      debugLog("🚨 Auth state changed", {
+        uid: user?.id || "null",
+        authenticated: !!user,
+        email: user?.email,
+      });
+
+      if (user) {
+        const authUser = getCurrentAuthUser();
+        debugLog("User authenticated, getting authUser", { authUser });
+
+        safeSetState((prev) => ({
+          ...prev,
+          user,
+          authUser,
+          initializing: false, // ⭐ QUESTO È FONDAMENTALE
+          error: null,
+        }));
+
+        if (authUser) {
+          startSession(authUser);
+          loadUserProfile(user.id);
+        }
+      } else {
+        debugLog("User not authenticated, clearing state");
+        safeSetState((prev) => ({
+          ...prev,
+          user: null,
+          authUser: null,
+          userProfile: null,
+          role: null,
+          permissions: DEFAULT_PERMISSIONS.user,
+          initializing: false, // ⭐ QUESTO È FONDAMENTALE
+        }));
+        endSession();
+      }
+    });
+
+    authUnsubscribeRef.current = unsubscribe;
+
+    return () => {
+      if (authUnsubscribeRef.current) {
+        authUnsubscribeRef.current();
+        authUnsubscribeRef.current = null;
+        debugLog("Auth state listener cleaned up");
+      }
+    };
+  }, [firebaseReady, safeSetState, startSession, endSession, loadUserProfile]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (authUnsubscribeRef.current) {
+        authUnsubscribeRef.current();
+      }
+      if (sessionTimerRef.current) {
+        clearInterval(sessionTimerRef.current);
+      }
+      debugLog("Hook cleaned up");
+    };
+  }, []);
+
+  // SIGN UP
   const handleSignUp = useCallback(
     async (input: SignUpInput): Promise<boolean> => {
       if (!firebaseReady) {
@@ -317,33 +334,22 @@ export const useAuth = () => {
       }
 
       setOperationLoading("signUp", true);
-
       try {
         debugLog("Sign up attempt", { email: input.email });
-
-        const result = await signUp({
-          email: input.email,
-          password: input.password,
-          displayName: input.displayName,
-          acceptTerms: input.acceptTerms,
-        });
-
+        const result = await signUp(input);
         if (result.success && result.user) {
           updateLastOperation("signUp", true);
-          debugLog("Sign up successful");
-          // Auth state listener will handle user state update
+          debugLog("Sign up successful", { uid: result.user.uid });
           return true;
         } else {
           throw result.error || new Error("Sign up failed");
         }
       } catch (error) {
         debugLog("Sign up failed", error);
-
         safeSetState((prev) => ({
           ...prev,
           error: normalizeAuthError(error),
         }));
-
         updateLastOperation("signUp", false);
         return false;
       } finally {
@@ -353,9 +359,7 @@ export const useAuth = () => {
     [firebaseReady, setOperationLoading, updateLastOperation, safeSetState]
   );
 
-  /**
-   * SIGN IN operation
-   */
+  // SIGN IN
   const handleSignIn = useCallback(
     async (input: SignInInput): Promise<boolean> => {
       if (!firebaseReady) {
@@ -364,32 +368,22 @@ export const useAuth = () => {
       }
 
       setOperationLoading("signIn", true);
-
       try {
         debugLog("Sign in attempt", { email: input.email });
-
-        const result = await signIn({
-          email: input.email,
-          password: input.password,
-          rememberMe: input.rememberMe,
-        });
-
+        const result = await signIn(input);
         if (result.success && result.user) {
           updateLastOperation("signIn", true);
-          debugLog("Sign in successful");
-          // Auth state listener will handle user state update
+          debugLog("Sign in successful", { uid: result.user.uid });
           return true;
         } else {
           throw result.error || new Error("Sign in failed");
         }
       } catch (error) {
         debugLog("Sign in failed", error);
-
         safeSetState((prev) => ({
           ...prev,
           error: normalizeAuthError(error),
         }));
-
         updateLastOperation("signIn", false);
         return false;
       } finally {
@@ -399,33 +393,25 @@ export const useAuth = () => {
     [firebaseReady, setOperationLoading, updateLastOperation, safeSetState]
   );
 
-  /**
-   * SIGN OUT operation
-   */
+  // SIGN OUT
   const handleSignOut = useCallback(async (): Promise<boolean> => {
     setOperationLoading("signOut", true);
-
     try {
       debugLog("Sign out attempt");
-
       const result = await signOutUser();
-
       if (result.success) {
         updateLastOperation("signOut", true);
         debugLog("Sign out successful");
-        // Auth state listener will handle user state clear
         return true;
       } else {
         throw result.error || new Error("Sign out failed");
       }
     } catch (error) {
       debugLog("Sign out failed", error);
-
       safeSetState((prev) => ({
         ...prev,
         error: normalizeAuthError(error),
       }));
-
       updateLastOperation("signOut", false);
       return false;
     } finally {
@@ -433,9 +419,7 @@ export const useAuth = () => {
     }
   }, [setOperationLoading, updateLastOperation, safeSetState]);
 
-  /**
-   * RESET PASSWORD operation
-   */
+  // RESET PASSWORD
   const handleResetPassword = useCallback(
     async (input: ResetPasswordInput): Promise<boolean> => {
       if (!firebaseReady) {
@@ -444,27 +428,22 @@ export const useAuth = () => {
       }
 
       setOperationLoading("resetPassword", true);
-
       try {
         debugLog("Password reset attempt", { email: input.email });
-
         const result = await resetPassword(input);
-
         if (result.success) {
           updateLastOperation("resetPassword", true);
-          debugLog("Password reset email sent");
+          debugLog("Password reset successful");
           return true;
         } else {
           throw result.error || new Error("Password reset failed");
         }
       } catch (error) {
         debugLog("Password reset failed", error);
-
         safeSetState((prev) => ({
           ...prev,
           error: normalizeAuthError(error),
         }));
-
         updateLastOperation("resetPassword", false);
         return false;
       } finally {
@@ -474,9 +453,7 @@ export const useAuth = () => {
     [firebaseReady, setOperationLoading, updateLastOperation, safeSetState]
   );
 
-  /**
-   * UPDATE PROFILE operation
-   */
+  // UPDATE PROFILE
   const handleUpdateProfile = useCallback(
     async (input: UpdateProfileInput): Promise<boolean> => {
       if (!firebaseReady || !state.authUser) {
@@ -487,28 +464,22 @@ export const useAuth = () => {
       }
 
       setOperationLoading("updateProfile", true);
-
       try {
         debugLog("Profile update attempt");
-
         const result = await updateAuthProfile(input);
-
         if (result.success && result.user) {
           updateLastOperation("updateProfile", true);
           debugLog("Profile update successful");
-          // Auth state listener will handle user state update
           return true;
         } else {
           throw result.error || new Error("Profile update failed");
         }
       } catch (error) {
         debugLog("Profile update failed", error);
-
         safeSetState((prev) => ({
           ...prev,
           error: normalizeAuthError(error),
         }));
-
         updateLastOperation("updateProfile", false);
         return false;
       } finally {
@@ -524,9 +495,7 @@ export const useAuth = () => {
     ]
   );
 
-  /**
-   * UPDATE PASSWORD operation
-   */
+  // UPDATE PASSWORD
   const handleUpdatePassword = useCallback(
     async (input: UpdatePasswordInput): Promise<boolean> => {
       if (!firebaseReady || !state.authUser) {
@@ -537,12 +506,9 @@ export const useAuth = () => {
       }
 
       setOperationLoading("updatePassword", true);
-
       try {
         debugLog("Password update attempt");
-
         const result = await updateUserPassword(input);
-
         if (result.success) {
           updateLastOperation("updatePassword", true);
           debugLog("Password update successful");
@@ -552,12 +518,10 @@ export const useAuth = () => {
         }
       } catch (error) {
         debugLog("Password update failed", error);
-
         safeSetState((prev) => ({
           ...prev,
           error: normalizeAuthError(error),
         }));
-
         updateLastOperation("updatePassword", false);
         return false;
       } finally {
@@ -573,11 +537,6 @@ export const useAuth = () => {
     ]
   );
 
-  // ===== UTILITY FUNCTIONS =====
-
-  /**
-   * Clear current error
-   */
   const clearError = useCallback(() => {
     safeSetState((prev) => ({
       ...prev,
@@ -585,16 +544,10 @@ export const useAuth = () => {
     }));
   }, [safeSetState]);
 
-  /**
-   * Check if user is authenticated
-   */
   const checkAuthenticated = useCallback((): boolean => {
     return !!state.user && !!state.authUser;
   }, [state.user, state.authUser]);
 
-  /**
-   * Get session info
-   */
   const getSessionInfo = useCallback(() => {
     return state.session
       ? {
@@ -606,117 +559,22 @@ export const useAuth = () => {
       : null;
   }, [state.session]);
 
-  // ===== AUTH STATE LISTENER EFFECT =====
-
-  /**
-   * Setup auth state listener
-   */
-  useEffect(() => {
-    if (!firebaseReady) {
-      debugLog("Firebase not ready, skipping auth state listener setup");
-      return;
-    }
-
-    debugLog("Setting up auth state listener");
-
-    // Setup auth state change listener
-    const unsubscribe = onAuthStateChange((user) => {
-      debugLog("Auth state changed", {
-        uid: user?.id || "null",
-        authenticated: !!user,
-      });
-
-      if (user) {
-        // User signed in
-        const authUser = getCurrentAuthUser();
-
-        safeSetState((prev) => ({
-          ...prev,
-          user,
-          authUser,
-          initializing: false,
-          error: null,
-        }));
-
-        // Start session if auth user available
-        if (authUser) {
-          startSession(authUser);
-        }
-      } else {
-        // User signed out
-        safeSetState((prev) => ({
-          ...prev,
-          user: null,
-          authUser: null,
-          initializing: false,
-        }));
-
-        // End session
-        endSession();
-      }
-    });
-
-    authUnsubscribeRef.current = unsubscribe;
-
-    return () => {
-      if (authUnsubscribeRef.current) {
-        authUnsubscribeRef.current();
-        authUnsubscribeRef.current = null;
-        debugLog("Auth state listener cleaned up");
-      }
-    };
-  }, [firebaseReady, safeSetState, startSession, endSession]);
-
-  // ===== CLEANUP EFFECT =====
-
-  /**
-   * Cleanup al unmount
-   */
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-
-      // Cleanup auth listener
-      if (authUnsubscribeRef.current) {
-        authUnsubscribeRef.current();
-      }
-
-      // Cleanup session timer
-      if (sessionTimerRef.current) {
-        clearInterval(sessionTimerRef.current);
-      }
-
-      debugLog("Hook cleaned up");
-    };
-  }, []);
-
-  // ===== COMPUTED VALUES =====
-
+  // Calculate derived state
   const isLoading =
     state.loading ||
     state.initializing ||
     Object.values(state.operationLoading).some((loading) => loading);
-
   const isReady = firebaseReady && !state.initializing && !isLoading;
 
-  // ===== ERROR FALLBACK =====
-
-  /**
-   * Handle Firebase initialization error
-   */
+  // Handle Firebase error
   if (firebaseError) {
     return {
-      // Auth state
       user: null,
       authUser: null,
       isAuthenticated: false,
-
-      // Loading states
       loading: false,
       initializing: false,
       isReady: false,
-
-      // Error state
       error: {
         code: "firebase-init-error",
         message: "Firebase initialization failed",
@@ -724,267 +582,87 @@ export const useAuth = () => {
         timestamp: new Date(),
       } as AuthError,
       hasError: true,
-
-      // Operations (disabled)
       signUp: async () => false,
       signIn: async () => false,
       signOut: async () => false,
       resetPassword: async () => false,
       updateProfile: async () => false,
       updatePassword: async () => false,
-
-      // Utilities (disabled)
       clearError: () => {},
-
-      // Validation utilities (still work)
       validateEmail,
       validatePassword,
-
-      // Session info
       session: null,
       getSessionInfo: () => null,
-
-      // Operation states
       isSigningIn: false,
       isSigningUp: false,
       isSigningOut: false,
       isResettingPassword: false,
       isUpdatingProfile: false,
       isUpdatingPassword: false,
-
-      // Metadata
       lastOperation: undefined,
+      userProfile: null,
+      role: null,
+      permissions: DEFAULT_PERMISSIONS.user,
+      isAdmin: false,
+      isUser: false,
+      canPerformAdminOps: false,
+      refreshProfile: async () => {},
     };
   }
 
-  // ===== RETURN HOOK API =====
-
   return {
-    // ===== AUTH STATE =====
-
-    /** User corrente (entity) */
     user: state.user,
-
-    /** Auth user corrente (infrastructure) */
     authUser: state.authUser,
-
-    /** User autenticato */
     isAuthenticated: checkAuthenticated(),
-
-    // ===== LOADING STATES =====
-
-    /** Loading globale */
     loading: isLoading,
-
-    /** Inizializzazione auth in corso */
     initializing: state.initializing,
-
-    /** Hook pronto per uso */
     isReady,
-
-    // ===== ERROR STATE =====
-
-    /** Errore corrente */
-    error: state.error,
-
-    /** Ha errore attivo */
     hasError: !!state.error,
-
-    // ===== AUTH OPERATIONS =====
-
-    /** Registrazione nuovo utente */
+    error: state.error,
     signUp: handleSignUp,
-
-    /** Login utente esistente */
     signIn: handleSignIn,
-
-    /** Logout utente */
     signOut: handleSignOut,
-
-    /** Reset password via email */
     resetPassword: handleResetPassword,
-
-    /** Aggiorna profilo utente */
     updateProfile: handleUpdateProfile,
-
-    /** Cambia password utente */
     updatePassword: handleUpdatePassword,
-
-    // ===== UTILITY FUNCTIONS =====
-
-    /** Clear errore corrente */
     clearError,
-
-    /** Validazione email */
     validateEmail,
-
-    /** Validazione password */
     validatePassword,
-
-    // ===== SESSION INFO =====
-
-    /** Sessione corrente */
     session: state.session,
-
-    /** Info sessione */
     getSessionInfo,
-
-    // ===== OPERATION STATES =====
-
-    /** Sign in in corso */
     isSigningIn: state.operationLoading.signIn,
-
-    /** Sign up in corso */
     isSigningUp: state.operationLoading.signUp,
-
-    /** Sign out in corso */
     isSigningOut: state.operationLoading.signOut,
-
-    /** Password reset in corso */
     isResettingPassword: state.operationLoading.resetPassword,
-
-    /** Profile update in corso */
     isUpdatingProfile: state.operationLoading.updateProfile,
-
-    /** Password update in corso */
     isUpdatingPassword: state.operationLoading.updatePassword,
-
-    // ===== METADATA =====
-
-    /** Ultima operazione eseguita */
     lastOperation: state.lastOperation,
+    userProfile: state.userProfile,
+    role: state.role,
+    permissions: state.permissions,
+    isAdmin: isAdmin(state.userProfile),
+    isUser: isUser(state.userProfile),
+    canPerformAdminOps: canPerformAdminOperation(state.userProfile),
+    refreshProfile: () => loadUserProfile(state.user?.id || ""),
   };
 };
 
-// =====================================================
-// 🔧 SPECIALIZED HOOKS
-// =====================================================
-
-/**
- * Hook per solo auth state (no operations)
- */
-export const useAuthState = () => {
+export const useUserRole = () => {
   const {
-    user,
-    authUser,
-    isAuthenticated,
-    loading,
-    initializing,
-    isReady,
-    error,
+    userProfile,
+    role,
+    permissions,
+    isAdmin,
+    isUser,
+    canPerformAdminOps,
   } = useAuth();
 
   return {
-    user,
-    authUser,
-    isAuthenticated,
-    loading,
-    initializing,
-    isReady,
-    error,
-    hasError: !!error,
+    userProfile,
+    role,
+    permissions,
+    isAdmin,
+    isUser,
+    canPerformAdminOps,
   };
 };
-
-/**
- * Hook per solo auth operations (no state)
- */
-export const useAuthOperations = () => {
-  const {
-    signUp,
-    signIn,
-    signOut,
-    resetPassword,
-    updateProfile,
-    updatePassword,
-    clearError,
-    validateEmail,
-    validatePassword,
-    isSigningIn,
-    isSigningUp,
-    isSigningOut,
-    isResettingPassword,
-    isUpdatingProfile,
-    isUpdatingPassword,
-  } = useAuth();
-
-  return {
-    signUp,
-    signIn,
-    signOut,
-    resetPassword,
-    updateProfile,
-    updatePassword,
-    clearError,
-    validateEmail,
-    validatePassword,
-    isSigningIn,
-    isSigningUp,
-    isSigningOut,
-    isResettingPassword,
-    isUpdatingProfile,
-    isUpdatingPassword,
-  };
-};
-
-/**
- * Hook per user info corrente
- */
-export const useCurrentUser = () => {
-  const { user, authUser, isAuthenticated, session } = useAuth();
-
-  return {
-    user,
-    authUser,
-    isAuthenticated,
-    session,
-    userId: user?.id || null,
-    email: user?.email || null,
-    displayName: user?.displayName || null,
-    emailVerified: user?.emailVerified || false,
-  };
-};
-
-// =====================================================
-// 📝 EXPORT SUMMARY
-// =====================================================
-
-/**
- * HOOKS AUTH ESPORTATI:
- *
- * 🎯 Main Hook:
- * - useAuth() → Complete auth management
- *
- * 🔧 Specialized Hooks:
- * - useAuthState() → Solo stato auth
- * - useAuthOperations() → Solo operazioni auth
- * - useCurrentUser() → Info user corrente
- *
- * FEATURES PRINCIPALI:
- * ✅ Type-safe per tutti gli auth types
- * ✅ Session management automatico
- * ✅ Loading states granulari per ogni operazione
- * ✅ Error handling tipizzato
- * ✅ Auto-cleanup listeners e timers
- * ✅ Integration con FirebaseContext
- * ✅ Validation utilities
- * ✅ Auth state monitoring real-time
- *
- * RESPONSABILITÀ SOLO AUTH:
- * ✅ User authentication state
- * ✅ Auth operations (login, logout, register)
- * ✅ Session tracking e validation
- * ✅ Password management
- * ✅ Profile management (AUTH data only)
- *
- * INTEGRA CON:
- * ✅ authService.ts per operations
- * ✅ FirebaseContext per ready state
- * ✅ User.types.ts e Auth.types.ts per types
- *
- * RIMOSSO:
- * ❌ Operazioni Firestore (ora in useFirestore)
- * ❌ Database operations
- * ❌ Document management
- * ❌ Real-time listeners Firestore
- */
