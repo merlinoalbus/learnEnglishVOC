@@ -33,12 +33,14 @@
       "@services/*": ["services/*"],
       "@styles/*": ["styles/*"],
       "@utils/*": ["utils/*"],
-      "@views/*": ["views/*"]
+      "@views/*": ["views/*"],
+      "@types/*": ["types/*"]
     }
   },
   "include": [
     "src/**/*",
     "src/**/*.ts",
+    "src/**/*.types.ts",
     "src/**/*.tsx",
     "src/**/*.js",
     "src/**/*.jsx"

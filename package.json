@@ -5,6 +5,7 @@
   "private": true,
   "homepage": ".",
   "dependencies": {
+    "firebase": "^11.10.0",
     "lucide-react": "^0.263.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -12,16 +13,17 @@
     "recharts": "^2.15.4"
   },
   "devDependencies": {
+    "@types/jest": "^29.4.0",
+    "@types/node": "^18.15.13",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
     "autoprefixer": "^10.4.21",
+    "firebase-tools": "^14.10.1",
     "postcss": "^8.5.6",
     "stylelint": "^15.0.0",
     "stylelint-config-standard": "^34.0.0",
     "tailwindcss": "^3.4.17",
-    "typescript": "^4.9.5",
-    "@types/react": "^18.0.28",
-    "@types/react-dom": "^18.0.11",
-    "@types/node": "^18.15.13",
-    "@types/jest": "^29.4.0"
+    "typescript": "^4.9.5"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -49,6 +51,10 @@
     "deploy:netlify": "npm run build && netlify deploy --prod --dir=build",
     "styles:watch": "postcss src/styles/**/*.css --watch --dir src/styles/dist",
     "styles:build": "postcss src/styles/**/*.css --dir src/styles/dist",
+    "firebase:emulators": "firebase emulators:start",
+    "firebase:deploy": "firebase deploy",
+    "firebase:login": "firebase login",
+    "dev:with-emulators": "concurrently \"npm run firebase:emulators\" \"npm start\"",
     "lint:css": "stylelint 'src/styles/**/*.css'"
   },
   "eslintConfig": {

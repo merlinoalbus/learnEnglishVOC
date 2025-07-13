@@ -6,7 +6,7 @@
  * REDESIGN PRINCIPI:
  * ✅ COMPONE types esistenti invece di ridefinirli
  * ✅ AGGREGA Test.types.ts + Performance.types.ts + Word.types.ts
- * ✅ MANTIENE allineamento con useEnhancedStats.js AS-IS
+ * ✅ MANTIENE allineamento con useStats.js AS-IS
  * ✅ ELIMINA duplicazioni usando imports esistenti
  * ✅ FOCUS su aggregation e analytics cross-domain
  */
@@ -27,7 +27,7 @@ import { Word, WordCategory } from "./Word.types";
 
 /**
  * Entità Statistics come AGGREGATORE di domini esistenti
- * FONTE: INITIAL_STATS da useEnhancedStats.js
+ * FONTE: INITIAL_STATS da useStats.js
  * NUOVO APPROCCIO: Compone types esistenti invece di ridefinirli
  */
 export interface Statistics {

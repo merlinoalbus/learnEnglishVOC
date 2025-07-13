@@ -438,11 +438,7 @@ function checkConfiguration() {
   logSection("Security Check");
 
   // File sorgente da controllare per credenziali hardcoded
-  const sourceFiles = [
-    "src/constants/appConstants.js",
-    "src/services/aiService.js",
-    "src/config/appConfig.js",
-  ];
+  const sourceFiles = ["src/services/aiService.js", "src/config/appConfig.js"];
 
   let securityIssues = false;
 

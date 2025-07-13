@@ -116,6 +116,16 @@ export const AppConfig = {
       maxVisible: 5,
     },
   },
+  // Storage Configuration (identico al tuo STORAGE_CONFIG)
+  storage: {
+    collections: {
+      words: "words",
+      statistics: "statistics",
+      tests: "tests",
+      performance: "performance",
+      users: "users",
+    },
+  },
 };
 
 // ====== ERROR MESSAGES (identici ai tuoi) ======

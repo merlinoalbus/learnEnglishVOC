@@ -1,0 +1,6 @@
+﻿NOME FILE: AppRouter.js
+
+import React from "react"; import { useAppContext } from "../contexts/AppContext"; import { MainView } from "../views/MainView"; import { TestView } from "../views/TestView"; import { ResultsView } from "../views/ResultsView"; import { StatsView } from "../views/StatsView"; export const AppRouter = () => { const { currentView, testMode, showResults } = useAppContext(); if (testMode) { return <TestView />; } if (showResults) { return <ResultsView />; } switch (currentView) { case "stats": return <StatsView />; case "main": default: return <MainView />; } };
+
+================================================================================
+

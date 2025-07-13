@@ -694,3 +694,11 @@ export interface FirestoreSyncConfig {
   /** Dimensione max cache (MB) */
   maxCacheSize: number;
 }
+export type FirestoreCollectionName =
+  | "users"
+  | "words"
+  | "tests"
+  | "statistics"
+  | "performance"
+  | "user_profiles"
+  | "user_preferences";

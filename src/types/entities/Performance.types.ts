@@ -5,7 +5,7 @@
 /**
  * CORREZIONI PRINCIPALI:
  * ✅ ELIMINA duplicazioni con Test.types.ts (TestTimeMetrics ritorna lì)
- * ✅ ALLINEA con useEnhancedStats.js struttura wordPerformance reale
+ * ✅ ALLINEA con useStats.js struttura wordPerformance reale
  * ✅ RIMUOVE over-engineering e mantiene semplicità AS-IS
  * ✅ FOCUS su word-specific performance tracking come da codice esistente
  */
@@ -17,8 +17,8 @@ import { Word } from "./Word.types";
 // =====================================================
 
 /**
- * Performance per singola parola - ALLINEATA con useEnhancedStats.js
- * FONTE: wordPerformance[wordId] structure da useEnhancedStats.js
+ * Performance per singola parola - ALLINEATA con useStats.js
+ * FONTE: wordPerformance[wordId] structure da useStats.js
  * CORREZIONE: Struttura semplificata come nel codice reale
  */
 export interface WordPerformance {
@@ -46,7 +46,7 @@ export interface WordPerformance {
 
 /**
  * Singolo tentativo performance
- * FONTE: attempts structure da recordWordPerformance in useEnhancedStats.js
+ * FONTE: attempts structure da recordWordPerformance in useStats.js
  * CORREZIONE: Allineata ESATTAMENTE con struttura AS-IS
  */
 export interface PerformanceAttempt {
@@ -69,7 +69,7 @@ export interface PerformanceAttempt {
 
 /**
  * Analisi performance parola
- * FONTE: getWordAnalysis function da useEnhancedStats.js
+ * FONTE: getWordAnalysis function da useStats.js
  * CORREZIONE: Rispecchia ESATTAMENTE i calcoli del codice esistente
  */
 export interface WordPerformanceAnalysis {
@@ -86,7 +86,7 @@ export interface WordPerformanceAnalysis {
   learned: boolean;
   difficult: boolean;
 
-  /** Statistiche performance - COME DA useEnhancedStats.js */
+  /** Statistiche performance - COME DA useStats.js */
   totalAttempts: number;
   correctAttempts: number;
   incorrectAttempts: number;
@@ -116,7 +116,7 @@ export interface WordPerformanceAnalysis {
 
 /**
  * Status performance parola
- * FONTE: status logic da getWordAnalysis in useEnhancedStats.js
+ * FONTE: status logic da getWordAnalysis in useStats.js
  * CORREZIONE: Enum allineato con logic AS-IS
  */
 export type WordPerformanceStatus =
@@ -134,7 +134,7 @@ export type WordPerformanceStatus =
 
 /**
  * Metriche performance aggregate
- * FONTE: getAllWordsPerformance da useEnhancedStats.js
+ * FONTE: getAllWordsPerformance da useStats.js
  * CORREZIONE: Struttura semplificata per aggregazione parole
  */
 export interface PerformanceMetrics {
@@ -153,7 +153,7 @@ export interface PerformanceMetrics {
 
 /**
  * Statistiche performance globali
- * FONTE: Logic da useEnhancedStats per aggregazioni
+ * FONTE: Logic da useStats per aggregazioni
  * CORREZIONE: Metriche semplici e utili
  */
 export interface GlobalPerformanceStats {
@@ -185,7 +185,7 @@ export interface GlobalPerformanceStats {
 
 /**
  * Input per aggiornamento performance
- * FONTE: recordWordPerformance signature da useEnhancedStats.js
+ * FONTE: recordWordPerformance signature da useStats.js
  * CORREZIONE: Allineata con function signature esistente
  */
 export interface UpdatePerformanceInput {
@@ -226,7 +226,7 @@ export interface UpdatePerformanceResult {
 
 /**
  * Analisi difficoltà test
- * FONTE: calculateSmartTestDifficulty da useEnhancedStats.js
+ * FONTE: calculateSmartTestDifficulty da useStats.js
  * CORREZIONE: Struttura allineata con logic esistente per test difficulty
  */
 export interface TestDifficultyAnalysis {

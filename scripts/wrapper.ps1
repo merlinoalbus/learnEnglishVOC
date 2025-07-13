@@ -9,13 +9,14 @@ $configFolder = ".\..\config_txt"
 $specificPaths = @(
     "..\src\components",
     "..\src\config", 
-    "..\src\constants",
     "..\src\contexts",
     "..\src\hooks",
     "..\src\layouts",
-    "..\src\services",
+    "..\src\manager",
     "..\src\routing",
+    "..\src\services",
     "..\src\styles",
+    "..\src\types",
     "..\src\utils",
     "..\src\views"
 )
@@ -62,11 +63,6 @@ Write-Host "Estraendo CONFIG..." -ForegroundColor Blue
 .\extract.ps1 -SourcePath ".\..\src\config" -OutputFile "$configFolder\config.txt"
 Write-Host "CONFIG extraction completata -> config.txt" -ForegroundColor Green
 
-# CONSTANTS
-Write-Host "Estraendo CONSTANTS..." -ForegroundColor Blue
-.\extract.ps1 -SourcePath ".\..\src\constants" -OutputFile "$configFolder\constants.txt"
-Write-Host "CONSTANTS extraction completata -> constants.txt" -ForegroundColor Green
-
 # CONTEXTS
 Write-Host "Estraendo CONTEXTS..." -ForegroundColor Blue
 .\extract.ps1 -SourcePath ".\..\src\contexts" -OutputFile "$configFolder\contexts.txt"
@@ -82,20 +78,30 @@ Write-Host "Estraendo LAYOUTS..." -ForegroundColor Blue
 .\extract.ps1 -SourcePath ".\..\src\layouts" -OutputFile "$configFolder\layouts.txt"
 Write-Host "LAYOUTS extraction completata -> layouts.txt" -ForegroundColor Green
 
-# SERVICES
-Write-Host "Estraendo SERVICES..." -ForegroundColor Blue
-.\extract.ps1 -SourcePath ".\..\src\services" -OutputFile "$configFolder\services.txt"
-Write-Host "SERVICES extraction completata -> services.txt" -ForegroundColor Green
+# MANAGER
+Write-Host "Estraendo MANAGER..." -ForegroundColor Blue
+.\extract.ps1 -SourcePath ".\..\src\manager" -OutputFile "$configFolder\manager.txt"
+Write-Host "MANAGER extraction completata -> manager.txt" -ForegroundColor Green
 
 # ROUTING
 Write-Host "Estraendo ROUTING..." -ForegroundColor Blue
 .\extract.ps1 -SourcePath ".\..\src\routing" -OutputFile "$configFolder\routing.txt"
 Write-Host "ROUTING extraction completata -> routing.txt" -ForegroundColor Green
 
+# SERVICES
+Write-Host "Estraendo SERVICES..." -ForegroundColor Blue
+.\extract.ps1 -SourcePath ".\..\src\services" -OutputFile "$configFolder\services.txt"
+Write-Host "SERVICES extraction completata -> services.txt" -ForegroundColor Green
+
 # STYLES
 Write-Host "Estraendo STYLES..." -ForegroundColor Blue
 .\extract.ps1 -SourcePath ".\..\src\styles" -OutputFile "$configFolder\styles.txt"
 Write-Host "STYLES extraction completata -> styles.txt" -ForegroundColor Green
+
+# TYPES
+Write-Host "Estraendo TYPES..." -ForegroundColor Blue
+.\extract.ps1 -SourcePath ".\..\src\types" -OutputFile "$configFolder\types.txt"
+Write-Host "TYPES extraction completata -> types.txt" -ForegroundColor Green
 
 # UTILS
 Write-Host "Estraendo UTILS..." -ForegroundColor Blue

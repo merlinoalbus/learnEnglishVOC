@@ -266,7 +266,7 @@ export type FontSize = "small" | "medium" | "large" | "extra-large";
 /**
  * Statistiche utente aggregate
  * Per: dashboard e tracking progresso
- * Basate su: necessità stats da StatsView.js e useEnhancedStats.js
+ * Basate su: necessità stats da StatsView.js e useStats.js
  */
 export interface UserStats {
   /** ID utente proprietario */
@@ -403,6 +403,7 @@ export type AuthErrorType =
   | "account-disabled"
   | "token-expired"
   | "permission-denied"
+  | "configuration-error"
   | "unknown";
 
 // =====================================================

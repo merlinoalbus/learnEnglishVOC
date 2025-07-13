@@ -5,7 +5,7 @@
 /**
  * Definizione completa dell'entità Test e tutto il flusso quiz
  * REFACTORED: Eliminazione ridondanze e gestione aggregata
- * Basato su: useOptimizedTest.js hook esistente e TestView.js UI
+ * Basato su: useTest.js hook esistente e TestView.js UI
  */
 
 import { Word } from "./Word.types";

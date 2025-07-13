@@ -4,7 +4,7 @@
 
 /**
  * Definizione completa dell'entità Word con tutti i campi utilizzati nell'app
- * Basato su: useOptimizedWords.js struttura dati esistente
+ * Basato su: useWords.js struttura dati esistente
  * Integra: categorie da appConstants.js, validazione da EnhancedAddWordForm.js
  */
 
@@ -118,7 +118,7 @@ export interface WordCategoryMetadata {
 
 /**
  * Capitoli disponibili per organizzare le parole
- * Basato su: utilizzo chapter in useOptimizedWords.js getAvailableChapters()
+ * Basato su: utilizzo chapter in useWords.js getAvailableChapters()
  */
 export interface WordChapter {
   /** ID univoco del capitolo */
@@ -137,7 +137,7 @@ export interface WordChapter {
 
 /**
  * Entità Word principale
- * Basata su: struttura dati utilizzata in useOptimizedWords.js
+ * Basata su: struttura dati utilizzata in useWords.js
  * Include: tutti i campi da EnhancedAddWordForm.js
  * AGGIORNATA: con array per sentences, sinonimi e contrari
  */
@@ -169,13 +169,13 @@ export interface Word {
   /** Contrari della parola inglese - array da 0 a N elementi */
   antonyms?: string[];
 
-  /** Flag parola appresa - utilizzato in toggleWordLearned da useOptimizedWords */
+  /** Flag parola appresa - utilizzato in toggleWordLearned da useWords */
   learned: boolean;
 
-  /** Flag parola difficile - utilizzato in toggleWordDifficult da useOptimizedWords */
+  /** Flag parola difficile - utilizzato in toggleWordDifficult da useWords */
   difficult: boolean;
 
-  /** Timestamp creazione - aggiunto in addWord da useOptimizedWords */
+  /** Timestamp creazione - aggiunto in addWord da useWords */
   createdAt: Date;
 
   /** Timestamp ultima modifica - aggiornato in updateWord */
@@ -348,7 +348,7 @@ export const WORD_VALIDATION_SCHEMA: WordValidationRules = {
 
 /**
  * Statistiche aggregate per le parole
- * Basate su: wordStats da useOptimizedWords.js
+ * Basate su: wordStats da useWords.js
  */
 export interface WordStats {
   /** Totale parole */
@@ -378,7 +378,7 @@ export interface WordStats {
 
 /**
  * Statistiche per capitolo specifico
- * Utilizzate da: getChapterStats in useOptimizedWords.js
+ * Utilizzate da: getChapterStats in useWords.js
  */
 export interface ChapterStats {
   /** Nome capitolo */
@@ -406,7 +406,7 @@ export interface ChapterStats {
 
 /**
  * Input per creazione nuova parola
- * Utilizzato da: addWord in useOptimizedWords.js
+ * Utilizzato da: addWord in useWords.js
  * AGGIORNATO: con array per sentences, synonyms, antonyms
  */
 export interface CreateWordInput {
@@ -433,7 +433,7 @@ export interface UpdateWordInput extends Partial<CreateWordInput> {
 
 /**
  * Input per importazione parole
- * Basato su: importWords da useOptimizedWords.js
+ * Basato su: importWords da useWords.js
  */
 export interface ImportWordsInput {
   words: CreateWordInput[];
