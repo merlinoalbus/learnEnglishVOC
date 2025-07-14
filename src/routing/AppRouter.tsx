@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useAppContext } from "../contexts/AppContext";
 import { useAuth, useUserRole } from "../hooks/integration/useAuth";
 import { MainView } from "../views/MainView";
@@ -11,32 +11,18 @@ import { ProtectedRoute } from "../components/auth/ProtectedRoute";
 
 export const AppRouter = () => {
   const { currentView, testMode, showResults } = useAppContext();
-  const authState = useAuth();
+  const { isAuthenticated, isReady, loading, hasError, error } = useAuth();
   const { isAdmin } = useUserRole();
 
-  // Debug logging per capire lo stato
-  useEffect(() => {
-    console.log("🔍 [AppRouter] Auth State Debug:", {
-      isAuthenticated: authState.isAuthenticated,
-      isReady: authState.isReady,
-      loading: authState.loading,
-      initializing: authState.initializing,
-      hasError: authState.hasError,
-      error: authState.error,
-      user: authState.user,
-      authUser: authState.authUser,
-    });
-  }, [authState]);
-
   // Se c'è un errore Firebase critico, mostra errore
-  if (authState.hasError && authState.error) {
+  if (hasError && error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50">
         <div className="text-center max-w-md p-6">
           <h2 className="text-xl font-bold text-red-600 mb-4">
             Errore di Inizializzazione
           </h2>
-          <p className="text-gray-700 mb-4">{authState.error.message}</p>
+          <p className="text-gray-700 mb-4">{error.message}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
@@ -48,8 +34,8 @@ export const AppRouter = () => {
     );
   }
 
-  // Loading state semplificato - mostra solo se initializing O se non isReady
-  if (authState.initializing || !authState.isReady) {
+  // Loading state - solo se non ancora pronto
+  if (!isReady || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
@@ -60,25 +46,17 @@ export const AppRouter = () => {
           <p className="text-sm text-gray-500">
             Configurazione sicurezza e database
           </p>
-
-          {/* Debug info */}
-          <div className="mt-4 p-3 bg-gray-100 rounded text-xs text-left">
-            <div>isReady: {String(authState.isReady)}</div>
-            <div>initializing: {String(authState.initializing)}</div>
-            <div>loading: {String(authState.loading)}</div>
-            <div>isAuthenticated: {String(authState.isAuthenticated)}</div>
-          </div>
         </div>
       </div>
     );
   }
 
   // Se l'utente non è autenticato, mostra AuthView
-  if (!authState.isAuthenticated) {
+  if (!isAuthenticated) {
     return (
       <AuthView
         onAuthSuccess={() => {
-          console.log("🔍 [AppRouter] Auth success, reloading...");
+          // Refresh della pagina per ricaricare lo stato dell'app
           window.location.reload();
         }}
       />
@@ -87,36 +65,44 @@ export const AppRouter = () => {
 
   // Se siamo in modalità test, mostra TestView (protetta)
   if (testMode) {
-    return <TestView />;
+    return (
+      <ProtectedRoute requireAuth={true}>
+        <TestView />
+      </ProtectedRoute>
+    );
   }
 
   // Se stiamo mostrando i risultati, mostra ResultsView (protetta)
   if (showResults) {
-    return <ResultsView />;
+    return (
+      <ProtectedRoute requireAuth={true}>
+        <ResultsView />
+      </ProtectedRoute>
+    );
   }
 
   // Routing principale basato su currentView
   switch (currentView) {
     case "admin":
-      if (!isAdmin) {
-        return (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-red-600">Accesso Negato</h2>
-              <p className="text-gray-600">
-                Non hai i permessi per accedere al pannello admin.
-              </p>
-            </div>
-          </div>
-        );
-      }
-      return <AdminView />;
+      return (
+        <ProtectedRoute requireAuth={true} requiredRole="admin">
+          <AdminView />
+        </ProtectedRoute>
+      );
 
     case "stats":
-      return <StatsView />;
+      return (
+        <ProtectedRoute requireAuth={true}>
+          <StatsView />
+        </ProtectedRoute>
+      );
 
     case "main":
     default:
-      return <MainView />;
+      return (
+        <ProtectedRoute requireAuth={true}>
+          <MainView />
+        </ProtectedRoute>
+      );
   }
 };

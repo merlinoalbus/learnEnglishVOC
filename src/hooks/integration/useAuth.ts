@@ -48,6 +48,7 @@ const AUTH_HOOK_CONFIG = {
   maxRetries: 3,
   retryDelay: 1000,
   enableDebugLogging: process.env.NODE_ENV === "development",
+  strictModeTimeout: 2000, // Timeout for StrictMode double mounting
 };
 
 const debugLog = (message: string, data?: any) => {
@@ -93,16 +94,27 @@ interface AuthHookState {
   };
 }
 
+// Global state to persist across StrictMode remounts
+let globalAuthState: {
+  isListenerSetup: boolean;
+  lastUser: User | null;
+  initializationComplete: boolean;
+} = {
+  isListenerSetup: false,
+  lastUser: null,
+  initializationComplete: false,
+};
+
 export const useAuth = () => {
   const { isReady: firebaseReady, error: firebaseError } = useFirebase();
   const [state, setState] = useState<AuthHookState>({
-    user: null,
+    user: globalAuthState.lastUser,
     authUser: null,
     userProfile: null,
     role: null,
     permissions: DEFAULT_PERMISSIONS.user,
     loading: false,
-    initializing: true,
+    initializing: !globalAuthState.initializationComplete,
     operationLoading: {
       signIn: false,
       signUp: false,
@@ -118,25 +130,7 @@ export const useAuth = () => {
   const authUnsubscribeRef = useRef<(() => void) | null>(null);
   const sessionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
-
-  // DEBUG: Log dello stato ogni volta che cambia
-  useEffect(() => {
-    debugLog("State update", {
-      firebaseReady,
-      initializing: state.initializing,
-      loading: state.loading,
-      hasUser: !!state.user,
-      hasAuthUser: !!state.authUser,
-      error: state.error?.message,
-    });
-  }, [
-    firebaseReady,
-    state.initializing,
-    state.loading,
-    state.user,
-    state.authUser,
-    state.error,
-  ]);
+  const hasSetupListenerRef = useRef(false);
 
   const safeSetState = useCallback(
     (updater: (prev: AuthHookState) => AuthHookState) => {
@@ -253,14 +247,28 @@ export const useAuth = () => {
     debugLog("Session ended");
   }, [safeSetState]);
 
-  // AUTH STATE LISTENER - QUESTO È CRITICO
+  // STRICTMODE-SAFE AUTH STATE LISTENER
   useEffect(() => {
     if (!firebaseReady) {
       debugLog("Firebase not ready, skipping auth state listener setup");
       return;
     }
 
-    debugLog("Setting up auth state listener");
+    // Avoid duplicate listeners in StrictMode
+    if (globalAuthState.isListenerSetup || hasSetupListenerRef.current) {
+      debugLog("Auth listener already setup, skipping duplicate");
+
+      // If initialization was already complete, update state immediately
+      if (globalAuthState.initializationComplete) {
+        safeSetState((prev) => ({ ...prev, initializing: false }));
+      }
+
+      return;
+    }
+
+    debugLog("Setting up auth state listener (first time)");
+    hasSetupListenerRef.current = true;
+    globalAuthState.isListenerSetup = true;
 
     const unsubscribe = onAuthStateChange((user) => {
       debugLog("🚨 Auth state changed", {
@@ -268,6 +276,10 @@ export const useAuth = () => {
         authenticated: !!user,
         email: user?.email,
       });
+
+      // Update global state
+      globalAuthState.lastUser = user;
+      globalAuthState.initializationComplete = true;
 
       if (user) {
         const authUser = getCurrentAuthUser();
@@ -277,7 +289,7 @@ export const useAuth = () => {
           ...prev,
           user,
           authUser,
-          initializing: false, // ⭐ QUESTO È FONDAMENTALE
+          initializing: false,
           error: null,
         }));
 
@@ -294,7 +306,7 @@ export const useAuth = () => {
           userProfile: null,
           role: null,
           permissions: DEFAULT_PERMISSIONS.user,
-          initializing: false, // ⭐ QUESTO È FONDAMENTALE
+          initializing: false,
         }));
         endSession();
       }
@@ -302,10 +314,25 @@ export const useAuth = () => {
 
     authUnsubscribeRef.current = unsubscribe;
 
+    // StrictMode safety timeout
+    const safetyTimeout = setTimeout(() => {
+      if (!globalAuthState.initializationComplete) {
+        debugLog("🚨 SAFETY TIMEOUT: Forcing initialization complete");
+        globalAuthState.initializationComplete = true;
+        safeSetState((prev) => ({
+          ...prev,
+          initializing: false,
+        }));
+      }
+    }, AUTH_HOOK_CONFIG.strictModeTimeout);
+
     return () => {
+      clearTimeout(safetyTimeout);
       if (authUnsubscribeRef.current) {
         authUnsubscribeRef.current();
         authUnsubscribeRef.current = null;
+        globalAuthState.isListenerSetup = false;
+        hasSetupListenerRef.current = false;
         debugLog("Auth state listener cleaned up");
       }
     };
@@ -315,9 +342,6 @@ export const useAuth = () => {
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
-      if (authUnsubscribeRef.current) {
-        authUnsubscribeRef.current();
-      }
       if (sessionTimerRef.current) {
         clearInterval(sessionTimerRef.current);
       }
@@ -325,7 +349,7 @@ export const useAuth = () => {
     };
   }, []);
 
-  // SIGN UP
+  // AUTH OPERATIONS (keeping all the original ones)
   const handleSignUp = useCallback(
     async (input: SignUpInput): Promise<boolean> => {
       if (!firebaseReady) {
@@ -359,7 +383,6 @@ export const useAuth = () => {
     [firebaseReady, setOperationLoading, updateLastOperation, safeSetState]
   );
 
-  // SIGN IN
   const handleSignIn = useCallback(
     async (input: SignInInput): Promise<boolean> => {
       if (!firebaseReady) {
@@ -393,13 +416,16 @@ export const useAuth = () => {
     [firebaseReady, setOperationLoading, updateLastOperation, safeSetState]
   );
 
-  // SIGN OUT
   const handleSignOut = useCallback(async (): Promise<boolean> => {
     setOperationLoading("signOut", true);
     try {
       debugLog("Sign out attempt");
       const result = await signOutUser();
       if (result.success) {
+        // Reset global state on logout
+        globalAuthState.lastUser = null;
+        globalAuthState.initializationComplete = false;
+
         updateLastOperation("signOut", true);
         debugLog("Sign out successful");
         return true;
@@ -419,7 +445,6 @@ export const useAuth = () => {
     }
   }, [setOperationLoading, updateLastOperation, safeSetState]);
 
-  // RESET PASSWORD
   const handleResetPassword = useCallback(
     async (input: ResetPasswordInput): Promise<boolean> => {
       if (!firebaseReady) {
@@ -453,7 +478,6 @@ export const useAuth = () => {
     [firebaseReady, setOperationLoading, updateLastOperation, safeSetState]
   );
 
-  // UPDATE PROFILE
   const handleUpdateProfile = useCallback(
     async (input: UpdateProfileInput): Promise<boolean> => {
       if (!firebaseReady || !state.authUser) {
@@ -495,7 +519,6 @@ export const useAuth = () => {
     ]
   );
 
-  // UPDATE PASSWORD
   const handleUpdatePassword = useCallback(
     async (input: UpdatePasswordInput): Promise<boolean> => {
       if (!firebaseReady || !state.authUser) {
@@ -562,9 +585,8 @@ export const useAuth = () => {
   // Calculate derived state
   const isLoading =
     state.loading ||
-    state.initializing ||
     Object.values(state.operationLoading).some((loading) => loading);
-  const isReady = firebaseReady && !state.initializing && !isLoading;
+  const isReady = firebaseReady && !state.initializing;
 
   // Handle Firebase error
   if (firebaseError) {
