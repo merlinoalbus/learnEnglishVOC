@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import type {
   User,
   AuthError,
@@ -22,11 +22,17 @@ import type {
   UpdatePasswordInput,
 } from "../../types/infrastructure/Auth.types";
 import { useFirebase } from "../../contexts/FirebaseContext";
+import { auth, db } from "../../config/firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import {
   signUp,
   signIn,
   signOutUser,
   resetPassword,
+  verifyPasswordResetCode,
+  confirmPasswordReset,
+  verifyEmail,
   updateAuthProfile,
   updateUserPassword,
   getCurrentUser,
@@ -40,6 +46,8 @@ import {
   validatePassword,
   getUserProfile,
   initializeUserProfile,
+  signInWithGoogle,
+  handleGoogleRedirectResult,
 } from "../../services/authService";
 
 const AUTH_HOOK_CONFIG = {
@@ -48,13 +56,12 @@ const AUTH_HOOK_CONFIG = {
   maxRetries: 3,
   retryDelay: 1000,
   enableDebugLogging: process.env.NODE_ENV === "development",
-  strictModeTimeout: 2000, // Timeout for StrictMode double mounting
+  strictModeTimeout: 3000, // Timeout for StrictMode double mounting (increased)
+  forceCompleteTimeout: 8000, // Force completion if stuck in StrictMode
 };
 
 const debugLog = (message: string, data?: any) => {
-  if (AUTH_HOOK_CONFIG.enableDebugLogging) {
-    console.log(`🔐 [useAuth] ${message}`, data || "");
-  }
+  // Debug logging disabled for production
 };
 
 const normalizeAuthError = (error: any): AuthError => {
@@ -99,11 +106,26 @@ let globalAuthState: {
   isListenerSetup: boolean;
   lastUser: User | null;
   initializationComplete: boolean;
+  initStartTime: number;
 } = {
   isListenerSetup: false,
   lastUser: null,
   initializationComplete: false,
+  initStartTime: 0,
 };
+
+// Global reset function for stuck initialization
+(window as any).__resetAuthState = () => {
+  console.log("🔧 Resetting global auth state");
+  globalAuthState.isListenerSetup = false;
+  globalAuthState.initializationComplete = false;
+  globalAuthState.lastUser = null;
+  globalAuthState.initStartTime = Date.now();
+  window.location.reload();
+};
+
+// Expose global state for AppLayout consistency
+(window as any).globalAuthState = globalAuthState;
 
 export const useAuth = () => {
   const { isReady: firebaseReady, error: firebaseError } = useFirebase();
@@ -134,9 +156,9 @@ export const useAuth = () => {
 
   const safeSetState = useCallback(
     (updater: (prev: AuthHookState) => AuthHookState) => {
-      if (isMountedRef.current) {
-        setState(updater);
-      }
+      // In StrictMode, React può smontare/rimontare rapidamente i componenti
+      // Rimuoviamo il check isMounted per permettere l'aggiornamento dello state
+      setState(updater);
     },
     []
   );
@@ -269,29 +291,63 @@ export const useAuth = () => {
     debugLog("Setting up auth state listener (first time)");
     hasSetupListenerRef.current = true;
     globalAuthState.isListenerSetup = true;
+    globalAuthState.initStartTime = Date.now();
+
+    // DEBUG: Direct Firebase auth listener per vedere se Firebase funziona
+    const directUnsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      debugLog("🔴 DIRECT Firebase auth state changed", {
+        uid: firebaseUser?.uid || "null",
+        email: firebaseUser?.email,
+        exists: !!firebaseUser
+      });
+    });
 
     const unsubscribe = onAuthStateChange((user) => {
       debugLog("🚨 Auth state changed", {
         uid: user?.id || "null",
         authenticated: !!user,
         email: user?.email,
+        userObject: user
       });
 
       // Update global state
       globalAuthState.lastUser = user;
       globalAuthState.initializationComplete = true;
+      
+      // Notifica AppLayout del cambiamento
+      window.dispatchEvent(new CustomEvent('globalAuthStateChanged'));
 
       if (user) {
+        // Usa la funzione esistente che gestisce correttamente la conversione
         const authUser = getCurrentAuthUser();
-        debugLog("User authenticated, getting authUser", { authUser });
-
-        safeSetState((prev) => ({
-          ...prev,
-          user,
+        
+        debugLog("User authenticated, getting authUser", { 
           authUser,
-          initializing: false,
-          error: null,
-        }));
+          authUserExists: !!authUser,
+          userEmail: user.email
+        });
+
+        safeSetState((prev) => {
+          debugLog("🔄 Setting authenticated state", {
+            user: user?.email,
+            authUser: authUser?.email,
+            prevUser: prev.user?.email,
+            prevAuthUser: prev.authUser?.email,
+            wasInitializing: prev.initializing
+          });
+          
+          // Force initialization complete when user authenticates
+          globalAuthState.initializationComplete = true;
+          
+          return {
+            ...prev,
+            user,
+            authUser,
+            initializing: false,
+            loading: false,
+            error: null,
+          };
+        });
 
         if (authUser) {
           startSession(authUser);
@@ -299,6 +355,11 @@ export const useAuth = () => {
         }
       } else {
         debugLog("User not authenticated, clearing state");
+        
+        // Update global state anche per logout
+        globalAuthState.lastUser = null;
+        window.dispatchEvent(new CustomEvent('globalAuthStateChanged'));
+        
         safeSetState((prev) => ({
           ...prev,
           user: null,
@@ -326,8 +387,24 @@ export const useAuth = () => {
       }
     }, AUTH_HOOK_CONFIG.strictModeTimeout);
 
+    // Force completion timeout for StrictMode issues
+    const forceCompleteTimeout = setTimeout(() => {
+      if (!globalAuthState.initializationComplete) {
+        debugLog("🚨 FORCE COMPLETE: StrictMode stuck, forcing completion");
+        globalAuthState.initializationComplete = true;
+        globalAuthState.isListenerSetup = true;
+        safeSetState((prev) => ({
+          ...prev,
+          initializing: false,
+          loading: false,
+        }));
+      }
+    }, AUTH_HOOK_CONFIG.forceCompleteTimeout);
+
     return () => {
       clearTimeout(safetyTimeout);
+      clearTimeout(forceCompleteTimeout);
+      directUnsubscribe(); // Cleanup direct listener
       if (authUnsubscribeRef.current) {
         authUnsubscribeRef.current();
         authUnsubscribeRef.current = null;
@@ -337,6 +414,24 @@ export const useAuth = () => {
       }
     };
   }, [firebaseReady, safeSetState, startSession, endSession, loadUserProfile]);
+
+  // Handle Google redirect result on mount
+  useEffect(() => {
+    if (firebaseReady) {
+      handleGoogleRedirectResult().then((result) => {
+        if (result) {
+          if (result.success) {
+            debugLog("Google redirect completed successfully");
+          } else {
+            safeSetState((prev) => ({
+              ...prev,
+              error: normalizeAuthError(result.error),
+            }));
+          }
+        }
+      });
+    }
+  }, [firebaseReady, safeSetState]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -364,6 +459,14 @@ export const useAuth = () => {
         if (result.success && result.user) {
           updateLastOperation("signUp", true);
           debugLog("Sign up successful", { uid: result.user.uid });
+          
+          // Initialize user profile after successful registration
+          try {
+            await initializeUserProfile(result.user.uid);
+          } catch (profileError) {
+            console.error("Error initializing user profile:", profileError);
+          }
+          
           return true;
         } else {
           throw result.error || new Error("Sign up failed");
@@ -415,6 +518,39 @@ export const useAuth = () => {
     },
     [firebaseReady, setOperationLoading, updateLastOperation, safeSetState]
   );
+
+  const handleGoogleSignIn = useCallback(async (): Promise<boolean> => {
+    if (!firebaseReady) {
+      debugLog("Firebase not ready for Google sign in");
+      return false;
+    }
+
+    setOperationLoading("signIn", true);
+    try {
+      debugLog("Google sign in attempt");
+      const result = await signInWithGoogle();
+      if (result.success && result.user) {
+        updateLastOperation("googleSignIn", true);
+        debugLog("Google sign in successful", { uid: result.user.uid });
+        return true;
+      } else if (result.message === "Reindirizzamento a Google...") {
+        // Redirect in progress
+        return true;
+      } else {
+        throw result.error || new Error("Google sign in failed");
+      }
+    } catch (error) {
+      debugLog("Google sign in failed", error);
+      safeSetState((prev) => ({
+        ...prev,
+        error: normalizeAuthError(error),
+      }));
+      updateLastOperation("googleSignIn", false);
+      return false;
+    } finally {
+      setOperationLoading("signIn", false);
+    }
+  }, [firebaseReady, setOperationLoading, updateLastOperation, safeSetState]);
 
   const handleSignOut = useCallback(async (): Promise<boolean> => {
     setOperationLoading("signOut", true);
@@ -478,6 +614,86 @@ export const useAuth = () => {
     [firebaseReady, setOperationLoading, updateLastOperation, safeSetState]
   );
 
+  const handleVerifyPasswordResetCode = useCallback(
+    async (oobCode: string): Promise<string> => {
+      if (!firebaseReady) {
+        debugLog("Firebase not ready for password reset verification");
+        throw new Error("Firebase not ready");
+      }
+
+      try {
+        debugLog("Verifying password reset code");
+        const email = await verifyPasswordResetCode(oobCode);
+        debugLog("Password reset code verified", { email });
+        return email;
+      } catch (error) {
+        debugLog("Password reset code verification failed", error);
+        safeSetState((prev) => ({
+          ...prev,
+          error: normalizeAuthError(error),
+        }));
+        throw error;
+      }
+    },
+    [firebaseReady, safeSetState]
+  );
+
+  const handleConfirmPasswordReset = useCallback(
+    async (oobCode: string, newPassword: string): Promise<boolean> => {
+      if (!firebaseReady) {
+        debugLog("Firebase not ready for password reset confirmation");
+        return false;
+      }
+
+      try {
+        debugLog("Confirming password reset");
+        const result = await confirmPasswordReset(oobCode, newPassword);
+        if (result.success) {
+          debugLog("Password reset confirmed");
+          return true;
+        } else {
+          throw result.error || new Error("Password reset confirmation failed");
+        }
+      } catch (error) {
+        debugLog("Password reset confirmation failed", error);
+        safeSetState((prev) => ({
+          ...prev,
+          error: normalizeAuthError(error),
+        }));
+        return false;
+      }
+    },
+    [firebaseReady, safeSetState]
+  );
+
+  const handleVerifyEmail = useCallback(
+    async (oobCode: string): Promise<boolean> => {
+      if (!firebaseReady) {
+        debugLog("Firebase not ready for email verification");
+        return false;
+      }
+
+      try {
+        debugLog("Verifying email");
+        const result = await verifyEmail(oobCode);
+        if (result.success) {
+          debugLog("Email verified");
+          return true;
+        } else {
+          throw result.error || new Error("Email verification failed");
+        }
+      } catch (error) {
+        debugLog("Email verification failed", error);
+        safeSetState((prev) => ({
+          ...prev,
+          error: normalizeAuthError(error),
+        }));
+        return false;
+      }
+    },
+    [firebaseReady, safeSetState]
+  );
+
   const handleUpdateProfile = useCallback(
     async (input: UpdateProfileInput): Promise<boolean> => {
       if (!firebaseReady || !state.authUser) {
@@ -489,15 +705,35 @@ export const useAuth = () => {
 
       setOperationLoading("updateProfile", true);
       try {
-        debugLog("Profile update attempt");
+        debugLog("Profile update attempt", input);
+        
+        // Update Firebase Auth profile
         const result = await updateAuthProfile(input);
-        if (result.success && result.user) {
-          updateLastOperation("updateProfile", true);
-          debugLog("Profile update successful");
-          return true;
-        } else {
+        if (!result.success) {
           throw result.error || new Error("Profile update failed");
         }
+        
+        // Update Firestore user document - use authUser.uid directly
+        if (input.displayName && state.authUser?.uid) {
+          try {
+            const userRef = doc(db, "users", state.authUser.uid);
+            await updateDoc(userRef, {
+              displayName: input.displayName,
+            });
+            debugLog("Firestore user document updated");
+          } catch (firestoreError) {
+            console.error("Error updating Firestore user document:", firestoreError);
+          }
+        }
+        
+        // Reload user profile to get updated data
+        if (state.authUser?.uid) {
+          await loadUserProfile(state.authUser.uid);
+        }
+        
+        updateLastOperation("updateProfile", true);
+        debugLog("Profile update successful");
+        return true;
       } catch (error) {
         debugLog("Profile update failed", error);
         safeSetState((prev) => ({
@@ -513,9 +749,11 @@ export const useAuth = () => {
     [
       firebaseReady,
       state.authUser,
+      state.userProfile,
       setOperationLoading,
       updateLastOperation,
       safeSetState,
+      loadUserProfile,
     ]
   );
 
@@ -568,7 +806,15 @@ export const useAuth = () => {
   }, [safeSetState]);
 
   const checkAuthenticated = useCallback((): boolean => {
-    return !!state.user && !!state.authUser;
+    const isAuth = !!state.user && !!state.authUser;
+    debugLog("🔍 checkAuthenticated", {
+      hasUser: !!state.user,
+      hasAuthUser: !!state.authUser,
+      isAuthenticated: isAuth,
+      userEmail: state.user?.email,
+      authUserEmail: state.authUser?.email
+    });
+    return isAuth;
   }, [state.user, state.authUser]);
 
   const getSessionInfo = useCallback(() => {
@@ -588,6 +834,21 @@ export const useAuth = () => {
     Object.values(state.operationLoading).some((loading) => loading);
   const isReady = firebaseReady && !state.initializing;
 
+  // Debug final state (BEFORE any early returns)
+  const finalIsAuthenticated = !!state.user && !!state.authUser;
+  
+  useEffect(() => {
+    debugLog("🔍 useAuth final state", {
+      isAuthenticated: finalIsAuthenticated,
+      hasUser: !!state.user,
+      hasAuthUser: !!state.authUser,
+      isReady,
+      firebaseReady,
+      loading: isLoading,
+      initializing: state.initializing
+    });
+  }, [finalIsAuthenticated, state.user, state.authUser, isReady, firebaseReady, isLoading, state.initializing]);
+
   // Handle Firebase error
   if (firebaseError) {
     return {
@@ -606,6 +867,7 @@ export const useAuth = () => {
       hasError: true,
       signUp: async () => false,
       signIn: async () => false,
+      signInWithGoogle: async () => false,
       signOut: async () => false,
       resetPassword: async () => false,
       updateProfile: async () => false,
@@ -632,10 +894,21 @@ export const useAuth = () => {
     };
   }
 
+  // Debug semplificato
+  debugLog("useAuth return state", {
+    hasUser: !!state.user,
+    hasAuthUser: !!state.authUser,
+    isAuthenticated: !!state.user && !!state.authUser
+  });
+
+  // SOLUZIONE StrictMode: usa globalAuthState se state locale è vuoto ma global ha dati
+  const effectiveUser = state.user || globalAuthState.lastUser;
+  const effectiveAuthUser = state.authUser || (effectiveUser ? getCurrentAuthUser() : null);
+  
   return {
-    user: state.user,
-    authUser: state.authUser,
-    isAuthenticated: checkAuthenticated(),
+    user: effectiveUser,
+    authUser: effectiveAuthUser,
+    isAuthenticated: !!effectiveUser && !!effectiveAuthUser,
     loading: isLoading,
     initializing: state.initializing,
     isReady,
@@ -643,8 +916,12 @@ export const useAuth = () => {
     error: state.error,
     signUp: handleSignUp,
     signIn: handleSignIn,
+    signInWithGoogle: handleGoogleSignIn,
     signOut: handleSignOut,
     resetPassword: handleResetPassword,
+    verifyPasswordResetCode: handleVerifyPasswordResetCode,
+    confirmPasswordReset: handleConfirmPasswordReset,
+    verifyEmail: handleVerifyEmail,
     updateProfile: handleUpdateProfile,
     updatePassword: handleUpdatePassword,
     clearError,
