@@ -186,26 +186,26 @@ const JSONManager = ({ words, onImportWords }) => {
   };
 
   return (
-    <Card className="backdrop-blur-sm bg-white/90 border-0 shadow-xl rounded-3xl overflow-hidden">
+    <Card className="backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-0 shadow-xl rounded-3xl overflow-hidden">
       <CardHeader 
-        className="cursor-pointer hover:bg-gray-50 transition-colors"
+        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         onClick={() => setShowSection(!showSection)}
       >
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <FileDown className="w-6 h-6 text-indigo-600" />
+            <FileDown className="w-6 h-6 text-indigo-600 dark:text-purple-400" />
             <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Gestione Dati JSON
             </span>
           </div>
-          {showSection ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+          {showSection ? <ChevronUp className="w-5 h-5 text-gray-400 dark:text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-400 dark:text-gray-500" />}
         </CardTitle>
       </CardHeader>
       {showSection && (
         <CardContent className="animate-fade-in">
           <div className="space-y-6">
-            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-200">
-              <p className="text-blue-800 text-sm flex items-center gap-2">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-2xl border border-blue-200 dark:border-blue-700">
+              <p className="text-blue-800 dark:text-blue-200 text-sm flex items-center gap-2">
                 <span className="text-lg">💡</span>
                 Usa questa sezione per fare backup del tuo vocabolario o condividerlo tra dispositivi
               </p>
@@ -216,7 +216,7 @@ const JSONManager = ({ words, onImportWords }) => {
               <Button
                 onClick={handleExport}
                 disabled={words.length === 0 || isProcessing}
-                className="border-2 border-blue-300 hover:border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center gap-2"
+                className="border-2 border-blue-300 dark:border-blue-700 hover:border-blue-400 dark:hover:border-blue-600 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 📤 Esporta JSON
@@ -225,7 +225,7 @@ const JSONManager = ({ words, onImportWords }) => {
               <Button
                 onClick={downloadAsFile}
                 disabled={!jsonText.trim() || isProcessing}
-                className="border-2 border-green-300 hover:border-green-400 bg-green-50 hover:bg-green-100 text-green-600 flex items-center justify-center gap-2"
+                className="border-2 border-green-300 dark:border-green-700 hover:border-green-400 dark:hover:border-green-600 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 text-green-600 dark:text-green-400 flex items-center justify-center gap-2"
               >
                 <FileDown className="w-4 h-4" />
                 💾 Scarica File
@@ -241,7 +241,7 @@ const JSONManager = ({ words, onImportWords }) => {
                 />
                 <Button
                   disabled={isProcessing}
-                  className="w-full border-2 border-orange-300 hover:border-orange-400 bg-orange-50 hover:bg-orange-100 text-orange-600 flex items-center justify-center gap-2"
+                  className="w-full bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-0 flex items-center justify-center gap-2"
                 >
                   <Upload className="w-4 h-4" />
                   📁 Carica File
@@ -251,7 +251,7 @@ const JSONManager = ({ words, onImportWords }) => {
               <Button
                 onClick={handleImport}
                 disabled={!jsonText.trim() || isProcessing}
-                className="border-2 border-purple-300 hover:border-purple-400 bg-purple-50 hover:bg-purple-100 text-purple-600 flex items-center justify-center gap-2"
+                className="w-full bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white border-0 flex items-center justify-center gap-2"
               >
                 <Upload className="w-4 h-4" />
                 📥 Importa JSON
@@ -263,15 +263,15 @@ const JSONManager = ({ words, onImportWords }) => {
               value={jsonText}
               onChange={(e) => setJsonText(e.target.value)}
               rows={12}
-              className="font-mono text-sm border-2 border-gray-200 rounded-2xl focus:border-blue-500 transition-colors"
+              className="font-mono text-sm border-2 border-gray-200 dark:border-gray-600 rounded-2xl focus:border-blue-500 dark:focus:border-purple-500 transition-colors dark:bg-gray-800 dark:text-gray-100"
               disabled={isProcessing}
             />
             
             {/* ⭐ ENHANCED: Status indicators */}
             {jsonText && (
               <div className="space-y-2">
-                <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
-                  <p className="text-green-800 text-sm">
+                <div className="p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-xl">
+                  <p className="text-green-800 dark:text-green-200 text-sm">
                     💾 <strong>Formato rilevato:</strong> {
                       (() => {
                         try {
@@ -311,18 +311,18 @@ const JSONManager = ({ words, onImportWords }) => {
                     if (wordsArray && wordsArray.length > 0) {
                       const sampleWords = wordsArray.slice(0, 3);
                       return (
-                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                          <p className="text-blue-800 text-sm font-bold mb-2">👀 Anteprima prime parole:</p>
+                        <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-xl">
+                          <p className="text-blue-800 dark:text-blue-200 text-sm font-bold mb-2">👀 Anteprima prime parole:</p>
                           <div className="space-y-1">
                             {sampleWords.map((word, idx) => (
-                              <div key={idx} className="text-xs text-blue-700 font-mono">
+                              <div key={idx} className="text-xs text-blue-700 dark:text-blue-300 font-mono">
                                 • {word.english} → {word.italian}
                                 {word.chapter && ` (Cap. ${word.chapter})`}
                                 {word.group && ` [${word.group}]`}
                               </div>
                             ))}
                             {wordsArray.length > 3 && (
-                              <div className="text-xs text-blue-600">
+                              <div className="text-xs text-blue-600 dark:text-blue-400">
                                 ... e altre {wordsArray.length - 3} parole
                               </div>
                             )}
@@ -339,16 +339,16 @@ const JSONManager = ({ words, onImportWords }) => {
             
             {/* ⭐ NEW: Processing indicator */}
             {isProcessing && (
-              <div className="flex items-center justify-center p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+              <div className="flex items-center justify-center p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-xl">
                 <div className="animate-spin w-5 h-5 border-2 border-yellow-500 border-t-transparent rounded-full mr-3"></div>
-                <span className="text-yellow-800 font-medium">Elaborazione in corso...</span>
+                <span className="text-yellow-800 dark:text-yellow-200 font-medium">Elaborazione in corso...</span>
               </div>
             )}
             
             {/* ⭐ ENHANCED: Usage instructions */}
-            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-              <h4 className="font-bold text-gray-800 mb-2">📖 Come usare:</h4>
-              <div className="text-sm text-gray-700 space-y-1">
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+              <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2">📖 Come usare:</h4>
+              <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
                 <p><strong>1. Esportare:</strong> Clicca "Esporta JSON" per vedere i tuoi dati</p>
                 <p><strong>2. Scaricare:</strong> Clicca "Scarica File" per salvare un file .json</p>
                 <p><strong>3. Importare:</strong> Carica un file .json o incolla il contenuto, poi clicca "Importa JSON"</p>

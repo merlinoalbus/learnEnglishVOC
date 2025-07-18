@@ -72,7 +72,7 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
 
       {showDataManagement && <DataManagementPanel />}
 
-      <React.Suspense fallback={<div className="text-center py-8">Caricamento...</div>}>
+      <React.Suspense fallback={<div className="text-center py-8 text-gray-600 dark:text-gray-400">Caricamento...</div>}>
         {renderSelectedSection()}
       </React.Suspense>
     </div>

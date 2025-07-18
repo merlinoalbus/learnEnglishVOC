@@ -43,6 +43,16 @@ const appReducer = (state, action) => {
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
+  // Listen for reset to main view after login
+  useEffect(() => {
+    const handleResetToMain = () => {
+      dispatch({ type: "SET_VIEW", payload: "main" });
+    };
+    
+    window.addEventListener('resetToMainView', handleResetToMain);
+    return () => window.removeEventListener('resetToMainView', handleResetToMain);
+  }, []);
+
   // Usa gli hooks base invece delle versioni "ottimizzate"
   const wordsAPI = useWords();
   const statsAPI = useStats();

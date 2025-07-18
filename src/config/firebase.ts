@@ -84,7 +84,6 @@ function validateFirebaseConfig(): void {
     );
   }
 
-  console.log("✅ Firebase configuration validated");
 }
 
 // =====================================================
@@ -202,8 +201,7 @@ export interface FirebaseInitResult {
  */
 export async function initializeFirebase(): Promise<FirebaseInitResult> {
   try {
-    console.log("🔥 Initializing Firebase...");
-
+  
     // Setup in sequenza
     await setupDevelopment();
 
@@ -212,8 +210,7 @@ export async function initializeFirebase(): Promise<FirebaseInitResult> {
       setupAuthPersistence(),
     ]);
 
-    console.log("✅ Firebase initialization completed");
-
+  
     return {
       success: true,
       firestorePersistence,

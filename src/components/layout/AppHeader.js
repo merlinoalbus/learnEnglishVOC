@@ -5,7 +5,7 @@ import { Brain, Sparkles } from 'lucide-react';
 export const AppHeader = React.memo(() => (
   <div className="text-center relative">
     <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl blur-3xl opacity-20"></div>
-    <Card className="relative backdrop-blur-sm bg-white/80 border-0 shadow-2xl rounded-3xl overflow-hidden">
+    <Card className="relative backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border-0 shadow-2xl rounded-3xl overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10"></div>
             
       <CardHeader className="relative py-8">
@@ -14,7 +14,7 @@ export const AppHeader = React.memo(() => (
           Vocabulary Master
           <Sparkles className="w-8 h-8 text-purple-600" />
         </CardTitle>
-        <p className="text-gray-600 text-lg mt-2">La tua app intelligente per imparare l'inglese</p>
+        <p className="text-gray-600 dark:text-gray-400 text-lg mt-2">La tua app intelligente per imparare l'inglese</p>
       </CardHeader>
     </Card>
   </div>

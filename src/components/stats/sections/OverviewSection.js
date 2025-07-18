@@ -355,7 +355,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
       </Card>
 
       {/* ⭐ FIXED: Multi-Metric Performance Chart with REAL dates and times */}
-      <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+      <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
           <CardTitle className="flex items-center gap-3 text-white">
             <TrendingUp className="w-6 h-6" />
@@ -533,7 +533,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* ⭐ FIXED: Performance Distribution with SIMPLIFIED pie chart labels */}
-        <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+        <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
             <CardTitle className="flex items-center gap-3 text-white">
               <Award className="w-6 h-6" />
@@ -577,7 +577,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                       </div>
                       <div className="text-right">
                         <div className="font-bold" style={{ color: item.color }}>{item.value} test</div>
-                        <div className="text-xs text-gray-500">{item.percentage}% del totale</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{item.percentage}% del totale</div>
                       </div>
                     </div>
                   ))}
@@ -585,7 +585,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                 
                 {/* Summary */}
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg text-center">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     Su <strong>{realTimelineData.length} test totali</strong>, hai ottenuto risultati eccellenti o buoni nel 
                     <strong className="text-green-600 mx-1">
                       {Math.round(((performanceDistribution.find(p => p.name === 'Eccellente')?.value || 0) + 
@@ -597,7 +597,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                 </div>
               </>
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <p>Dati insufficienti per la distribuzione</p>
               </div>
             )}
@@ -605,7 +605,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
         </Card>
 
         {/* ⭐ ENHANCED: Advanced Metrics Breakdown with REAL data */}
-        <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+        <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
             <CardTitle className="flex items-center gap-3 text-white">
               <Zap className="w-6 h-6" />
@@ -618,7 +618,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
               {/* Learning Velocity */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium text-gray-700">Velocità di Apprendimento</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Velocità di Apprendimento</span>
                   <span className={`font-bold ${
                     performanceAnalysis.learningVelocity > 0 ? 'text-green-600' : 
                     performanceAnalysis.learningVelocity < 0 ? 'text-red-600' : 'text-gray-600'
@@ -635,7 +635,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                     style={{ width: `${Math.min(100, Math.abs(performanceAnalysis.learningVelocity) * 2)}%` }}
                   ></div>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {performanceAnalysis.trend} rispetto ai primi test
                 </div>
               </div>
@@ -643,7 +643,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
               {/* Consistency Score */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium text-gray-700">Consistenza</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Consistenza</span>
                   <span className="font-bold text-blue-600">{performanceAnalysis.consistency}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -652,7 +652,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                     style={{ width: `${performanceAnalysis.consistency}%` }}
                   ></div>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {performanceAnalysis.consistency >= 80 ? 'Molto stabile' :
                    performanceAnalysis.consistency >= 60 ? 'Abbastanza costante' : 'Variabile'}
                 </div>
@@ -661,7 +661,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
               {/* Response Speed REAL */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium text-gray-700">Velocità Risposta (Reale)</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Velocità Risposta (Reale)</span>
                   <span className="font-bold text-purple-600">
                     {performanceAnalysis.avgResponseTime}s ({performanceAnalysis.speedRating})
                   </span>
@@ -675,7 +675,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                     style={{ width: `${performanceAnalysis.speedScore}%` }}
                   ></div>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Calcolato dai tempi reali di risposta
                 </div>
               </div>
@@ -683,7 +683,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
               {/* Hint Efficiency */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium text-gray-700">Efficienza Aiuti</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Efficienza Aiuti</span>
                   <span className="font-bold text-orange-600">{performanceAnalysis.hintEfficiency}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -692,7 +692,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                     style={{ width: `${performanceAnalysis.hintEfficiency}%` }}
                   ></div>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {Math.round(100 - performanceAnalysis.hintEfficiency)}% aiuti utilizzati di media
                 </div>
               </div>
@@ -718,7 +718,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
 
       {/* ⭐ ENHANCED: Weekly Pattern Analysis */}
       {weeklyPattern.length > 0 && (
-        <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+        <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
             <CardTitle className="flex items-center gap-3 text-white">
               <Clock className="w-6 h-6" />

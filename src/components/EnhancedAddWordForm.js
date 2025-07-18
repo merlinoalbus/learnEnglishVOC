@@ -317,10 +317,10 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
     if (!aiServiceStatus) return null;
 
     const statusConfig = {
-      healthy: { color: 'text-green-600', icon: '🟢', message: 'AI disponibile' },
-      degraded: { color: 'text-yellow-600', icon: '🟡', message: 'AI instabile' },
-      down: { color: 'text-red-600', icon: '🔴', message: 'AI non disponibile' },
-      unknown: { color: 'text-gray-600', icon: '⚪', message: 'AI sconosciuto' }
+      healthy: { color: 'text-green-600 dark:text-green-400', icon: '🟢', message: 'AI disponibile' },
+      degraded: { color: 'text-yellow-600 dark:text-yellow-400', icon: '🟡', message: 'AI instabile' },
+      down: { color: 'text-red-600 dark:text-red-400', icon: '🔴', message: 'AI non disponibile' },
+      unknown: { color: 'text-gray-600 dark:text-gray-400', icon: '⚪', message: 'AI sconosciuto' }
     };
 
     const config = statusConfig[aiServiceStatus.health] || statusConfig.unknown;
@@ -334,7 +334,7 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
           size="sm"
           onClick={handleRefreshStatus}
           disabled={isRefreshingStatus}
-          className="h-6 px-2 text-xs hover:bg-yellow-100"
+          className="h-6 px-2 text-xs hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
           title="⚠️ ATTENZIONE: Verifica manuale - COSTA DENARO!"
         >
           <RefreshCw className={`w-3 h-3 ${isRefreshingStatus ? 'animate-spin' : ''}`} />
@@ -352,9 +352,9 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
 
   return (
     <FormErrorBoundary formName="AddWord" onFormError={(error) => showError(error, 'Word Form')}>
-      <Card className="backdrop-blur-sm bg-white/90 border-0 shadow-xl rounded-3xl overflow-hidden">
+      <Card className="backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardHeader className={editingWord ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white" : ""}>
-          <CardTitle className={`flex items-center justify-between ${editingWord ? "text-white" : "text-gray-800"}`}>
+          <CardTitle className={`flex items-center justify-between ${editingWord ? "text-white" : "text-gray-800 dark:text-gray-200"}`}>
             {editingWord ? (
               <div className="flex items-center gap-3">
                 <Edit3 className="w-6 h-6" />
@@ -362,7 +362,7 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <Plus className="w-6 h-6 text-green-600" />
+                <Plus className="w-6 h-6 text-green-600 dark:text-green-400" />
                 <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
                   Aggiungi Nuove Parole
                 </span>
@@ -384,7 +384,7 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
                   variant="ghost" 
                   size="sm"
                   onClick={() => setShowAdvancedForm(!showAdvancedForm)}
-                  className={editingWord ? "text-white hover:bg-white/20" : "text-gray-600 hover:bg-gray-100"}
+                  className={editingWord ? "text-white hover:bg-white/20" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}
                 >
                   {showAdvancedForm ? 'Semplice' : 'Avanzato'}
                 </Button>
@@ -411,11 +411,11 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
                   onChange={(e) => handleInputChange('english', e.target.value)}
                   onBlur={() => handleFieldBlur('english')}
                   className={`border-2 rounded-xl h-12 transition-colors ${
-                    formValidation.english ? 'border-red-300 bg-red-50 focus:border-red-400' : 'border-gray-200 focus:border-blue-500'
+                    formValidation.english ? 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/30 focus:border-red-400 dark:focus:border-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-purple-500'
                   }`}
                 />
                 {formValidation.english && (
-                  <p className="text-red-600 text-xs flex items-center gap-1 animate-fade-in">
+                  <p className="text-red-600 dark:text-red-400 text-xs flex items-center gap-1 animate-fade-in">
                     <AlertTriangle className="w-3 h-3" />
                     {formValidation.english}
                   </p>
@@ -429,11 +429,11 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
                   onChange={(e) => handleInputChange('italian', e.target.value)}
                   onBlur={() => handleFieldBlur('italian')}
                   className={`border-2 rounded-xl h-12 transition-colors ${
-                    formValidation.italian ? 'border-red-300 bg-red-50 focus:border-red-400' : 'border-gray-200 focus:border-blue-500'
+                    formValidation.italian ? 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/30 focus:border-red-400 dark:focus:border-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-purple-500'
                   }`}
                 />
                 {formValidation.italian && (
-                  <p className="text-red-600 text-xs flex items-center gap-1 animate-fade-in">
+                  <p className="text-red-600 dark:text-red-400 text-xs flex items-center gap-1 animate-fade-in">
                     <AlertTriangle className="w-3 h-3" />
                     {formValidation.italian}
                   </p>
@@ -444,7 +444,7 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
             {/* AI Assistant */}
             <AIServiceErrorBoundary onAIError={(error) => showError(error, 'AI Assistant')}>
               {aiLoading.isLoading ? (
-                <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                <div className="p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-xl">
                   <SmartLoadingIndicator 
                     isLoading={true}
                     operation={aiLoading.operation}
@@ -476,13 +476,13 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
 
             {/* Advanced Form */}
             {showAdvancedForm && (
-              <div className="space-y-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border-2 border-blue-200">
-                <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-2xl">
+              <div className="space-y-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 rounded-2xl border-2 border-blue-200 dark:border-blue-700">
+                <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 border-2 border-green-200 dark:border-green-700 rounded-2xl">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-2xl">📚</span>
-                    <h4 className="font-bold text-green-800">Gestione Avanzata</h4>
+                    <h4 className="font-bold text-green-800 dark:text-green-200">Gestione Avanzata</h4>
                   </div>
-                  <div className="text-sm text-green-700 space-y-1">
+                  <div className="text-sm text-green-700 dark:text-green-300 space-y-1">
                     <p>• <strong>Capitolo:</strong> Organizza per capitoli (es. 1, 2A, Unit 5)</p>
                     <p>• <strong>Appresa:</strong> Rimane ma viene saltata nei test</p>
                     <p>• <strong>Difficile:</strong> ⭐ Per test specifici</p>
@@ -492,13 +492,13 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Group */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                       <span>📂</span> Categoria
                     </label>
                     <select
                       value={formData.group}
                       onChange={(e) => handleInputChange('group', e.target.value)}
-                      className="w-full px-4 py-3 border-2 rounded-xl bg-white border-gray-200"
+                      className="w-full px-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 dark:text-gray-100"
                     >
                       <option value="">Nessun gruppo</option>
                       {getPredefinedGroups().map(group => (
@@ -511,52 +511,52 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
                   
                   {/* Chapter */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                       <span>📖</span> Capitolo
                     </label>
                     <Input
                       placeholder="es. 1, 2A, Unit 5"
                       value={formData.chapter}
                       onChange={(e) => handleInputChange('chapter', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl"
+                      className="border-2 border-gray-200 dark:border-gray-600 rounded-xl"
                     />
                   </div>
 
                   {/* Status */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                       <span>🎓</span> Stato
                     </label>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl bg-white">
+                      <div className="flex items-center gap-3 p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <div 
                             onClick={() => handleInputChange('learned', !formData.learned)}
                             className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
                               formData.learned 
                                 ? 'bg-green-500 border-green-500 text-white' 
-                                : 'border-gray-300 bg-white'
+                                : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                             }`}
                           >
                             {formData.learned && <span className="text-sm">✓</span>}
                           </div>
-                          <span className="text-sm font-medium text-gray-700">Appresa</span>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Appresa</span>
                         </label>
                       </div>
                       
-                      <div className="flex items-center gap-3 p-3 border-2 border-orange-200 rounded-xl bg-orange-50">
+                      <div className="flex items-center gap-3 p-3 border-2 border-orange-200 dark:border-orange-700 rounded-xl bg-orange-50 dark:bg-orange-900/30">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <div 
                             onClick={() => handleInputChange('difficult', !formData.difficult)}
                             className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
                               formData.difficult 
                                 ? 'bg-orange-500 border-orange-500 text-white' 
-                                : 'border-orange-300 bg-white'
+                                : 'border-orange-300 dark:border-orange-600 bg-white dark:bg-gray-800'
                             }`}
                           >
                             {formData.difficult && <AlertTriangle className="w-4 h-4" />}
                           </div>
-                          <span className="text-sm font-medium text-orange-700">⭐ Difficile</span>
+                          <span className="text-sm font-medium text-orange-700 dark:text-orange-300">⭐ Difficile</span>
                         </label>
                       </div>
                     </div>
@@ -565,20 +565,20 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
                 
                 {/* Sentence */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                     <span>💬</span> Frase d'esempio
                   </label>
                   <Input
                     placeholder="es. I love this beautiful song"
                     value={formData.sentence}
                     onChange={(e) => handleInputChange('sentence', e.target.value)}
-                    className="border-2 border-gray-200 rounded-xl"
+                    className="border-2 border-gray-200 dark:border-gray-600 rounded-xl"
                   />
                 </div>
                 
                 {/* Notes */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                     <span>📝</span> Note
                   </label>
                   <Textarea
@@ -586,7 +586,7 @@ const EnhancedAddWordForm = ({ onAddWord, editingWord, onClearForm }) => {
                     value={formData.notes}
                     onChange={(e) => handleInputChange('notes', e.target.value)}
                     rows={4}
-                    className="border-2 border-gray-200 rounded-xl"
+                    className="border-2 border-gray-200 dark:border-gray-600 rounded-xl"
                   />
                 </div>
               </div>

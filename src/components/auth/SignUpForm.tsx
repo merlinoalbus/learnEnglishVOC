@@ -350,21 +350,25 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
               className="text-sm text-gray-700 cursor-pointer"
             >
               Accetto i{" "}
-              <button
-                type="button"
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-800 underline"
-                disabled={currentLoading}
+                onClick={(e) => e.stopPropagation()}
               >
                 Termini di Servizio
-              </button>{" "}
+              </a>{" "}
               e la{" "}
-              <button
-                type="button"
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-800 underline"
-                disabled={currentLoading}
+                onClick={(e) => e.stopPropagation()}
               >
                 Privacy Policy
-              </button>
+              </a>
             </Label>
             {validationErrors.terms && (
               <p className="text-sm text-red-600">{validationErrors.terms}</p>

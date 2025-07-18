@@ -1,5 +1,6 @@
 import React from "react";
 import { useAppContext } from "../contexts/AppContext";
+import { useFirebase } from "../contexts/FirebaseContext";
 import { useAuth, useUserRole } from "../hooks/integration/useAuth";
 import { MainView } from "../views/MainView";
 import { TestView } from "../views/TestView";
@@ -7,12 +8,44 @@ import { ResultsView } from "../views/ResultsView";
 import { StatsView } from "../views/StatsView";
 import { AdminView } from "../views/AdminView";
 import { AuthView } from "../views/AuthView";
+import { ProfileView } from "../views/ProfileView";
+import { SettingsView } from "../views/SettingsView";
 import { ProtectedRoute } from "../components/auth/ProtectedRoute";
 
 export const AppRouter = () => {
-  const { currentView, testMode, showResults } = useAppContext();
-  const { isAuthenticated, isReady, loading, hasError, error } = useAuth();
+  const { currentView, testMode, showResults, dispatch } = useAppContext();
+  const { isAuthenticated, isReady, loading, hasError, error, user, authUser } = useAuth();
   const { isAdmin } = useUserRole();
+  
+  // Calcolo diretto che funzionava
+  const directIsAuthenticated = !!user && !!authUser;
+  
+  
+  // Force re-render per login
+  const [renderKey, setRenderKey] = React.useState(0);
+  
+  // Force main view after login - REMOVED to allow navigation to profile/settings
+  
+  // Rimuovo forceUpdate che causava loop infinito
+
+  // Controllo stato Firebase
+  const { isReady: firebaseContextReady } = useFirebase();
+
+  // Hook per timeout message (deve essere sempre chiamato)
+  const [showTimeoutMessage, setShowTimeoutMessage] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (!isReady) {
+      const timeout = setTimeout(() => {
+        setShowTimeoutMessage(true);
+      }, 5000);
+      
+      return () => clearTimeout(timeout);
+    } else {
+      setShowTimeoutMessage(false);
+      return undefined; // Explicit return for all code paths
+    }
+  }, [isReady]);
 
   // Se c'è un errore Firebase critico, mostra errore
   if (hasError && error) {
@@ -34,8 +67,8 @@ export const AppRouter = () => {
     );
   }
 
-  // Loading state - solo se non ancora pronto
-  if (!isReady || loading) {
+  // Loading state - solo se Firebase non è ancora pronto E firebaseContext non è pronto
+  if (!firebaseContextReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
@@ -46,18 +79,46 @@ export const AppRouter = () => {
           <p className="text-sm text-gray-500">
             Configurazione sicurezza e database
           </p>
+          {showTimeoutMessage && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-xs text-yellow-700">
+                Se l'inizializzazione impiega troppo tempo, prova a ricaricare la pagina
+              </p>
+              <div className="mt-2 space-x-2">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
+                >
+                  Ricarica
+                </button>
+                <button
+                  onClick={() => {
+                    if ((window as any).__resetAuthState) {
+                      (window as any).__resetAuthState();
+                    }
+                  }}
+                  className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                >
+                  Reset Auth
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   // Se l'utente non è autenticato, mostra AuthView
-  if (!isAuthenticated) {
+  if (!directIsAuthenticated) {
     return (
       <AuthView
         onAuthSuccess={() => {
-          // Refresh della pagina per ricaricare lo stato dell'app
-          window.location.reload();
+          // Reset view to main after successful login
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('resetToMainView'));
+            setRenderKey(prev => prev + 1);
+          }, 100);
         }}
       />
     );
@@ -94,6 +155,20 @@ export const AppRouter = () => {
       return (
         <ProtectedRoute requireAuth={true}>
           <StatsView />
+        </ProtectedRoute>
+      );
+
+    case "profile":
+      return (
+        <ProtectedRoute requireAuth={true}>
+          <ProfileView />
+        </ProtectedRoute>
+      );
+
+    case "settings":
+      return (
+        <ProtectedRoute requireAuth={true}>
+          <SettingsView />
         </ProtectedRoute>
       );
 

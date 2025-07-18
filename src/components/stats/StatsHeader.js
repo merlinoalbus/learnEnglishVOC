@@ -23,14 +23,14 @@ const StatsHeader = ({
   ];
 
   return (
-    <Card className="backdrop-blur-sm bg-white/90 border-0 shadow-2xl rounded-3xl overflow-hidden">
+    <Card className="backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-0 shadow-2xl rounded-3xl overflow-hidden">
       <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-1">
-        <div className="bg-white rounded-3xl p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl p-6">
           <div className="flex justify-between items-center mb-6">
             <CardTitle className="flex items-center gap-3 text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               <BarChart3 className="w-8 h-8 text-purple-600" />
               Analisi Avanzata dell'Apprendimento
-              <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded-full">
+              <span className="text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
                 Live: {testHistory.length} test
               </span>
             </CardTitle>
@@ -46,7 +46,7 @@ const StatsHeader = ({
               <Button
                 onClick={onClearHistory}
                 variant="outline"
-                className="border-red-300 text-red-600 hover:bg-red-50"
+                className="border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
               >
                 🗑️ Pulisci Cronologia ({testHistory.length})
               </Button>

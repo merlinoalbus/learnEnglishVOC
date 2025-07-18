@@ -3,9 +3,10 @@ import { AuthLayout } from "../layouts/AuthLayout";
 import { LoginForm } from "../components/auth/LoginForm";
 import { SignUpForm } from "../components/auth/SignUpForm";
 import { ForgotPasswordForm } from "../components/auth/ForgotPasswordForm";
+import { AuthActionHandler } from "../components/auth/AuthActionHandler";
 import { useAuth } from "../hooks/integration/useAuth";
 
-type AuthMode = "login" | "signup" | "forgot-password";
+type AuthMode = "login" | "signup" | "forgot-password" | "auth-action";
 
 interface AuthViewProps {
   onAuthSuccess?: () => void;
@@ -23,6 +24,24 @@ export const AuthView: React.FC<AuthViewProps> = ({
 }) => {
   const [currentMode, setCurrentMode] = useState<AuthMode>(initialMode);
   const { isAuthenticated, isReady } = useAuth();
+  const [authActionParams, setAuthActionParams] = useState<{
+    mode: string;
+    oobCode: string;
+    apiKey: string;
+  } | null>(null);
+
+  useEffect(() => {
+    // Controlla se ci sono parametri di azione auth nell'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get("mode");
+    const oobCode = urlParams.get("oobCode");
+    const apiKey = urlParams.get("apiKey");
+
+    if (mode && oobCode && apiKey) {
+      setAuthActionParams({ mode, oobCode, apiKey });
+      setCurrentMode("auth-action");
+    }
+  }, []);
 
   useEffect(() => {
     if (isReady && isAuthenticated) {
@@ -48,6 +67,11 @@ export const AuthView: React.FC<AuthViewProps> = ({
           title: "Recupera password",
           subtitle:
             "Ti invieremo le istruzioni per reimpostare la tua password",
+        };
+      case "auth-action":
+        return {
+          title: "Elaborazione in corso...",
+          subtitle: "Stiamo processando la tua richiesta",
         };
       default:
         return getAuthConfig("login");
@@ -77,10 +101,24 @@ export const AuthView: React.FC<AuthViewProps> = ({
         return (
           <ForgotPasswordForm onSwitchToLogin={() => setCurrentMode("login")} />
         );
+      case "auth-action":
+        return authActionParams ? (
+          <AuthActionHandler
+            mode={authActionParams.mode}
+            oobCode={authActionParams.oobCode}
+            apiKey={authActionParams.apiKey}
+            onComplete={() => setCurrentMode("login")}
+          />
+        ) : null;
       default:
         return null;
     }
   };
+
+  // Per le azioni auth, render direttamente il componente senza layout
+  if (currentMode === "auth-action") {
+    return renderAuthForm();
+  }
 
   return (
     <AuthLayout title={config.title} subtitle={config.subtitle}>

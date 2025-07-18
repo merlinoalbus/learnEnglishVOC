@@ -106,7 +106,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   useEffect(() => {
     async function init(): Promise<void> {
       try {
-        console.log("🔥 Starting Firebase initialization...");
 
         // Reset error state se retry
         setFirebaseState((prev) => ({
@@ -128,13 +127,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
             initResult,
           });
 
-          // Debug info in development
-          if (process.env.NODE_ENV === "development") {
-            console.log("🔍 Firebase Status:", getFirebaseStatus());
-            console.log("🔍 Init Result:", initResult);
-          }
-
-          console.log("✅ Firebase ready!");
         } else {
           // Handle initialization failure
           throw initResult.error || new Error("Firebase initialization failed");

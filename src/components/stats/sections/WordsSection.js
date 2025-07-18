@@ -273,7 +273,7 @@ const WordsSection = ({ localRefresh }) => {
     <div className="space-y-8" key={`words-enhanced-${localRefresh}-${internalRefresh}`}>
        
       {/* ⭐ ENHANCED: Header with bulk actions */}
-      <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+      <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
           <div className="flex justify-between items-start">
             <div>
@@ -332,7 +332,7 @@ const WordsSection = ({ localRefresh }) => {
           <CardContent className="animate-fade-in">
             <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">🔍 Cerca Parola</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">🔍 Cerca Parola</label>
                 <Input
                   placeholder="Parola inglese..."
                   value={searchWord}
@@ -342,11 +342,11 @@ const WordsSection = ({ localRefresh }) => {
               </div>
                
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">📚 Capitolo</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">📚 Capitolo</label>
                 <select
                   value={filterChapter}
                   onChange={(e) => setFilterChapter(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 dark:focus:border-purple-500 bg-white dark:bg-gray-800 dark:text-gray-100"
                 >
                   <option value="">Tutti i capitoli</option>
                   {availableChapters.map(chapter => (
@@ -359,11 +359,11 @@ const WordsSection = ({ localRefresh }) => {
               </div>
                
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">🎓 Stato Apprendimento</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">🎓 Stato Apprendimento</label>
                 <select
                   value={filterLearned}
                   onChange={(e) => setFilterLearned(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 dark:focus:border-purple-500 bg-white dark:bg-gray-800 dark:text-gray-100"
                 >
                   <option value="all">Tutte le parole</option>
                   <option value="learned">✅ Solo apprese</option>
@@ -372,11 +372,11 @@ const WordsSection = ({ localRefresh }) => {
               </div>
                
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">⭐ Difficoltà</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">⭐ Difficoltà</label>
                 <select
                   value={filterDifficult}
                   onChange={(e) => setFilterDifficult(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 dark:focus:border-purple-500 bg-white dark:bg-gray-800 dark:text-gray-100"
                 >
                   <option value="all">Tutte le parole</option>
                   <option value="difficult">⭐ Solo difficili</option>
@@ -385,11 +385,11 @@ const WordsSection = ({ localRefresh }) => {
               </div>
                
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">📂 Categoria</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">📂 Categoria</label>
                 <select
                   value={filterGroup}
                   onChange={(e) => setFilterGroup(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-blue-500 bg-white"
+                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 dark:focus:border-purple-500 bg-white dark:bg-gray-800 dark:text-gray-100"
                 >
                   <option value="">Tutte le categorie</option>
                   {availableGroups.map(group => (
@@ -454,7 +454,7 @@ const WordsSection = ({ localRefresh }) => {
 
       {/* ⭐ FIXED: Lista parole con capitoli collassabili SENZA RESTRIZIONI */}
       {filteredWords.length === 0 ? (
-        <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+        <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardContent className="text-center py-16">
             <div className="text-8xl mb-6">🔍</div>
             <h3 className="text-2xl font-bold text-gray-700 mb-4">Nessuna parola trovata</h3>

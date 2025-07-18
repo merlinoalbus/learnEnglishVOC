@@ -19,7 +19,7 @@ const StatsNavigation = ({ selectedView, setSelectedView }) => {
           className={`px-6 py-3 rounded-xl transition-all ${
             selectedView === tab.id
               ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           }`}
         >
           <span className="mr-2">{tab.icon}</span>

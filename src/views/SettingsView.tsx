@@ -53,14 +53,29 @@ export const SettingsView: React.FC = () => {
       try {
         setPreferencesLoading(true);
         
-        const preferences = await getUserPreferences(user.id);
-        if (preferences) {
-          setDarkMode(preferences.theme === 'dark');
-          setEmailNotifications(preferences.notificationPreferences.emailEnabled);
-          setStudyReminders(preferences.notificationPreferences.dailyReminder);
-        } else {
-          // Set default values if no preferences found
-          console.log("No preferences found, using defaults");
+        try {
+          const preferences = await getUserPreferences(user.id);
+          if (preferences) {
+            const isDark = preferences.theme === 'dark';
+            setDarkMode(isDark);
+            
+            // Apply theme to DOM immediately
+            if (isDark) {
+              document.documentElement.classList.add('dark');
+            } else {
+              document.documentElement.classList.remove('dark');
+            }
+            
+            setEmailNotifications(preferences.notificationPreferences.emailEnabled);
+            setStudyReminders(preferences.notificationPreferences.dailyReminder);
+          } else {
+            // Set default values if no preferences found
+            setDarkMode(false);
+            setEmailNotifications(true);
+            setStudyReminders(true);
+          }
+        } catch (prefError) {
+          // Always set defaults on error
           setDarkMode(false);
           setEmailNotifications(true);
           setStudyReminders(true);
@@ -80,14 +95,33 @@ export const SettingsView: React.FC = () => {
     if (!user?.id) return;
     
     try {
+      // Apply theme to DOM immediately for instant feedback
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      
       const success = await updateUserTheme(user.id, theme);
       if (success) {
         setDarkMode(theme === 'dark');
         setMessage({ type: "success", text: `Tema ${theme === 'dark' ? 'scuro' : 'chiaro'} attivato` });
       } else {
+        // Revert DOM change if save failed
+        if (theme === 'dark') {
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+        }
         setMessage({ type: "error", text: "Errore nell'aggiornamento del tema" });
       }
     } catch (error) {
+      // Revert DOM change if error occurred
+      if (theme === 'dark') {
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.documentElement.classList.add('dark');
+      }
       console.error('Error updating theme:', error);
       setMessage({ type: "error", text: "Errore nell'aggiornamento del tema" });
     }
@@ -126,13 +160,6 @@ export const SettingsView: React.FC = () => {
     }
   };
   
-  const handleDeleteAccount = () => {
-    setMessage({ type: "error", text: "Funzione eliminazione account non ancora implementata" });
-  };
-  
-  const handleTestAdminToggle = () => {
-    setMessage({ type: "success", text: "Funzione test admin - ricarica la pagina per vedere il pannello admin nella navigazione" });
-  };
 
   const handlePasswordChange = (field: keyof typeof passwordForm, value: string) => {
     setPasswordForm(prev => ({ ...prev, [field]: value }));
@@ -189,7 +216,7 @@ export const SettingsView: React.FC = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Caricamento impostazioni...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Caricamento impostazioni...</p>
         </div>
       </div>
     );
@@ -199,8 +226,8 @@ export const SettingsView: React.FC = () => {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Impostazioni</h1>
-        <p className="text-gray-600">Configura le tue preferenze e sicurezza</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Impostazioni</h1>
+        <p className="text-gray-600 dark:text-gray-400">Configura le tue preferenze e sicurezza</p>
       </div>
 
       {/* Message */}
@@ -227,92 +254,102 @@ export const SettingsView: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="currentPassword" className="text-sm font-medium text-gray-700">
-                Password attuale
-              </Label>
-              <div className="relative mt-1">
-                <Input
-                  id="currentPassword"
-                  type={showPasswords.current ? "text" : "password"}
-                  value={passwordForm.currentPassword}
-                  onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
-                  className="pr-10"
-                  disabled={updateLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility("current")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleUpdatePassword(); }}>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="currentPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Password attuale
+                  </Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="currentPassword"
+                      name="currentPassword"
+                      type={showPasswords.current ? "text" : "password"}
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
+                      className="pr-10"
+                      disabled={updateLoading}
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility("current")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
 
-            <div>
-              <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700">
-                Nuova password
-              </Label>
-              <div className="relative mt-1">
-                <Input
-                  id="newPassword"
-                  type={showPasswords.new ? "text" : "password"}
-                  value={passwordForm.newPassword}
-                  onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
-                  className="pr-10"
-                  disabled={updateLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility("new")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+                <div>
+                  <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Nuova password
+                  </Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="newPassword"
+                      name="newPassword"
+                      type={showPasswords.new ? "text" : "password"}
+                      value={passwordForm.newPassword}
+                      onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
+                      className="pr-10"
+                      disabled={updateLoading}
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility("new")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
 
-            <div>
-              <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
-                Conferma nuova password
-              </Label>
-              <div className="relative mt-1">
-                <Input
-                  id="confirmPassword"
-                  type={showPasswords.confirm ? "text" : "password"}
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
-                  className="pr-10"
-                  disabled={updateLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility("confirm")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+                <div>
+                  <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Conferma nuova password
+                  </Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showPasswords.confirm ? "text" : "password"}
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
+                      className="pr-10"
+                      disabled={updateLoading}
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility("confirm")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
 
-            <Button
-              onClick={handleUpdatePassword}
-              disabled={updateLoading}
-              className="w-full"
-            >
-              {updateLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Aggiornamento...
-                </>
-              ) : (
-                <>
-                  <Lock className="w-4 h-4 mr-2" />
-                  Aggiorna Password
-                </>
-              )}
-            </Button>
+                <Button
+                  type="submit"
+                  disabled={updateLoading}
+                  className="w-full"
+                >
+                  {updateLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Aggiornamento...
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Aggiorna Password
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
 
@@ -326,7 +363,7 @@ export const SettingsView: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label className="text-sm font-medium text-gray-700">Tema</Label>
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tema</Label>
               <div className="mt-2 flex items-center gap-4">
                 <Button 
                   variant={!darkMode ? "outline" : "ghost"} 
@@ -350,7 +387,7 @@ export const SettingsView: React.FC = () => {
             </div>
 
             <div>
-              <Label className="text-sm font-medium text-gray-700">Lingua</Label>
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Lingua</Label>
               <div className="mt-2">
                 <Button variant="outline" size="sm" className="flex items-center gap-2">
                   <Globe className="w-4 h-4" />
@@ -372,7 +409,7 @@ export const SettingsView: React.FC = () => {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">Notifiche email</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Notifiche email</p>
                 <p className="text-xs text-gray-500">Ricevi aggiornamenti via email</p>
               </div>
               <Button 
@@ -386,7 +423,7 @@ export const SettingsView: React.FC = () => {
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">Promemoria studio</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Promemoria studio</p>
                 <p className="text-xs text-gray-500">Notifiche per sessioni di studio</p>
               </div>
               <Button 
@@ -400,71 +437,6 @@ export const SettingsView: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Developer Tools */}
-        <Card className="border-blue-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-700">
-              <Settings className="w-5 h-5" />
-              Strumenti Sviluppatore
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {!isAdmin && (
-              <div>
-                <p className="text-sm text-gray-700 mb-2">Test funzionalità admin</p>
-                <p className="text-xs text-gray-500 mb-4">
-                  Attiva temporaneamente i permessi admin per testare le funzionalità (solo per sviluppo)
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleTestAdminToggle}
-                >
-                  <Shield className="w-4 h-4 mr-2" />
-                  Test Admin Mode
-                </Button>
-              </div>
-            )}
-            {isAdmin && (
-              <div>
-                <p className="text-sm text-gray-700 mb-2">Pannello Amministratore</p>
-                <p className="text-xs text-gray-500 mb-4">
-                  Hai accesso al pannello admin nella navigazione principale
-                </p>
-                <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                  <Shield className="w-3 h-3" />
-                  Amministratore
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Danger Zone */}
-        <Card className="border-red-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-700">
-              <Trash2 className="w-5 h-5" />
-              Zona Pericolosa
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-700 mb-2">Elimina account</p>
-              <p className="text-xs text-gray-500 mb-4">
-                Questa azione eliminerà permanentemente il tuo account e tutti i dati associati.
-              </p>
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={handleDeleteAccount}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Elimina Account
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

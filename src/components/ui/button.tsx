@@ -32,17 +32,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseClasses =
-      "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background";
+      "inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:pointer-events-none";
 
     const variants: Record<ButtonVariant, string> = {
       default:
-        "bg-primary text-primary-foreground hover:bg-primary/90 bg-slate-900 text-white hover:bg-slate-800",
+        "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-500",
       outline:
-        "border border-input hover:bg-accent hover:text-accent-foreground border-gray-300 hover:bg-gray-50",
-      ghost: "hover:bg-accent hover:text-accent-foreground hover:bg-gray-100",
+        "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700",
+      ghost: 
+        "bg-transparent text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100",
       destructive:
-        "bg-destructive text-destructive-foreground hover:bg-destructive/90 bg-red-600 text-white hover:bg-red-700",
-      link: "text-primary underline-offset-4 hover:underline text-blue-600 hover:text-blue-800",
+        "bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:bg-red-700 dark:hover:bg-red-800",
+      link: 
+        "text-indigo-600 underline-offset-4 hover:underline hover:text-indigo-800 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-purple-400 dark:hover:text-purple-300",
     };
 
     const sizes: Record<ButtonSize, string> = {

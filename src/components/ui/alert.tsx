@@ -9,7 +9,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
     <div
       ref={ref}
       role="alert"
-      className={`relative w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm ${className}`}
+      className={`relative w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 ${className}`}
       {...props}
     />
   )

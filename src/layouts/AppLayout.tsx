@@ -1,6 +1,7 @@
 import React from "react";
 import { useAppContext } from "../contexts/AppContext";
 import { useAuth } from "../hooks/integration/useAuth";
+import { getCurrentAuthUser } from "../services/authService";
 import { AppHeader } from "../components/layout/AppHeader";
 import { AppNavigation } from "../components/layout/AppNavigation";
 import { BackgroundParticles } from "../components/ui/BackgroundParticles";
@@ -13,10 +14,31 @@ interface AppLayoutProps {
 
 export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { testMode, showResults } = useAppContext();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  
+  // Accesso al global state che usa useAuth per la consistenza
+  const globalAuthState = (window as any).globalAuthState || { lastUser: null };
+  const effectiveUser = user || globalAuthState.lastUser;
+  const effectiveAuthUser = effectiveUser ? getCurrentAuthUser() : null;
+  const effectiveIsAuthenticated = isAuthenticated || (!!effectiveUser && !!effectiveAuthUser);
+  
+  // Force re-render quando global state cambia tramite eventi
+  const [forceRender, setForceRender] = React.useState(0);
+  React.useEffect(() => {
+    const handleGlobalAuthChange = () => {
+      setForceRender(prev => prev + 1);
+    };
+    
+    window.addEventListener('globalAuthStateChanged', handleGlobalAuthChange);
+    return () => window.removeEventListener('globalAuthStateChanged', handleGlobalAuthChange);
+  }, []);
+  
+  
+  // Force re-render quando user O effectiveUser cambia per sincronizzare con StrictMode
+  const layoutKey = effectiveUser?.id || user?.id || 'no-user';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+    <div key={layoutKey} className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-slate-900">
       {/* Background Particles sempre visibile */}
       <BackgroundParticles />
 
@@ -26,11 +48,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       {/* Global Modals sempre disponibili */}
       <GlobalModals />
 
-      {/* Header e Navigation solo se autenticato e non in modalità test/risultati */}
-      {isAuthenticated && !testMode && !showResults && (
+      {/* Header e Navigation sempre se autenticato */}
+      {effectiveIsAuthenticated && (
         <>
           <div className="relative z-10 pb-8">
-            <div className="max-width-7xl mx-auto px-4 pt-8">
+            <div className="max-w-7xl mx-auto px-4 pt-8">
               <AppHeader />
             </div>
           </div>
@@ -47,7 +69,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       <div className="relative z-10">
         <div
           className={`max-w-7xl mx-auto px-4 ${
-            isAuthenticated && !testMode && !showResults ? "pt-4" : "pt-8"
+            effectiveIsAuthenticated && !testMode && !showResults ? "pt-4" : "pt-8"
           }`}
         >
           <main>{children}</main>

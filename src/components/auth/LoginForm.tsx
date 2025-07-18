@@ -1,10 +1,9 @@
 // components/auth/LoginForm.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Alert, AlertDescription } from "../ui/alert";
 import {
   Mail,
@@ -15,6 +14,7 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
+import { useAuth } from "../../hooks/integration/useAuth";
 
 interface LoginFormProps {
   onSwitchToSignUp?: () => void;
@@ -38,6 +38,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onSwitchToForgotPassword = () => {},
   onLoginSuccess = () => {},
 }) => {
+  const {
+    signIn,
+    signInWithGoogle,
+    isSigningIn,
+    error: authError,
+    clearError,
+    validateEmail: authValidateEmail,
+    isAuthenticated,
+  } = useAuth();
+
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -47,12 +57,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
     {}
   );
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  // Handle successful authentication
+  useEffect(() => {
+    if (isAuthenticated) {
+      onLoginSuccess();
+    }
+  }, [isAuthenticated, onLoginSuccess]);
+
+  // Clear errors when component unmounts
+  useEffect(() => {
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
+
+  const error = authError?.message || localError;
+
+  const validateEmailLocal = (email: string): boolean => {
+    return authValidateEmail(email);
   };
 
   const validateForm = (): boolean => {
@@ -60,7 +84,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
     if (!formData.email) {
       errors.email = "Email è richiesta";
-    } else if (!validateEmail(formData.email)) {
+    } else if (!validateEmailLocal(formData.email)) {
       errors.email = "Formato email non valido";
     }
 
@@ -88,7 +112,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     }
 
     if (error) {
-      setError(null);
+      setLocalError(null);
+      clearError();
     }
   };
 
@@ -101,32 +126,34 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       return;
     }
 
-    setIsLoading(true);
     try {
-      // Mock login - sostituisci con la tua logica esistente
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      console.log("Login attempt:", {
+      const success = await signIn({
         email: formData.email,
-        rememberMe: formData.rememberMe,
+        password: formData.password,
       });
 
-      // Simula successo
-      onLoginSuccess();
+      if (success) {
+        // onLoginSuccess will be called by useEffect when isAuthenticated becomes true
+      }
     } catch (error) {
       console.error("Login error:", error);
-      setError("Credenziali non valide");
-    } finally {
-      setIsLoading(false);
+      setLocalError("Si è verificato un errore durante il login");
     }
   };
 
   const handleGoogleSignIn = async (): Promise<void> => {
     try {
-      console.log("Google sign-in clicked");
-      // Implementa Google sign-in con la tua logica esistente
+      clearError();
+      setLocalError(null);
+      
+      const success = await signInWithGoogle();
+      
+      if (success) {
+        // onLoginSuccess will be called by useEffect when isAuthenticated becomes true
+      }
     } catch (error) {
       console.error("Google sign-in error:", error);
+      setLocalError("Si è verificato un errore con il login Google");
     }
   };
 
@@ -160,7 +187,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 ? "border-red-300 focus:border-red-500"
                 : "border-gray-200 focus:border-blue-500"
             }`}
-            disabled={isLoading}
+            disabled={isSigningIn}
           />
         </div>
         {validationErrors.email && (
@@ -188,13 +215,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 ? "border-red-300 focus:border-red-500"
                 : "border-gray-200 focus:border-blue-500"
             }`}
-            disabled={isLoading}
+            disabled={isSigningIn}
           />
           <button
             type="button"
             className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 bg-transparent border-none cursor-pointer flex items-center justify-center"
             onClick={() => setShowPassword(!showPassword)}
-            disabled={isLoading}
+            disabled={isSigningIn}
           >
             {showPassword ? (
               <EyeOff className="h-4 w-4 text-gray-400" />
@@ -219,7 +246,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               handleInputChange("rememberMe", e.target.checked)
             }
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            disabled={isLoading}
+            disabled={isSigningIn}
           />
           <Label htmlFor="remember" className="text-sm text-gray-600">
             Ricordami
@@ -229,7 +256,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           type="button"
           onClick={onSwitchToForgotPassword}
           className="text-sm text-blue-600 hover:text-blue-800 p-0 h-auto bg-transparent border-none cursor-pointer"
-          disabled={isLoading}
+          disabled={isSigningIn}
         >
           Password dimenticata?
         </button>
@@ -239,9 +266,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       <Button
         type="submit"
         className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
-        disabled={isLoading}
+        disabled={isSigningIn}
       >
-        {isLoading ? (
+        {isSigningIn ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Accesso in corso...
@@ -266,28 +293,38 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       <Button
         type="button"
         onClick={handleGoogleSignIn}
-        className="w-full h-12 border-2 border-gray-200 hover:border-gray-300 rounded-xl transition-all duration-200 bg-white text-gray-700 hover:bg-gray-50"
-        disabled={isLoading}
+        variant="outline"
+        className="w-full h-12 rounded-xl font-medium"
+        disabled={isSigningIn}
       >
-        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-          />
-          <path
-            fill="currentColor"
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-          />
-          <path
-            fill="currentColor"
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-          />
-          <path
-            fill="currentColor"
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-          />
-        </svg>
-        Continua con Google
+        {isSigningIn ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <span>Accesso in corso...</span>
+          </>
+        ) : (
+          <>
+            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            <span>Continua con Google</span>
+          </>
+        )}
       </Button>
 
       {/* Sign Up Link */}
@@ -297,7 +334,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           type="button"
           onClick={onSwitchToSignUp}
           className="text-sm text-blue-600 hover:text-blue-800 p-0 h-auto font-semibold bg-transparent border-none cursor-pointer"
-          disabled={isLoading}
+          disabled={isSigningIn}
         >
           Registrati ora
         </button>

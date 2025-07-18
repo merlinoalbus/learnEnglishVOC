@@ -9,6 +9,10 @@
 // per creare design personalizzati.
 
 module.exports = {
+  // ====== DARK MODE CONFIGURATION ======
+  // SCOPO: Abilita il dark mode basato su classe CSS
+  darkMode: 'class', // Usa 'class' invece di 'media' per controllo manuale
+  
   // ====== CONTENT CONFIGURATION ======
   // SCOPO: Dice a Tailwind dove cercare le classi CSS utilizzate
   // Tailwind scansiona questi file per creare un CSS finale ottimizzato

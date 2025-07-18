@@ -21,11 +21,11 @@ const DataManagementPanel = () => {
   } = useDataManagement();
 
   return (
-    <Card className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl animate-fade-in">
+    <Card className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 border-2 border-indigo-200 dark:border-indigo-700 rounded-2xl animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Backup Section */}
         <div className="text-center">
-          <h4 className="font-bold text-indigo-800 mb-3 flex items-center justify-center gap-2">
+          <h4 className="font-bold text-indigo-800 dark:text-indigo-200 mb-3 flex items-center justify-center gap-2">
             <Shield className="w-5 h-5" />
             Backup Completo
           </h4>
@@ -49,8 +49,8 @@ const DataManagementPanel = () => {
           </div>
           
           {/* ⭐ ENHANCED: Info about backup content */}
-          <div className="mt-3 p-3 bg-white rounded-lg border border-indigo-200">
-            <p className="text-xs text-indigo-700">
+          <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-indigo-200 dark:border-indigo-700">
+            <p className="text-xs text-indigo-700 dark:text-indigo-300">
               <strong>Include:</strong> Parole, Statistiche, Cronologia Test, Performance Parole
             </p>
           </div>
@@ -58,7 +58,7 @@ const DataManagementPanel = () => {
 
         {/* Reset Section */}
         <div className="text-center">
-          <h4 className="font-bold text-red-800 mb-3 flex items-center justify-center gap-2">
+          <h4 className="font-bold text-red-800 dark:text-red-200 mb-3 flex items-center justify-center gap-2">
             <AlertTriangle className="w-5 h-5" />
             Reset Completo
           </h4>
@@ -70,7 +70,7 @@ const DataManagementPanel = () => {
             <RefreshCw className="w-4 h-4 mr-2" />
             Reset Completo
           </Button>
-          <p className="text-xs text-red-600 mt-2">
+          <p className="text-xs text-red-600 dark:text-red-400 mt-2">
             ⚠️ Cancella tutto: parole, test, statistiche
           </p>
         </div>
