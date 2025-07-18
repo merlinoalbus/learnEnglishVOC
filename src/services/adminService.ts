@@ -2,6 +2,7 @@ import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmail
 import { auth, adminAuth, db } from '../config/firebase';
 import { doc, setDoc, serverTimestamp, collection, getDocs, query, where, deleteDoc, writeBatch } from 'firebase/firestore';
 import type { UserRole } from '../types/entities/User.types';
+import { initializeUserProfile } from './authService';
 
 export interface CreateUserRequest {
   email: string;
@@ -97,8 +98,14 @@ export const processPendingUserCreations = async (
         
         const newUser = userCredential.user;
         
-        // Initialize user data using service function
-        await initializeNewUserData(newUser.uid, pendingData);
+        // Initialize user profile using authService function (no duplication)
+        await initializeUserProfile(newUser.uid, "email", true);
+        
+        // Update with admin-specified role and display name
+        await setDoc(doc(db, 'users', newUser.uid), {
+          role: pendingData.role,
+          displayName: pendingData.displayName,
+        }, { merge: true });
         
         // Remove from pending queue
         await deleteDoc(doc(db, 'pending_user_creations', pendingDoc.id));
@@ -148,53 +155,7 @@ export const processPendingUserCreations = async (
   }
 };
 
-/**
- * Initialize new user data in Firestore
- */
-const initializeNewUserData = async (uid: string, userData: PendingUserCreation): Promise<void> => {
-  // Create user profile
-  const userProfile = {
-    id: uid,
-    email: userData.email,
-    displayName: userData.displayName,
-    role: userData.role,
-    emailVerified: false,
-    isActive: true,
-    createdAt: serverTimestamp(),
-    lastLoginAt: null,
-    photoURL: null,
-    providerId: 'password'
-  };
-  
-  await setDoc(doc(db, 'users', uid), userProfile);
-  
-  // Initialize user preferences
-  await setDoc(doc(db, 'user_preferences', uid), {
-    theme: 'light',
-    notifications: {
-      email: true,
-      push: false,
-      inApp: true
-    },
-    privacy: {
-      showProfile: true,
-      showStats: false
-    },
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  });
-  
-  // Initialize user stats
-  await setDoc(doc(db, 'user_stats', uid), {
-    totalTests: 0,
-    totalWords: 0,
-    averageScore: 0,
-    lastTestDate: null,
-    streakDays: 0,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  });
-};
+// Removed initializeNewUserData - now using authService.initializeUserProfile to avoid duplication
 
 // Legacy function for backward compatibility
 export const processPendingUserCreationsForGoogle = processPendingUserCreations;

@@ -107,7 +107,7 @@ export const AppNavigation = React.memo(() => {
             {navItems.map((item) => (
               <Button
                 key={item.id}
-                onClick={() => dispatch({ type: "SET_VIEW", payload: item.id })}
+                onClick={() => dispatch({ type: "SET_VIEW", payload: item.id as any })}
                 className={`flex items-center gap-2 py-4 px-4 rounded-2xl text-base font-semibold transition-all duration-300 relative ${
                   currentView === item.id
                     ? `bg-gradient-to-r ${item.color} text-white shadow-lg transform scale-105`

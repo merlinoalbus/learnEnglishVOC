@@ -103,7 +103,9 @@ interface TestGetters {
   getTestSummary: () => TestSummary;
 }
 
-interface TestHookResult extends TestState, TestOperations, TestGetters {}
+interface TestHookResult extends TestState, TestOperations, TestGetters {
+  hintUsed: boolean;
+}
 
 type TestCompleteCallback = (
   testStats: TestStats,
@@ -858,6 +860,9 @@ export const useTest = (
     // Getters
     getTestProgress: useCallback(() => progressData, [progressData]),
     getTestSummary: useCallback(() => summaryData, [summaryData]),
+
+    // Alias for AppContext compatibility
+    hintUsed: hintUsedForCurrentWord,
   };
 };
 

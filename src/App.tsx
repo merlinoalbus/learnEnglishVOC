@@ -36,10 +36,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
  * App Error Handler Props
  * Type-safe props for error handling
  */
-interface AppErrorInfo {
-  componentStack: string;
-  errorBoundary?: string;
-}
+import { ErrorInfo } from 'react';
 
 // =====================================================
 // COMPONENTE PRINCIPALE - TypeScript
@@ -55,7 +52,7 @@ const VocabularyApp: React.FC = () => {
   // 🔧 ERROR HANDLER TYPE-SAFE
   // =====================================================
 
-  const handleAppError = (error: Error, errorInfo: AppErrorInfo): void => {
+  const handleAppError = (error: Error, errorInfo: ErrorInfo): void => {
     // Error tracking esistente - INVARIATO ma type-safe
     ErrorTracker.logError(error, "Main App", { errorInfo });
 

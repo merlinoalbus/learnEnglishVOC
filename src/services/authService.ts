@@ -252,9 +252,10 @@ export const initializeUserProfile = async (
 
 const initializeUserCollections = async (userId: string): Promise<void> => {
   try {
-    // Initialize consolidated profile data in users collection
+    // Initialize consolidated user data - profile, preferences and stats all in users collection
     const userRef = doc(db, USERS_COLLECTION, userId);
-    const profileData = {
+    const consolidatedData = {
+      // ===== PROFILE DATA =====
       nativeLanguage: "it",
       targetLanguage: "en",
       englishLevel: "B1",
@@ -263,12 +264,8 @@ const initializeUserCollections = async (userId: string): Promise<void> => {
       weeklyTestTarget: 3,
       profileCreatedAt: serverTimestamp(),
       profileUpdatedAt: serverTimestamp(),
-    };
 
-    // Initialize UserPreferences
-    const userPreferencesRef = doc(db, USER_PREFERENCES_COLLECTION, userId);
-    const defaultPreferences: UserPreferences = {
-      userId,
+      // ===== PREFERENCES (consolidated from UserPreferences) =====
       theme: "light",
       interfaceLanguage: "it",
       testPreferences: {
@@ -302,16 +299,8 @@ const initializeUserCollections = async (userId: string): Promise<void> => {
         compactView: false,
         showAdvancedStats: false,
       },
-      updatedAt: new Date(),
-    };
-    
-    await setDoc(userPreferencesRef, {
-      ...defaultPreferences,
-      updatedAt: serverTimestamp(),
-    });
 
-    // Initialize consolidated stats data in users collection
-    const statsData = {
+      // ===== STATS DATA (consolidated from UserStats) =====
       totalActiveDays: 0,
       currentStreak: 0,
       longestStreak: 0,
@@ -332,14 +321,13 @@ const initializeUserCollections = async (userId: string): Promise<void> => {
         reward: "Badge Principiante",
       },
       statsUpdatedAt: serverTimestamp(),
+
+      // ===== METADATA =====
+      lastUpdated: serverTimestamp(),
     };
     
-    // Update user document with consolidated profile and stats data
-    await updateDoc(userRef, {
-      ...profileData,
-      ...statsData,
-      lastUpdated: serverTimestamp(),
-    });
+    // Update user document with all consolidated data
+    await updateDoc(userRef, consolidatedData);
 
     // User collections initialized successfully
   } catch (error) {
@@ -693,8 +681,7 @@ const checkUserInvitation = async (email: string): Promise<UserRole | null> => {
 // =====================================================
 const USERS_COLLECTION = "users";
 const ADMIN_OPERATIONS_COLLECTION = "admin_operations";
-const USER_PREFERENCES_COLLECTION = "user_preferences";
-// Note: user_profiles and user_stats are now consolidated in users collection
+// Note: user_profiles, user_stats and user_preferences are now consolidated in users collection
 
 const AUTH_SERVICE_CONFIG = {
   // Session configuration
@@ -760,7 +747,7 @@ const convertToUserEntity = (authUser: AuthUser): User => {
     displayName: authUser.displayName || undefined,
     photoURL: authUser.photoURL || undefined,
     emailVerified: authUser.emailVerified,
-    providerId: authUser.providerData[0]?.providerId || "email",
+    providerId: authUser.providerData[0]?.providerId || "password",
     createdAt: authUser.metadata.creationTime,
     lastLoginAt: authUser.metadata.lastSignInTime,
     role: "user" as UserRole, // AGGIUNGI
@@ -1873,23 +1860,55 @@ export const updateUserStats = async (
 
 export const getUserPreferences = async (userId: string): Promise<UserPreferences | null> => {
   try {
-    // First check new structure
-    const preferencesDoc = await getDoc(doc(db, USER_PREFERENCES_COLLECTION, userId));
-    
-    if (preferencesDoc.exists()) {
-      const data = preferencesDoc.data();
-      return {
-        ...data,
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-      } as UserPreferences;
-    }
-
-    // Fallback to old structure in users collection
+    // Get preferences from consolidated user document
     const userDoc = await getDoc(doc(db, USERS_COLLECTION, userId));
+    
     if (userDoc.exists()) {
       const userData = userDoc.data();
+      
+      // Extract preferences data from user document (consolidated structure)
+      if (userData.theme || userData.testPreferences) {
+        return {
+          userId,
+          theme: userData.theme || "light",
+          interfaceLanguage: userData.interfaceLanguage || "it",
+          testPreferences: userData.testPreferences || {
+            defaultTestMode: "normal",
+            defaultWordsPerTest: 20,
+            hintsEnabled: true,
+            autoAdvanceDelay: 3000,
+            showMeaningAfterAnswer: true,
+            showTimer: true,
+            soundsEnabled: true,
+          },
+          notificationPreferences: userData.notificationPreferences || {
+            pushEnabled: true,
+            emailEnabled: true,
+            dailyReminder: true,
+            reminderTime: "19:00",
+            weeklyTestReminder: true,
+            progressNotifications: true,
+            achievementNotifications: true,
+          },
+          audioPreferences: userData.audioPreferences || {
+            autoPlayPronunciation: true,
+            volume: 0.8,
+            playbackSpeed: 1.0,
+            actionSounds: true,
+          },
+          displayPreferences: userData.displayPreferences || {
+            fontSize: "medium",
+            highContrast: false,
+            reducedMotion: false,
+            compactView: false,
+            showAdvancedStats: false,
+          },
+          updatedAt: userData.lastUpdated?.toDate() || new Date(),
+        } as UserPreferences;
+      }
+
+      // Fallback for old structure migration
       if (userData.settings) {
-        // Convert old structure to new structure
         const migratedPreferences: UserPreferences = {
           userId,
           theme: userData.settings.theme || "light",
@@ -1928,9 +1947,15 @@ export const getUserPreferences = async (userId: string): Promise<UserPreference
           updatedAt: new Date(),
         };
 
-        // Migrate to new structure
-        await setDoc(doc(db, USER_PREFERENCES_COLLECTION, userId), {
-          ...migratedPreferences,
+        // Migrate to consolidated structure in user document
+        await updateDoc(doc(db, USERS_COLLECTION, userId), {
+          theme: migratedPreferences.theme,
+          interfaceLanguage: migratedPreferences.interfaceLanguage,
+          testPreferences: migratedPreferences.testPreferences,
+          notificationPreferences: migratedPreferences.notificationPreferences,
+          audioPreferences: migratedPreferences.audioPreferences,
+          displayPreferences: migratedPreferences.displayPreferences,
+          lastUpdated: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
 
@@ -1950,12 +1975,22 @@ export const updateUserPreferences = async (
   preferences: Partial<UserPreferences>
 ): Promise<boolean> => {
   try {
-    const preferencesRef = doc(db, USER_PREFERENCES_COLLECTION, userId);
+    // Update preferences in consolidated user document
+    const userRef = doc(db, USERS_COLLECTION, userId);
     
-    await setDoc(preferencesRef, {
-      ...preferences,
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
+    // Prepare update data (only include preference fields)
+    const updateData: any = {
+      lastUpdated: serverTimestamp(),
+    };
+    
+    if (preferences.theme) updateData.theme = preferences.theme;
+    if (preferences.interfaceLanguage) updateData.interfaceLanguage = preferences.interfaceLanguage;
+    if (preferences.testPreferences) updateData.testPreferences = preferences.testPreferences;
+    if (preferences.notificationPreferences) updateData.notificationPreferences = preferences.notificationPreferences;
+    if (preferences.audioPreferences) updateData.audioPreferences = preferences.audioPreferences;
+    if (preferences.displayPreferences) updateData.displayPreferences = preferences.displayPreferences;
+
+    await updateDoc(userRef, updateData);
 
     return true;
   } catch (error) {

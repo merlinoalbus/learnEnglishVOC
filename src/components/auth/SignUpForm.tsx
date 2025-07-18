@@ -376,6 +376,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
                     type: "SET_VIEW", 
                     payload: "terms",
                     authContext: { 
+                      view: "terms",
                       source: "signup", 
                       formData: formData 
                     }
@@ -395,6 +396,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
                     type: "SET_VIEW", 
                     payload: "privacy",
                     authContext: { 
+                      view: "terms",
                       source: "signup", 
                       formData: formData 
                     }
