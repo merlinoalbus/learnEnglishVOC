@@ -100,6 +100,12 @@ validateFirebaseConfig();
 export const firebaseApp: FirebaseApp = initializeApp(firebaseConfig);
 
 /**
+ * Initialize secondary Firebase App for admin operations
+ * This prevents session interference during user creation
+ */
+export const adminFirebaseApp: FirebaseApp = initializeApp(firebaseConfig, "admin");
+
+/**
  * Initialize Firestore with types
  * Type-safe Firestore instance
  */
@@ -110,6 +116,13 @@ export const db: Firestore = getFirestore(firebaseApp);
  * Type-safe Auth instance
  */
 export const auth: Auth = getAuth(firebaseApp);
+
+/**
+ * Initialize secondary Auth instance for admin operations
+ * This prevents session interference during user creation
+ */
+export const adminAuth: Auth = getAuth(adminFirebaseApp);
+
 
 // =====================================================
 // 🔧 SETUP & PERSISTENCE
@@ -171,6 +184,7 @@ async function setupDevelopment(): Promise<void> {
         connectAuthEmulator(auth, "http://localhost:9099");
         console.log("🔧 Connected to Auth Emulator");
       }
+
     } catch (error) {
       console.warn(
         "⚠️ Emulator connection failed (normal if not running):",

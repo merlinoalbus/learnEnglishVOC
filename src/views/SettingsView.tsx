@@ -17,6 +17,14 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  Sun,
+  Moon,
+  Mail,
+  MessageSquare,
+  Key,
+  Sparkles,
+  Zap,
+  Star,
 } from "lucide-react";
 import { useAuth, useUserRole } from "../hooks/integration/useAuth";
 import { 
@@ -58,14 +66,6 @@ export const SettingsView: React.FC = () => {
           if (preferences) {
             const isDark = preferences.theme === 'dark';
             setDarkMode(isDark);
-            
-            // Apply theme to DOM immediately
-            if (isDark) {
-              document.documentElement.classList.add('dark');
-            } else {
-              document.documentElement.classList.remove('dark');
-            }
-            
             setEmailNotifications(preferences.notificationPreferences.emailEnabled);
             setStudyReminders(preferences.notificationPreferences.dailyReminder);
           } else {
@@ -95,33 +95,20 @@ export const SettingsView: React.FC = () => {
     if (!user?.id) return;
     
     try {
-      // Apply theme to DOM immediately for instant feedback
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      
       const success = await updateUserTheme(user.id, theme);
       if (success) {
         setDarkMode(theme === 'dark');
+        // Apply theme to DOM
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
         setMessage({ type: "success", text: `Tema ${theme === 'dark' ? 'scuro' : 'chiaro'} attivato` });
       } else {
-        // Revert DOM change if save failed
-        if (theme === 'dark') {
-          document.documentElement.classList.remove('dark');
-        } else {
-          document.documentElement.classList.add('dark');
-        }
         setMessage({ type: "error", text: "Errore nell'aggiornamento del tema" });
       }
     } catch (error) {
-      // Revert DOM change if error occurred
-      if (theme === 'dark') {
-        document.documentElement.classList.remove('dark');
-      } else {
-        document.documentElement.classList.add('dark');
-      }
       console.error('Error updating theme:', error);
       setMessage({ type: "error", text: "Errore nell'aggiornamento del tema" });
     }
@@ -223,220 +210,274 @@ export const SettingsView: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Impostazioni</h1>
-        <p className="text-gray-600 dark:text-gray-400">Configura le tue preferenze e sicurezza</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative max-w-4xl mx-auto px-6 py-12">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+              <Settings className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold mb-4">Impostazioni ⚙️</h1>
+            <p className="text-white/80 text-lg max-w-2xl mx-auto">Personalizza la tua esperienza di apprendimento e configura le tue preferenze</p>
+          </div>
+        </div>
       </div>
+      
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-6 py-8 space-y-8 relative -mt-16 z-10">
 
-      {/* Message */}
-      {message && (
-        <Alert className={message.type === "success" ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
-          {message.type === "success" ? (
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          ) : (
-            <AlertCircle className="h-4 w-4 text-red-600" />
-          )}
-          <AlertDescription className={message.type === "success" ? "text-green-800" : "text-red-800"}>
-            {message.text}
-          </AlertDescription>
-        </Alert>
-      )}
+        {/* Message */}
+        {message && (
+          <Alert className={message.type === "success" ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+            {message.type === "success" ? (
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-red-600" />
+            )}
+            <AlertDescription className={message.type === "success" ? "text-green-800" : "text-red-800"}>
+              {message.text}
+            </AlertDescription>
+          </Alert>
+        )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Password & Security */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5" />
-              Password e Sicurezza
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form onSubmit={(e) => { e.preventDefault(); handleUpdatePassword(); }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Password & Security */}
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Lock className="w-5 h-5" />
+                Password e Sicurezza
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={(e) => { e.preventDefault(); handleUpdatePassword(); }}>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="currentPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Password attuale
+                    </Label>
+                    <div className="relative mt-1">
+                      <Input
+                        id="currentPassword"
+                        name="currentPassword"
+                        type={showPasswords.current ? "text" : "password"}
+                        value={passwordForm.currentPassword}
+                        onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
+                        className="pr-10"
+                        disabled={updateLoading}
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("current")}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Nuova password
+                    </Label>
+                    <div className="relative mt-1">
+                      <Input
+                        id="newPassword"
+                        name="newPassword"
+                        type={showPasswords.new ? "text" : "password"}
+                        value={passwordForm.newPassword}
+                        onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
+                        className="pr-10"
+                        disabled={updateLoading}
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("new")}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Conferma nuova password
+                    </Label>
+                    <div className="relative mt-1">
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showPasswords.confirm ? "text" : "password"}
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
+                        className="pr-10"
+                        disabled={updateLoading}
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("confirm")}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={updateLoading}
+                    className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white border-0 shadow-lg"
+                  >
+                    {updateLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Aggiornamento...
+                      </>
+                    ) : (
+                      <>
+                        <Key className="w-4 h-4 mr-2" />
+                        Aggiorna Password
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Preferences */}
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Sparkles className="w-5 h-5" />
+                Preferenze
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="currentPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Password attuale
-                  </Label>
-                  <div className="relative mt-1">
-                    <Input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type={showPasswords.current ? "text" : "password"}
-                      value={passwordForm.currentPassword}
-                      onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
-                      className="pr-10"
-                      disabled={updateLoading}
-                      autoComplete="current-password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility("current")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Nuova password
-                  </Label>
-                  <div className="relative mt-1">
-                    <Input
-                      id="newPassword"
-                      name="newPassword"
-                      type={showPasswords.new ? "text" : "password"}
-                      value={passwordForm.newPassword}
-                      onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
-                      className="pr-10"
-                      disabled={updateLoading}
-                      autoComplete="new-password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility("new")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Conferma nuova password
-                  </Label>
-                  <div className="relative mt-1">
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showPasswords.confirm ? "text" : "password"}
-                      value={passwordForm.confirmPassword}
-                      onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
-                      className="pr-10"
-                      disabled={updateLoading}
-                      autoComplete="new-password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility("confirm")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={updateLoading}
-                  className="w-full"
-                >
-                  {updateLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Aggiornamento...
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4 mr-2" />
-                      Aggiorna Password
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Preferences */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Preferenze
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tema</Label>
-              <div className="mt-2 flex items-center gap-4">
-                <Button 
-                  variant={!darkMode ? "outline" : "ghost"} 
-                  size="sm" 
-                  className="flex items-center gap-2"
-                  onClick={() => handleThemeChange('light')}
-                >
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                   <Palette className="w-4 h-4" />
-                  Chiaro
-                </Button>
-                <Button 
-                  variant={darkMode ? "outline" : "ghost"} 
-                  size="sm" 
-                  className="flex items-center gap-2"
-                  onClick={() => handleThemeChange('dark')}
-                >
-                  <Palette className="w-4 h-4" />
-                  Scuro
-                </Button>
+                  Tema Interfaccia
+                </Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    variant={!darkMode ? "default" : "outline"} 
+                    size="sm" 
+                    className={`flex items-center gap-2 justify-start p-4 h-auto ${!darkMode ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg' : 'border-2 border-gray-200 hover:border-yellow-300'}`}
+                    onClick={() => handleThemeChange('light')}
+                  >
+                    <Sun className="w-5 h-5" />
+                    <div className="text-left">
+                      <div className="font-medium">Chiaro</div>
+                      <div className="text-xs opacity-80">Tema luminoso</div>
+                    </div>
+                  </Button>
+                  <Button 
+                    variant={darkMode ? "default" : "outline"} 
+                    size="sm" 
+                    className={`flex items-center gap-2 justify-start p-4 h-auto ${darkMode ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white border-0 shadow-lg' : 'border-2 border-gray-200 hover:border-purple-300'}`}
+                    onClick={() => handleThemeChange('dark')}
+                  >
+                    <Moon className="w-5 h-5" />
+                    <div className="text-left">
+                      <div className="font-medium">Scuro</div>
+                      <div className="text-xs opacity-80">Tema notturno</div>
+                    </div>
+                  </Button>
+                </div>
               </div>
-            </div>
 
-            <div>
-              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Lingua</Label>
-              <div className="mt-2">
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <div className="space-y-4">
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                   <Globe className="w-4 h-4" />
-                  Italiano
-                </Button>
+                  Lingua Interfaccia
+                </Label>
+                <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+                      <Globe className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-green-800 dark:text-green-200">Italiano</div>
+                      <div className="text-sm text-green-600 dark:text-green-400">Lingua predefinita</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        {/* Notifications full width */}
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-t-lg">
+            <CardTitle className="flex items-center gap-2 text-white">
               <Bell className="w-5 h-5" />
-              Notifiche
+              Notifiche e Comunicazioni
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Notifiche email</p>
-                <p className="text-xs text-gray-500">Ricevi aggiornamenti via email</p>
+          <CardContent className="space-y-6 p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                      <Mail className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-blue-800 dark:text-blue-200">Notifiche Email</p>
+                      <p className="text-sm text-blue-600 dark:text-blue-400">Ricevi aggiornamenti via email</p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant={emailNotifications ? "default" : "outline"}
+                    size="sm"
+                    className={emailNotifications ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-lg" : "border-blue-300 text-blue-700 hover:bg-blue-50"}
+                    onClick={() => handleNotificationToggle('email')}
+                  >
+                    {emailNotifications ? (
+                      <><CheckCircle className="w-4 h-4 mr-2" />Attive</>
+                    ) : (
+                      <><Zap className="w-4 h-4 mr-2" />Attiva</>
+                    )}
+                  </Button>
+                </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleNotificationToggle('email')}
-              >
-                {emailNotifications ? 'Disattiva' : 'Attiva'}
-              </Button>
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Promemoria studio</p>
-                <p className="text-xs text-gray-500">Notifiche per sessioni di studio</p>
+              <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+                      <MessageSquare className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-purple-800 dark:text-purple-200">Promemoria Studio</p>
+                      <p className="text-sm text-purple-600 dark:text-purple-400">Notifiche per sessioni di studio</p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant={studyReminders ? "default" : "outline"}
+                    size="sm"
+                    className={studyReminders ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white border-0 shadow-lg" : "border-purple-300 text-purple-700 hover:bg-purple-50"}
+                    onClick={() => handleNotificationToggle('study')}
+                  >
+                    {studyReminders ? (
+                      <><CheckCircle className="w-4 h-4 mr-2" />Attivi</>
+                    ) : (
+                      <><Star className="w-4 h-4 mr-2" />Attiva</>
+                    )}
+                  </Button>
+                </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleNotificationToggle('study')}
-              >
-                {studyReminders ? 'Disattiva' : 'Attiva'}
-              </Button>
             </div>
           </CardContent>
         </Card>
-
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -47,15 +47,19 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   onSwitchToLogin,
   onSignUpSuccess = () => {},
 }) => {
-  const { dispatch } = useAppContext();
-  const [formData, setFormData] = useState<FormData>({
+  const { dispatch, authReturnContext } = useAppContext();
+  
+  // Initialize form data from context if returning from Terms/Privacy
+  const initialFormData = authReturnContext?.formData || {
     email: "",
     password: "",
     confirmPassword: "",
     displayName: "",
     acceptTerms: false,
     acceptPrivacy: false,
-  });
+  };
+  
+  const [formData, setFormData] = useState<FormData>(initialFormData);
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] =
@@ -74,6 +78,16 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     validateEmail,
     validatePassword,
   } = useAuth();
+
+  // Clear auth context when component unmounts after successful registration
+  useEffect(() => {
+    return () => {
+      // Only clear if we had context (came from Terms/Privacy)
+      if (authReturnContext) {
+        dispatch({ type: "CLEAR_AUTH_CONTEXT" });
+      }
+    };
+  }, [authReturnContext, dispatch]);
 
   // Validation functions
   const validateForm = (): boolean => {
@@ -358,7 +372,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  dispatch({ type: "SET_VIEW", payload: "terms" });
+                  dispatch({ 
+                    type: "SET_VIEW", 
+                    payload: "terms",
+                    authContext: { 
+                      source: "signup", 
+                      formData: formData 
+                    }
+                  });
                 }}
               >
                 Termini di Servizio
@@ -370,7 +391,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  dispatch({ type: "SET_VIEW", payload: "privacy" });
+                  dispatch({ 
+                    type: "SET_VIEW", 
+                    payload: "privacy",
+                    authContext: { 
+                      source: "signup", 
+                      formData: formData 
+                    }
+                  });
                 }}
               >
                 Privacy Policy

@@ -15,15 +15,13 @@ import {
   AlertCircle,
   Key,
   Mail,
-  Filter,
-  Download,
-  UserPlus,
   Eye,
   EyeOff,
+  UserPlus,
 } from "lucide-react";
 import { useAuth, useUserRole } from "../hooks/integration/useAuth";
-import { getAllUsers, deleteUserData, updateUserRole, updateUserStatus } from "../services/authService";
-import { createUserAsAdmin, resetPasswordAsAdmin, generateSecurePassword, getPendingUserCreationsCount, type CreateUserRequest } from "../services/adminService";
+import { getAllUsers, updateUserRole, updateUserStatus, getUserPreferences } from "../services/authService";
+import { resetPasswordAsAdmin, getPendingUserCreationsCount, cleanupAdminOperations, deleteUserComplete } from "../services/adminService";
 import type { User } from "../types/entities/User.types";
 
 // Using User interface from types
@@ -36,17 +34,17 @@ export const AdminView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState<"edit" | "delete" | "password" | "create">("edit");
+  const [modalType, setModalType] = useState<"edit" | "delete" | "password" | "preferences">("edit");
   const [formData, setFormData] = useState({
     email: "",
     displayName: "",
     role: "user" as "user" | "admin",
-    password: "",
-    confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [pendingCount, setPendingCount] = useState<number>(0);
+  const [userPreferences, setUserPreferences] = useState<any>(null);
+  const [loadingPreferences, setLoadingPreferences] = useState(false);
 
   // Load real users data from Firebase and pending count
   useEffect(() => {
@@ -71,12 +69,33 @@ export const AdminView: React.FC = () => {
     loadData();
   }, []);
 
+  // Listen for admin users processed event to refresh pending count
+  useEffect(() => {
+    const handleAdminUsersProcessed = async () => {
+      try {
+        const pending = await getPendingUserCreationsCount();
+        setPendingCount(pending);
+        const realUsers = await getAllUsers();
+        setUsers(realUsers);
+        setMessage({
+          type: "success",
+          text: "Utenti in coda processati con successo"
+        });
+      } catch (error) {
+        console.error("Error refreshing data after processing:", error);
+      }
+    };
+
+    window.addEventListener('adminUsersProcessed', handleAdminUsersProcessed);
+    return () => window.removeEventListener('adminUsersProcessed', handleAdminUsersProcessed);
+  }, []);
+
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (user.displayName || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleOpenModal = (type: typeof modalType, user?: User) => {
+  const handleOpenModal = async (type: typeof modalType, user?: User) => {
     setModalType(type);
     setSelectedUser(user || null);
     
@@ -85,16 +104,26 @@ export const AdminView: React.FC = () => {
         email: user.email,
         displayName: user.displayName || "",
         role: user.role,
-        password: "",
-        confirmPassword: "",
       });
+      
+      // Load user preferences if opening preferences modal
+      if (type === "preferences") {
+        setLoadingPreferences(true);
+        try {
+          const preferences = await getUserPreferences(user.id);
+          setUserPreferences(preferences);
+        } catch (error) {
+          console.error("Error loading user preferences:", error);
+          setMessage({ type: "error", text: "Errore nel caricamento delle preferenze utente" });
+        } finally {
+          setLoadingPreferences(false);
+        }
+      }
     } else {
       setFormData({
         email: "",
         displayName: "",
         role: "user",
-        password: "",
-        confirmPassword: "",
       });
     }
     
@@ -109,9 +138,8 @@ export const AdminView: React.FC = () => {
       email: "",
       displayName: "",
       role: "user",
-      password: "",
-      confirmPassword: "",
     });
+    setUserPreferences(null);
     setMessage(null);
   };
 
@@ -152,10 +180,20 @@ export const AdminView: React.FC = () => {
     }
     
     try {
-      await deleteUserData(userId, userProfile.id);
+      const result = await deleteUserComplete(userId, userProfile.id);
       
-      setUsers(prev => prev.filter(user => user.id !== userId));
-      setMessage({ type: "success", text: "Utente eliminato con successo" });
+      if (result.success) {
+        setUsers(prev => prev.filter(user => user.id !== userId));
+        setMessage({ 
+          type: "success", 
+          text: result.message
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: result.message
+        });
+      }
       handleCloseModal();
     } catch (error) {
       setMessage({
@@ -198,61 +236,26 @@ export const AdminView: React.FC = () => {
     }
   };
 
-  const handleCreateUser = async () => {
-    if (!formData.email || !formData.displayName || !formData.password) {
-      setMessage({ type: "error", text: "Email, nome e password sono obbligatori" });
-      return;
-    }
 
-    if (formData.password !== formData.confirmPassword) {
-      setMessage({ type: "error", text: "Le password non corrispondono" });
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setMessage({ type: "error", text: "La password deve contenere almeno 6 caratteri" });
-      return;
-    }
-
+  const handleCleanupOperations = async () => {
     try {
       setLoading(true);
-      const userData: CreateUserRequest = {
-        email: formData.email,
-        displayName: formData.displayName,
-        role: formData.role,
-        password: formData.password,
-      };
-
-      const success = await createUserAsAdmin(userData, userProfile?.id || '');
-
-      if (success) {
-        setPendingCount(prev => prev + 1);
-        setMessage({ 
-          type: "success", 
-          text: `Utente ${userData.displayName} aggiunto alla coda di creazione. Verrà creato al prossimo login dell'admin.` 
-        });
-        handleCloseModal();
-      }
-    } catch (error: any) {
-      console.error("Error creating user:", error);
-      let errorMessage = "Errore nella creazione dell'utente";
-      
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "Email già in uso da un altro account";
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = "Password troppo debole";
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = "Email non valida";
-      }
-      
+      const result = await cleanupAdminOperations();
+      setMessage({
+        type: "success",
+        text: `Cleanup completato: ${result.deleted} operazioni amministrative rimosse`
+      });
+    } catch (error) {
+      console.error("Cleanup error:", error);
       setMessage({
         type: "error",
-        text: errorMessage
+        text: "Errore durante il cleanup delle operazioni amministrative"
       });
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleResetPassword = async () => {
     if (!selectedUser?.email) {
@@ -355,11 +358,13 @@ export const AdminView: React.FC = () => {
           <p className="text-gray-600 dark:text-gray-400">Amministra gli utenti registrati nella piattaforma</p>
         </div>
         <Button
-          onClick={() => handleOpenModal("create")}
-          className="bg-indigo-600 hover:bg-indigo-700"
+          onClick={() => handleCleanupOperations()}
+          variant="outline"
+          className="border-orange-200 text-orange-700 hover:bg-orange-50"
+          disabled={loading}
         >
-          <UserPlus className="w-4 h-4 mr-2" />
-          Nuovo Utente
+          <Trash2 className="w-4 h-4 mr-2" />
+          Cleanup Admin Operations
         </Button>
       </div>
 
@@ -456,14 +461,6 @@ export const AdminView: React.FC = () => {
                   className="pl-10 w-64"
                 />
               </div>
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                Filtri
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Esporta
-              </Button>
             </div>
           </div>
         </CardHeader>
@@ -551,6 +548,14 @@ export const AdminView: React.FC = () => {
                           <Ban className="w-4 h-4" />
                         </Button>
                         <Button
+                          onClick={() => handleOpenModal("preferences", user)}
+                          variant="ghost"
+                          size="sm"
+                          title="Visualizza preferenze utente"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
                           onClick={() => handleOpenModal("delete", user)}
                           variant="ghost"
                           size="sm"
@@ -575,10 +580,10 @@ export const AdminView: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-bold mb-4">
-              {modalType === "create" && "Crea Nuovo Utente"}
               {modalType === "edit" && "Modifica Utente"}
               {modalType === "password" && "Reimposta Password"}
               {modalType === "delete" && "Elimina Utente"}
+              {modalType === "preferences" && "Preferenze Utente"}
             </h3>
 
             {modalType === "delete" ? (
@@ -601,7 +606,7 @@ export const AdminView: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {(modalType === "create" || modalType === "edit") && (
+                {modalType === "edit" && (
                   <>
                     <div>
                       <Label htmlFor="email">Email</Label>
@@ -610,7 +615,7 @@ export const AdminView: React.FC = () => {
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        disabled={modalType === "edit"}
+                        disabled={true}
                       />
                     </div>
                     <div>
@@ -636,55 +641,6 @@ export const AdminView: React.FC = () => {
                   </>
                 )}
 
-                {modalType === "create" && (
-                  <>
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="password">Password</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const newPassword = generateSecurePassword();
-                            setFormData(prev => ({ 
-                              ...prev, 
-                              password: newPassword,
-                              confirmPassword: newPassword
-                            }));
-                          }}
-                        >
-                          Genera
-                        </Button>
-                      </div>
-                      <div className="relative">
-                        <Input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          value={formData.password}
-                          onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                          className="pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-400"
-                        >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="confirmPassword">Conferma Password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type={showPassword ? "text" : "password"}
-                        value={formData.confirmPassword}
-                        onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      />
-                    </div>
-                  </>
-                )}
 
                 {modalType === "password" && (
                   <div className="space-y-4">
@@ -707,6 +663,63 @@ export const AdminView: React.FC = () => {
                   </div>
                 )}
 
+                {modalType === "preferences" && (
+                  <div className="space-y-4">
+                    {loadingPreferences ? (
+                      <div className="text-center py-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Caricamento preferenze...</p>
+                      </div>
+                    ) : userPreferences ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tema</label>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{userPreferences.theme || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Lingua</label>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{userPreferences.interfaceLanguage || 'N/A'}</p>
+                          </div>
+                        </div>
+                        {userPreferences.notifications && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Notifiche</label>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              <div>Email: {userPreferences.notifications.email ? 'Attive' : 'Disattive'}</div>
+                              <div>Push: {userPreferences.notifications.push ? 'Attive' : 'Disattive'}</div>
+                              <div>In-App: {userPreferences.notifications.inApp ? 'Attive' : 'Disattive'}</div>
+                            </div>
+                          </div>
+                        )}
+                        {userPreferences.privacy && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Privacy</label>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              <div>Profilo visibile: {userPreferences.privacy.showProfile ? 'Sì' : 'No'}</div>
+                              <div>Statistiche visibili: {userPreferences.privacy.showStats ? 'Sì' : 'No'}</div>
+                            </div>
+                          </div>
+                        )}
+                        {userPreferences.testPreferences && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Test</label>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              <div>Modalità: {userPreferences.testPreferences.defaultTestMode || 'N/A'}</div>
+                              <div>Parole per test: {userPreferences.testPreferences.defaultWordsPerTest || 'N/A'}</div>
+                              <div>Hints: {userPreferences.testPreferences.hintsEnabled ? 'Attivi' : 'Disattivi'}</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Nessuna preferenza trovata per questo utente.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
 
                 {message && (
                   <Alert className={message.type === "success" ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
@@ -718,19 +731,19 @@ export const AdminView: React.FC = () => {
 
                 <div className="flex justify-end gap-2">
                   <Button onClick={handleCloseModal} variant="outline">
-                    Annulla
+                    {modalType === "preferences" ? "Chiudi" : "Annulla"}
                   </Button>
-                  <Button 
-                    onClick={() => {
-                      if (modalType === "create") handleCreateUser();
-                      else if (modalType === "edit") handleUpdateUser();
-                      else if (modalType === "password") handleResetPassword();
-                    }}
-                  >
-                    {modalType === "create" && "Crea"}
-                    {modalType === "edit" && "Salva"}
-                    {modalType === "password" && "Reimposta"}
-                  </Button>
+                  {modalType !== "preferences" && (
+                    <Button 
+                      onClick={() => {
+                        if (modalType === "edit") handleUpdateUser();
+                        else if (modalType === "password") handleResetPassword();
+                      }}
+                    >
+                      {modalType === "edit" && "Salva"}
+                      {modalType === "password" && "Reimposta"}
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

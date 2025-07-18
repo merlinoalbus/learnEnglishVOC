@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getUserPreferences } from '../services/authService';
-import { useAuth } from '../hooks/integration/useAuth';
 
 interface ThemeContextType {
   isDark: boolean;
@@ -23,8 +22,11 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [isDark, setIsDark] = useState(false);
-  const { user } = useAuth();
+  const [isDark, setIsDark] = useState(() => {
+    // Initialize from localStorage on app start
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme === 'dark';
+  });
 
   // Apply theme to DOM
   const applyTheme = (dark: boolean) => {
@@ -35,34 +37,30 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
   };
 
-  // Load theme from user preferences
+  // Apply theme on component mount and when isDark changes
   useEffect(() => {
-    const loadTheme = async () => {
-      if (!user?.id) {
-        // Default theme for non-authenticated users
-        const savedTheme = localStorage.getItem('theme');
-        const dark = savedTheme === 'dark';
-        setIsDark(dark);
-        applyTheme(dark);
-        return;
-      }
+    applyTheme(isDark);
+  }, [isDark]);
 
-      try {
-        const preferences = await getUserPreferences(user.id);
-        const dark = preferences?.theme === 'dark' || false;
-        setIsDark(dark);
-        applyTheme(dark);
-      } catch (error) {
-        // Fallback to localStorage or default
-        const savedTheme = localStorage.getItem('theme');
-        const dark = savedTheme === 'dark';
-        setIsDark(dark);
-        applyTheme(dark);
-      }
+  // Listen to theme reset events (e.g., from logout)
+  useEffect(() => {
+    const handleThemeReset = () => {
+      const savedTheme = localStorage.getItem('theme');
+      const shouldBeDark = savedTheme === 'dark';
+      setIsDark(shouldBeDark);
     };
 
-    loadTheme();
-  }, [user?.id]);
+    // Listen to custom theme reset event
+    window.addEventListener('themeReset', handleThemeReset);
+    
+    // Listen to storage changes from other tabs/windows
+    window.addEventListener('storage', handleThemeReset);
+
+    return () => {
+      window.removeEventListener('themeReset', handleThemeReset);
+      window.removeEventListener('storage', handleThemeReset);
+    };
+  }, []);
 
   const setTheme = (theme: 'light' | 'dark') => {
     const dark = theme === 'dark';

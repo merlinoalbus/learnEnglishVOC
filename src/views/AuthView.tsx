@@ -5,6 +5,7 @@ import { SignUpForm } from "../components/auth/SignUpForm";
 import { ForgotPasswordForm } from "../components/auth/ForgotPasswordForm";
 import { AuthActionHandler } from "../components/auth/AuthActionHandler";
 import { useAuth } from "../hooks/integration/useAuth";
+import { useAppContext } from "../contexts/AppContext";
 
 type AuthMode = "login" | "signup" | "forgot-password" | "auth-action";
 
@@ -22,7 +23,17 @@ export const AuthView: React.FC<AuthViewProps> = ({
   onAuthSuccess,
   initialMode = "login",
 }) => {
-  const [currentMode, setCurrentMode] = useState<AuthMode>(initialMode);
+  const { authReturnContext } = useAppContext();
+  
+  // Determine initial mode based on context
+  const determineInitialMode = (): AuthMode => {
+    if (authReturnContext?.source === "signup") {
+      return "signup";
+    }
+    return initialMode;
+  };
+  
+  const [currentMode, setCurrentMode] = useState<AuthMode>(determineInitialMode());
   const { isAuthenticated, isReady } = useAuth();
   const [authActionParams, setAuthActionParams] = useState<{
     mode: string;
@@ -42,6 +53,13 @@ export const AuthView: React.FC<AuthViewProps> = ({
       setCurrentMode("auth-action");
     }
   }, []);
+
+  // Update mode when returning from Terms/Privacy
+  useEffect(() => {
+    if (authReturnContext?.source === "signup") {
+      setCurrentMode("signup");
+    }
+  }, [authReturnContext]);
 
   useEffect(() => {
     if (isReady && isAuthenticated) {

@@ -78,6 +78,59 @@ export interface User {
     createdBy?: string;
     notes?: string;
   };
+  
+  // ===== CONSOLIDATED PROFILE DATA (formerly user_profiles) =====
+  /** Nome completo */
+  fullName?: string;
+  /** Lingua nativa */
+  nativeLanguage?: string;
+  /** Lingua target (inglese per la nostra app) */
+  targetLanguage?: string;
+  /** Livello inglese corrente */
+  englishLevel?: EnglishLevel;
+  /** Obiettivo apprendimento */
+  learningGoal?: LearningGoal;
+  /** Parole target giornaliere */
+  dailyWordTarget?: number;
+  /** Test preferiti settimanali */
+  weeklyTestTarget?: number;
+  /** Bio/descrizione utente */
+  bio?: string;
+  /** Timestamp creazione profilo */
+  profileCreatedAt?: Date;
+  /** Timestamp ultimo aggiornamento profilo */
+  profileUpdatedAt?: Date;
+  
+  // ===== CONSOLIDATED STATS DATA (formerly user_stats) =====
+  /** Giorni totali attivi */
+  totalActiveDays?: number;
+  /** Streak giorni consecutivi */
+  currentStreak?: number;
+  /** Streak record */
+  longestStreak?: number;
+  /** Totale parole aggiunte */
+  totalWordsAdded?: number;
+  /** Totale parole apprese */
+  totalWordsLearned?: number;
+  /** Totale test completati */
+  totalTestsCompleted?: number;
+  /** Tempo totale studio (minuti) */
+  totalStudyTime?: number;
+  /** Accuratezza media test */
+  averageTestAccuracy?: number;
+  /** Livello progresso calcolato */
+  progressLevel?: number;
+  /** Prossimo milestone */
+  nextMilestone?: UserMilestone;
+  /** Timestamp ultimo aggiornamento stats */
+  statsUpdatedAt?: Date;
+  
+  // ===== MIGRATION METADATA =====
+  /** Timestamp migrazione (se applicabile) */
+  migratedAt?: Date;
+  /** Timestamp ultimo aggiornamento generale */
+  lastUpdated?: Date;
+  
   /** Metadata Firestore - usa FirestoreDocMetadata generic */
   firestoreMetadata?: import("../infrastructure/Firestore.types").FirestoreDocMetadata;
 }

@@ -194,10 +194,15 @@ export const useAuth = () => {
   // Handle Google redirect result
   useEffect(() => {
     if (firebaseReady) {
+      updateState({ loading: true });
       handleGoogleRedirectResult().then((result) => {
         if (result && !result.success && result.error) {
-          updateState({ error: result.error as AuthError });
+          updateState({ error: result.error as AuthError, loading: false });
+        } else {
+          updateState({ loading: false });
         }
+      }).catch(() => {
+        updateState({ loading: false });
       });
     }
   }, [firebaseReady, updateState]);
@@ -250,6 +255,10 @@ export const useAuth = () => {
             
             if (results.processed > 0) {
               console.log(`Successfully processed ${results.processed} pending user creations`);
+              // Notify admin components to refresh their data
+              window.dispatchEvent(new CustomEvent('adminUsersProcessed', { 
+                detail: { processed: results.processed, failed: results.failed } 
+              }));
             }
           } else {
             console.log('Not an admin user, skipping pending user processing');
@@ -294,6 +303,10 @@ export const useAuth = () => {
             
             if (results.processed > 0) {
               console.log(`Successfully processed ${results.processed} pending user creations`);
+              // Notify admin components to refresh their data
+              window.dispatchEvent(new CustomEvent('adminUsersProcessed', { 
+                detail: { processed: results.processed, failed: results.failed } 
+              }));
             }
           } else {
             console.log('Not an admin user, skipping pending user processing');

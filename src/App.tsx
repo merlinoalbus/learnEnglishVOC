@@ -25,6 +25,8 @@ import {
 
 // 🔥 NUOVA AGGIUNTA - Firebase Provider TypeScript
 import { FirebaseProvider } from "./contexts/FirebaseContext";
+// 🎨 AGGIUNTA - Theme Provider
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 // =====================================================
 // 📊 TYPES
@@ -101,44 +103,63 @@ const VocabularyApp: React.FC = () => {
          */}
         <FirebaseProvider>
           {/* =====================================================
-              APP PROVIDER - Livello 4 (INVARIATO)
+              THEME PROVIDER - Livello 4 (NUOVO)
               ===================================================== */}
           {/**
-           * AppProvider - ESISTENTE, nessuna modifica
-           * ORA può accedere a Firebase tramite useFirebase() hook type-safe
+           * ThemeProvider - NUOVO LIVELLO per gestione tema
+           * RESPONSABILITÀ:
+           * - Carica preferenze tema utente dal database
+           * - Applica tema al DOM (dark/light mode)
+           * - Gestisce persistenza tema in localStorage
+           * - Fornisce hook useTheme() ai componenti
            *
-           * POTENTIAL FUTURE UPGRADE:
-           * - AppProvider.js → AppProvider.tsx
-           * - Type-safe context value
-           * - Integration con Firebase types
+           * POSIZIONE:
+           * - Dopo FirebaseProvider (può accedere auth state)
+           * - Prima di AppProvider (tema disponibile all'app)
+           * - Integrato con useAuth per preferenze utente
            */}
-          <AppProvider>
+          <ThemeProvider>
             {/* =====================================================
-                APP LAYOUT - Livello 5 (INVARIATO)
+                APP PROVIDER - Livello 5 (INVARIATO)
                 ===================================================== */}
             {/**
-             * AppLayout - ESISTENTE, nessuna modifica
+             * AppProvider - ESISTENTE, nessuna modifica
+             * ORA può accedere a Firebase tramite useFirebase() hook type-safe
+             * E può accedere al tema tramite useTheme() hook
              *
              * POTENTIAL FUTURE UPGRADE:
-             * - AppLayout.js → AppLayout.tsx
-             * - Type-safe props
-             * - Integration con Firebase user state
+             * - AppProvider.js → AppProvider.tsx
+             * - Type-safe context value
+             * - Integration con Firebase types
              */}
-            <AppLayout>
+            <AppProvider>
               {/* =====================================================
-                  APP ROUTER - Livello 6 (INVARIATO)
+                  APP LAYOUT - Livello 6 (INVARIATO)
                   ===================================================== */}
               {/**
-               * AppRouter - ESISTENTE, nessuna modifica
+               * AppLayout - ESISTENTE, nessuna modifica
                *
                * POTENTIAL FUTURE UPGRADE:
-               * - AppRouter.js → AppRouter.tsx
-               * - Type-safe routing
-               * - Firebase-aware routing
+               * - AppLayout.js → AppLayout.tsx
+               * - Type-safe props
+               * - Integration con Firebase user state
                */}
-              <AppRouter />
-            </AppLayout>
-          </AppProvider>
+              <AppLayout>
+                {/* =====================================================
+                    APP ROUTER - Livello 7 (INVARIATO)
+                    ===================================================== */}
+                {/**
+                 * AppRouter - ESISTENTE, nessuna modifica
+                 *
+                 * POTENTIAL FUTURE UPGRADE:
+                 * - AppRouter.js → AppRouter.tsx
+                 * - Type-safe routing
+                 * - Firebase-aware routing
+                 */}
+                <AppRouter />
+              </AppLayout>
+            </AppProvider>
+          </ThemeProvider>
         </FirebaseProvider>
       </NotificationProvider>
     </MainAppErrorBoundary>

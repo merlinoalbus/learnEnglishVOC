@@ -88,7 +88,7 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
 
     const data = userDoc.data();
     
-    // Clean up the data to match User interface
+    // Clean up the data to match User interface with consolidated fields
     const cleanedData: User = {
       id: userDoc.id,
       email: data.email || "",
@@ -106,6 +106,40 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
       metadata: data.metadata || {
         registrationMethod: "email",
       },
+      
+      // === CONSOLIDATED PROFILE DATA ===
+      fullName: data.fullName || undefined,
+      nativeLanguage: data.nativeLanguage || undefined,
+      targetLanguage: data.targetLanguage || undefined,
+      englishLevel: data.englishLevel || undefined,
+      learningGoal: data.learningGoal || undefined,
+      dailyWordTarget: data.dailyWordTarget || undefined,
+      weeklyTestTarget: data.weeklyTestTarget || undefined,
+      bio: data.bio || undefined,
+      profileCreatedAt: data.profileCreatedAt instanceof Date ? data.profileCreatedAt : 
+                      (data.profileCreatedAt?.toDate ? data.profileCreatedAt.toDate() : undefined),
+      profileUpdatedAt: data.profileUpdatedAt instanceof Date ? data.profileUpdatedAt : 
+                      (data.profileUpdatedAt?.toDate ? data.profileUpdatedAt.toDate() : undefined),
+      
+      // === CONSOLIDATED STATS DATA ===
+      totalActiveDays: data.totalActiveDays || undefined,
+      currentStreak: data.currentStreak || undefined,
+      longestStreak: data.longestStreak || undefined,
+      totalWordsAdded: data.totalWordsAdded || undefined,
+      totalWordsLearned: data.totalWordsLearned || undefined,
+      totalTestsCompleted: data.totalTestsCompleted || undefined,
+      totalStudyTime: data.totalStudyTime || undefined,
+      averageTestAccuracy: data.averageTestAccuracy || undefined,
+      progressLevel: data.progressLevel || undefined,
+      nextMilestone: data.nextMilestone || undefined,
+      statsUpdatedAt: data.statsUpdatedAt instanceof Date ? data.statsUpdatedAt : 
+                    (data.statsUpdatedAt?.toDate ? data.statsUpdatedAt.toDate() : undefined),
+      
+      // === MIGRATION METADATA ===
+      migratedAt: data.migratedAt instanceof Date ? data.migratedAt : 
+                (data.migratedAt?.toDate ? data.migratedAt.toDate() : undefined),
+      lastUpdated: data.lastUpdated instanceof Date ? data.lastUpdated : 
+                 (data.lastUpdated?.toDate ? data.lastUpdated.toDate() : undefined),
     };
 
     return cleanedData;
@@ -218,25 +252,18 @@ export const initializeUserProfile = async (
 
 const initializeUserCollections = async (userId: string): Promise<void> => {
   try {
-    // Initialize UserProfile
-    const userProfileRef = doc(db, USER_PROFILES_COLLECTION, userId);
-    const defaultProfile: UserProfile = {
-      userId,
+    // Initialize consolidated profile data in users collection
+    const userRef = doc(db, USERS_COLLECTION, userId);
+    const profileData = {
       nativeLanguage: "it",
       targetLanguage: "en",
       englishLevel: "B1",
       learningGoal: "general",
       dailyWordTarget: 20,
       weeklyTestTarget: 3,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      profileCreatedAt: serverTimestamp(),
+      profileUpdatedAt: serverTimestamp(),
     };
-    
-    await setDoc(userProfileRef, {
-      ...defaultProfile,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
 
     // Initialize UserPreferences
     const userPreferencesRef = doc(db, USER_PREFERENCES_COLLECTION, userId);
@@ -283,10 +310,8 @@ const initializeUserCollections = async (userId: string): Promise<void> => {
       updatedAt: serverTimestamp(),
     });
 
-    // Initialize UserStats
-    const userStatsRef = doc(db, USER_STATS_COLLECTION, userId);
-    const defaultStats: UserStats = {
-      userId,
+    // Initialize consolidated stats data in users collection
+    const statsData = {
       totalActiveDays: 0,
       currentStreak: 0,
       longestStreak: 0,
@@ -306,12 +331,14 @@ const initializeUserCollections = async (userId: string): Promise<void> => {
         completed: false,
         reward: "Badge Principiante",
       },
-      updatedAt: new Date(),
+      statsUpdatedAt: serverTimestamp(),
     };
     
-    await setDoc(userStatsRef, {
-      ...defaultStats,
-      updatedAt: serverTimestamp(),
+    // Update user document with consolidated profile and stats data
+    await updateDoc(userRef, {
+      ...profileData,
+      ...statsData,
+      lastUpdated: serverTimestamp(),
     });
 
     // User collections initialized successfully
@@ -666,9 +693,8 @@ const checkUserInvitation = async (email: string): Promise<UserRole | null> => {
 // =====================================================
 const USERS_COLLECTION = "users";
 const ADMIN_OPERATIONS_COLLECTION = "admin_operations";
-const USER_PROFILES_COLLECTION = "user_profiles";
 const USER_PREFERENCES_COLLECTION = "user_preferences";
-const USER_STATS_COLLECTION = "user_stats";
+// Note: user_profiles and user_stats are now consolidated in users collection
 
 const AUTH_SERVICE_CONFIG = {
   // Session configuration
@@ -1703,17 +1729,28 @@ const generateRandomPassword = (): string => {
 
 export const getUserExtendedProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
-    const profileDoc = await getDoc(doc(db, USER_PROFILES_COLLECTION, userId));
+    // Get from consolidated users collection
+    const userDoc = await getDoc(doc(db, USERS_COLLECTION, userId));
     
-    if (!profileDoc.exists()) {
+    if (!userDoc.exists()) {
       return null;
     }
 
-    const data = profileDoc.data();
+    const userData = userDoc.data();
+    
+    // Return profile from consolidated user document
     return {
-      ...data,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
+      userId,
+      fullName: userData.fullName,
+      nativeLanguage: userData.nativeLanguage || 'it',
+      targetLanguage: userData.targetLanguage || 'en',
+      englishLevel: userData.englishLevel || 'A1',
+      learningGoal: userData.learningGoal,
+      dailyWordTarget: userData.dailyWordTarget || 20,
+      weeklyTestTarget: userData.weeklyTestTarget || 3,
+      bio: userData.bio,
+      createdAt: userData.profileCreatedAt || userData.createdAt,
+      updatedAt: userData.profileUpdatedAt || userData.lastUpdated || new Date(),
     } as UserProfile;
   } catch (error) {
     console.error("Error getting user profile:", error);
@@ -1726,11 +1763,25 @@ export const updateUserExtendedProfile = async (
   updates: Partial<UserProfile>
 ): Promise<boolean> => {
   try {
-    const profileRef = doc(db, USER_PROFILES_COLLECTION, userId);
+    // Update in consolidated users collection
+    const userRef = doc(db, USERS_COLLECTION, userId);
     
-    await updateDoc(profileRef, {
-      ...updates,
-      updatedAt: serverTimestamp(),
+    // Map profile fields to user fields
+    const userUpdates: any = {};
+    Object.entries(updates).forEach(([key, value]) => {
+      if (key === 'createdAt') {
+        userUpdates.profileCreatedAt = value;
+      } else if (key === 'updatedAt') {
+        userUpdates.profileUpdatedAt = value;
+      } else if (key !== 'userId') {
+        userUpdates[key] = value;
+      }
+    });
+    
+    await updateDoc(userRef, {
+      ...userUpdates,
+      profileUpdatedAt: serverTimestamp(),
+      lastUpdated: serverTimestamp(),
     });
 
     return true;
@@ -1746,55 +1797,36 @@ export const updateUserExtendedProfile = async (
 
 export const getUserStats = async (userId: string): Promise<UserStats | null> => {
   try {
-    // First check new structure
-    const statsDoc = await getDoc(doc(db, USER_STATS_COLLECTION, userId));
-    
-    if (statsDoc.exists()) {
-      const data = statsDoc.data();
-      return {
-        ...data,
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-      } as UserStats;
-    }
-
-    // Fallback to old structure in users collection
+    // Get from consolidated users collection
     const userDoc = await getDoc(doc(db, USERS_COLLECTION, userId));
+    
     if (userDoc.exists()) {
       const userData = userDoc.data();
-      if (userData.stats) {
-        // Convert old structure to new structure
-        const migratedStats: UserStats = {
-          userId,
-          totalActiveDays: 0,
-          currentStreak: 0,
-          longestStreak: 0,
-          totalWordsAdded: userData.stats.totalWords || 0,
-          totalWordsLearned: 0,
-          totalTestsCompleted: userData.stats.totalTests || 0,
-          totalStudyTime: 0,
-          averageTestAccuracy: userData.stats.averageScore || 0,
-          progressLevel: 1,
-          nextMilestone: {
-            id: "first_test",
-            name: "Primo Test",
-            description: "Completa il tuo primo test",
-            icon: "🎯",
-            target: 1,
-            progress: userData.stats.totalTests || 0,
-            completed: (userData.stats.totalTests || 0) >= 1,
-            reward: "Badge Principiante",
-          },
-          updatedAt: new Date(),
-        };
-
-        // Migrate to new structure
-        await setDoc(doc(db, USER_STATS_COLLECTION, userId), {
-          ...migratedStats,
-          updatedAt: serverTimestamp(),
-        });
-
-        return migratedStats;
-      }
+      
+      // Return stats from consolidated user document
+      return {
+        userId,
+        totalActiveDays: userData.totalActiveDays || 0,
+        currentStreak: userData.currentStreak || 0,
+        longestStreak: userData.longestStreak || 0,
+        totalWordsAdded: userData.totalWordsAdded || 0,
+        totalWordsLearned: userData.totalWordsLearned || 0,
+        totalTestsCompleted: userData.totalTestsCompleted || 0,
+        totalStudyTime: userData.totalStudyTime || 0,
+        averageTestAccuracy: userData.averageTestAccuracy || 0,
+        progressLevel: userData.progressLevel || 1,
+        nextMilestone: userData.nextMilestone || {
+          id: "first_test",
+          name: "Primo Test",
+          description: "Completa il tuo primo test",
+          icon: "🎯",
+          target: 1,
+          progress: 0,
+          completed: false,
+          reward: "Badge Principiante",
+        },
+        updatedAt: userData.statsUpdatedAt || userData.lastUpdated || new Date(),
+      } as UserStats;
     }
 
     return null;
@@ -1809,11 +1841,23 @@ export const updateUserStats = async (
   updates: Partial<UserStats>
 ): Promise<boolean> => {
   try {
-    const statsRef = doc(db, USER_STATS_COLLECTION, userId);
+    // Update in consolidated users collection
+    const userRef = doc(db, USERS_COLLECTION, userId);
     
-    await updateDoc(statsRef, {
-      ...updates,
-      updatedAt: serverTimestamp(),
+    // Map stats fields to user fields
+    const userUpdates: any = {};
+    Object.entries(updates).forEach(([key, value]) => {
+      if (key === 'updatedAt') {
+        userUpdates.statsUpdatedAt = value;
+      } else if (key !== 'userId') {
+        userUpdates[key] = value;
+      }
+    });
+    
+    await updateDoc(userRef, {
+      ...userUpdates,
+      statsUpdatedAt: serverTimestamp(),
+      lastUpdated: serverTimestamp(),
     });
 
     return true;
@@ -1908,10 +1952,10 @@ export const updateUserPreferences = async (
   try {
     const preferencesRef = doc(db, USER_PREFERENCES_COLLECTION, userId);
     
-    await updateDoc(preferencesRef, {
+    await setDoc(preferencesRef, {
       ...preferences,
       updatedAt: serverTimestamp(),
-    });
+    }, { merge: true });
 
     return true;
   } catch (error) {

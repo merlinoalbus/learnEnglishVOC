@@ -7,6 +7,8 @@ const AppContext = createContext();
 
 const initialState = {
   currentView: "main",
+  previousView: null,
+  authReturnContext: null, // Store context when navigating from auth forms
   showWordsList: true,
   editingWord: null,
   showChapterSelector: false,
@@ -17,7 +19,23 @@ const initialState = {
 const appReducer = (state, action) => {
   switch (action.type) {
     case "SET_VIEW":
-      return { ...state, currentView: action.payload };
+      return { 
+        ...state, 
+        previousView: state.currentView,
+        currentView: action.payload,
+        authReturnContext: action.authContext || state.authReturnContext
+      };
+    case "GO_BACK":
+      return {
+        ...state,
+        currentView: state.previousView || "main",
+        previousView: null
+      };
+    case "CLEAR_AUTH_CONTEXT":
+      return {
+        ...state,
+        authReturnContext: null
+      };
     case "TOGGLE_WORDS_LIST":
       return { ...state, showWordsList: !state.showWordsList };
     case "SET_EDITING_WORD":

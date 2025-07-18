@@ -3,12 +3,23 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { ArrowLeft, FileText } from "lucide-react";
 import { useAppContext } from "../contexts/AppContext";
+import { useAuth } from "../hooks/integration/useAuth";
 
 export const TermsOfServiceView: React.FC = () => {
-  const { dispatch } = useAppContext();
+  const { dispatch, authReturnContext } = useAppContext();
+  const { isAuthenticated } = useAuth();
 
   const handleGoBack = () => {
-    dispatch({ type: "SET_VIEW", payload: "main" });
+    // If we have auth context, go back to auth view (signup form)
+    if (authReturnContext && authReturnContext.source === "signup") {
+      dispatch({ type: "GO_BACK" });
+    } else if (!isAuthenticated) {
+      // If no context and not authenticated, just go back
+      dispatch({ type: "GO_BACK" });
+    } else {
+      // Otherwise, normal go back
+      dispatch({ type: "GO_BACK" });
+    }
   };
 
   return (
