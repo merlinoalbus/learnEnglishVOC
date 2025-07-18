@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 // FIXED: Corrected import path to hooks/integration/useAuth
 import { useAuth } from "../../hooks/integration/useAuth";
+import { useAppContext } from "../../contexts/AppContext";
 import { Alert, AlertDescription } from "../ui/alert";
 
 interface SignUpFormProps {
@@ -46,6 +47,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   onSwitchToLogin,
   onSignUpSuccess = () => {},
 }) => {
+  const { dispatch } = useAppContext();
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -350,25 +352,29 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
               className="text-sm text-gray-700 cursor-pointer"
             >
               Accetto i{" "}
-              <a
-                href="/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline"
-                onClick={(e) => e.stopPropagation()}
+              <button
+                type="button"
+                className="text-blue-600 hover:text-blue-800 underline bg-transparent border-none p-0 cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  dispatch({ type: "SET_VIEW", payload: "terms" });
+                }}
               >
                 Termini di Servizio
-              </a>{" "}
+              </button>{" "}
               e la{" "}
-              <a
-                href="/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline"
-                onClick={(e) => e.stopPropagation()}
+              <button
+                type="button"
+                className="text-blue-600 hover:text-blue-800 underline bg-transparent border-none p-0 cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  dispatch({ type: "SET_VIEW", payload: "privacy" });
+                }}
               >
                 Privacy Policy
-              </a>
+              </button>
             </Label>
             {validationErrors.terms && (
               <p className="text-sm text-red-600">{validationErrors.terms}</p>

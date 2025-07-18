@@ -21,6 +21,7 @@ import {
   handleGoogleRedirectResult,
   validateEmail,
   validatePassword,
+  getUserPreferences,
 } from "../../services/authService";
 import {
   DEFAULT_PERMISSIONS,
@@ -124,6 +125,25 @@ export const useAuth = () => {
     }
   }, [updateState]);
 
+  // Load user preferences and apply theme
+  const loadUserPreferences = useCallback(async (userId: string) => {
+    try {
+      const preferences = await getUserPreferences(userId);
+      if (preferences) {
+        // Apply theme to DOM immediately
+        const isDark = preferences.theme === 'dark';
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        console.log("User preferences loaded and theme applied:", preferences.theme);
+      }
+    } catch (error) {
+      console.error("Error loading user preferences:", error);
+    }
+  }, []);
+
   // Firebase auth state listener
   useEffect(() => {
     if (!firebaseReady) return;
@@ -142,12 +162,19 @@ export const useAuth = () => {
           error: null,
         });
 
-        // Load user profile
+        // Load user profile and preferences
         if (user?.id) {
           await loadUserProfile(user.id);
+          await loadUserPreferences(user.id);
         }
       } else {
-        // User is signed out
+        // User is signed out - reset theme to light mode
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+        
+        // Notify ThemeProvider about theme reset
+        window.dispatchEvent(new Event('themeReset'));
+        
         updateState({
           user: null,
           authUser: null,
@@ -162,7 +189,7 @@ export const useAuth = () => {
     });
 
     return unsubscribe;
-  }, [firebaseReady, updateState, loadUserProfile]);
+  }, [firebaseReady, updateState, loadUserProfile, loadUserPreferences]);
 
   // Handle Google redirect result
   useEffect(() => {
@@ -209,6 +236,29 @@ export const useAuth = () => {
     try {
       const result = await signIn(input);
       if (result.success) {
+        // Check if this is an admin login and process pending user creations
+        try {
+          console.log('Login successful, checking if admin...');
+          const userProfile = await getUserProfile(result.user!.uid);
+          console.log('User profile:', userProfile);
+          
+          if (userProfile?.role === 'admin') {
+            console.log('Admin login detected, processing pending user creations...');
+            const { processPendingUserCreations } = await import('../../services/adminService');
+            const results = await processPendingUserCreations('email', { email: input.email, password: input.password });
+            console.log('Pending user creation results:', results);
+            
+            if (results.processed > 0) {
+              console.log(`Successfully processed ${results.processed} pending user creations`);
+            }
+          } else {
+            console.log('Not an admin user, skipping pending user processing');
+          }
+        } catch (adminError) {
+          console.error('Error processing admin tasks:', adminError);
+          // Don't fail login if admin tasks fail
+        }
+        
         return true;
       } else {
         updateState({ error: result.error as AuthError });
@@ -229,6 +279,30 @@ export const useAuth = () => {
     try {
       const result = await signInWithGoogle();
       if (result.success) {
+        // Check if this is an admin login and process pending user creations
+        try {
+          console.log('Google login successful, checking if admin...');
+          const userProfile = await getUserProfile(result.user!.uid);
+          console.log('User profile:', userProfile);
+          
+          if (userProfile?.role === 'admin') {
+            console.log('Admin Google login detected, processing pending user creations...');
+            
+            const { processPendingUserCreations } = await import('../../services/adminService');
+            const results = await processPendingUserCreations('google');
+            console.log('Pending user creation results:', results);
+            
+            if (results.processed > 0) {
+              console.log(`Successfully processed ${results.processed} pending user creations`);
+            }
+          } else {
+            console.log('Not an admin user, skipping pending user processing');
+          }
+        } catch (adminError) {
+          console.error('Error processing admin tasks:', adminError);
+          // Don't fail login if admin tasks fail
+        }
+        
         return true;
       } else if (result.message === "Reindirizzamento a Google...") {
         return true; // Redirect in progress

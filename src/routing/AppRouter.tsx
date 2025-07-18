@@ -10,6 +10,8 @@ import { AdminView } from "../views/AdminView";
 import { AuthView } from "../views/AuthView";
 import { ProfileView } from "../views/ProfileView";
 import { SettingsView } from "../views/SettingsView";
+import { TermsOfServiceView } from "../views/TermsOfServiceView";
+import { PrivacyPolicyView } from "../views/PrivacyPolicyView";
 import { ProtectedRoute } from "../components/auth/ProtectedRoute";
 
 export const AppRouter = () => {
@@ -109,6 +111,15 @@ export const AppRouter = () => {
     );
   }
 
+  // Allow access to terms and privacy without authentication
+  if (currentView === "terms") {
+    return <TermsOfServiceView />;
+  }
+
+  if (currentView === "privacy") {
+    return <PrivacyPolicyView />;
+  }
+
   // Se l'utente non è autenticato, mostra AuthView
   if (!directIsAuthenticated) {
     return (
@@ -171,6 +182,7 @@ export const AppRouter = () => {
           <SettingsView />
         </ProtectedRoute>
       );
+
 
     case "main":
     default:

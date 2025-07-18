@@ -56,9 +56,8 @@
     "styles:watch": "postcss src/styles/**/*.css --watch --dir src/styles/dist",
     "styles:build": "postcss src/styles/**/*.css --dir src/styles/dist",
     "firebase:emulators": "firebase emulators:start",
-    "firebase:deploy": "firebase deploy",
+    "firebase:deploy": "firebase deploy --only hosting,firestore",
     "firebase:login": "firebase login",
-    "dev:with-emulators": "concurrently \"npm run firebase:emulators\" \"npm start\"",
     "lint:css": "stylelint 'src/styles/**/*.css'"
   },
   "eslintConfig": {

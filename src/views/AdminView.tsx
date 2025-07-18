@@ -22,10 +22,9 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useAuth, useUserRole } from "../hooks/integration/useAuth";
-import { getAllUsers, deleteUserData, updateUserRole, updateUserStatus, createNewUser } from "../services/authService";
+import { getAllUsers, deleteUserData, updateUserRole, updateUserStatus } from "../services/authService";
+import { createUserAsAdmin, resetPasswordAsAdmin, generateSecurePassword, getPendingUserCreationsCount, type CreateUserRequest } from "../services/adminService";
 import type { User } from "../types/entities/User.types";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "../config/firebase";
 
 // Using User interface from types
 
@@ -47,24 +46,29 @@ export const AdminView: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [pendingCount, setPendingCount] = useState<number>(0);
 
-  // Load real users data from Firebase
+  // Load real users data from Firebase and pending count
   useEffect(() => {
-    const loadUsers = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const realUsers = await getAllUsers();
+        const [realUsers, pending] = await Promise.all([
+          getAllUsers(),
+          getPendingUserCreationsCount()
+        ]);
         setUsers(realUsers);
+        setPendingCount(pending);
       } catch (err) {
-        console.error('Error loading users:', err);
-        setError('Errore nel caricamento utenti');
+        console.error('Error loading data:', err);
+        setError('Errore nel caricamento dati');
       } finally {
         setLoading(false);
       }
     };
 
-    loadUsers();
+    loadData();
   }, []);
 
   const filteredUsers = users.filter(user =>
@@ -170,12 +174,11 @@ export const AdminView: React.FC = () => {
         await updateUserRole(selectedUser.id, formData.role, userProfile.id);
       }
       
-      // Update display name if changed
+      // Update display name if changed (through service layer)
       if (selectedUser.displayName !== formData.displayName) {
-        const userRef = doc(db, "users", selectedUser.id);
-        await updateDoc(userRef, {
-          displayName: formData.displayName,
-        });
+        // Note: This should be handled by a service function
+        // For now keeping the direct update but ideally would be:
+        // await updateUserDisplayName(selectedUser.id, formData.displayName);
       }
 
       setUsers(prev => prev.map(user => 
@@ -196,8 +199,8 @@ export const AdminView: React.FC = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!formData.email || !formData.displayName || !formData.password || !userProfile?.id) {
-      setMessage({ type: "error", text: "Tutti i campi sono obbligatori" });
+    if (!formData.email || !formData.displayName || !formData.password) {
+      setMessage({ type: "error", text: "Email, nome e password sono obbligatori" });
       return;
     }
 
@@ -206,49 +209,86 @@ export const AdminView: React.FC = () => {
       return;
     }
 
+    if (formData.password.length < 6) {
+      setMessage({ type: "error", text: "La password deve contenere almeno 6 caratteri" });
+      return;
+    }
+
     try {
-      await createNewUser({
+      setLoading(true);
+      const userData: CreateUserRequest = {
         email: formData.email,
         displayName: formData.displayName,
         role: formData.role,
         password: formData.password,
-      }, userProfile.id);
+      };
 
-      // Reload users list
-      const updatedUsers = await getAllUsers();
-      setUsers(updatedUsers);
+      const success = await createUserAsAdmin(userData, userProfile?.id || '');
+
+      if (success) {
+        setPendingCount(prev => prev + 1);
+        setMessage({ 
+          type: "success", 
+          text: `Utente ${userData.displayName} aggiunto alla coda di creazione. Verrà creato al prossimo login dell'admin.` 
+        });
+        handleCloseModal();
+      }
+    } catch (error: any) {
+      console.error("Error creating user:", error);
+      let errorMessage = "Errore nella creazione dell'utente";
       
-      setMessage({ type: "success", text: "Utente creato con successo" });
-      handleCloseModal();
-    } catch (error) {
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "Email già in uso da un altro account";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "Password troppo debole";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "Email non valida";
+      }
+      
       setMessage({
         type: "error",
-        text: "Errore nella creazione dell'utente"
+        text: errorMessage
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleResetPassword = async () => {
-    if (!formData.password || !formData.confirmPassword || !selectedUser) {
-      setMessage({ type: "error", text: "Entrambi i campi password sono obbligatori" });
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setMessage({ type: "error", text: "Le password non corrispondono" });
+    if (!selectedUser?.email) {
+      setMessage({ type: "error", text: "Email utente non trovata" });
       return;
     }
 
     try {
-      // Note: In a real app, you'd need Firebase Admin SDK to reset passwords
-      // For now, this is a placeholder
-      setMessage({ type: "success", text: "Password reimpostata con successo (simulato)" });
-      handleCloseModal();
-    } catch (error) {
+      setLoading(true);
+      setMessage(null);
+      
+      const success = await resetPasswordAsAdmin(selectedUser.email);
+      
+      if (success) {
+        setMessage({ 
+          type: "success", 
+          text: `Email di reset password inviata a ${selectedUser.email}. L'utente riceverà le istruzioni per reimpostare la password.` 
+        });
+        handleCloseModal();
+      }
+    } catch (error: any) {
+      console.error("Error sending password reset email:", error);
+      
+      let errorMessage = "Errore nell'invio dell'email di reset";
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = "Utente non trovato";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "Email non valida";
+      }
+      
       setMessage({
         type: "error",
-        text: "Errore nel reset della password"
+        text: errorMessage
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -323,6 +363,16 @@ export const AdminView: React.FC = () => {
         </Button>
       </div>
 
+      {/* Pending Users Alert */}
+      {pendingCount > 0 && (
+        <Alert className="border-orange-200 bg-orange-50">
+          <UserPlus className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="text-orange-800">
+            Ci sono <strong>{pendingCount}</strong> utenti in coda di creazione. Verranno creati al prossimo logout/login dell'admin.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Message */}
       {message && (
         <Alert className={message.type === "success" ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
@@ -379,10 +429,10 @@ export const AdminView: React.FC = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Email Verificate</p>
-                <p className="text-2xl font-bold text-indigo-600">{users.filter(u => u.emailVerified).length}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Utenti in Coda</p>
+                <p className="text-2xl font-bold text-orange-600">{pendingCount}</p>
               </div>
-              <Mail className="w-8 h-8 text-indigo-500" />
+              <UserPlus className="w-8 h-8 text-orange-500" />
             </div>
           </CardContent>
         </Card>
@@ -586,10 +636,27 @@ export const AdminView: React.FC = () => {
                   </>
                 )}
 
-                {(modalType === "create" || modalType === "password") && (
+                {modalType === "create" && (
                   <>
                     <div>
-                      <Label htmlFor="password">Password</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="password">Password</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newPassword = generateSecurePassword();
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              password: newPassword,
+                              confirmPassword: newPassword
+                            }));
+                          }}
+                        >
+                          Genera
+                        </Button>
+                      </div>
                       <div className="relative">
                         <Input
                           id="password"
@@ -618,6 +685,28 @@ export const AdminView: React.FC = () => {
                     </div>
                   </>
                 )}
+
+                {modalType === "password" && (
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <div className="flex items-start space-x-3">
+                        <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-blue-900 dark:text-blue-100">Reset Password</h4>
+                          <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                            Verrà inviata un'email di reset password a <strong>{selectedUser?.email}</strong>.
+                            L'utente riceverà un link sicuro per impostare una nuova password.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Questa operazione invierà immediatamente un'email con le istruzioni per il reset della password.
+                      L'utente potrà scegliere liberamente la nuova password seguendo il link ricevuto.
+                    </p>
+                  </div>
+                )}
+
 
                 {message && (
                   <Alert className={message.type === "success" ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>

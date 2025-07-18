@@ -17,6 +17,7 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
+  sendPasswordResetEmail,
   type UserCredential,
   type AuthError as FirebaseAuthError,
 } from "firebase/auth";
@@ -51,7 +52,6 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { 
-  sendPasswordResetEmail,
   verifyPasswordResetCode as firebaseVerifyPasswordResetCode,
   confirmPasswordReset as firebaseConfirmPasswordReset,
   applyActionCode
@@ -147,14 +147,22 @@ export const initializeUserProfile = async (
     // Create new profile for new users
     const defaultRole: UserRole = "user";
 
-    // Check if this is the first user (should be admin)
-    const isFirstUser = await checkIfFirstUser();
-    const role: UserRole = isFirstUser ? "admin" : defaultRole;
-
     // Get current auth user to create base profile
     const currentUser = getCurrentUser();
     if (!currentUser) {
       throw new Error("No authenticated user found");
+    }
+
+    // Check if this is the first user (should be admin) or has invitation
+    const isFirstUser = await checkIfFirstUser();
+    let role: UserRole = isFirstUser ? "admin" : defaultRole;
+    
+    // Check for user invitation
+    if (!isFirstUser) {
+      const invitationRole = await checkUserInvitation(currentUser.email!);
+      if (invitationRole) {
+        role = invitationRole;
+      }
     }
 
     // Create base User profile (auth data only)
@@ -620,6 +628,37 @@ export const checkIfFirstUser = async (): Promise<boolean> => {
   } catch (error) {
     console.error("Error checking if first user:", error);
     return false;
+  }
+};
+
+/**
+ * Check if user has a pending invitation and return role
+ */
+const checkUserInvitation = async (email: string): Promise<UserRole | null> => {
+  try {
+    const invitationsRef = collection(db, 'user_invitations');
+    const q = query(
+      invitationsRef, 
+      where('email', '==', email),
+      where('status', '==', 'pending')
+    );
+    const snapshot = await getDocs(q);
+    
+    if (!snapshot.empty) {
+      const invitation = snapshot.docs[0].data();
+      
+      // Mark invitation as completed
+      await updateDoc(doc(db, 'user_invitations', snapshot.docs[0].id), {
+        status: 'completed'
+      });
+      
+      return invitation.role as UserRole;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error checking user invitation:", error);
+    return null;
   }
 };
 // =====================================================
@@ -1597,54 +1636,65 @@ export const createNewUser = async (
   adminId: string
 ): Promise<void> => {
   try {
-    // Note: In a real app, you'd need Firebase Admin SDK to create users with custom passwords
-    // For now, this is a placeholder that shows the structure
-    const newUserRef = doc(collection(db, USERS_COLLECTION));
-    const newUser = {
-      id: newUserRef.id,
+    // Firebase client-side limitation: we can't create users while staying logged in as admin
+    // Solution: Create a "pending user" invitation system
+    
+    // Generate a temporary user ID
+    const tempUserId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Create user invitation/placeholder in Firestore
+    const userDoc = {
+      id: tempUserId,
       email: userData.email,
       displayName: userData.displayName,
       role: userData.role,
       emailVerified: false,
-      isActive: true,
-      createdAt: new Date(),
-      lastLoginAt: new Date(),
+      isActive: false, // Set to false until user completes registration
+      createdAt: serverTimestamp(),
+      lastLoginAt: null,
       providerId: "email",
       metadata: {
-        registrationMethod: "email" as const,
+        registrationMethod: "admin_invitation" as const,
         createdBy: adminId,
-        notes: "Created by admin",
+        notes: "Created by admin - pending user registration",
+        status: "pending",
+        invitationEmail: userData.email,
       },
     };
-
-    const cleanUser = Object.fromEntries(
-      Object.entries({
-        ...newUser,
-        createdAt: serverTimestamp(),
-        lastLoginAt: serverTimestamp(),
-      }).filter(([_, value]) => value !== undefined)
-    );
     
-    await setDoc(newUserRef, cleanUser);
-
-    // Log operation
-    const operationRef = doc(collection(db, "admin_operations"));
-    const operation = {
-      type: "create_user",
-      performedBy: adminId,
-      timestamp: new Date(),
-      metadata: { email: userData.email, role: userData.role },
-    };
-    await setDoc(operationRef, {
-      ...operation,
-      timestamp: serverTimestamp(),
+    // Save to Firestore with temporary ID
+    await setDoc(doc(db, USERS_COLLECTION, tempUserId), userDoc);
+    
+    // Send invitation email using password reset (user will register normally)
+    // This is a workaround: we send a "reset" email to an email that will be used for registration
+    try {
+      await sendPasswordResetEmail(auth, userData.email);
+    } catch (emailError) {
+      // If email fails, it's because the email doesn't exist in Firebase Auth yet
+      // This is expected - user will need to register normally
+      console.log("Expected: Email not in Firebase Auth yet, user will register normally");
+    }
+    
+    debugLog("User invitation created successfully", { 
+      email: userData.email, 
+      tempId: tempUserId,
+      adminId 
     });
-
-    debugLog("User created successfully", { email: userData.email, adminId });
+    
   } catch (error) {
-    console.error("Error creating user:", error);
-    throw new Error("Failed to create user");
+    console.error("Error creating user invitation:", error);
+    throw new Error("Failed to create user invitation");
   }
+};
+
+// Helper function to generate a temporary password
+const generateRandomPassword = (): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  let password = '';
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
 };
 
 // =====================================================
