@@ -46,8 +46,53 @@ export const GlobalModals = React.memo(() => {
     showSuccess('✅ Tutte le parole sono state eliminate!');
   };
 
-  const handleTestStart = (filteredWords) => {
-    startTest(filteredWords);
+  const handleTestStart = (config) => {
+    // Filter words based on configuration
+    let filteredWords = words.filter(word => {
+      // Filter by selected chapters
+      if (config.selectedChapters.includes('no-chapter')) {
+        if (!word.chapter && !config.selectedChapters.some(ch => ch !== 'no-chapter' && ch === word.chapter)) {
+          // Include words without chapter only if no other chapters match
+        } else if (word.chapter && !config.selectedChapters.includes(word.chapter)) {
+          return false;
+        }
+      } else if (word.chapter && !config.selectedChapters.includes(word.chapter)) {
+        return false;
+      } else if (!word.chapter && !config.selectedChapters.includes('no-chapter')) {
+        return false;
+      }
+
+      // Filter by test mode
+      if (config.testMode === 'difficult-only') {
+        return word.difficult;
+      }
+
+      // Filter by learned words setting
+      if (!config.includeLearnedWords && word.learned) {
+        return false;
+      }
+
+      return true;
+    });
+
+    // Convert TestConfig to useTest format
+    const testConfig = {
+      hints: {
+        enabled: config.enableHints,
+        maxPerWord: config.maxHintsPerWord,
+        maxTotal: config.maxTotalHints
+      },
+      timing: {
+        enabled: config.enableTimer,
+        maxTimePerWord: config.maxTimePerWord
+      },
+      wordSelection: {
+        unlearnedOnly: !config.includeLearnedWords,
+        difficultOnly: config.testMode === 'difficult-only'
+      }
+    };
+
+    startTest(filteredWords, testConfig);
     dispatch({ type: 'SET_SHOW_CHAPTER_SELECTOR', payload: false });
   };
 

@@ -26,6 +26,12 @@ export const MainView: React.FC = React.memo(() => {
 
   const { showSuccess, showError, showWarning } = useNotification();
 
+  // Debug wordStats
+  React.useEffect(() => {
+    console.log('MainView - wordStats:', wordStats);
+    console.log('MainView - words length:', words.length);
+  }, [wordStats, words]);
+
   const handleStartTest = React.useCallback(() => {
     const availableWords = words.filter(word => !word.learned);
     if (availableWords.length === 0) {
@@ -82,7 +88,7 @@ export const MainView: React.FC = React.memo(() => {
     if (word) {
       toggleWordLearned(id);
       showSuccess(
-        word.learned 
+        !word.learned 
           ? `📖 "${word.english}" segnata come da studiare`
           : `✅ "${word.english}" segnata come appresa!`
       );
@@ -94,7 +100,7 @@ export const MainView: React.FC = React.memo(() => {
     if (word) {
       toggleWordDifficult(id);
       showSuccess(
-        word.difficult 
+        !word.difficult 
           ? `📚 "${word.english}" rimossa dalle parole difficili`
           : `⭐ "${word.english}" segnata come difficile!`
       );
@@ -160,14 +166,12 @@ export const MainView: React.FC = React.memo(() => {
         onClearAllWords: () => dispatch({ type: 'SET_SHOW_CONFIRM_CLEAR', payload: true }),
         words: words,
         wordStats: {
-          total: wordStats.total,
-          learned: wordStats.learned,
-          difficult: wordStats.difficult,
+          ...wordStats,
           unlearned: wordStats.total - wordStats.learned,
           normal: wordStats.total - wordStats.learned - wordStats.difficult,
+          completionPercentage: wordStats.total > 0 ? Math.round((wordStats.learned / wordStats.total) * 100) : 0,
           byCategory: {},
-          byChapter: {},
-          completionPercentage: wordStats.total > 0 ? Math.round((wordStats.learned / wordStats.total) * 100) : 0
+          byChapter: {}
         },
         getAvailableChapters: getAvailableChapters
       }} />

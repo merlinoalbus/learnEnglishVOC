@@ -458,6 +458,11 @@ export const useWords = (): WordsResult => {
     }
 
     const words = firestoreHook.data;
+    
+    // Debug log
+    console.log('useWords - calculating stats for words:', words.length);
+    console.log('useWords - sample words:', words.slice(0, 2));
+    
     const stats: WordStats = {
       total: words.length,
       learned: words.filter((w) => w.learned).length,
