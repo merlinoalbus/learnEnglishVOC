@@ -1,5 +1,5 @@
 // =====================================================
-// 📁 src/components/EnhancedAddWordForm.tsx - TypeScript Migration
+// 📁 src/components/AddWordForm.tsx - TypeScript Migration
 // =====================================================
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -10,21 +10,91 @@ import { Textarea } from './ui/textarea';
 import { Plus, Edit3, Check, Sparkles, Brain, AlertTriangle, RefreshCw } from 'lucide-react';
 import { getPredefinedGroups, getCategoryStyle } from '../utils/categoryUtils';
 import { useNotification } from '../contexts/NotificationContext';
-import { enhancedAIService } from '../services/enhancedAIService';
+import { aiService } from '../services/aiService';
 import { useAILoading } from '../hooks/useLoadingState';
 import { SmartLoadingIndicator, ErrorWithRetry } from '../components/LoadingComponents';
 import { AIServiceErrorBoundary, FormErrorBoundary } from '../components/ErrorBoundaries';
-import { Word, CreateWordInput } from '../types/entities/Word.types';
+import { Word, CreateWordInput, UpdateWordInput } from '../types/entities/Word.types';
 
 // =====================================================
 // 🔧 TYPES & INTERFACES
 // =====================================================
 
+// ⭐ ARRAY INPUT COMPONENT - Definito FUORI per evitare re-creazione
+interface ArrayInputProps {
+  label: string;
+  icon: string;
+  values: string[];
+  placeholder: string;
+  onArrayChange: (index: number, value: string) => void;
+  onAddItem: () => void;
+  onRemoveItem: (index: number) => void;
+  maxItems?: number;
+  description?: string;
+}
+
+const ArrayInput: React.FC<ArrayInputProps> = ({ 
+  label, 
+  icon, 
+  values, 
+  placeholder, 
+  onArrayChange, 
+  onAddItem, 
+  onRemoveItem, 
+  maxItems = 5, 
+  description 
+}) => (
+  <div className="space-y-2">
+    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+      <span>{icon}</span> {label}
+      {description && <span className="text-xs text-gray-500">({description})</span>}
+    </label>
+    <div className="space-y-2">
+      {values.map((value, index) => (
+        <div key={index} className="flex gap-2">
+          <Input
+            placeholder={`${placeholder} ${index + 1}`}
+            value={value}
+            onChange={(e) => onArrayChange(index, e.target.value)}
+            className="border-2 border-gray-200 dark:border-gray-600 rounded-xl flex-1"
+          />
+          {values.length > 1 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onRemoveItem(index)}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3"
+              title="Rimuovi elemento"
+            >
+              ✕
+            </Button>
+          )}
+        </div>
+      ))}
+      {values.length < maxItems && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onAddItem}
+          className="w-full border-dashed border-2 border-gray-300 hover:border-gray-400 text-gray-600 hover:text-gray-800"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Aggiungi {label.toLowerCase()}
+        </Button>
+      )}
+    </div>
+  </div>
+);
+
 interface FormData {
   english: string;
   italian: string;
   group: string;
-  sentence: string;
+  sentences: string[];     // AGGIORNATO: array di frasi
+  synonyms: string[];      // NUOVO: array di sinonimi
+  antonyms: string[];      // NUOVO: array di contrari
   notes: string;
   chapter: string;
   learned: boolean;
@@ -41,8 +111,9 @@ interface AIServiceStatus {
   consecutiveFailures: number;
 }
 
-interface EnhancedAddWordFormProps {
+interface AddWordFormProps {
   onAddWord: (word: CreateWordInput) => Promise<void>;
+  onUpdateWord: (word: UpdateWordInput) => Promise<void>;
   editingWord?: Word | null;
   onClearForm: () => void;
 }
@@ -51,8 +122,9 @@ interface EnhancedAddWordFormProps {
 // 🎯 MAIN COMPONENT
 // =====================================================
 
-const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({ 
+const AddWordForm: React.FC<AddWordFormProps> = ({ 
   onAddWord, 
+  onUpdateWord,
   editingWord, 
   onClearForm 
 }) => {
@@ -60,7 +132,9 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
     english: '',
     italian: '',
     group: '',
-    sentence: '',
+    sentences: [''],         // AGGIORNATO: array con una frase vuota
+    synonyms: [''],          // NUOVO: array con un sinonimo vuoto
+    antonyms: [''],          // NUOVO: array con un contrario vuoto
     notes: '',
     chapter: '',
     learned: false,
@@ -78,7 +152,7 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
   const checkAIServiceStatus = useCallback(() => {
     try {
       // ⭐ ONLY get status, NO health check calls
-      const currentStatus = enhancedAIService.getServiceStatus();
+      const currentStatus = aiService.getServiceStatus();
       setAiServiceStatus(currentStatus);
       
       console.log('📊 AI Status (passive):', { 
@@ -111,8 +185,8 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
     
     try {
       console.log('💰 Manual AI health check (COSTS MONEY) - User confirmed');
-      const isHealthy = await enhancedAIService.checkHealth();
-      const updatedStatus = enhancedAIService.getServiceStatus();
+      const isHealthy = await aiService.checkHealth();
+      const updatedStatus = aiService.getServiceStatus();
       setAiServiceStatus(updatedStatus);
       
       if (isHealthy) {
@@ -172,6 +246,54 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
     }
   }, [formValidation]);
 
+  // ⭐ ARRAY HELPERS - Per gestire sentences, synonyms, antonyms
+  const handleArrayChange = useCallback((arrayField: 'sentences' | 'synonyms' | 'antonyms', index: number, value: string) => {
+    setFormData(prev => {
+      const newArray = [...prev[arrayField]];
+      newArray[index] = value;
+      return { ...prev, [arrayField]: newArray };
+    });
+  }, []);
+
+  const addArrayItem = useCallback((arrayField: 'sentences' | 'synonyms' | 'antonyms') => {
+    setFormData(prev => ({
+      ...prev,
+      [arrayField]: [...prev[arrayField], '']
+    }));
+  }, []);
+
+  const removeArrayItem = useCallback((arrayField: 'sentences' | 'synonyms' | 'antonyms', index: number) => {
+    setFormData(prev => {
+      const newArray = prev[arrayField].filter((_, i) => i !== index);
+      // Mantieni almeno un elemento vuoto se l'array diventa vuoto
+      return {
+        ...prev,
+        [arrayField]: newArray.length === 0 ? [''] : newArray
+      };
+    });
+  }, []);
+
+  // ⭐ CALLBACKS SPECIFICI PER OGNI ARRAY - Memorizzati per evitare re-render
+  const handleSentencesChange = useCallback((index: number, value: string) => {
+    handleArrayChange('sentences', index, value);
+  }, [handleArrayChange]);
+
+  const handleSynonymsChange = useCallback((index: number, value: string) => {
+    handleArrayChange('synonyms', index, value);
+  }, [handleArrayChange]);
+
+  const handleAntonymsChange = useCallback((index: number, value: string) => {
+    handleArrayChange('antonyms', index, value);
+  }, [handleArrayChange]);
+
+  const addSentence = useCallback(() => addArrayItem('sentences'), [addArrayItem]);
+  const addSynonym = useCallback(() => addArrayItem('synonyms'), [addArrayItem]);
+  const addAntonym = useCallback(() => addArrayItem('antonyms'), [addArrayItem]);
+
+  const removeSentence = useCallback((index: number) => removeArrayItem('sentences', index), [removeArrayItem]);
+  const removeSynonym = useCallback((index: number) => removeArrayItem('synonyms', index), [removeArrayItem]);
+  const removeAntonym = useCallback((index: number) => removeArrayItem('antonyms', index), [removeArrayItem]);
+
   // ⭐ FIELD BLUR - trigger validation
   const handleFieldBlur = useCallback((field: keyof FormData) => {
     const errors: FormValidation = {};
@@ -213,12 +335,12 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
       showNotification('🤖 L\'AI sta analizzando la parola...', 'info');
       
       const aiData = await aiLoading.executeAIOperation(
-        () => enhancedAIService.analyzeWordWithFallback(formData.english.trim()),
+        () => aiService.analyzeWordWithFallback(formData.english.trim()),
         `Analisi di "${formData.english}"`
       );
       
       // ⭐ UPDATE STATUS after real usage (no extra cost)
-      const updatedStatus = enhancedAIService.getServiceStatus();
+      const updatedStatus = aiService.getServiceStatus();
       setAiServiceStatus(updatedStatus);
       
       if (aiData._aiError) {
@@ -229,14 +351,31 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
           notes: aiData.notes || prev.notes
         }));
       } else {
-        setFormData(prev => ({
-          ...prev,
-          italian: aiData.italian || prev.italian,
-          group: aiData.group || prev.group,
-          sentence: aiData.sentence || prev.sentence,
-          notes: aiData.notes || prev.notes,
-          chapter: aiData.chapter || prev.chapter
-        }));
+        console.log('🔄 Updating form with AI data:', aiData);
+        
+        setFormData(prev => {
+          const newFormData = {
+            ...prev,
+            italian: aiData.italian || prev.italian,
+            group: aiData.group || prev.group,
+            sentences: (aiData.sentences && aiData.sentences.length > 0) 
+              ? aiData.sentences 
+              : aiData.sentence 
+              ? [aiData.sentence] 
+              : prev.sentences,
+            synonyms: (aiData.synonyms && aiData.synonyms.length > 0) 
+              ? aiData.synonyms 
+              : prev.synonyms,
+            antonyms: (aiData.antonyms && aiData.antonyms.length > 0) 
+              ? aiData.antonyms 
+              : prev.antonyms,
+            notes: aiData.notes || prev.notes,
+            chapter: aiData.chapter || prev.chapter
+          };
+          
+          console.log('🎯 New form data:', newFormData);
+          return newFormData;
+        });
         
         if (aiData.italian) {
           showSuccess('✨ Dati compilati dall\'AI!');
@@ -251,10 +390,10 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
       console.error('AI Assist Error:', error);
       
       // Update status after failure (no extra cost)
-      const updatedStatus = enhancedAIService.getServiceStatus();
+      const updatedStatus = aiService.getServiceStatus();
       setAiServiceStatus(updatedStatus);
       
-      const fallbackGroup = enhancedAIService.categorizeWordFallback(formData.english.trim());
+      const fallbackGroup = aiService.categorizeWordFallback(formData.english.trim());
       setFormData(prev => ({
         ...prev,
         group: prev.group || fallbackGroup,
@@ -272,24 +411,58 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
     }
 
     try {
-      const wordData: CreateWordInput = {
-        english: formData.english.trim(),
-        italian: formData.italian.trim(),
-        group: formData.group.trim() || undefined,
-        chapter: formData.chapter.trim() || undefined,
-        sentences: formData.sentence.trim() ? [formData.sentence.trim()] : undefined,
-        notes: formData.notes.trim() || undefined,
-        difficult: formData.difficult
+      // Helper per filtrare array in modo sicuro
+      const filterArray = (arr: string[]) => {
+        if (!Array.isArray(arr)) return [];
+        return arr.filter(s => s && typeof s === 'string' && s.trim()).map(s => s.trim());
       };
 
-      await onAddWord(wordData);
+      const sentences = filterArray(formData.sentences);
+      const synonyms = filterArray(formData.synonyms);
+      const antonyms = filterArray(formData.antonyms);
+
+      if (editingWord) {
+        // EDITING MODE - Update existing word
+        const updateData: UpdateWordInput = {
+          id: editingWord.id,
+          english: formData.english.trim(),
+          italian: formData.italian.trim(),
+          group: formData.group.trim() || undefined,
+          chapter: formData.chapter.trim() || undefined,
+          sentences: sentences.length > 0 ? sentences : undefined,
+          synonyms: synonyms.length > 0 ? synonyms : undefined,
+          antonyms: antonyms.length > 0 ? antonyms : undefined,
+          notes: formData.notes.trim() || undefined,
+          difficult: formData.difficult,
+          learned: formData.learned
+        };
+
+        await onUpdateWord(updateData);
+      } else {
+        // ADD MODE - Create new word
+        const wordData: CreateWordInput = {
+          english: formData.english.trim(),
+          italian: formData.italian.trim(),
+          group: formData.group.trim() || undefined,
+          chapter: formData.chapter.trim() || undefined,
+          sentences: sentences.length > 0 ? sentences : undefined,
+          synonyms: synonyms.length > 0 ? synonyms : undefined,
+          antonyms: antonyms.length > 0 ? antonyms : undefined,
+          notes: formData.notes.trim() || undefined,
+          difficult: formData.difficult
+        };
+
+        await onAddWord(wordData);
+      }
       
       // Reset form
       setFormData({
         english: '',
         italian: '',
         group: '',
-        sentence: '',
+        sentences: [''],
+        synonyms: [''],
+        antonyms: [''],
         notes: '',
         chapter: '',
         learned: false,
@@ -306,9 +479,12 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
 
   // ⭐ CLEAR FORM
   const handleClear = useCallback(() => {
-    const hasData = Object.values(formData).some(value => 
-      typeof value === 'string' ? value.trim() : value
-    );
+    const hasData = formData.english.trim() || formData.italian.trim() || 
+                    formData.sentences.some(s => s.trim()) || 
+                    formData.synonyms.some(s => s.trim()) || 
+                    formData.antonyms.some(s => s.trim()) || 
+                    formData.notes.trim() || formData.group.trim() || formData.chapter.trim() ||
+                    formData.learned || formData.difficult;
     
     if (hasData && !window.confirm('🗑️ Cancellare tutti i dati?')) {
       return;
@@ -318,7 +494,9 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
       english: '',
       italian: '',
       group: '',
-      sentence: '',
+      sentences: [''],
+      synonyms: [''],
+      antonyms: [''],
       notes: '',
       chapter: '',
       learned: false,
@@ -344,7 +522,9 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
         english: editingWord.english || '',
         italian: editingWord.italian || '',
         group: editingWord.group || '',
-        sentence: editingWord.sentences?.[0] || '',
+        sentences: editingWord.sentences && editingWord.sentences.length > 0 ? editingWord.sentences : [''],
+        synonyms: editingWord.synonyms && editingWord.synonyms.length > 0 ? editingWord.synonyms : [''],
+        antonyms: editingWord.antonyms && editingWord.antonyms.length > 0 ? editingWord.antonyms : [''],
         notes: editingWord.notes || '',
         chapter: editingWord.chapter || '',
         learned: editingWord.learned || false,
@@ -360,7 +540,7 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
 
     const statusConfig = {
       healthy: { color: 'text-green-600 dark:text-green-400', icon: '🟢', message: 'AI disponibile' },
-      degraded: { color: 'text-yellow-600 dark:text-yellow-400', icon: '🟡', message: 'AI instabile' },
+      degraded: { color: 'text-orange-600 dark:text-orange-400', icon: '🟡', message: 'AI instabile' },
       down: { color: 'text-red-600 dark:text-red-400', icon: '🔴', message: 'AI non disponibile' },
       unknown: { color: 'text-gray-600 dark:text-gray-400', icon: '⚪', message: 'AI sconosciuto' }
     };
@@ -376,7 +556,7 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
           size="sm"
           onClick={handleRefreshStatus}
           disabled={isRefreshingStatus}
-          className="h-6 px-2 text-xs hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
+          className="h-6 px-2 text-xs hover:bg-orange-100 dark:hover:bg-orange-900/30"
           title="⚠️ ATTENZIONE: Verifica manuale - COSTA DENARO!"
         >
           <RefreshCw className={`w-3 h-3 ${isRefreshingStatus ? 'animate-spin' : ''}`} />
@@ -385,6 +565,7 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
       </div>
     );
   };
+
 
   // Check if form is valid
   const isFormValid = formData.english.trim().length >= 2 && 
@@ -396,7 +577,7 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
     <FormErrorBoundary formName="AddWord" onFormError={(error) => showError(error instanceof Error ? error : new Error(String(error)), 'Word Form')}>
       <Card className="backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardHeader className={editingWord ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white" : ""}>
-          <CardTitle className={`flex items-center justify-between ${editingWord ? "text-white" : "text-gray-800 dark:text-gray-200"}`}>
+          <CardTitle className={`flex items-center justify-between ${editingWord ? "text-white" : "text-gray-900 dark:text-gray-100"}`}>
             {editingWord ? (
               <div className="flex items-center gap-3">
                 <Edit3 className="w-6 h-6" />
@@ -526,8 +707,10 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
                   </div>
                   <div className="text-sm text-green-700 dark:text-green-300 space-y-1">
                     <p>• <strong>Capitolo:</strong> Organizza per capitoli (es. 1, 2A, Unit 5)</p>
+                    <p>• <strong>Frasi di Contesto:</strong> 🎯 Per suggerimenti durante i test</p>
+                    <p>• <strong>Sinonimi/Contrari:</strong> 🎯 Per aiuti intelligenti durante i test</p>
                     <p>• <strong>Appresa:</strong> Rimane ma viene saltata nei test</p>
-                    <p>• <strong>Difficile:</strong> ⭐ Per test specifici</p>
+                    <p>• <strong>Difficile:</strong> ⭐ Per test specifici su parole difficili</p>
                   </div>
                 </div>
 
@@ -540,7 +723,7 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
                     <select
                       value={formData.group}
                       onChange={(e) => handleInputChange('group', e.target.value)}
-                      className="w-full px-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 dark:text-gray-100"
+                      className="w-full px-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-blue-500 dark:focus:border-blue-400"
                     >
                       <option value="">Nessun gruppo</option>
                       {getPredefinedGroups().map(group => (
@@ -570,7 +753,7 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
                       <span>🎓</span> Stato
                     </label>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800">
+                      <div className="flex items-center gap-3 p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-800">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <div 
                             onClick={() => handleInputChange('learned', !formData.learned)}
@@ -605,29 +788,58 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
                   </div>
                 </div>
                 
-                {/* Sentence */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <span>💬</span> Frase d'esempio
-                  </label>
-                  <Input
+                {/* Array Inputs per Test Mode */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Frasi di Contesto */}
+                  <ArrayInput
+                    label="Frasi di Contesto"
+                    icon="💬"
+                    values={formData.sentences}
                     placeholder="es. I love this beautiful song"
-                    value={formData.sentence}
-                    onChange={(e) => handleInputChange('sentence', e.target.value)}
-                    className="border-2 border-gray-200 dark:border-gray-600 rounded-xl"
+                    onArrayChange={handleSentencesChange}
+                    onAddItem={addSentence}
+                    onRemoveItem={removeSentence}
+                    maxItems={5}
+                    description="per suggerimenti Test"
+                  />
+                  
+                  {/* Sinonimi */}
+                  <ArrayInput
+                    label="Sinonimi"
+                    icon="🔄"
+                    values={formData.synonyms}
+                    placeholder="es. beautiful, pretty"
+                    onArrayChange={handleSynonymsChange}
+                    onAddItem={addSynonym}
+                    onRemoveItem={removeSynonym}
+                    maxItems={8}
+                    description="per suggerimenti Test"
+                  />
+                  
+                  {/* Contrari */}
+                  <ArrayInput
+                    label="Contrari"
+                    icon="↔️"
+                    values={formData.antonyms}
+                    placeholder="es. ugly, bad"
+                    onArrayChange={handleAntonymsChange}
+                    onAddItem={addAntonym}
+                    onRemoveItem={removeAntonym}
+                    maxItems={8}
+                    description="per suggerimenti Test"
                   />
                 </div>
                 
                 {/* Notes */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <span>📝</span> Note
+                    <span>📝</span> Note Aggiuntive
                   </label>
                   <Textarea
-                    placeholder="Altri significati, sinonimi, forme irregolari..."
+                    placeholder="Forme irregolari, pronuncia, note grammaticali..."
                     value={formData.notes}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange('notes', e.target.value)}
-                    rows={4}
+                    rows={3}
                     className="border-2 border-gray-200 dark:border-gray-600 rounded-xl"
                   />
                 </div>
@@ -663,4 +875,4 @@ const EnhancedAddWordForm: React.FC<EnhancedAddWordFormProps> = ({
   );
 };
 
-export default EnhancedAddWordForm;
+export default AddWordForm;

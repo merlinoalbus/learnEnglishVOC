@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/integration/useAuth";
 import { getCurrentAuthUser } from "../services/authService";
 import { AppHeader } from "../components/layout/AppHeader";
 import { AppNavigation } from "../components/layout/AppNavigation";
+import { Footer } from "../components/layout/Footer";
 import { BackgroundParticles } from "../components/ui/BackgroundParticles";
 import { NotificationToast } from "../components/ui/NotificationToast";
 import { GlobalModals } from "../components/modals/GlobalModals";
@@ -52,13 +53,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       {effectiveIsAuthenticated && (
         <>
           <div className="relative z-10 pb-8">
-            <div className="max-w-7xl mx-auto px-4 pt-8">
+            <div className="max-w-7xl mx-auto px-4 pt-8" style={{ maxWidth: '1400px' }}>
               <AppHeader />
             </div>
           </div>
 
           <div className="relative z-10 pb-8">
-            <div className="max-w-7xl mx-auto px-4">
+            <div className="max-w-7xl mx-auto px-4" style={{ maxWidth: '1400px' }}>
               <AppNavigation />
             </div>
           </div>
@@ -66,14 +67,20 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       )}
 
       {/* Main Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col min-h-screen">
         <div
-          className={`max-w-7xl mx-auto px-4 ${
+          className={`flex-1 max-w-7xl mx-auto px-4 w-full ${
             effectiveIsAuthenticated && !testMode && !showResults ? "pt-4" : "pt-8"
           }`}
+          style={{ maxWidth: '1400px' }}
         >
           <main>{children}</main>
         </div>
+        
+        {/* Footer */}
+        {effectiveIsAuthenticated && (
+          <Footer className="mt-auto" />
+        )}
       </div>
     </div>
   );

@@ -266,6 +266,10 @@ export function useFirestore<T extends { id: string }>(
       const newDoc = {
         id: docRef.id,
         ...documentData,
+        // Add sync metadata to indicate this was successfully created in Firestore
+        _lastSyncedAt: new Date(),
+        _pendingSync: false,
+        _firestoreStatus: 'synced'
       } as unknown as T;
 
       setState((prev) => ({
@@ -328,14 +332,85 @@ export function useFirestore<T extends { id: string }>(
         "firestoreMetadata.updatedAt": new Date(),
       };
 
-      await updateDoc(docRef, updateData);
+      let firestoreUpdateSuccess = true;
+      
+      try {
+        // Check if document exists before updating
+        const docSnapshot = await getDoc(docRef);
+        
+        if (!docSnapshot.exists()) {
+          console.warn(`🔥 [useFirestore] Document ${id} does not exist, creating it instead of updating`);
+          // Create the document with the local data + updates
+          const existingLocalItem = state.data.find((item) => item.id === id);
+          if (existingLocalItem) {
+            const createData = {
+              ...existingLocalItem,
+              ...updates,
+              "firestoreMetadata.createdAt": new Date(),
+              "firestoreMetadata.updatedAt": new Date(),
+            };
+            await setDoc(docRef, createData);
+            console.log(`✅ [useFirestore] Created missing document ${id} in Firestore`);
+          } else {
+            throw new Error(`Local item ${id} not found to create in Firestore`);
+          }
+        } else {
+          // Document exists, proceed with normal update
+          await updateDoc(docRef, updateData);
+        }
+      } catch (error: any) {
+        console.error(`🔥 [useFirestore] Failed to update document ${id}:`, error);
+        firestoreUpdateSuccess = false;
+        
+        // Handle different types of errors
+        if (error.code === 'unavailable' || 
+            error.code === 'deadline-exceeded' || 
+            error.code === 'failed-precondition' ||
+            error.code === 'cancelled' ||
+            error.message?.includes('Failed to get document') ||
+            error.message?.includes('network')) {
+          console.log(`🔥 [useFirestore] Network/connection error, updating local state only for ${id}`, error);
+        } else if (error.message?.includes('No document to update')) {
+          console.warn(`🔥 [useFirestore] Document ${id} does not exist in Firestore, creating it instead`);
+          try {
+            // Try to create the document instead of updating
+            const existingLocalItem = state.data.find((item) => item.id === id);
+            if (existingLocalItem) {
+              const createData = {
+                ...existingLocalItem,
+                ...updates,
+                "firestoreMetadata.createdAt": new Date(),
+                "firestoreMetadata.updatedAt": new Date(),
+              };
+              await setDoc(docRef, createData);
+              firestoreUpdateSuccess = true;
+              console.log(`✅ [useFirestore] Created missing document ${id} in Firestore`);
+            } else {
+              throw new Error(`Local item ${id} not found to create in Firestore`);
+            }
+          } catch (createError: any) {
+            console.error(`🔥 [useFirestore] Failed to create missing document ${id}:`, createError);
+            firestoreUpdateSuccess = false;
+          }
+        } else {
+          console.error(`🔥 [useFirestore] Non-recoverable error, rethrowing:`, error);
+          throw error;
+        }
+      }
 
       const existingItem = state.data.find((item) => item.id === id);
       if (!existingItem) {
         throw new Error(`Document with id ${id} not found in local state`);
       }
 
-      const updatedItem = { ...existingItem, ...updates } as T;
+      const updatedItem = { 
+        ...existingItem, 
+        ...updates,
+        // Add sync metadata to track Firestore sync status
+        _lastSyncedAt: firestoreUpdateSuccess ? new Date() : (existingItem as any)._lastSyncedAt,
+        _pendingSync: !firestoreUpdateSuccess,
+        _firestoreStatus: firestoreUpdateSuccess ? 'synced' : 'local-only'
+      } as T;
 
       setState((prev) => ({
         ...prev,
@@ -366,7 +441,11 @@ export function useFirestore<T extends { id: string }>(
         }
       }
 
-      return updatedItem;
+      // Add status indicator to the returned item
+      return {
+        ...updatedItem,
+        _firestoreStatus: firestoreUpdateSuccess ? 'synced' : 'local-only'
+      } as T;
     },
     [
       isReady,
@@ -460,6 +539,10 @@ export function useFirestore<T extends { id: string }>(
           ? doc(db, collectionName, operation.id)
           : doc(collection(db, collectionName));
 
+        if (debug && operation.id) {
+          console.log(`🔥 [useFirestore] Batch operation ${operation.type} for document ID: ${operation.id}`);
+        }
+
         switch (operation.type) {
           case "create":
             if (operation.data) {
@@ -474,6 +557,9 @@ export function useFirestore<T extends { id: string }>(
                   custom: {},
                 },
               });
+              if (debug) {
+                console.log(`🔥 [useFirestore] Added create operation for: ${operation.id || 'auto-generated-id'}`);
+              }
             }
             break;
           case "update":
@@ -494,13 +580,21 @@ export function useFirestore<T extends { id: string }>(
         }
       });
 
+      if (debug) {
+        console.log(`🔥 [useFirestore] Committing batch with ${operations.length} operations...`);
+      }
+      
       await batch.commit();
+
+      if (debug) {
+        console.log(`🔥 [useFirestore] Batch committed successfully, refreshing data...`);
+      }
 
       // Force refresh after batch operation
       await refresh();
 
       if (debug) {
-        console.log(`🔥 [useFirestore] Batch update completed`);
+        console.log(`🔥 [useFirestore] Batch update completed and data refreshed`);
       }
     },
     [isReady, collectionName, debug, getCurrentUserId]

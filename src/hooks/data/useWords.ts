@@ -59,7 +59,7 @@ interface WordsOperations {
   toggleWordLearned: (wordId: string) => Promise<OperationResult<Word>>;
   toggleWordDifficult: (wordId: string) => Promise<OperationResult<Word>>;
   clearAllWords: () => Promise<OperationResult<void>>;
-  importWords: (words: CreateInput<Word>[]) => Promise<OperationResult<Word[]>>;
+  importWords: (words: (CreateInput<Word> & { id?: string })[]) => Promise<OperationResult<Word[]>>;
   forceRefresh: () => void;
   setEditingWord: (word: Word | null) => void;
 }
@@ -222,7 +222,7 @@ export const useWords = (): WordsResult => {
     async (
       wordId: string,
       updates: UpdateInput<Word>
-    ): Promise<OperationResult<Word>> => {
+    ): Promise<OperationResult<Word> & { synced?: boolean; warning?: string }> => {
       const startTime = Date.now();
 
       try {
@@ -237,15 +237,20 @@ export const useWords = (): WordsResult => {
         statsCache.current = null;
         setRefreshTrigger((prev) => prev + 1);
 
+        // Check if the update was synced to Firestore
+        const isSynced = (updatedWord as any)._firestoreStatus === 'synced';
+        
         return {
-          success: true,
+          success: isSynced,
           data: updatedWord,
           metadata: {
             operation: "updateWord",
             timestamp: new Date(),
             duration: Date.now() - startTime,
           },
-        };
+          synced: isSynced,
+          warning: !isSynced ? "Parola salvata solo localmente. Controllare la connessione di rete." : undefined,
+        } as OperationResult<Word> & { synced: boolean; warning?: string };
       } catch (error) {
         return {
           success: false,
@@ -358,7 +363,7 @@ export const useWords = (): WordsResult => {
   // Import words
   const importWords = useCallback(
     async (
-      wordsToImport: CreateInput<Word>[]
+      wordsToImport: (CreateInput<Word> & { id?: string })[]
     ): Promise<OperationResult<Word[]>> => {
       const startTime = Date.now();
 
@@ -387,6 +392,7 @@ export const useWords = (): WordsResult => {
         // Prepare words for batch creation
         const operations = newWords.map((word) => ({
           type: "create" as const,
+          id: word.id, // Preserve custom ID from import if present
           data: {
             ...word,
             english: word.english.trim(),

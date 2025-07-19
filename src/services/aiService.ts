@@ -1,5 +1,5 @@
 // =====================================================
-// 📁 src/services/enhancedAIService.ts - NO AUTOMATIC PING VERSION
+// 📁 src/services/aiService.ts - NO AUTOMATIC PING VERSION
 // =====================================================
 
 import AppConfig, { isAIAvailable } from "../config/appConfig";
@@ -10,7 +10,10 @@ import { withTimeout, globalOperationManager } from "../utils/retryUtils";
 interface AIAnalysisResult {
   italian: string;
   group: string;
-  sentence: string;
+  sentence?: string;           // DEPRECATED: per backward compatibility
+  sentences?: string[];        // NUOVO: array di frasi
+  synonyms?: string[];         // NUOVO: array di sinonimi
+  antonyms?: string[];         // NUOVO: array di contrari
   notes: string;
   chapter: string;
   _aiError?: boolean;
@@ -43,7 +46,7 @@ interface APIResponse {
 
 type HealthStatus = "unknown" | "healthy" | "degraded" | "down";
 
-class EnhancedAIService {
+class AIService {
   private config: any;
   private isConfigured: boolean;
   private canUseAI: boolean;
@@ -327,14 +330,23 @@ class EnhancedAIService {
   // ⭐ PARSE AI RESPONSE
   private parseAIResponse(content: string, fallbackWord: string): AIAnalysisResult {
     try {
+      console.log("🔍 AI Raw Response:", content);
+      
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
+        console.error("❌ No JSON found in AI response");
         return this.createFallbackResponse(fallbackWord, "No JSON in response");
       }
 
       const parsedData = JSON.parse(jsonMatch[0]);
-      return this.validateAndSanitizeResponse(parsedData, fallbackWord);
+      console.log("📊 AI Parsed Data:", parsedData);
+      
+      const result = this.validateAndSanitizeResponse(parsedData, fallbackWord);
+      console.log("✅ AI Final Result:", result);
+      
+      return result;
     } catch (parseError) {
+      console.error("❌ AI JSON Parsing Error:", parseError);
       return this.createFallbackResponse(fallbackWord, "JSON parsing failed");
     }
   }
@@ -344,11 +356,14 @@ class EnhancedAIService {
     const result: AIAnalysisResult = {
       italian: "",
       group: "",
-      sentence: "",
+      sentences: [],
+      synonyms: [],
+      antonyms: [],
       notes: "",
       chapter: "",
     };
 
+    // Validazione traduzione italiana
     if (
       !data.italian ||
       typeof data.italian !== "string" ||
@@ -358,16 +373,54 @@ class EnhancedAIService {
     }
     result.italian = data.italian.trim();
 
+    // Validazione gruppo
     if (data.group && WORD_CATEGORIES.includes(data.group)) {
       result.group = data.group;
     } else {
       result.group = this.categorizeWordFallback(fallbackWord);
     }
 
-    result.sentence =
-      data.sentence && typeof data.sentence === "string"
-        ? data.sentence.trim()
-        : "";
+    // Validazione frasi (NUOVO) - fallback su sentence singola per backward compatibility
+    console.log("🔍 Validating sentences - data.sentences:", data.sentences, "data.sentence:", data.sentence);
+    
+    if (Array.isArray(data.sentences) && data.sentences.length > 0) {
+      result.sentences = data.sentences
+        .filter((s: any) => typeof s === "string" && s.trim())
+        .map((s: string) => s.trim())
+        .slice(0, 5); // Max 5 frasi
+      console.log("✅ Using sentences array:", result.sentences);
+    } else if (data.sentence && typeof data.sentence === "string") {
+      // Backward compatibility
+      result.sentences = [data.sentence.trim()];
+      result.sentence = data.sentence.trim(); // Per backward compatibility
+      console.log("✅ Using single sentence fallback:", result.sentences);
+    } else {
+      console.warn("⚠️ No sentences found in AI response!");
+    }
+
+    // Validazione sinonimi (NUOVO)
+    console.log("🔍 Validating synonyms - data.synonyms:", data.synonyms);
+    if (Array.isArray(data.synonyms) && data.synonyms.length > 0) {
+      result.synonyms = data.synonyms
+        .filter((s: any) => typeof s === "string" && s.trim())
+        .map((s: string) => s.trim())
+        .slice(0, 8); // Max 8 sinonimi
+      console.log("✅ Using synonyms:", result.synonyms);
+    } else {
+      console.warn("⚠️ No synonyms found in AI response!");
+    }
+
+    // Validazione contrari (NUOVO)
+    console.log("🔍 Validating antonyms - data.antonyms:", data.antonyms);
+    if (Array.isArray(data.antonyms) && data.antonyms.length > 0) {
+      result.antonyms = data.antonyms
+        .filter((s: any) => typeof s === "string" && s.trim())
+        .map((s: string) => s.trim())
+        .slice(0, 8); // Max 8 contrari
+      console.log("✅ Using antonyms:", result.antonyms);
+    } else {
+      console.warn("⚠️ No antonyms found in AI response!");
+    }
 
     result.notes =
       data.notes && typeof data.notes === "string" ? data.notes.trim() : "";
@@ -382,9 +435,13 @@ class EnhancedAIService {
     return {
       italian: "",
       group: this.categorizeWordFallback(word),
-      sentence: "",
+      sentences: [],
+      synonyms: [],
+      antonyms: [],
       notes: `❌ AI analysis failed: ${reason}. Fill manually.`,
       chapter: "",
+      _aiError: true,
+      _fallbackUsed: true,
     };
   }
 
@@ -393,27 +450,46 @@ class EnhancedAIService {
     const groupsList = WORD_CATEGORIES.join(", ");
 
     return `
-Analizza la parola inglese "${englishWord}" e fornisci JSON:
+Genera JSON per la parola inglese "${englishWord}":
 
 {
-  "italian": "traduzione principale italiana",
-  "group": "DEVE essere una di: ${groupsList}",
-  "sentence": "frase d'esempio inglese",
-  "notes": "note aggiuntive, sinonimi, forme irregolari",
-  "chapter": "lascia vuoto"
+  "italian": "traduzione principale",
+  "group": "categoria esatta dalla lista",
+  "sentences": [
+    "Frase di esempio 1 con ${englishWord}",
+    "Frase di esempio 2 con ${englishWord}",
+    "Frase di esempio 3 con ${englishWord}"
+  ],
+  "synonyms": ["sinonimo1", "sinonimo2", "sinonimo3"],
+  "antonyms": ["contrario1", "contrario2"],
+  "notes": "note utili",
+  "chapter": ""
 }
 
-REGOLE:
-- Solo JSON valido
-- "group" deve essere esatto da lista
-- Per verbi irregolari usa "VERBI_IRREGOLARI_COMUNI"
-- Includi 2-3 significati nelle note
-- "chapter" sempre vuoto
+REGOLE CRITICHE:
+1. SEMPRE includere ESATTAMENTE 3 frasi nell'array "sentences"
+2. SEMPRE includere almeno 3 sinonimi nell'array "synonyms"
+3. Se esistono contrari, includerli nell'array "antonyms"
+4. Solo JSON puro, senza testo prima o dopo
+5. "group" deve essere uno di: ${groupsList}
 
-ESEMPI:
-- "run" → "VERBI_IRREGOLARI_COMUNI" 
-- "beautiful" → "AGGETTIVI_BASE"
-- "computer" → "TECNOLOGIA_DIGITALE"
+ESEMPIO PER "${englishWord}":
+Se "${englishWord}" = "check":
+{
+  "italian": "controllare, verificare",
+  "group": "VERBI_BASE",
+  "sentences": [
+    "Please check your email",
+    "I need to check the time",
+    "The doctor will check your blood pressure"
+  ],
+  "synonyms": ["verify", "examine", "inspect", "review"],
+  "antonyms": ["ignore", "neglect"],
+  "notes": "Verbo molto comune con molteplici significati",
+  "chapter": ""
+}
+
+IMPORTANTE: NON scrivere altro testo, solo il JSON!
 `;
   }
 
@@ -573,7 +649,7 @@ ESEMPI:
   }
 }
 
-const enhancedAIService = new EnhancedAIService();
+const aiService = new AIService();
 
-export { enhancedAIService };
-export default enhancedAIService;
+export { aiService };
+export default aiService;

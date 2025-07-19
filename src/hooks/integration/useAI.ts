@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
-import { enhancedAIService } from '../../services/enhancedAIService';
+import { aiService } from '../../services/aiService';
 
-type AIServiceStatus = ReturnType<typeof enhancedAIService.getServiceStatus>;
+type AIServiceStatus = ReturnType<typeof aiService.getServiceStatus>;
 
 interface AIAnalysisResult {
   success: boolean;
@@ -64,7 +64,7 @@ export const useAI = (): AIHookReturn => {
 
   const checkStatus = useCallback(async (): Promise<AIServiceStatus> => {
     try {
-      const status = enhancedAIService.getServiceStatus();
+      const status = aiService.getServiceStatus();
       setStatus(status);
       return status;
     } catch (error) {
@@ -112,7 +112,7 @@ export const useAI = (): AIHookReturn => {
 
     try {
       // This would integrate with your AI service
-      const analysisResult = await enhancedAIService.analyzeWord(word);
+      const analysisResult = await aiService.analyzeWord(word);
 
       const duration = Date.now() - startTime;
       

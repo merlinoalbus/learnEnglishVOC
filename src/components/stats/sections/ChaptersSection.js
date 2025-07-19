@@ -22,7 +22,7 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
   const [selectedChapterForTrend, setSelectedChapterForTrend] = useState(null);
 
   // ⭐ FIXED: Calcolo corretto dei dati per capitoli
-  const enhancedChapterData = useMemo(() => {
+  const chapterAnalysis = useMemo(() => {
     const chapterStats = {};
     const chapterFirstTestDate = {};
     const chapterDetailedHistory = {};
@@ -153,11 +153,11 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
 
   // ⭐ FIXED: Trend data for selected chapter only - CHRONOLOGICALLY ORDERED
   const selectedChapterTrendData = useMemo(() => {
-    if (!selectedChapterForTrend || !enhancedChapterData.chapterDetailedHistory[selectedChapterForTrend]) {
+    if (!selectedChapterForTrend || !chapterAnalysis.chapterDetailedHistory[selectedChapterForTrend]) {
       return [];
     }
 
-    const history = enhancedChapterData.chapterDetailedHistory[selectedChapterForTrend];
+    const history = chapterAnalysis.chapterDetailedHistory[selectedChapterForTrend];
     
     // ⭐ CRITICAL: Sort chronologically (oldest to newest) BEFORE taking last 15
     // Timestamps are ISO strings, sort them directly as Date objects
@@ -185,32 +185,32 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
       }),
       timestamp: entry.timestamp
     }));
-  }, [selectedChapterForTrend, enhancedChapterData.chapterDetailedHistory]);
+  }, [selectedChapterForTrend, chapterAnalysis.chapterDetailedHistory]);
 
   // ⭐ FIXED: Statistics calculations
   const overviewStats = useMemo(() => {
-    const testedChapters = enhancedChapterData.processedData.filter(c => c.testsPerformed > 0);
+    const testedChapters = chapterAnalysis.processedData.filter(c => c.testsPerformed > 0);
     
     return {
-      totalChapters: enhancedChapterData.processedData.length,
+      totalChapters: chapterAnalysis.processedData.length,
       testedChapters: testedChapters.length,
       bestEfficiency: testedChapters.length > 0 ? Math.max(...testedChapters.map(c => c.efficiency)) : 0,
-      averageCompletion: enhancedChapterData.processedData.length > 0 
-        ? Math.round(enhancedChapterData.processedData.reduce((sum, c) => sum + c.completionRate, 0) / enhancedChapterData.processedData.length)
+      averageCompletion: chapterAnalysis.processedData.length > 0 
+        ? Math.round(chapterAnalysis.processedData.reduce((sum, c) => sum + c.completionRate, 0) / chapterAnalysis.processedData.length)
         : 0,
       averageAccuracy: testedChapters.length > 0
         ? Math.round(testedChapters.reduce((sum, c) => sum + c.accuracy, 0) / testedChapters.length)
         : 0
     };
-  }, [enhancedChapterData.processedData]);
+  }, [chapterAnalysis.processedData]);
 
   // ⭐ FIXED: Top and struggling chapters
-  const topChapters = enhancedChapterData.processedData
+  const topChapters = chapterAnalysis.processedData
     .filter(c => c.testsPerformed > 0)
     .sort((a, b) => b.efficiency - a.efficiency)
     .slice(0, 5);
 
-  const strugglingChapters = enhancedChapterData.processedData
+  const strugglingChapters = chapterAnalysis.processedData
     .filter(c => c.testsPerformed > 2) // At least 3 tests to be considered struggling
     .sort((a, b) => a.efficiency - b.efficiency)
     .slice(0, 3);
@@ -271,7 +271,7 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
         <CardContent className="p-6">
           <ResponsiveContainer width="100%" height={400}>
             <ComposedChart 
-              data={enhancedChapterData.processedData.filter(c => c.testsPerformed > 0)} 
+              data={chapterAnalysis.processedData.filter(c => c.testsPerformed > 0)} 
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e4e7" />
@@ -520,7 +520,7 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
                 </tr>
               </thead>
               <tbody>
-                {enhancedChapterData.processedData.map((chapter, index) => (
+                {chapterAnalysis.processedData.map((chapter, index) => (
                   <tr 
                     key={chapter.fullChapter} 
                     className={`border-b border-gray-100 transition-colors ${
@@ -618,7 +618,7 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
             </table>
           </div>
           
-          {enhancedChapterData.processedData.some(c => c.testsPerformed > 0) && (
+          {chapterAnalysis.processedData.some(c => c.testsPerformed > 0) && (
             <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-800">
                 💡 <strong>Suggerimento:</strong> Clicca su un capitolo testato per visualizzare il suo andamento temporale dettagliato.

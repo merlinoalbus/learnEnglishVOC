@@ -148,7 +148,7 @@ export const TestView: React.FC = React.memo(() => {
         {!showMeaning && (
           <Button
             onClick={() => setShowMeaning(true)}
-            className="bg-yellow-500 hover:bg-yellow-600"
+            className="bg-blue-500 hover:bg-blue-600"
           >
             <HelpCircle className="w-4 h-4 mr-2" />
             Mostra Significato

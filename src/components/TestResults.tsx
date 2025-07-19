@@ -85,7 +85,7 @@ const TestResults: React.FC<TestResultsProps> = ({ stats, wrongWords, onStartNew
   const getCorrectStats = (): ProcessedStats => {
     // ⭐ PRIORITY 1: Se stats contiene già i dati enhanced, usali direttamente
     if (stats && typeof stats === 'object') {
-      const enhancedStats: ProcessedStats = {
+      const processedStats: ProcessedStats = {
         correct: stats.correct || 0,
         incorrect: stats.incorrect || 0,
         hints: stats.hints || 0,
@@ -95,7 +95,7 @@ const TestResults: React.FC<TestResultsProps> = ({ stats, wrongWords, onStartNew
         minTimePerWord: stats.minTimePerWord || 0,
         totalRecordedTime: stats.totalRecordedTime || 0
       };
-      return enhancedStats;
+      return processedStats;
     }
     
     // ⭐ FALLBACK: Try legacy format extraction (just in case)

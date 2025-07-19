@@ -71,7 +71,7 @@ const SelectTrigger = React.forwardRef<
     <button
       ref={ref}
       type="button"
-      className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       onClick={() => setIsOpen?.(!isOpen)}
       {...props}
     >
@@ -98,7 +98,7 @@ const SelectValue: React.FC<SelectValueProps> = ({
   placeholder,
   selectedValue,
 }) => (
-  <span className={selectedValue ? "" : "text-gray-500"}>
+  <span className={selectedValue ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}>
     {selectedValue || placeholder}
   </span>
 );
@@ -133,7 +133,7 @@ const SelectContent = React.forwardRef<
   return (
     <div
       ref={contentRef}
-      className={`absolute top-full mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-md z-50 ${className}`}
+      className={`absolute top-full mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md z-50 ${className}`}
     >
       <div className="p-1">
         {React.Children.map(children, (child) =>
@@ -155,7 +155,7 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps & any>(
   ) => (
     <div
       ref={ref}
-      className={`relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100 cursor-pointer ${className}`}
+      className={`relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm text-gray-900 dark:text-gray-100 outline-none hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 cursor-pointer ${className}`}
       onClick={() => {
         onValueChange?.(value);
         setIsOpen?.(false);

@@ -1,5 +1,5 @@
 // =====================================================
-// 📁 src/services/enhancedStorageService.ts - Enhanced Storage Service
+// 📁 src/services/storageService.ts - Storage Service
 // =====================================================
 
 import { STORAGE_CONFIG } from '../constants/appConstants';
@@ -56,7 +56,7 @@ interface AppSettings {
 
 type HealthStatus = 'unknown' | 'healthy' | 'degraded' | 'down' | 'quota_exceeded';
 
-class EnhancedStorageService {
+class StorageService {
   private isAvailable: boolean;
   private keys: StorageKeys;
   private operationQueue: Array<any>;
@@ -501,7 +501,7 @@ class EnhancedStorageService {
   }
 }
 
-const enhancedStorageService = new EnhancedStorageService();
+const storageService = new StorageService();
 
-export { enhancedStorageService };
-export default enhancedStorageService;
+export { storageService };
+export default storageService;

@@ -59,7 +59,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, className = ""
       {/* Modal Container */}
       <div className="flex min-h-full items-center justify-center p-4" onClick={handleBackdropClick}>
         <div 
-          className={`relative bg-white rounded-2xl shadow-2xl transform transition-all duration-300 scale-100 max-w-md w-full mx-auto ${className}`}
+          className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl transform transition-all duration-300 scale-100 max-w-md w-full mx-auto ${className}`}
           onClick={handleModalClick}
         >
           {children}
@@ -70,13 +70,13 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, className = ""
 };
 
 const ModalHeader: React.FC<ModalHeaderProps> = ({ children, className = "" }) => (
-  <div className={`px-6 py-4 border-b border-gray-200 ${className}`}>
+  <div className={`px-6 py-4 border-b border-gray-200 dark:border-gray-600 ${className}`}>
     {children}
   </div>
 );
 
 const ModalTitle: React.FC<ModalTitleProps> = ({ children, className = "" }) => (
-  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
+  <h3 className={`text-lg font-semibold text-gray-900 dark:text-gray-100 ${className}`}>
     {children}
   </h3>
 );
@@ -88,7 +88,7 @@ const ModalContent: React.FC<ModalContentProps> = ({ children, className = "" })
 );
 
 const ModalFooter: React.FC<ModalFooterProps> = ({ children, className = "" }) => (
-  <div className={`px-6 py-4 border-t border-gray-200 flex justify-end gap-3 ${className}`}>
+  <div className={`px-6 py-4 border-t border-gray-200 dark:border-gray-600 flex justify-end gap-3 ${className}`}>
     {children}
   </div>
 );

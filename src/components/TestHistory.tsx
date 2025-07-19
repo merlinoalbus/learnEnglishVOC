@@ -117,7 +117,7 @@ const TestHistory: React.FC<TestHistoryProps> = ({ testHistory, onClearHistory }
         </p>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="space-y-4 max-h-96 overflow-y-auto scrollbar-thin">
+        <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
           {testHistory.map((test, index) => (
             <TestHistoryCard
               key={test.id}

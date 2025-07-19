@@ -100,15 +100,15 @@ export const AppNavigation = React.memo(() => {
 
   return (
     <Card className="backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-0 shadow-xl rounded-3xl overflow-hidden">
-      <CardContent className="p-2">
-        <div className="flex items-center justify-between gap-2 p-2">
+      <CardContent className="p-0">
+        <div className="flex items-center justify-between gap-2 px-4 py-3">
           {/* Navigation Items */}
-          <div className="flex gap-2 flex-1">
+          <div className="flex items-center gap-2 flex-1">
             {navItems.map((item) => (
               <Button
                 key={item.id}
                 onClick={() => dispatch({ type: "SET_VIEW", payload: item.id as any })}
-                className={`flex items-center gap-2 py-4 px-4 rounded-2xl text-base font-semibold transition-all duration-300 relative ${
+                className={`flex items-center justify-center gap-2 h-12 px-4 rounded-2xl text-base font-semibold transition-all duration-300 relative ${
                   currentView === item.id
                     ? `bg-gradient-to-r ${item.color} text-white shadow-lg transform scale-105`
                     : "bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300"
@@ -118,7 +118,7 @@ export const AppNavigation = React.memo(() => {
                 <item.icon className="w-5 h-5" />
                 <span className="hidden md:inline">{item.label}</span>
                 {item.badge && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {item.badge}
                   </span>
                 )}
@@ -132,7 +132,7 @@ export const AppNavigation = React.memo(() => {
               ref={userButtonRef}
               onClick={toggleUserMenu}
               variant="ghost"
-              className="flex items-center gap-2 py-3 px-4 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all duration-300 border-0"
+              className="flex items-center justify-center gap-2 h-12 px-4 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all duration-300 border-0"
               disabled={authLoading}
             >
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">

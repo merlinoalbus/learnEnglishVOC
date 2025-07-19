@@ -11,7 +11,11 @@
       "Bash(rg:*)",
       "Bash(ls:*)",
       "Bash(npm run typecheck:*)",
-      "Bash(del \"C:\\Repository\\learnEnglishVOC\\src\\components\\ui\\textarea.js\")"
+      "Bash(del \"C:\\Repository\\learnEnglishVOC\\src\\components\\ui\\textarea.js\")",
+      "Bash(npm start)",
+      "Bash(mv:*)",
+      "Bash(git log:*)",
+      "Bash(git ls-tree:*)"
     ],
     "deny": []
   }

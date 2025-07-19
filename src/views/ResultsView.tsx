@@ -14,7 +14,7 @@ export const ResultsView: React.FC = React.memo(() => {
     const summary = getTestSummary && getTestSummary();
         
     if (summary && (summary.correct >= 0 || summary.incorrect >= 0)) {
-      const enhancedData = {
+      const processedData = {
         correct: summary.correct || 0,
         incorrect: summary.incorrect || 0,
         hints: summary.hints || 0,
@@ -29,7 +29,7 @@ export const ResultsView: React.FC = React.memo(() => {
         percentage: summary.percentage || 0
       };
       
-      return enhancedData;
+      return processedData;
     }
     
     if (wrongWords && Array.isArray(wrongWords)) {

@@ -369,7 +369,7 @@ export const SettingsView: React.FC = () => {
                   <Button 
                     variant={!darkMode ? "default" : "outline"} 
                     size="sm" 
-                    className={`flex items-center gap-2 justify-start p-4 h-auto ${!darkMode ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg' : 'border-2 border-gray-200 hover:border-yellow-300'}`}
+                    className={`flex items-center gap-2 justify-start p-4 h-auto ${!darkMode ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 shadow-lg' : 'border-2 border-gray-200 hover:border-blue-300'}`}
                     onClick={() => handleThemeChange('light')}
                   >
                     <Sun className="w-5 h-5" />

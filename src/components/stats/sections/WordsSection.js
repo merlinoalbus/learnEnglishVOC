@@ -49,7 +49,7 @@ const WordsSection = ({ localRefresh }) => {
   }, []);
 
   // ⭐ REFACTORED: Enhanced word performance data using ONLY AppContext data
-  const enhancedWordsData = useMemo(() => {
+  const wordsAnalysis = useMemo(() => {
     if (!getAllWordsPerformance || !words) {
       return [];
     }
@@ -60,7 +60,7 @@ const WordsSection = ({ localRefresh }) => {
     const performanceMap = new Map(performanceData.map(p => [p.wordId, p]));
      
     // ⭐ ENHANCED: Better word merging with detailed logging
-    const enhanced = words.map((word, index) => {
+    const analyzed = words.map((word, index) => {
       const performance = performanceMap.get(word.id);
        
       // ⭐ CRITICAL: Multiple ways to detect if word has performance data
@@ -83,12 +83,12 @@ const WordsSection = ({ localRefresh }) => {
       };
     });
      
-    const withData = enhanced.filter(w => w.hasPerformanceData).length;
+    const withData = analyzed.filter(w => w.hasPerformanceData).length;
              
     // ⭐ FALLBACK: If getAllWordsPerformance is broken, use raw wordPerformance
     if (withData === 0 && wordPerformance && Object.keys(wordPerformance).length > 0) {
            
-      const enhancedFallback = words.map(word => {
+      const fallbackAnalysis = words.map(word => {
         const rawPerformance = wordPerformance[word.id];
         const hasRawData = rawPerformance && rawPerformance.attempts && rawPerformance.attempts.length > 0;
                 
@@ -122,16 +122,16 @@ const WordsSection = ({ localRefresh }) => {
         };
       });
        
-      const fallbackWithData = enhancedFallback.filter(w => w.hasPerformanceData).length;
-      return enhancedFallback;
+      const fallbackWithData = fallbackAnalysis.filter(w => w.hasPerformanceData).length;
+      return fallbackAnalysis;
     }
      
-    return enhanced;
+    return analyzed;
   }, [getAllWordsPerformance, words, wordPerformance, localRefresh]);
 
   // ⭐ SAME: Filtering logic
   const filteredWords = useMemo(() => {
-    return enhancedWordsData.filter(word => {
+    return wordsAnalysis.filter(word => {
       if (searchWord && !word.english.toLowerCase().includes(searchWord.toLowerCase())) {
         return false;
       }
@@ -152,12 +152,12 @@ const WordsSection = ({ localRefresh }) => {
        
       return true;
     });
-  }, [enhancedWordsData, searchWord, filterChapter, filterGroup, filterLearned, filterDifficult]);
+  }, [wordsAnalysis, searchWord, filterChapter, filterGroup, filterLearned, filterDifficult]);
 
   // ⭐ SAME: Available options
   const availableChapters = useMemo(() => {
     const chapters = new Set();
-    enhancedWordsData.forEach(word => {
+    wordsAnalysis.forEach(word => {
       if (word.chapter) chapters.add(word.chapter);
     });
     return Array.from(chapters).sort((a, b) => {
@@ -165,36 +165,36 @@ const WordsSection = ({ localRefresh }) => {
       const bNum = parseInt(b);
       return !isNaN(aNum) && !isNaN(bNum) ? aNum - bNum : a.localeCompare(b);
     });
-  }, [enhancedWordsData]);
+  }, [wordsAnalysis]);
 
   const availableGroups = useMemo(() => {
     const groups = new Set();
-    enhancedWordsData.forEach(word => {
+    wordsAnalysis.forEach(word => {
       if (word.group) groups.add(word.group);
     });
     return Array.from(groups).sort();
-  }, [enhancedWordsData]);
+  }, [wordsAnalysis]);
 
   const wordsWithoutChapter = useMemo(() => {
-    return enhancedWordsData.filter(word => !word.chapter);
-  }, [enhancedWordsData]);
+    return wordsAnalysis.filter(word => !word.chapter);
+  }, [wordsAnalysis]);
 
   // ⭐ FIXED: Better stats calculation
   const stats = useMemo(() => {
-    const withPerformance = enhancedWordsData.filter(w => w.hasPerformanceData);
+    const withPerformance = wordsAnalysis.filter(w => w.hasPerformanceData);
     return {
-      total: enhancedWordsData.length,
-      learned: enhancedWordsData.filter(w => w.learned).length,
-      notLearned: enhancedWordsData.filter(w => !w.learned).length,
-      difficult: enhancedWordsData.filter(w => w.difficult).length,
-      withChapter: enhancedWordsData.filter(w => w.chapter).length,
+      total: wordsAnalysis.length,
+      learned: wordsAnalysis.filter(w => w.learned).length,
+      notLearned: wordsAnalysis.filter(w => !w.learned).length,
+      difficult: wordsAnalysis.filter(w => w.difficult).length,
+      withChapter: wordsAnalysis.filter(w => w.chapter).length,
       withPerformance: withPerformance.length,
       filtered: filteredWords.length,
       avgAccuracy: withPerformance.length > 0 
         ? Math.round(withPerformance.reduce((sum, w) => sum + w.accuracy, 0) / withPerformance.length)
         : 0
     };
-  }, [enhancedWordsData, filteredWords.length]);
+  }, [wordsAnalysis, filteredWords.length]);
 
   // ⭐ SAME: Grouped words
   const groupedWords = useMemo(() => {
@@ -217,7 +217,7 @@ const WordsSection = ({ localRefresh }) => {
 
   // ⭐ SAME: Handle word actions
   const handleToggleLearned = (id) => {
-    const word = enhancedWordsData.find(w => w.id === id);
+    const word = wordsAnalysis.find(w => w.id === id);
     if (word) {
       toggleWordLearned(id);
       showSuccess(
@@ -229,7 +229,7 @@ const WordsSection = ({ localRefresh }) => {
   };
 
   const handleToggleDifficult = (id) => {
-    const word = enhancedWordsData.find(w => w.id === id);
+    const word = wordsAnalysis.find(w => w.id === id);
     if (word) {
       toggleWordDifficult(id);
       showSuccess(
@@ -447,7 +447,7 @@ const WordsSection = ({ localRefresh }) => {
           wordId={selectedWordId}
           getWordAnalysis={getWordAnalysis}
           testHistory={testHistory} // ⭐ CRITICAL: Pass testHistory from AppContext
-          wordInfo={enhancedWordsData.find(w => w.id === selectedWordId)}
+          wordInfo={wordsAnalysis.find(w => w.id === selectedWordId)}
           localRefresh={`${localRefresh}-${internalRefresh}`}
         />
       )}
@@ -524,7 +524,7 @@ const WordsSection = ({ localRefresh }) => {
                   {!isCollapsed && (
                     <CardContent className="p-4">
                       {/* ⭐ FIXED: Scrollable word list */}
-                      <div className="max-h-80 overflow-y-auto space-y-2 pr-2 scrollbar-thin scrollbar-thumb-indigo-300 scrollbar-track-gray-100">
+                      <div className="max-h-80 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                         {chapterWords.map((word) => (
                           <CompactWordCard
                             key={word.id}

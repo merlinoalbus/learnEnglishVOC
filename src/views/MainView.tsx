@@ -3,9 +3,9 @@ import { useAppContext } from '../contexts/AppContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { ControlPanel } from '../components/main/ControlPanel';
 import JSONManager from '../components/JSONManager';
-import EnhancedAddWordForm from '../components/EnhancedAddWordForm';
+import AddWordForm from '../components/AddWordForm';
 import WordsList from '../components/WordsList';
-import { Word, CreateWordInput } from '../types';
+import { Word, CreateWordInput, UpdateWordInput } from '../types';
 
 export const MainView: React.FC = React.memo(() => {
   const {
@@ -14,6 +14,7 @@ export const MainView: React.FC = React.memo(() => {
     showWordsList,
     dispatch,
     addWord,
+    updateWord,
     toggleWordLearned,
     toggleWordDifficult,
     importWords,
@@ -48,6 +49,26 @@ export const MainView: React.FC = React.memo(() => {
       showError(error instanceof Error ? error : new Error('Unknown error'), 'Add Word');
     }
   }, [addWord, editingWord, dispatch, showSuccess, showError]);
+
+  const handleUpdateWord = React.useCallback(async (wordData: UpdateWordInput) => {
+    try {
+      const result = await updateWord(wordData.id, wordData);
+      if (result.success) {
+        dispatch({ type: 'SET_EDITING_WORD', payload: null });
+        showSuccess(`✅ Parola "${wordData.english}" modificata!`);
+      } else {
+        console.error('MainView: Error updating word:', result.error);
+        if (result.warning) {
+          showError(new Error(result.warning), 'Attenzione');
+        } else {
+          showError(result.error || new Error('Failed to update word'), 'Update Word');
+        }
+      }
+    } catch (error) {
+      console.error('MainView: Error updating word:', error);
+      showError(error instanceof Error ? error : new Error('Unknown error'), 'Update Word');
+    }
+  }, [updateWord, dispatch, showSuccess, showError]);
 
   const handleRemoveWord = React.useCallback((id: string) => {
     const wordToDelete = words.find(word => word.id === id);
@@ -156,8 +177,9 @@ export const MainView: React.FC = React.memo(() => {
         onImportWords={handleImportWords}
       />
 
-      <EnhancedAddWordForm
+      <AddWordForm
         onAddWord={handleAddWord}
+        onUpdateWord={handleUpdateWord}
         editingWord={editingWord}
         onClearForm={() => dispatch({ type: 'SET_EDITING_WORD', payload: null })}
       />
