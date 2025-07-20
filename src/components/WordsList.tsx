@@ -305,6 +305,7 @@ const WordsList: React.FC<WordListProps> = ({
   const [filterLearned, setFilterLearned] = useState<FilterLearned>('all');
   const [filterDifficult, setFilterDifficult] = useState<FilterDifficult>('all');
   const [filterGroup, setFilterGroup] = useState<string>('');
+  const [collapsedChapters, setCollapsedChapters] = useState<Set<string>>(new Set());
 
   // Calcolo dati derivati all'inizio per evitare problemi di scope
   const availableChapters = useMemo(() => {
@@ -326,6 +327,17 @@ const WordsList: React.FC<WordListProps> = ({
     });
     return Array.from(groups).sort();
   }, [words]);
+
+  // Funzione per toggleare il collasso dei capitoli
+  const toggleChapterCollapse = (chapter: string) => {
+    const newCollapsed = new Set(collapsedChapters);
+    if (newCollapsed.has(chapter)) {
+      newCollapsed.delete(chapter);
+    } else {
+      newCollapsed.add(chapter);
+    }
+    setCollapsedChapters(newCollapsed);
+  };
 
   const wordsWithoutChapter = useMemo(() => {
     return words.filter(word => !word.chapter);
@@ -543,41 +555,56 @@ const WordsList: React.FC<WordListProps> = ({
                     const bNum = parseInt(b);
                     return !isNaN(aNum) && !isNaN(bNum) ? aNum - bNum : a.localeCompare(b);
                   })
-                  .map(([chapter, chapterWords]) => (
-                    <div key={chapter} className="space-y-3">
-                      {/* Header Capitolo Enhanced */}
-                      <div className="words-list-chapter-section">
-                        <BookOpen className="w-5 h-5 text-indigo-600 dark:text-purple-400" />
-                        <h3 className="words-list-chapter-title">
-                          {chapter === 'Senza Capitolo' ? '📋 Senza Capitolo' : `📖 Capitolo ${chapter}`}
-                        </h3>
-                        <span className="text-sm text-indigo-600 dark:text-blue-300 bg-indigo-200 dark:bg-blue-900/20 px-3 py-1 rounded-full">
-                          {chapterWords.length} parole
-                        </span>
-                        <span className="text-sm text-green-600 dark:text-green-300 bg-green-200 dark:bg-green-900/20 px-3 py-1 rounded-full">
-                          {chapterWords.filter(w => w.learned).length} apprese
-                        </span>
-                        {/* Difficili counter */}
-                        <span className="text-sm text-red-600 dark:text-red-300 bg-red-200 dark:bg-red-900/20 px-3 py-1 rounded-full">
-                          {chapterWords.filter(w => w.difficult).length} difficili
-                        </span>
+                  .map(([chapter, chapterWords]) => {
+                    const isCollapsed = collapsedChapters.has(chapter);
+                    return (
+                      <div key={chapter} className="space-y-3">
+                        {/* Header Capitolo Enhanced - Cliccabile */}
+                        <div 
+                          className="words-list-chapter-section cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors rounded-lg p-3"
+                          onClick={() => toggleChapterCollapse(chapter)}
+                        >
+                          <div className="flex items-center gap-3">
+                            {isCollapsed ? (
+                              <ChevronDown className="w-5 h-5 text-indigo-600 dark:text-purple-400" />
+                            ) : (
+                              <ChevronUp className="w-5 h-5 text-indigo-600 dark:text-purple-400" />
+                            )}
+                            <BookOpen className="w-5 h-5 text-indigo-600 dark:text-purple-400" />
+                            <h3 className="words-list-chapter-title">
+                              {chapter === 'Senza Capitolo' ? '📋 Senza Capitolo' : `📖 Capitolo ${chapter}`}
+                            </h3>
+                            <span className="text-sm text-indigo-600 dark:text-blue-300 bg-indigo-200 dark:bg-blue-900/20 px-3 py-1 rounded-full">
+                              {chapterWords.length} parole
+                            </span>
+                            <span className="text-sm text-green-600 dark:text-green-300 bg-green-200 dark:bg-green-900/20 px-3 py-1 rounded-full">
+                              {chapterWords.filter(w => w.learned).length} apprese
+                            </span>
+                            {/* Difficili counter */}
+                            <span className="text-sm text-red-600 dark:text-red-300 bg-red-200 dark:bg-red-900/20 px-3 py-1 rounded-full">
+                              {chapterWords.filter(w => w.difficult).length} difficili
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Parole del Capitolo - Collassabili */}
+                        {!isCollapsed && (
+                          <div className="space-y-3 animate-fade-in">
+                            {chapterWords.map((word) => (
+                              <WordCard 
+                                key={word.id} 
+                                word={word} 
+                                onEdit={() => onEditWord(word)}
+                                onRemove={() => onRemoveWord(word.id)}
+                                onToggleLearned={() => onToggleLearned(word.id)}
+                                onToggleDifficult={() => onToggleDifficult(word.id)}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      
-                      {/* Parole del Capitolo */}
-                      <div className="space-y-3">
-                        {chapterWords.map((word) => (
-                          <WordCard 
-                            key={word.id} 
-                            word={word} 
-                            onEdit={() => onEditWord(word)}
-                            onRemove={() => onRemoveWord(word.id)}
-                            onToggleLearned={() => onToggleLearned(word.id)}
-                            onToggleDifficult={() => onToggleDifficult(word.id)}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             </div>
           )}
