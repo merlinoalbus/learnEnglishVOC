@@ -58,10 +58,10 @@ const TestCard: React.FC<TestCardProps> = ({
           <div className="test-card-content">
             
             
-            {/* Traditional hint display for non-game mode */}
-            {!gameMode && showHint && sentence && (
+            {/* Hint container - always present to maintain card positioning */}
+            {!gameMode && sentence && (
               <div className="absolute top-6 left-6 right-6">
-                <div className="test-card-hint-box">
+                <div className={`test-card-hint-box ${!showHint ? 'opacity-0 pointer-events-none' : ''}`}>
                   <div className="test-card-hint-header">
                     <span className="test-card-hint-icon">💡</span>
                     <span className="test-card-hint-label">Suggerimento:</span>
@@ -100,26 +100,6 @@ const TestCard: React.FC<TestCardProps> = ({
           }}
         >
           <div className="test-card-back-overlay"></div>
-          
-          {/* Placeholder for hint container to maintain card positioning */}
-          {!gameMode && showHint && sentence && (
-            <div className="absolute top-6 left-6 right-6">
-              <div className="test-card-hint-box opacity-20 pointer-events-none">
-                <div className="test-card-hint-header">
-                  <span className="test-card-hint-icon">💡</span>
-                  <span className="test-card-hint-label">Suggerimento:</span>
-                  {hintUsed && (
-                    <span className="test-card-hint-badge">
-                      Conteggiato
-                    </span>
-                  )}
-                </div>
-                <div className="test-card-hint-text">
-                  "{sentence}"
-                </div>
-              </div>
-            </div>
-          )}
           
           {/* Category badge */}
           {word.group && (

@@ -5,7 +5,7 @@
   @apply min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-4;
 }
 
-:root.dark .test-results-container {
+.dark .test-results-container {
   @apply from-gray-900 via-gray-800 to-indigo-900/50;
 }
 
@@ -14,7 +14,7 @@
   @apply mb-6 px-6 py-3 bg-white/90 backdrop-blur-sm text-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 text-sm font-medium;
 }
 
-:root.dark .test-results-back-button {
+.dark .test-results-back-button {
   @apply bg-gray-800/90 text-gray-300 hover:bg-gray-700/90;
 }
 
@@ -23,7 +23,7 @@
   @apply bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-3 md:p-4 border border-purple-100;
 }
 
-:root.dark .test-results-card {
+.dark .test-results-card {
   @apply bg-gray-800/95 border-gray-600/50 shadow-2xl;
 }
 
@@ -36,7 +36,7 @@
   @apply text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2;
 }
 
-:root.dark .test-results-title {
+.dark .test-results-title {
   @apply from-purple-400 to-indigo-400;
 }
 
@@ -44,7 +44,7 @@
   @apply text-gray-600;
 }
 
-:root.dark .test-results-subtitle {
+.dark .test-results-subtitle {
   @apply text-gray-400;
 }
 
@@ -143,7 +143,7 @@
   @apply text-sm text-gray-600 mt-1;
 }
 
-:root.dark .test-results-score-label {
+.dark .test-results-score-label {
   @apply text-gray-400;
 }
 
@@ -173,7 +173,7 @@
   @apply bg-gray-50 rounded-xl p-4 text-center;
 }
 
-:root.dark .test-results-stat-card {
+.dark .test-results-stat-card {
   @apply bg-gray-700/50;
 }
 
@@ -181,7 +181,7 @@
   @apply text-2xl font-bold text-gray-800;
 }
 
-:root.dark .test-results-stat-value {
+.dark .test-results-stat-value {
   @apply text-gray-200;
 }
 
@@ -189,7 +189,7 @@
   @apply text-sm text-gray-600 mt-1;
 }
 
-:root.dark .test-results-stat-label {
+.dark .test-results-stat-label {
   @apply text-gray-400;
 }
 
@@ -198,7 +198,7 @@
   @apply bg-blue-50 rounded-xl p-3 mb-8;
 }
 
-:root.dark .test-results-time-stats {
+.dark .test-results-time-stats {
   @apply bg-blue-900/20 border border-blue-700/30;
 }
 
@@ -206,7 +206,7 @@
   @apply text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2;
 }
 
-:root.dark .test-results-time-title {
+.dark .test-results-time-title {
   @apply text-blue-300;
 }
 
@@ -222,7 +222,7 @@
   @apply text-2xl font-bold text-blue-700;
 }
 
-:root.dark .test-results-time-value {
+.dark .test-results-time-value {
   @apply text-blue-400;
 }
 
@@ -230,7 +230,7 @@
   @apply text-sm text-blue-600 mt-1;
 }
 
-:root.dark .test-results-time-label {
+.dark .test-results-time-label {
   @apply text-blue-400/80;
 }
 
@@ -239,7 +239,7 @@
   @apply bg-purple-50 rounded-xl p-3 mb-8;
 }
 
-:root.dark .test-results-analysis {
+.dark .test-results-analysis {
   @apply bg-purple-900/20 border border-purple-700/30;
 }
 
@@ -247,7 +247,7 @@
   @apply text-lg font-semibold text-purple-900 mb-4 flex items-center gap-2;
 }
 
-:root.dark .test-results-analysis-title {
+.dark .test-results-analysis-title {
   @apply text-purple-300;
 }
 
@@ -259,7 +259,7 @@
   @apply flex items-center justify-between p-4 bg-white/50 rounded-lg;
 }
 
-:root.dark .test-results-analysis-item {
+.dark .test-results-analysis-item {
   @apply bg-gray-700/60 border border-gray-600/30;
 }
 
@@ -276,7 +276,7 @@
   @apply text-2xl font-bold text-gray-800 flex items-center gap-2;
 }
 
-:root.dark .test-results-wrong-words-title {
+.dark .test-results-wrong-words-title {
   @apply text-gray-200;
 }
 
@@ -284,7 +284,7 @@
   @apply bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-medium;
 }
 
-:root.dark .test-results-wrong-words-count {
+.dark .test-results-wrong-words-count {
   @apply bg-red-900/40 text-red-300 border border-red-700/50;
 }
 
@@ -297,7 +297,7 @@
   @apply bg-gray-50 rounded-xl p-3 hover:shadow-lg transition-all duration-200;
 }
 
-:root.dark .test-results-word-card {
+.dark .test-results-word-card {
   @apply bg-gray-700/60 border border-gray-600/30 hover:bg-gray-700/80;
 }
 
@@ -309,7 +309,7 @@
   @apply text-xl font-bold text-gray-800;
 }
 
-:root.dark .test-results-word-title {
+.dark .test-results-word-title {
   @apply text-gray-200;
 }
 
@@ -317,7 +317,7 @@
   @apply text-sm text-gray-500;
 }
 
-:root.dark .test-results-word-chapter {
+.dark .test-results-word-chapter {
   @apply text-gray-400;
 }
 
@@ -325,7 +325,7 @@
   @apply text-lg text-gray-700 mb-4;
 }
 
-:root.dark .test-results-word-translation {
+.dark .test-results-word-translation {
   @apply text-gray-300;
 }
 
@@ -334,7 +334,7 @@
   @apply p-4 bg-white/60 rounded-xl border;
 }
 
-:root.dark .test-results-word-section {
+.dark .test-results-word-section {
   @apply bg-gray-800/60;
 }
 
@@ -342,7 +342,7 @@
   @apply border-blue-200 bg-blue-50;
 }
 
-:root.dark .test-results-word-section-examples {
+.dark .test-results-word-section-examples {
   @apply border-blue-800 bg-blue-900/20;
 }
 
@@ -350,7 +350,7 @@
   @apply border-yellow-200 bg-yellow-50;
 }
 
-:root.dark .test-results-word-section-notes {
+.dark .test-results-word-section-notes {
   @apply border-yellow-800 bg-yellow-900/20;
 }
 
@@ -379,6 +379,6 @@
   @apply bg-white text-gray-700 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50;
 }
 
-:root.dark .test-results-new-button {
+.dark .test-results-new-button {
   @apply bg-gray-800 text-gray-300 border-gray-600 hover:border-gray-500 hover:bg-gray-700;
 }
