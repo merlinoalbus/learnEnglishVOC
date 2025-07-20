@@ -33,6 +33,8 @@
 @import './components/auth.css';
 @import './components/modals.css';
 @import './components/lists.css';
+@import './components/control-panel.css';
+@import './components/test-history.css';
 @import './components/test-selector.css';
 @import './components/test-selector-advanced.css';
 @import './components/test-card.css';

@@ -97,7 +97,7 @@ const TestHistory: React.FC<TestHistoryProps> = ({ testHistory, onClearHistory }
 
   return (
     <Card className="backdrop-blur-sm bg-white/90 border-0 shadow-2xl rounded-3xl overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+      <CardHeader className="test-history-header">
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-3 text-white">
             <Calendar className="w-6 h-6" />
@@ -151,7 +151,7 @@ const TestHistoryCard: React.FC<TestHistoryCardProps> = ({
   const testType = formatTestType(test.testType);
   
   return (
-    <div className="bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden">
+    <div className="test-history-item">
       {/* Header del Test */}
       <div 
         className="p-6 cursor-pointer"

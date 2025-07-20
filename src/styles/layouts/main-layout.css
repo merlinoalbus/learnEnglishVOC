@@ -71,6 +71,25 @@
   @apply pt-8;
 }
 
+/* ===================
+ * AppHeader Components
+ * =================== */
+
+/* Header background blur effect */
+.app-header-blur {
+  @apply absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl blur-3xl opacity-20;
+}
+
+/* Header overlay */
+.app-header-overlay {
+  @apply absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10;
+}
+
+/* Header title */
+.app-header-title {
+  @apply text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-3;
+}
+
 .section-indicator {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);

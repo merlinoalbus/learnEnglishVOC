@@ -1,0 +1,92 @@
+/* =====================================================
+ * 📁 ControlPanel Component - Main Dashboard Styles
+ * ===================================================== */
+
+/* ===================
+ * Container Components
+ * =================== */
+
+/* Main card container gradient border */
+.control-panel-container {
+  @apply bg-gradient-to-r from-blue-500 to-purple-600 p-1;
+}
+
+/* ===================
+ * Header Section
+ * =================== */
+
+/* Title with gradient text */
+.control-panel-title {
+  @apply flex items-center gap-3 text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6;
+}
+
+/* ===================
+ * Alert Section
+ * =================== */
+
+/* Alert container */
+.control-panel-alert {
+  @apply mb-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl;
+}
+
+.dark .control-panel-alert {
+  @apply from-red-900/30 to-orange-900/30 border-red-700;
+}
+
+/* ===================
+ * Action Buttons
+ * =================== */
+
+/* Primary action button */
+.control-panel-action-button {
+  @apply bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white p-6 h-auto rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+}
+
+/* ===================
+ * Stats Cards
+ * =================== */
+
+/* Base stats card */
+.control-panel-stat-card {
+  @apply bg-white rounded-xl p-4 shadow-lg border border-gray-100 transition-transform hover:scale-105;
+}
+
+.dark .control-panel-stat-card {
+  @apply bg-gray-800 border-gray-700;
+}
+
+/* Stats value with gradient */
+.control-panel-stat-value {
+  @apply text-3xl font-bold;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Stats label */
+.control-panel-stat-label {
+  @apply text-sm text-gray-600 mt-1;
+}
+
+.dark .control-panel-stat-label {
+  @apply text-gray-400;
+}
+
+/* ===================
+ * Responsive Design
+ * =================== */
+
+@media (max-width: 768px) {
+  .control-panel-title {
+    @apply text-xl gap-2 mb-4;
+  }
+  
+  .control-panel-alert {
+    @apply p-3 mb-4;
+  }
+  
+  .control-panel-action-button {
+    @apply p-4 text-base;
+  }
+}

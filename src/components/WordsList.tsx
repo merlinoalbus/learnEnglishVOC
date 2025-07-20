@@ -110,7 +110,7 @@ const WordCard: React.FC<WordCardProps> = ({ word, onEdit, onRemove, onToggleLea
         <div className="flex justify-between items-center">
           {/* Info Principale */}
           <div className="flex items-center gap-3 flex-1">
-            <span className={`text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent ${
+            <span className={`words-list-title ${
               word.learned ? 'opacity-75' : ''
             }`}>
               {word.english}
@@ -395,7 +395,7 @@ const WordsList: React.FC<WordListProps> = ({
           <div className="flex items-center gap-3">
             <span className="text-2xl">📚</span>
             <div className="flex flex-col">
-              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-bold">
+              <span className="words-list-header-title">
                 Il Tuo Vocabolario ({stats.total} parole)
               </span>
               <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -415,10 +415,10 @@ const WordsList: React.FC<WordListProps> = ({
           {words.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-8xl mb-6">📚</div>
-              <h3 className="text-2xl font-bold text-gray-700 dark:text-transparent dark:bg-gradient-to-r dark:from-gray-200 dark:to-gray-400 dark:bg-clip-text mb-4">Il tuo vocabolario è vuoto</h3>
+              <h3 className="words-list-empty-title mb-4">Il tuo vocabolario è vuoto</h3>
               <p className="text-gray-600 dark:text-gray-600 dark:text-gray-400 text-lg mb-8">Aggiungi la tua prima parola per iniziare a studiare!</p>
               <div className="flex justify-center">
-                <Button className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 dark:bg-gradient-to-r dark:from-blue-500 dark:via-purple-500 dark:to-pink-500 dark:hover:from-blue-600 dark:hover:via-purple-600 dark:hover:to-pink-600 text-white px-8 py-4 text-lg rounded-2xl shadow-xl">
+                <Button className="words-list-add-button">
                   <Plus className="w-5 h-5 mr-2" />
                   Aggiungi Prima Parola
                 </Button>
@@ -427,7 +427,7 @@ const WordsList: React.FC<WordListProps> = ({
           ) : (
             <div className="space-y-6">
               {/* Filtri con difficoltà */}
-              <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:bg-gradient-to-r dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-700">
+              <Card className="words-list-filter-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Filter className="w-5 h-5 text-blue-600 dark:text-purple-400" />
@@ -546,9 +546,9 @@ const WordsList: React.FC<WordListProps> = ({
                   .map(([chapter, chapterWords]) => (
                     <div key={chapter} className="space-y-3">
                       {/* Header Capitolo Enhanced */}
-                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-100 to-purple-100 dark:bg-gradient-to-r dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl border border-indigo-200 dark:border-indigo-700">
+                      <div className="words-list-chapter-section">
                         <BookOpen className="w-5 h-5 text-indigo-600 dark:text-purple-400" />
-                        <h3 className="font-bold text-indigo-800 dark:text-transparent dark:bg-gradient-to-r dark:from-blue-200 dark:to-purple-200 dark:bg-clip-text text-lg">
+                        <h3 className="words-list-chapter-title">
                           {chapter === 'Senza Capitolo' ? '📋 Senza Capitolo' : `📖 Capitolo ${chapter}`}
                         </h3>
                         <span className="text-sm text-indigo-600 dark:text-blue-300 bg-indigo-200 dark:bg-blue-900/20 px-3 py-1 rounded-full">

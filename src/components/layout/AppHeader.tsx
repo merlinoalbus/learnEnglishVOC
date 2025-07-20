@@ -4,12 +4,12 @@ import { Brain, Sparkles } from 'lucide-react';
 
 export const AppHeader: React.FC = React.memo(() => (
   <div className="text-center relative">
-    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl blur-3xl opacity-20"></div>
+    <div className="app-header-blur"></div>
     <Card className="relative backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border-0 shadow-2xl rounded-3xl overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10"></div>
+      <div className="app-header-overlay"></div>
             
       <CardHeader className="relative py-8">
-        <CardTitle className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-3">
+        <CardTitle className="app-header-title">
           <Brain className="w-10 h-10 text-blue-600" />
           Vocabulary Master
           <Sparkles className="w-8 h-8 text-purple-600" />

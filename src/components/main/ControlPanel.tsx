@@ -36,9 +36,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
   
   return (
     <Card className="backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-0 shadow-2xl rounded-3xl overflow-hidden">
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-1">
+      <div className="control-panel-container">
         <div className="bg-white dark:bg-gray-800 rounded-3xl p-6">
-          <CardTitle className="flex items-center gap-3 text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
+          <CardTitle className="control-panel-title">
             <Play className="w-6 h-6 text-blue-600" />
             Controlli di Studio
           </CardTitle>
@@ -69,7 +69,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
 
           {/* ⭐ NEW: Info box per parole difficili */}
           {wordStats.difficult > 0 && (
-            <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30 border-2 border-red-200 dark:border-red-700 rounded-2xl">
+            <div className="control-panel-alert">
               <div className="flex items-center gap-3 mb-2">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
                 <h4 className="font-bold text-red-800 dark:text-red-200">Parole Difficili Disponibili</h4>
@@ -85,7 +85,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
             <Button 
               onClick={onStartTest} 
               disabled={availableWords.length === 0}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white p-6 h-auto rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="control-panel-action-button"
             >
               <div className="flex flex-col items-center gap-2">
                 <BookOpen className="w-8 h-8" />

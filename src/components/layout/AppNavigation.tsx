@@ -132,10 +132,10 @@ export const AppNavigation = React.memo(() => {
               ref={userButtonRef}
               onClick={toggleUserMenu}
               variant="ghost"
-              className="flex items-center justify-center gap-2 h-12 px-4 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all duration-300 border-0"
+              className="app-nav-user-button"
               disabled={authLoading}
             >
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+              <div className="app-nav-user-avatar">
                 {getDisplayName().charAt(0).toUpperCase()}
               </div>
               <div className="hidden md:flex flex-col items-start">
@@ -163,7 +163,7 @@ export const AppNavigation = React.memo(() => {
                 }}
               >
                 {/* Header with User Info */}
-                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white">
+                <div className="app-nav-dropdown-header">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
                       {getDisplayName().charAt(0).toUpperCase()}
