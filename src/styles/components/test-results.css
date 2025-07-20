@@ -1,0 +1,318 @@
+/* Test Results Component Styles */
+
+/* Main container */
+.test-results-container {
+  @apply min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-4 md:p-6;
+}
+
+:root.dark .test-results-container {
+  @apply from-gray-900 via-purple-900/20 to-indigo-900/30;
+}
+
+/* Back button */
+.test-results-back-button {
+  @apply mb-6 px-6 py-3 bg-white/90 backdrop-blur-sm text-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 text-sm font-medium;
+}
+
+:root.dark .test-results-back-button {
+  @apply bg-gray-800/90 text-gray-300 hover:bg-gray-700/90;
+}
+
+/* Results card */
+.test-results-card {
+  @apply bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 md:p-8 border border-purple-100;
+}
+
+:root.dark .test-results-card {
+  @apply bg-gray-800/90 border-gray-700;
+}
+
+/* Header section */
+.test-results-header {
+  @apply text-center mb-8;
+}
+
+.test-results-title {
+  @apply text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2;
+}
+
+:root.dark .test-results-title {
+  @apply from-purple-400 to-indigo-400;
+}
+
+.test-results-subtitle {
+  @apply text-gray-600;
+}
+
+:root.dark .test-results-subtitle {
+  @apply text-gray-400;
+}
+
+/* Score display */
+.test-results-score {
+  @apply text-center mb-8;
+}
+
+.test-results-score-circle {
+  @apply relative w-48 h-48 mx-auto;
+}
+
+.test-results-score-bg {
+  @apply absolute inset-0 rounded-full;
+}
+
+.test-results-score-fill {
+  @apply absolute inset-0 rounded-full transition-all duration-1000 ease-out;
+}
+
+.test-results-score-content {
+  @apply absolute inset-0 flex flex-col items-center justify-center;
+}
+
+.test-results-score-value {
+  @apply text-5xl font-bold;
+}
+
+.test-results-score-label {
+  @apply text-sm text-gray-600 mt-1;
+}
+
+:root.dark .test-results-score-label {
+  @apply text-gray-400;
+}
+
+/* Score gradient classes */
+.test-results-score-excellent {
+  @apply bg-gradient-to-br from-green-400 to-emerald-500;
+}
+
+.test-results-score-good {
+  @apply bg-gradient-to-br from-blue-400 to-indigo-500;
+}
+
+.test-results-score-average {
+  @apply bg-gradient-to-br from-yellow-400 to-orange-500;
+}
+
+.test-results-score-poor {
+  @apply bg-gradient-to-br from-red-400 to-pink-500;
+}
+
+/* Stats grid */
+.test-results-stats {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4 mb-8;
+}
+
+.test-results-stat-card {
+  @apply bg-gray-50 rounded-xl p-4 text-center;
+}
+
+:root.dark .test-results-stat-card {
+  @apply bg-gray-700/50;
+}
+
+.test-results-stat-value {
+  @apply text-2xl font-bold text-gray-800;
+}
+
+:root.dark .test-results-stat-value {
+  @apply text-gray-200;
+}
+
+.test-results-stat-label {
+  @apply text-sm text-gray-600 mt-1;
+}
+
+:root.dark .test-results-stat-label {
+  @apply text-gray-400;
+}
+
+/* Time stats section */
+.test-results-time-stats {
+  @apply bg-blue-50 rounded-xl p-6 mb-8;
+}
+
+:root.dark .test-results-time-stats {
+  @apply bg-gray-700/30;
+}
+
+.test-results-time-title {
+  @apply text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2;
+}
+
+:root.dark .test-results-time-title {
+  @apply text-blue-300;
+}
+
+.test-results-time-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
+
+.test-results-time-item {
+  @apply text-center;
+}
+
+.test-results-time-value {
+  @apply text-2xl font-bold text-blue-700;
+}
+
+:root.dark .test-results-time-value {
+  @apply text-blue-400;
+}
+
+.test-results-time-label {
+  @apply text-sm text-blue-600 mt-1;
+}
+
+:root.dark .test-results-time-label {
+  @apply text-blue-400/80;
+}
+
+/* Performance analysis */
+.test-results-analysis {
+  @apply bg-purple-50 rounded-xl p-6 mb-8;
+}
+
+:root.dark .test-results-analysis {
+  @apply bg-gray-700/30;
+}
+
+.test-results-analysis-title {
+  @apply text-lg font-semibold text-purple-900 mb-4 flex items-center gap-2;
+}
+
+:root.dark .test-results-analysis-title {
+  @apply text-purple-300;
+}
+
+.test-results-analysis-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+.test-results-analysis-item {
+  @apply flex items-center justify-between p-4 bg-white/50 rounded-lg;
+}
+
+:root.dark .test-results-analysis-item {
+  @apply bg-gray-800/50;
+}
+
+/* Wrong words section */
+.test-results-wrong-words {
+  @apply mt-8;
+}
+
+.test-results-wrong-words-header {
+  @apply flex items-center justify-between mb-6;
+}
+
+.test-results-wrong-words-title {
+  @apply text-2xl font-bold text-gray-800 flex items-center gap-2;
+}
+
+:root.dark .test-results-wrong-words-title {
+  @apply text-gray-200;
+}
+
+.test-results-wrong-words-count {
+  @apply bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+:root.dark .test-results-wrong-words-count {
+  @apply bg-red-900/30 text-red-400;
+}
+
+/* Word cards */
+.test-results-word-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.test-results-word-card {
+  @apply bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-all duration-200;
+}
+
+:root.dark .test-results-word-card {
+  @apply bg-gray-700/50;
+}
+
+.test-results-word-header {
+  @apply flex justify-between items-start mb-4;
+}
+
+.test-results-word-title {
+  @apply text-xl font-bold text-gray-800;
+}
+
+:root.dark .test-results-word-title {
+  @apply text-gray-200;
+}
+
+.test-results-word-chapter {
+  @apply text-sm text-gray-500;
+}
+
+:root.dark .test-results-word-chapter {
+  @apply text-gray-400;
+}
+
+.test-results-word-translation {
+  @apply text-lg text-gray-700 mb-4;
+}
+
+:root.dark .test-results-word-translation {
+  @apply text-gray-300;
+}
+
+/* Word details sections */
+.test-results-word-section {
+  @apply p-4 bg-white/60 rounded-xl border;
+}
+
+:root.dark .test-results-word-section {
+  @apply bg-gray-800/60;
+}
+
+.test-results-word-section-examples {
+  @apply border-blue-200 bg-blue-50;
+}
+
+:root.dark .test-results-word-section-examples {
+  @apply border-blue-800 bg-blue-900/20;
+}
+
+.test-results-word-section-notes {
+  @apply border-yellow-200 bg-yellow-50;
+}
+
+:root.dark .test-results-word-section-notes {
+  @apply border-yellow-800 bg-yellow-900/20;
+}
+
+.test-results-word-section-header {
+  @apply font-semibold text-sm mb-2 flex items-center gap-2;
+}
+
+.test-results-word-section-content {
+  @apply text-sm space-y-2;
+}
+
+/* Action buttons */
+.test-results-actions {
+  @apply flex flex-col sm:flex-row gap-4 mt-8;
+}
+
+.test-results-action-button {
+  @apply flex-1 py-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2;
+}
+
+.test-results-retry-button {
+  @apply bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow-lg hover:shadow-xl;
+}
+
+.test-results-new-button {
+  @apply bg-white text-gray-700 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50;
+}
+
+:root.dark .test-results-new-button {
+  @apply bg-gray-800 text-gray-300 border-gray-600 hover:border-gray-500 hover:bg-gray-700;
+}

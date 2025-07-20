@@ -41,6 +41,8 @@ interface TestConfig {
   maxTotalHints?: number;
   enableTimer: boolean;
   enableHints: boolean;
+  enableTotalHintsLimit?: boolean;
+  hintsMode?: 'disabled' | 'unlimited' | 'limited';
 }
 
 interface ChapterStats {
@@ -116,6 +118,81 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
       availableForTest
     };
   };
+  
+  // Calcola la difficoltà del test basata sulla selezione di parole
+  const calculateTestDifficulty = (): { level: string; percentage: number; description: string } => {
+    let totalSelectedWords = 0;
+    let difficultWordsSelected = 0;
+    let learnedWordsSelected = 0;
+    
+    selectedChapters.forEach(chapter => {
+      const stats = chapter === 'no-chapter' ? getWordsWithoutChapterStats() : getChapterStats(chapter);
+      totalSelectedWords += stats.availableForTest;
+      difficultWordsSelected += stats.difficultWords;
+      learnedWordsSelected += stats.learnedWords;
+    });
+    
+    if (totalSelectedWords === 0) {
+      return { level: 'Nessuna', percentage: 0, description: 'Nessuna parola selezionata' };
+    }
+    
+    // Calcola la difficoltà basata su vari fattori
+    let difficultyScore = 0;
+    
+    // Fattore 1: Percentuale di parole difficili (peso: 40%)
+    const difficultPercentage = (difficultWordsSelected / totalSelectedWords) * 100;
+    difficultyScore += (difficultPercentage / 100) * 40;
+    
+    // Fattore 2: Modalità test (peso: 30%)
+    if (testMode === 'difficult-only') {
+      difficultyScore += 30;
+    } else if (!includeLearnedWords) {
+      difficultyScore += 15; // Solo parole non apprese
+    }
+    
+    // Fattore 3: Configurazione timer (peso: 15%)
+    if (enableTimer) {
+      const timeScore = Math.max(0, (60 - maxTimePerWord) / 60) * 15;
+      difficultyScore += timeScore;
+    }
+    
+    // Fattore 4: Limitazioni aiuti (peso: 15%)
+    if (hintsMode === 'disabled') {
+      difficultyScore += 15;
+    } else if (hintsMode === 'limited') {
+      const hintScore = Math.max(0, (3 - maxHintsPerWord) / 3) * 15;
+      difficultyScore += hintScore;
+    }
+    
+    // Determina il livello di difficoltà
+    let level: string;
+    let description: string;
+    
+    if (difficultyScore >= 80) {
+      level = 'Estrema';
+      description = 'Test molto impegnativo per esperti';
+    } else if (difficultyScore >= 65) {
+      level = 'Difficile';
+      description = 'Test impegnativo con sfide significative';
+    } else if (difficultyScore >= 45) {
+      level = 'Intermedia';
+      description = 'Test di livello medio, ben bilanciato';
+    } else if (difficultyScore >= 25) {
+      level = 'Facile';
+      description = 'Test accessibile per principianti';
+    } else {
+      level = 'Molto Facile';
+      description = 'Test di pratica con massimo supporto';
+    }
+    
+    return {
+      level,
+      percentage: Math.round(difficultyScore),
+      description
+    };
+  };
+  
+  const testDifficulty = calculateTestDifficulty();
 
   // Calcola statistiche per parole senza capitolo
   const getWordsWithoutChapterStats = (): ChapterStats => {
@@ -209,8 +286,10 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
       enableTimer,
       maxTimePerWord: enableTimer ? maxTimePerWord : undefined,
       enableHints: hintsMode !== 'disabled',
+      hintsMode,
       maxHintsPerWord: hintsMode === 'limited' ? maxHintsPerWord : undefined,
-      maxTotalHints: hintsMode === 'limited' && enableTotalHintsLimit ? maxTotalHints : undefined
+      maxTotalHints: hintsMode === 'limited' && enableTotalHintsLimit ? maxTotalHints : undefined,
+      enableTotalHintsLimit: hintsMode === 'limited' ? enableTotalHintsLimit : false
     };
 
     onStartTest(config);
@@ -514,10 +593,45 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                                       onChange={(e) => setMaxHintsPerWord(parseInt(e.target.value))}
                                       className="w-full h-1.5 bg-gradient-to-r from-green-200 to-emerald-200 dark:from-green-700 dark:to-emerald-700 rounded-lg appearance-none cursor-pointer"
                                     />
+                                    
+                                    {/* Limite totale aiuti per test */}
+                                    <div className="pt-2 border-t border-green-200/30">
+                                      <button
+                                        onClick={() => setEnableTotalHintsLimit(!enableTotalHintsLimit)}
+                                        className="w-full flex items-center gap-2 text-left group mb-2"
+                                      >
+                                        <div className={`p-1 rounded transition-all duration-300 ${
+                                          enableTotalHintsLimit 
+                                            ? 'bg-green-500 text-white' 
+                                            : 'bg-green-200 dark:bg-green-800 text-green-600 dark:text-green-400'
+                                        }`}>
+                                          {enableTotalHintsLimit ? 
+                                            <CheckSquare className="w-2.5 h-2.5" /> : 
+                                            <Square className="w-2.5 h-2.5" />
+                                          }
+                                        </div>
+                                        <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                                          Limite totale: {maxTotalHints}
+                                        </span>
+                                      </button>
+                                      
+                                      {enableTotalHintsLimit && (
+                                        <input
+                                          type="range"
+                                          min="5"
+                                          max="20"
+                                          step="1"
+                                          value={maxTotalHints}
+                                          onChange={(e) => setMaxTotalHints(parseInt(e.target.value))}
+                                          className="w-full h-1 bg-gradient-to-r from-green-200 to-emerald-200 dark:from-green-700 dark:to-emerald-700 rounded-lg appearance-none cursor-pointer"
+                                        />
+                                      )}
+                                    </div>
                                   </div>
                                 )}
                               </div>
                             </div>
+
                         </div>
                       </div>
                     </div>
@@ -711,7 +825,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                       {enableTimer && <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">⏱️ {maxTimePerWord}s</span>}
                       {hintsMode !== 'disabled' && (
                         <span className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
-                          💡 {hintsMode === 'unlimited' ? 'Illimitati' : 'Limitati'}
+                          💡 {hintsMode === 'unlimited' ? 'Illimitati' : enableTotalHintsLimit ? `Max ${maxTotalHints} totali` : `Max ${maxHintsPerWord}/parola`}
                         </span>
                       )}
                     </div>

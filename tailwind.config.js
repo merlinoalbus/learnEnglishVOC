@@ -21,6 +21,22 @@ module.exports = {
     "./src/**/*.{js,jsx,ts,tsx}",  // Tutti i file JavaScript/JSX in src/
     "./public/index.html"          // Il file HTML principale
   ],
+  
+  // ====== SAFELIST CONFIGURATION ======
+  // SCOPO: Forza l'inclusione di classi che potrebbero non essere rilevate durante la scansione
+  // Necessario per le classi generate dinamicamente (come i colori dei gruppi di carte)
+  safelist: [
+    // Gradients per i gruppi di carte
+    'bg-gradient-to-br',
+    // Colori base
+    {
+      pattern: /^(from|to|via)-(red|orange|amber|yellow|green|emerald|teal|cyan|sky|blue|indigo|purple|violet|pink|rose|slate|gray|stone|neutral|lime)-(400|500|600|700|800|900)$/,
+    },
+    // Background colors
+    {
+      pattern: /^bg-(red|orange|amber|yellow|green|emerald|teal|cyan|sky|blue|indigo|purple|violet|pink|rose|slate|gray|stone|neutral|lime)-(400|500|600|700|800|900)$/,
+    }
+  ],
   // PERCHÉ: Senza questo, Tailwind non saprebbe quali classi includere
   // nel CSS finale, risultando in un bundle vuoto o troppo grande
 

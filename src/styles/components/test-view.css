@@ -1,0 +1,241 @@
+/* =====================================================
+ * 📁 Test View Component - Optimized Styles
+ * ===================================================== */
+
+/* Main container - using design system */
+.test-view-container {
+  background: var(--gradient-bg-light);
+  min-height: 100vh;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+:root.dark .test-view-container {
+  background: var(--gradient-bg-dark);
+}
+
+@media (min-width: 768px) {
+  .test-view-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .test-view-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Progress section - optimized */
+.test-view-progress {
+  @apply animate-fade-in;
+  margin-bottom: var(--space-md);
+}
+
+.test-view-progress-card {
+  background: var(--glass-strong);
+  backdrop-filter: blur(var(--backdrop-blur-sm));
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-md);
+}
+
+:root.dark .test-view-progress-card {
+  background: var(--glass-strong);
+  border-color: rgba(107, 114, 128, 0.5);
+}
+
+.test-view-progress-header {
+  @apply flex justify-between items-center mb-4;
+}
+
+.test-view-progress-title {
+  @apply text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent;
+}
+
+:root.dark .test-view-progress-title {
+  @apply from-purple-400 to-indigo-400;
+}
+
+.test-view-progress-stats {
+  @apply flex gap-4 text-sm;
+}
+
+.test-view-progress-stat {
+  @apply flex items-center gap-1;
+}
+
+.test-view-progress-bar {
+  @apply h-3 bg-gray-200 rounded-full overflow-hidden;
+}
+
+:root.dark .test-view-progress-bar {
+  @apply bg-gray-700;
+}
+
+.test-view-progress-fill {
+  @apply h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300 ease-out;
+}
+
+/* Timer section */
+.test-view-timer {
+  @apply flex justify-center mb-6;
+}
+
+.test-view-timer-display {
+  @apply inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg border;
+}
+
+:root.dark .test-view-timer-display {
+  @apply bg-gray-800/90 border-gray-700;
+}
+
+.test-view-timer-normal {
+  @apply border-purple-200 text-gray-700;
+}
+
+:root.dark .test-view-timer-normal {
+  @apply border-gray-600 text-gray-300;
+}
+
+.test-view-timer-warning {
+  @apply border-red-300 text-red-600 animate-pulse;
+}
+
+:root.dark .test-view-timer-warning {
+  @apply border-red-700 text-red-400;
+}
+
+/* Content wrapper */
+.test-view-content {
+  @apply max-w-4xl mx-auto space-y-6;
+}
+
+/* Card section */
+.test-view-card-wrapper {
+  @apply flex-shrink-0;
+}
+
+/* Hints section */
+.test-view-hints {
+  @apply flex justify-center gap-2 flex-wrap;
+}
+
+.test-view-hint-button {
+  @apply px-4 py-2 bg-gradient-to-r text-white rounded-lg shadow-md transform transition-all duration-200 hover:scale-105 hover:shadow-lg flex items-center gap-2 text-sm font-medium;
+}
+
+.test-view-hint-context {
+  @apply from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600;
+}
+
+.test-view-hint-synonym {
+  @apply from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600;
+}
+
+.test-view-hint-antonym {
+  @apply from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600;
+}
+
+.test-view-hint-button:disabled {
+  @apply opacity-50 cursor-not-allowed transform-none;
+}
+
+/* Answer buttons */
+.test-view-answer-buttons {
+  @apply flex justify-center gap-4 mt-6;
+}
+
+.test-view-answer-button {
+  @apply px-8 py-3 text-white rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2 font-medium;
+}
+
+.test-view-answer-incorrect {
+  @apply bg-red-500 hover:bg-red-600;
+}
+
+.test-view-answer-correct {
+  @apply bg-green-500 hover:bg-green-600;
+}
+
+/* Timeout notification */
+.test-view-timeout-notice {
+  @apply text-center mt-4;
+}
+
+.test-view-timeout-badge {
+  @apply inline-flex items-center gap-2 bg-red-50 text-red-600 rounded-xl px-4 py-2 text-sm animate-pulse;
+}
+
+:root.dark .test-view-timeout-badge {
+  @apply bg-red-900/20 text-red-400;
+}
+
+/* Test summary */
+.test-view-summary {
+  @apply p-6 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200/30;
+}
+
+:root.dark .test-view-summary {
+  @apply from-green-950/30 to-blue-950/30 border-green-700/30;
+}
+
+.test-view-summary-title {
+  @apply text-2xl font-bold text-center mb-4 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent;
+}
+
+:root.dark .test-view-summary-title {
+  @apply from-green-400 to-blue-400;
+}
+
+.test-view-summary-stats {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+}
+
+.test-view-summary-stat {
+  @apply text-center p-4 bg-white/50 rounded-xl;
+}
+
+:root.dark .test-view-summary-stat {
+  @apply bg-gray-800/50;
+}
+
+.test-view-summary-value {
+  @apply text-2xl font-bold;
+}
+
+.test-view-summary-label {
+  @apply text-sm text-gray-600 mt-1;
+}
+
+:root.dark .test-view-summary-label {
+  @apply text-gray-400;
+}
+
+/* Loading state */
+.test-view-loading {
+  @apply flex items-center justify-center min-h-screen;
+}
+
+.test-view-loading-spinner {
+  @apply animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600;
+}
+
+/* Animations */
+@keyframes test-view-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.test-view-animate-fade {
+  animation: test-view-fade-in 0.5s ease-out;
+}

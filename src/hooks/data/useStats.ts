@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useFirestore } from "../core/useFirestore";
 import { useFirebase } from "../../contexts/FirebaseContext";
+import { useAuth } from "../integration/useAuth";
 import AppConfig from "../../config/appConfig";
 import { StatsAnalyticsService } from "../../services/statsAnalyticsService"; // Fixed case sensitivity
 import type {
@@ -90,7 +91,8 @@ interface StatsOperations {
   handleTestComplete: (
     testStats: any,
     testWords: Word[],
-    wrongWords: Word[]
+    wrongWords: Word[],
+    detailedSession?: any
   ) => Promise<OperationResult<void>>;
   addTestToHistory: (testResult: TestResult) => Promise<OperationResult<void>>;
   recordWordPerformance: (
@@ -104,6 +106,11 @@ interface StatsOperations {
   importData: (
     data: ComprehensiveStatisticsExportData
   ) => Promise<OperationResult<void>>;
+  // DetailedTestSession operations
+  getDetailedTestSessions: () => Promise<OperationResult<any[]>>;
+  getDetailedSessionById: (sessionId: string) => Promise<OperationResult<any>>;
+  deleteDetailedSession: (sessionId: string) => Promise<OperationResult<void>>;
+  exportDetailedSessions: () => Promise<OperationResult<any[]>>;
 }
 
 interface StatsGetters {
@@ -143,7 +150,17 @@ export const useStats = (): StatsResult => {
     debug: process.env.NODE_ENV === "development",
   });
 
+  // Dedicated collection for DetailedTestSession analytics
+  const detailedSessionFirestore = useFirestore<any>({
+    collection: "detailedTestSessions",
+    realtime: false,
+    enableCache: false,
+    autoFetch: false, // Manual fetch only when needed
+    debug: process.env.NODE_ENV === "development",
+  });
+
   const { isReady } = useFirebase();
+  const { user, authUser } = useAuth();
 
   const [testHistory, setTestHistory] = useState<TestResult[]>(EMPTY_ARRAY);
   const [wordPerformance, setWordPerformance] = useState<
@@ -188,26 +205,98 @@ export const useStats = (): StatsResult => {
     attempts,
   });
 
+  // Helper function per determinare time of day
+  const getTimeOfDay = (date: Date): string => {
+    const hour = date.getHours();
+    if (hour < 6) return 'night';
+    if (hour < 12) return 'morning';
+    if (hour < 18) return 'afternoon';
+    return 'evening';
+  };
+
+  // Helper functions per calcoli statistici
+  const calculateTimePercentiles = (times: number[]) => {
+    if (times.length === 0) return { p25: 2000, p50: 3000, p75: 4000, p90: 5000 };
+    
+    const sorted = [...times].sort((a, b) => a - b);
+    return {
+      p25: sorted[Math.floor(sorted.length * 0.25)] || 0,
+      p50: sorted[Math.floor(sorted.length * 0.50)] || 0,
+      p75: sorted[Math.floor(sorted.length * 0.75)] || 0,
+      p90: sorted[Math.floor(sorted.length * 0.90)] || 0,
+    };
+  };
+
+  const calculateSpeedTrend = (speedData: number[]): "stable" | "improving" | "declining" => {
+    if (speedData.length < 2) return "stable";
+    
+    const firstHalf = speedData.slice(0, Math.floor(speedData.length / 2));
+    const secondHalf = speedData.slice(Math.floor(speedData.length / 2));
+    
+    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+    
+    const change = ((secondAvg - firstAvg) / firstAvg) * 100;
+    
+    if (change > 5) return "declining"; // Più lento = declining (negativo per performance)
+    if (change < -5) return "improving"; // Più veloce = improving (positivo per performance)
+    return "stable";
+  };
+
+  const calculateSpeedChangePercentage = (speedData: number[]): number => {
+    if (speedData.length < 2) return 0;
+    
+    const firstHalf = speedData.slice(0, Math.floor(speedData.length / 2));
+    const secondHalf = speedData.slice(Math.floor(speedData.length / 2));
+    
+    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+    
+    return Math.round(((secondAvg - firstAvg) / firstAvg) * 100);
+  };
+
   const handleTestComplete = useCallback(
     async (
       testStats: any,
       testWords: Word[],
-      wrongWords: Word[]
+      wrongWords: Word[],
+      detailedSession?: any // DetailedTestSession opzionale per tracking dettagliato
     ): Promise<OperationResult<void>> => {
       const startTime = Date.now();
       try {
         setIsProcessing(true);
 
+        // Get current user ID for security and data isolation
+        const currentUserId = authUser?.uid || user?.id || currentStats.id || "anonymous";
+
         const testResult: TestResult = {
           testId: `test_${Date.now()}`,
-          userId: currentStats.id || "temp",
+          userId: currentUserId,
           completedSession: {
             // TestSession complete structure with all required properties
             currentQuestion: null,
-            timeMetrics: {
+            timeMetrics: detailedSession ? {
+              // Usa dati reali dalla detailed session
+              totalTestTime: detailedSession.totalTimeSpent || 0,
+              averageQuestionTime: detailedSession.averageTimePerWord || 0,
+              fastestQuestion: detailedSession.words.length > 0 ? 
+                Math.min(...detailedSession.words.map((w: any) => w.totalTime)) : 1000,
+              slowestQuestion: detailedSession.words.length > 0 ? 
+                Math.max(...detailedSession.words.map((w: any) => w.totalTime)) : 5000,
+              timeDistribution: {
+                byCategory: {},
+                byDifficulty: {},
+                percentiles: calculateTimePercentiles(detailedSession.words.map((w: any) => w.totalTime)),
+              },
+              speedTrend: {
+                direction: calculateSpeedTrend(detailedSession.speedTrend),
+                changePercentage: calculateSpeedChangePercentage(detailedSession.speedTrend),
+                dataPoints: detailedSession.speedTrend || [],
+              },
+            } : {
+              // Fallback ai dati esistenti
               totalTestTime: testStats.timeSpent || 0,
-              averageQuestionTime:
-                (testStats.timeSpent || 0) / testWords.length,
+              averageQuestionTime: (testStats.timeSpent || 0) / testWords.length,
               fastestQuestion: 1000,
               slowestQuestion: 5000,
               timeDistribution: {
@@ -261,29 +350,63 @@ export const useStats = (): StatsResult => {
               currentIndex: testWords.length,
               selectionStrategy: "random",
             },
-            answerHistory: testWords.map((word, index) => ({
-              id: `answer_${index}`,
-              questionId: word.id!,
-              wordId: word.id!,
-              result: {
-                isCorrect: !wrongWords.some((w) => w.id === word.id),
-                confidence: 0.8,
-              },
-              hintsUsed: [],
-              timing: {
-                startedAt: new Date(),
-                cardFlippedAt: new Date(),
-                declaredAt: new Date(),
-                totalTime: Math.random() * 5000 + 1000,
-                thinkingTime: Math.random() * 3000 + 500,
-                declarationTime: Math.random() * 1000 + 500,
-              },
-              metadata: {
-                timeOfDay: "afternoon",
-                sessionPosition: index + 1,
-                contextFactors: [],
-              },
-            })),
+            answerHistory: detailedSession?.words ? 
+              // Usa dati reali dalla detailed session
+              detailedSession.words.map((wordSession: any, index: number) => ({
+                id: `answer_${index}`,
+                questionId: wordSession.wordId,
+                wordId: wordSession.wordId,
+                result: {
+                  isCorrect: wordSession.isCorrect,
+                  confidence: wordSession.timeExpired ? 0.3 : (wordSession.isCorrect ? 0.9 : 0.7),
+                },
+                hintsUsed: wordSession.hintsUsed.map((hint: any) => ({
+                  type: hint.type,
+                  content: hint.content,
+                  usedAt: hint.requestedAt,
+                  effective: wordSession.isCorrect && hint.sequenceOrder === 1, // First hint più efficace
+                })),
+                timing: {
+                  startedAt: wordSession.wordShownAt,
+                  cardFlippedAt: wordSession.cardFlippedAt || wordSession.answerDeclaredAt,
+                  declaredAt: wordSession.answerDeclaredAt || wordSession.wordShownAt,
+                  totalTime: wordSession.totalTime,
+                  thinkingTime: wordSession.thinkingTime || wordSession.totalTime,
+                  declarationTime: wordSession.evaluationTime || 0,
+                },
+                metadata: {
+                  timeOfDay: getTimeOfDay(wordSession.wordShownAt),
+                  sessionPosition: wordSession.testPosition,
+                  contextFactors: [
+                    ...(wordSession.timeExpired ? ['timeout'] : []),
+                    ...(wordSession.hintsUsed.length > 0 ? ['hints_used'] : []),
+                  ],
+                },
+              })) :
+              // Fallback ai dati esistenti se gameSession non disponibile
+              testWords.map((word, index) => ({
+                id: `answer_${index}`,
+                questionId: word.id!,
+                wordId: word.id!,
+                result: {
+                  isCorrect: !wrongWords.some((w) => w.id === word.id),
+                  confidence: 0.8,
+                },
+                hintsUsed: [],
+                timing: {
+                  startedAt: new Date(),
+                  cardFlippedAt: new Date(),
+                  declaredAt: new Date(),
+                  totalTime: Math.random() * 5000 + 1000,
+                  thinkingTime: Math.random() * 3000 + 500,
+                  declarationTime: Math.random() * 1000 + 500,
+                },
+                metadata: {
+                  timeOfDay: "afternoon",
+                  sessionPosition: index + 1,
+                  contextFactors: [],
+                },
+              })),
             hintSystem: {
               globalState: {
                 totalHintsUsed: testStats.hints || 0,
@@ -586,19 +709,28 @@ export const useStats = (): StatsResult => {
           }
         }
 
+        // Use detailedSession data if available for accurate statistics
+        const correctAnswers = detailedSession?.correctAnswers ?? testStats.correct ?? 0;
+        const incorrectAnswers = detailedSession 
+          ? (detailedSession.incorrectAnswers + detailedSession.timeoutAnswers) 
+          : (testStats.incorrect ?? 0);
+        const hintsUsed = detailedSession?.totalHintsUsed ?? testStats.hints ?? 0;
+        const timeSpent = detailedSession?.totalTimeSpent ?? testStats.timeSpent ?? 0;
+        const totalWordsCount = detailedSession?.totalWords ?? testWords.length;
+        const accuracy = detailedSession?.accuracy ?? 
+          (((testStats.correct || 0) / testWords.length) * 100);
+
         const updatedStats = {
           ...currentStats,
+          userId: currentUserId, // Ensure consistent user association
           testsCompleted: currentStats.testsCompleted + 1,
-          totalWords: currentStats.totalWords + testWords.length,
-          correctAnswers:
-            currentStats.correctAnswers + (testStats.correct || 0),
-          incorrectAnswers:
-            currentStats.incorrectAnswers + (testStats.incorrect || 0),
-          hintsUsed: currentStats.hintsUsed + (testStats.hints || 0),
-          timeSpent: currentStats.timeSpent + (testStats.timeSpent || 0),
+          totalWords: currentStats.totalWords + totalWordsCount,
+          correctAnswers: currentStats.correctAnswers + correctAnswers,
+          incorrectAnswers: currentStats.incorrectAnswers + incorrectAnswers,
+          hintsUsed: currentStats.hintsUsed + hintsUsed,
+          timeSpent: currentStats.timeSpent + timeSpent,
           averageScore:
-            (currentStats.averageScore * currentStats.testsCompleted +
-              (testStats.score || 0)) /
+            (currentStats.averageScore * currentStats.testsCompleted + accuracy) /
             (currentStats.testsCompleted + 1),
           lastStudyDate: new Date().toISOString(),
         };
@@ -607,6 +739,59 @@ export const useStats = (): StatsResult => {
           await statsFirestore.update(statsFirestore.data[0].id, updatedStats);
         } else {
           await statsFirestore.create(updatedStats);
+        }
+
+        // Salva la detailed session se disponibile
+        if (detailedSession) {
+          try {
+            // Complete the detailed session with final metadata and user security
+            const completedDetailedSession = {
+              ...detailedSession,
+              completedAt: new Date(),
+              userId: currentUserId, // Use consistent user ID for security
+              // Add device/browser info if available
+              deviceInfo: navigator.userAgent,
+              sessionMetadata: {
+                testResultId: testResult.testId,
+                totalDuration: detailedSession.totalTimeSpent,
+                wordsCompleted: detailedSession.words.length,
+                finalAccuracy: detailedSession.accuracy,
+                browserTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                screenResolution: `${window.screen.width}x${window.screen.height}`,
+                // Additional security metadata
+                authStatus: authUser ? 'authenticated' : 'anonymous',
+                dataSource: 'learnEnglishVOC_webapp',
+              }
+            };
+
+            // Save to dedicated DetailedTestSession collection with security
+            try {
+              // Clean undefined values from the object before saving to Firestore
+              const cleanedSession = JSON.parse(JSON.stringify(completedDetailedSession, (key, value) => {
+                return value === undefined ? null : value;
+              }));
+              
+              await detailedSessionFirestore.create(cleanedSession);
+              
+              if (AppConfig.app.environment === "development") {
+                console.log("✅ DetailedTestSession saved to Firestore:", {
+                  sessionId: completedDetailedSession.sessionId,
+                  userId: currentUserId,
+                  duration: completedDetailedSession.totalTimeSpent,
+                  accuracy: completedDetailedSession.accuracy,
+                  totalHints: completedDetailedSession.totalHintsUsed,
+                  wordsCount: completedDetailedSession.words.length,
+                });
+              }
+            } catch (saveError) {
+              console.error("❌ Failed to save DetailedTestSession to Firestore:", saveError);
+              // Don't block main test completion if DetailedTestSession save fails
+            }
+            
+          } catch (detailedSessionError) {
+            console.error("❌ Failed to save detailed session:", detailedSessionError);
+            // Non bloccare il salvataggio principale se la detailed session fallisce
+          }
         }
 
         calculatedStatsCache.current = null;
@@ -737,24 +922,37 @@ export const useStats = (): StatsResult => {
   const refreshData = useCallback(() => {
     statsFirestore.refresh();
     performanceFirestore.refresh();
+    detailedSessionFirestore.refresh();
     calculatedStatsCache.current = null;
     setLastSync(new Date());
-  }, [statsFirestore, performanceFirestore]);
+  }, [statsFirestore, performanceFirestore, detailedSessionFirestore]);
 
   const resetStats = useCallback(async (): Promise<OperationResult<void>> => {
     const startTime = Date.now();
     try {
       setIsProcessing(true);
 
-      const deleteOps = performanceFirestore.data.map((perf) => ({
+      // Delete performance data
+      const deletePerformanceOps = performanceFirestore.data.map((perf) => ({
         type: "delete" as const,
         id: perf.id,
       }));
 
-      if (deleteOps.length > 0) {
-        await performanceFirestore.batchUpdate(deleteOps);
+      if (deletePerformanceOps.length > 0) {
+        await performanceFirestore.batchUpdate(deletePerformanceOps);
       }
 
+      // Delete detailed test sessions (optional - user may want to keep analytical data)
+      // await detailedSessionFirestore.fetch();
+      // const deleteSessionOps = detailedSessionFirestore.data.map((session) => ({
+      //   type: "delete" as const,
+      //   id: session.id,
+      // }));
+      // if (deleteSessionOps.length > 0) {
+      //   await detailedSessionFirestore.batchUpdate(deleteSessionOps);
+      // }
+
+      // Reset main statistics
       if (statsFirestore.data[0]) {
         await statsFirestore.update(statsFirestore.data[0].id, INITIAL_STATS);
       }
@@ -785,7 +983,7 @@ export const useStats = (): StatsResult => {
     } finally {
       setIsProcessing(false);
     }
-  }, [statsFirestore, performanceFirestore]);
+  }, [statsFirestore, performanceFirestore, detailedSessionFirestore]);
 
   const clearHistoryOnly = useCallback(async (): Promise<
     OperationResult<void>
@@ -923,6 +1121,149 @@ export const useStats = (): StatsResult => {
     ]
   );
 
+  // DetailedTestSession operations with user security
+  const getDetailedTestSessions = useCallback(async (): Promise<OperationResult<any[]>> => {
+    const startTime = Date.now();
+    try {
+      await detailedSessionFirestore.fetch();
+      return {
+        success: true,
+        data: detailedSessionFirestore.data,
+        metadata: {
+          operation: "getDetailedTestSessions",
+          timestamp: new Date(),
+          duration: Date.now() - startTime,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error as FirestoreError,
+        metadata: {
+          operation: "getDetailedTestSessions",
+          timestamp: new Date(),
+          duration: Date.now() - startTime,
+        },
+      };
+    }
+  }, [detailedSessionFirestore]);
+
+  const getDetailedSessionById = useCallback(async (sessionId: string): Promise<OperationResult<any>> => {
+    const startTime = Date.now();
+    try {
+      await detailedSessionFirestore.fetch();
+      const session = detailedSessionFirestore.data.find(s => s.sessionId === sessionId);
+      
+      if (!session) {
+        return {
+          success: false,
+          error: { message: "Session not found", code: "not-found" } as FirestoreError,
+          metadata: {
+            operation: "getDetailedSessionById",
+            timestamp: new Date(),
+            duration: Date.now() - startTime,
+          },
+        };
+      }
+
+      return {
+        success: true,
+        data: session,
+        metadata: {
+          operation: "getDetailedSessionById",
+          timestamp: new Date(),
+          duration: Date.now() - startTime,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error as FirestoreError,
+        metadata: {
+          operation: "getDetailedSessionById",
+          timestamp: new Date(),
+          duration: Date.now() - startTime,
+        },
+      };
+    }
+  }, [detailedSessionFirestore]);
+
+  const deleteDetailedSession = useCallback(async (sessionId: string): Promise<OperationResult<void>> => {
+    const startTime = Date.now();
+    try {
+      await detailedSessionFirestore.fetch();
+      const session = detailedSessionFirestore.data.find(s => s.sessionId === sessionId);
+      
+      if (!session) {
+        return {
+          success: false,
+          error: { message: "Session not found", code: "not-found" } as FirestoreError,
+          metadata: {
+            operation: "deleteDetailedSession",
+            timestamp: new Date(),
+            duration: Date.now() - startTime,
+          },
+        };
+      }
+
+      await detailedSessionFirestore.remove(session.id);
+
+      return {
+        success: true,
+        metadata: {
+          operation: "deleteDetailedSession",
+          timestamp: new Date(),
+          duration: Date.now() - startTime,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error as FirestoreError,
+        metadata: {
+          operation: "deleteDetailedSession",
+          timestamp: new Date(),
+          duration: Date.now() - startTime,
+        },
+      };
+    }
+  }, [detailedSessionFirestore]);
+
+  const exportDetailedSessions = useCallback(async (): Promise<OperationResult<any[]>> => {
+    const startTime = Date.now();
+    try {
+      await detailedSessionFirestore.fetch();
+      
+      // Export only user's own data (security ensured by useFirestore)
+      const exportData = detailedSessionFirestore.data.map(session => ({
+        ...session,
+        // Remove sensitive system information from export
+        deviceInfo: undefined,
+        firestoreMetadata: undefined,
+      }));
+
+      return {
+        success: true,
+        data: exportData,
+        metadata: {
+          operation: "exportDetailedSessions",
+          timestamp: new Date(),
+          duration: Date.now() - startTime,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error as FirestoreError,
+        metadata: {
+          operation: "exportDetailedSessions",
+          timestamp: new Date(),
+          duration: Date.now() - startTime,
+        },
+      };
+    }
+  }, [detailedSessionFirestore]);
+
   const getAllWordsPerformance = useCallback((): WordPerformanceAnalysis[] => {
     return Object.values(wordPerformance).map((perf) => {
       const totalAttempts = perf.attempts.length;
@@ -1036,10 +1377,10 @@ export const useStats = (): StatsResult => {
     testHistory,
     wordPerformance,
     isInitialized,
-    isLoading: statsFirestore.loading || performanceFirestore.loading,
+    isLoading: statsFirestore.loading || performanceFirestore.loading || detailedSessionFirestore.loading,
     isProcessing,
     lastSync: lastSync || statsFirestore.lastSync,
-    error: statsFirestore.error || performanceFirestore.error,
+    error: statsFirestore.error || performanceFirestore.error || detailedSessionFirestore.error,
     fromCache: statsFirestore.fromCache,
     handleTestComplete,
     addTestToHistory,
@@ -1049,6 +1390,12 @@ export const useStats = (): StatsResult => {
     clearHistoryOnly,
     exportData,
     importData,
+    // DetailedTestSession operations
+    getDetailedTestSessions,
+    getDetailedSessionById,
+    deleteDetailedSession,
+    exportDetailedSessions,
+    // Word performance
     getAllWordsPerformance,
     getWordAnalysis,
     calculatedStats,

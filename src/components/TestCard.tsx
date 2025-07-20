@@ -78,21 +78,10 @@ const TestCard: React.FC<TestCardProps> = ({
               </div>
             )}
             
-            <div className="test-card-front-content">
-              <div className="test-card-english-word">
+            <div className="test-card-word">
+              <h2 className="test-card-word-text">
                 {word.english}
-              </div>
-              
-              {/* Click instruction */}
-              <div className="test-card-instruction">
-                Clicca per vedere la traduzione
-              </div>
-              
-              <div className="test-card-language-badge">
-                <div className="test-card-language-indicator">
-                  <span className="test-card-language-text">EN</span>
-                </div>
-              </div>
+              </h2>
             </div>
             
             {/* Animated particles */}

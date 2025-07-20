@@ -69,7 +69,7 @@ interface AppContextType extends AppState {
   currentWord: any;
   showMeaning: boolean;
   setShowMeaning: (show: boolean) => void;
-  handleAnswer: (isCorrect: boolean) => void;
+  handleAnswer: (isCorrect: boolean, isTimeout?: boolean) => void;
   getTestProgress: () => any;
   getTestSummary: () => any;
   showHint: boolean;
@@ -78,6 +78,18 @@ interface AppContextType extends AppState {
   isTransitioning: boolean;
   wrongWords: any[];
   startNewTest: () => void;
+
+  // Game mode hints
+  gameHints: any;
+  totalHintsUsed: number;
+  testConfig: any;
+  handleGameHintRequest: (type: 'synonym' | 'antonym' | 'context') => void;
+
+  // Enhanced tracking per tutti i test
+  currentWordSession: any;
+  detailedSession: any;
+  currentWordStartTime: Date | null;
+  hintSequenceCounter: number;
 
   // Stats API
   stats: Statistics;
@@ -88,7 +100,7 @@ interface AppContextType extends AppState {
   resetStats: () => Promise<any>;
   exportStats: () => any;
   importStats: (data: any) => Promise<any>;
-  handleTestComplete: (testStats: any, testWords: Word[], wrongWords: Word[]) => void;
+  handleTestComplete: (testStats: any, testWords: Word[], wrongWords: Word[], detailedSession?: any) => void;
   clearHistoryOnly: () => Promise<any>;
   addTestToHistory: (testResult: TestResult) => void;
   getAllWordsPerformance: () => any;
@@ -193,8 +205,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const statsAPI = useStats();
 
   // Callback per completamento test
-  const testCompleteCallback = (testStats: any, testWords: Word[], wrongWords: Word[]) => {
-    statsAPI.handleTestComplete(testStats, testWords, wrongWords);
+  const testCompleteCallback = (testStats: any, testWords: Word[], wrongWords: Word[], detailedSession?: any) => {
+    statsAPI.handleTestComplete(testStats, testWords, wrongWords, detailedSession);
   };
 
   const testAPI = useTest(testCompleteCallback);
@@ -264,6 +276,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     hintsRate: statsAPI.hintsRate || 0,
     weeklyProgress: (statsAPI.weeklyProgress || []) as any[],
     isMigrated: statsAPI.isMigrated || false,
+
+    // Game mode hints properties
+    gameHints: testAPI.gameHints || {},
+    totalHintsUsed: testAPI.totalHintsUsed || 0,
+    testConfig: testAPI.testConfig || null,
+    handleGameHintRequest: testAPI.handleGameHintRequest || (() => {}),
 
     // Aggiungo le proprietà mancanti
     hintUsed: testAPI.hintUsed || false,

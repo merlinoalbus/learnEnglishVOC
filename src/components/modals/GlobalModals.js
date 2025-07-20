@@ -75,8 +75,9 @@ export const GlobalModals = React.memo(() => {
       return true;
     });
 
-    // Convert TestConfig to useTest format
+    // Convert TestConfig to useTest format - mantieni la configurazione originale
     const testConfig = {
+      ...config, // Passa tutta la configurazione originale
       hints: {
         enabled: config.enableHints,
         maxPerWord: config.maxHintsPerWord,

@@ -5,9 +5,16 @@
 /* TAILWIND CSS */
 @tailwind base;
 @tailwind components;
+
+/* UTILITIES (Import after @tailwind components for @layer to work) */
+@import './utilities/components.css';
+@import './utilities/animations.css';
+@import './utilities/common.css';
+
 @tailwind utilities;
 
 /* DESIGN SYSTEM */
+@import './design-system.css';
 @import './variables.css';
 
 /* GLOBAL STYLES */
@@ -28,10 +35,6 @@
 
 /* PAGES */
 @import './pages/start-test.css';
-
-/* UTILITIES */
-@import './utilities/animations.css';
-@import './utilities/common.css';
 
 /* TAILWIND CUSTOM UTILITIES */
 @layer utilities {

@@ -43,6 +43,87 @@ interface WordTiming {
   endTime: number;
   timeSpent: number;
   usedHint: boolean;
+  gameHintsUsed?: string[]; // Per tracciare gli aiuti della modalità gioco
+}
+
+// Enhanced tracking per modalità gioco
+interface DetailedGameHint {
+  type: 'synonym' | 'antonym' | 'context';
+  content: string;
+  requestedAt: Date;
+  timeFromWordStart: number; // millisecondi dall'inizio della parola
+  sequenceOrder: number; // ordine nell'uso degli hint (1, 2, 3...)
+}
+
+interface DetailedWordSession {
+  wordId: string;
+  english: string;
+  italian: string;
+  chapter?: string;
+  
+  // Timing dettagliato
+  wordShownAt: Date;
+  cardFlippedAt?: Date; // quando l'utente ha girato la card o timeout
+  answerDeclaredAt?: Date; // quando ha risposto
+  thinkingTime?: number; // tempo prima di girare card
+  evaluationTime?: number; // tempo dopo aver visto traduzione
+  totalTime: number;
+  
+  // Hint dettagliato
+  hintsUsed: DetailedGameHint[];
+  totalHintsCount: number;
+  
+  // Risultato
+  result: 'correct' | 'incorrect' | 'timeout';
+  isCorrect: boolean;
+  
+  // Context
+  testPosition: number; // posizione nel test (1-based)
+  timeExpired: boolean; // se è scaduto il timer
+  
+  // Confidence (per future implementazioni)
+  userConfidence?: 1 | 2 | 3 | 4 | 5;
+}
+
+interface DetailedTestSession {
+  sessionId: string;
+  userId?: string;
+  startedAt: Date;
+  completedAt?: Date;
+  
+  // Configurazione test
+  config: TestConfig;
+  
+  // Words e risultati dettagliati
+  words: DetailedWordSession[];
+  wrongWords: DetailedWordSession[]; // Parole sbagliate con tutti i dettagli
+  
+  // Statistiche aggregate
+  totalWords: number;
+  correctAnswers: number;
+  incorrectAnswers: number;
+  timeoutAnswers: number;
+  totalHintsUsed: number;
+  totalTimeSpent: number;
+  averageTimePerWord: number;
+  accuracy: number;
+  
+  // Analisi per livelli
+  chapterBreakdown: Record<string, {
+    correct: number;
+    incorrect: number;
+    totalTime: number;
+    hintsUsed: number;
+  }>;
+  
+  // Analisi session
+  performanceTrend: number[]; // accuracy per posizione
+  speedTrend: number[]; // velocità per posizione
+  hintUsagePattern: number[]; // hint per posizione
+  
+  // Metadata
+  deviceInfo?: string;
+  sessionMetadata?: Record<string, any>;
 }
 
 interface TestProgress {
@@ -62,6 +143,25 @@ interface TestSummary {
   timeSpent: number;
   averageTimePerWord: number;
   wrongWords: Word[];
+  
+  // Enhanced properties for TestResults compatibility
+  correct?: number;
+  incorrect?: number;
+  hints?: number;
+  totalTime?: number;
+  avgTimePerWord?: number;
+  maxTimePerWord?: number;
+  minTimePerWord?: number;
+  totalRecordedTime?: number;
+  total?: number;
+  answered?: number;
+  percentage?: number;
+}
+
+interface GameModeHints {
+  synonym?: string[];
+  antonym?: string[];
+  context?: string[];
 }
 
 interface TestState {
@@ -83,6 +183,18 @@ interface TestState {
   hintUsedForCurrentWord: boolean;
   isTransitioning: boolean;
 
+  // Game mode hints system
+  gameHints: GameModeHints;
+  totalHintsUsed: number;
+  hintsUsedThisWord: number;
+  testConfig: any; // Configurazione test dalla TestSelector
+
+  // Enhanced tracking per tutti i test
+  currentWordSession: DetailedWordSession | null;
+  detailedSession: DetailedTestSession | null;
+  currentWordStartTime: Date | null;
+  hintSequenceCounter: number;
+
   // Test metadata
   testSaved: boolean;
   isInitialized: boolean;
@@ -90,12 +202,13 @@ interface TestState {
 }
 
 interface TestOperations {
-  startTest: (words: Word[], config?: Partial<TestConfig>) => void;
-  handleAnswer: (isCorrect: boolean) => void;
+  startTest: (words: Word[], config?: any) => void;
+  handleAnswer: (isCorrect: boolean, isTimeout?: boolean) => void;
   resetTest: () => void;
   startNewTest: () => void;
   toggleHint: () => void;
   setShowMeaning: (show: boolean) => void;
+  handleGameHintRequest: (type: 'synonym' | 'antonym' | 'context') => void;
 }
 
 interface TestGetters {
@@ -110,7 +223,8 @@ interface TestHookResult extends TestState, TestOperations, TestGetters {
 type TestCompleteCallback = (
   testStats: TestStats,
   testWords: Word[],
-  wrongWords: Word[]
+  wrongWords: Word[],
+  detailedSession?: DetailedTestSession | null
 ) => void;
 
 export const useTest = (
@@ -141,6 +255,21 @@ export const useTest = (
     useState<boolean>(false);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
+  // Game mode hints system
+  const [gameHints, setGameHints] = useState<GameModeHints>({});
+  const [totalHintsUsed, setTotalHintsUsed] = useState<number>(0);
+  const [hintsUsedThisWord, setHintsUsedThisWord] = useState<number>(0);
+  const [testConfig, setTestConfig] = useState<any>(null);
+
+  // Enhanced tracking per tutti i test
+  const [currentWordSession, setCurrentWordSession] = useState<DetailedWordSession | null>(null);
+  const [detailedSession, setDetailedSession] = useState<DetailedTestSession | null>(null);
+  const [currentWordStartTime, setCurrentWordStartTime] = useState<Date | null>(null);
+  const [hintSequenceCounter, setHintSequenceCounter] = useState<number>(0);
+  
+  // ⭐ CRITICAL FIX: Use ref to track hints in real-time, avoiding React state delays
+  const currentWordHintsRef = useRef<any[]>([]);
+
   // Test metadata
   const [testSaved, setTestSaved] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
@@ -149,6 +278,7 @@ export const useTest = (
   // Refs for timing
   const testStartTimeRef = useRef<number | null>(null);
   const wordStartTimeRef = useRef<number | null>(null);
+  const detailedSessionRef = useRef<DetailedTestSession | null>(null);
 
   // Initialize when Firebase is ready
   useEffect(() => {
@@ -442,16 +572,178 @@ export const useTest = (
     recommendations: [],
   });
 
+  // Generate hint for game mode con estrazione casuale
+  const generateGameHint = useCallback((type: 'synonym' | 'antonym' | 'context'): string | null => {
+    if (!currentWord) return null;
+    
+    const usedHints = gameHints[type] || [];
+    let availableHints: string[] = [];
+    
+    switch (type) {
+      case 'synonym':
+        availableHints = currentWord.synonyms || [];
+        break;
+      case 'antonym':
+        availableHints = currentWord.antonyms || [];
+        break;
+      case 'context':
+        availableHints = currentWord.sentences || [];
+        break;
+      default:
+        return null;
+    }
+    
+    // Filtra gli hint già usati
+    const remainingHints = availableHints.filter(hint => !usedHints.includes(hint));
+    
+    if (remainingHints.length === 0) {
+      return null; // Nessun hint disponibile
+    }
+    
+    // Estrai casualmente un hint tra quelli rimanenti
+    const randomIndex = Math.floor(Math.random() * remainingHints.length);
+    return remainingHints[randomIndex];
+  }, [currentWord, gameHints]);
+
+  // Handle game hint request con supporto click multipli
+  const handleGameHintRequest = useCallback((type: 'synonym' | 'antonym' | 'context') => {
+    if (!currentWord || !testConfig) {
+      if (AppConfig.app.environment === "development") {
+        console.log('🚫 Mancano currentWord o testConfig:', { currentWord: !!currentWord, testConfig: !!testConfig });
+      }
+      return;
+    }
+    
+    // Controlla i limiti di configurazione
+    const { hintsMode, maxHintsPerWord, maxTotalHints, enableTotalHintsLimit } = testConfig;
+    
+    if (AppConfig.app.environment === "development") {
+      console.log('🔍 INIZIO CONTROLLO LIMITI - Configurazione completa:', {
+        hintsMode,
+        maxHintsPerWord,
+        maxTotalHints,
+        enableTotalHintsLimit,
+        configCompleto: testConfig
+      });
+    }
+    
+    if (hintsMode === 'disabled') {
+      if (AppConfig.app.environment === "development") {
+        console.log('🚫 Suggerimenti disabilitati');
+      }
+      return;
+    }
+    
+    // Calcola hintsUsedThisWord correnti
+    const currentHintsThisWord = Object.values(gameHints).reduce((total, hints) => total + (hints?.length || 0), 0);
+    
+    // Debug logging dettagliato
+    if (AppConfig.app.environment === "development") {
+      console.log(`🔍 Debug limiti - Tipo richiesto: ${type}`);
+      console.log(`🔍 Hint correnti questa parola: ${currentHintsThisWord}`);
+      console.log(`🔍 Limit per parola: ${maxHintsPerWord}`);
+      console.log(`🔍 Hint totali usati: ${totalHintsUsed}`);
+      console.log(`🔍 Limite totale: ${maxTotalHints}`);
+      console.log(`🔍 Modalità: ${hintsMode} (tipo: ${typeof hintsMode})`);
+      console.log(`🔍 enableTotalHintsLimit: ${enableTotalHintsLimit}`);
+      console.log(`🔍 Condizione limite parola: hintsMode === 'limited' && maxHintsPerWord && currentHintsThisWord >= maxHintsPerWord`);
+      console.log(`🔍 Valori: ${hintsMode === 'limited'} && ${!!maxHintsPerWord} && ${currentHintsThisWord >= maxHintsPerWord}`);
+      console.log(`🔍 Condizione limite totale: hintsMode === 'limited' && enableTotalHintsLimit && maxTotalHints && totalHintsUsed >= maxTotalHints`);
+      console.log(`🔍 Valori: ${hintsMode === 'limited'} && ${enableTotalHintsLimit} && ${!!maxTotalHints} && ${totalHintsUsed >= maxTotalHints}`);
+    }
+    
+    // Controlla limite per parola PRIMA di aggiungere il nuovo hint
+    if (hintsMode === 'limited' && maxHintsPerWord && currentHintsThisWord >= maxHintsPerWord) {
+      if (AppConfig.app.environment === "development") {
+        console.log(`🚫 LIMITE PER PAROLA RAGGIUNTO: ${currentHintsThisWord}/${maxHintsPerWord} - BLOCCO RICHIESTA`);
+      }
+      return;
+    }
+    
+    // Controlla limite totale PRIMA di aggiungere il nuovo hint
+    if (hintsMode === 'limited' && enableTotalHintsLimit && maxTotalHints && totalHintsUsed >= maxTotalHints) {
+      if (AppConfig.app.environment === "development") {
+        console.log(`🚫 LIMITE TOTALE RAGGIUNTO: ${totalHintsUsed}/${maxTotalHints} - BLOCCO RICHIESTA`);
+      }
+      return;
+    }
+    
+    // Genera un nuovo aiuto casuale
+    const newHint = generateGameHint(type);
+    if (!newHint) {
+      if (AppConfig.app.environment === "development") {
+        console.log(`🚫 Nessun suggerimento disponibile per ${type}`);
+      }
+      return;
+    }
+    
+    if (AppConfig.app.environment === "development") {
+      console.log(`✅ LIMITI OK - Procedo con l'aggiunta del hint: ${newHint}`);
+    }
+    
+    // Create detailed hint tracking
+    const now = new Date();
+    const timeFromStart = currentWordStartTime ? now.getTime() - currentWordStartTime.getTime() : 0;
+    const sequenceOrder = hintSequenceCounter + 1;
+    
+    const detailedHint: DetailedGameHint = {
+      type,
+      content: newHint,
+      requestedAt: now,
+      timeFromWordStart: timeFromStart,
+      sequenceOrder
+    };
+    
+    // Update current word session with hint details
+    // ⭐ CRITICAL FIX: Update ref immediately (synchronous)
+    currentWordHintsRef.current = [...currentWordHintsRef.current, detailedHint];
+    
+    if (currentWordSession) {
+      setCurrentWordSession(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          hintsUsed: [...prev.hintsUsed, detailedHint],
+          totalHintsCount: prev.totalHintsCount + 1
+        };
+      });
+    }
+    
+    // Aggiungi il nuovo hint alla lista per questo tipo (UI)
+    setGameHints(prev => ({
+      ...prev,
+      [type]: [...(prev[type] || []), newHint]
+    }));
+    setTotalHintsUsed(prev => prev + 1);
+    setHintsUsedThisWord(prev => prev + 1);
+    setHintSequenceCounter(prev => prev + 1);
+    
+    if (AppConfig.app.environment === "development") {
+      console.log(`💡 Aiuto ${type} fornito: ${newHint}`);
+      console.log(`💡 Nuovi contatori - Parola: ${currentHintsThisWord + 1}, Totale: ${totalHintsUsed + 1}`);
+      console.log(`📊 Detailed hint tracked: ${JSON.stringify(detailedHint)}`);
+    }
+  }, [currentWord, testConfig, gameHints, totalHintsUsed, generateGameHint, currentWordStartTime, currentWordSession, hintSequenceCounter]);
+
+  // Reset hints when word changes
+  const resetWordHints = useCallback(() => {
+    setGameHints({});
+    setHintsUsedThisWord(0);
+  }, []);
+
   // Start test
   const startTest = useCallback(
-    (words: Word[], config?: Partial<TestConfig>) => {
+    (words: Word[], config?: any) => {
       try {
         if (!words || words.length === 0) {
           throw new Error("No words available for test");
         }
 
+        // Salva la configurazione del test per uso nelle funzioni hint
+        setTestConfig(config || {});
+
         // Apply test configuration with complete types
-        const testConfig: TestConfig = {
+        const testConfigInternal: TestConfig = {
           mode: "normal",
           hints: createHintSystemConfig(),
           wordSelection: createWordSelectionConfig(config?.wordSelection),
@@ -463,23 +755,23 @@ export const useTest = (
         // Filter words based on configuration
         let filteredWords = [...words];
 
-        if (testConfig.wordSelection.unlearnedOnly) {
+        if (testConfigInternal.wordSelection.unlearnedOnly) {
           filteredWords = filteredWords.filter((word) => !word.learned);
         }
 
-        // Randomize order if specified
-        if (testConfig.wordSelection.randomOrder) {
-          filteredWords = [...filteredWords].sort(() => Math.random() - 0.5);
-        }
-
-        // Limit word count (default to all words if not specified)
+        // NON randomizziamo l'ordine qui - lo facciamo durante l'estrazione
+        // per garantire che ogni parola sia estratta una volta sola
         const selectedWords = filteredWords;
 
         // Initialize test state
         setTestWords(selectedWords);
         setTestMode(true);
         setShowResults(false);
-        setStats({ correct: 0, incorrect: 0, hints: 0 });
+        setStats({ 
+          correct: 0, 
+          incorrect: 0, 
+          hints: 0
+        });
         setWrongWords([]);
         setWordTimes([]);
         setUsedWordIds(new Set());
@@ -490,14 +782,74 @@ export const useTest = (
         setIsTransitioning(false);
         setError(null);
 
+        // Initialize enhanced test session tracking
+        const sessionId = `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const newDetailedSession: DetailedTestSession = {
+          sessionId,
+          startedAt: new Date(),
+          config: config || {},
+          words: [],
+          wrongWords: [],
+          totalWords: selectedWords.length,
+          correctAnswers: 0,
+          incorrectAnswers: 0,
+          timeoutAnswers: 0,
+          totalHintsUsed: 0,
+          totalTimeSpent: 0,
+          averageTimePerWord: 0,
+          accuracy: 0,
+          chapterBreakdown: {},
+          performanceTrend: [],
+          speedTrend: [],
+          hintUsagePattern: [],
+        };
+        setDetailedSession(newDetailedSession);
+        detailedSessionRef.current = newDetailedSession; // Sync ref with state
+        setCurrentWordSession(null);
+        setCurrentWordStartTime(null);
+        setHintSequenceCounter(0);
+
+        // Reset game mode hints
+        setGameHints({});
+        setTotalHintsUsed(0);
+        setHintsUsedThisWord(0);
+
         // Set timing
         testStartTimeRef.current = Date.now();
         wordStartTimeRef.current = Date.now();
 
-        // Start with first word
+        // Estrai la prima parola casualmente
         if (selectedWords.length > 0) {
-          setCurrentWord(selectedWords[0]);
-          setUsedWordIds(new Set([selectedWords[0].id]));
+          const randomIndex = Math.floor(Math.random() * selectedWords.length);
+          const firstWord = selectedWords[randomIndex];
+          setCurrentWord(firstWord);
+          setUsedWordIds(new Set([firstWord.id]));
+          
+          // Create currentWordSession for the first word (like in nextWord)
+          const now = new Date();
+          const firstWordSession: DetailedWordSession = {
+            wordId: firstWord.id,
+            english: firstWord.english,
+            italian: firstWord.italian,
+            chapter: firstWord.chapter || '',
+            wordShownAt: now,
+            totalTime: 0,
+            hintsUsed: [],
+            totalHintsCount: 0,
+            result: 'timeout', // Will be updated when answered
+            isCorrect: false,
+            testPosition: 1,
+            timeExpired: false,
+          };
+          
+          setCurrentWordSession(firstWordSession);
+          setCurrentWordStartTime(now);
+          setHintSequenceCounter(0);
+          currentWordHintsRef.current = []; // Reset ref for first word
+          
+          if (AppConfig.app.environment === "development") {
+            console.log(`🎮 Prima parola estratta: ${firstWord.english} (${selectedWords.length - 1} rimanenti)`);
+          }
         }
 
         if (AppConfig.app.environment === "development") {
@@ -512,26 +864,37 @@ export const useTest = (
     []
   );
 
-  // Record word timing
-  const recordWordTime = useCallback(() => {
+  // Record word timing con supporto per aiuti modalità gioco
+  const recordWordTime = useCallback((gameHintsUsed: string[] = [], isTimeout: boolean = false) => {
     if (!currentWord || !wordStartTimeRef.current) return;
 
     const endTime = Date.now();
-    const timeSpent = endTime - wordStartTimeRef.current;
+    const rawTimeSpent = endTime - wordStartTimeRef.current;
+    
+    // ⭐ CRITICAL FIX: Clamp time to timer limit for timeout scenarios
+    const timeSpent = isTimeout ? 
+      Math.min(rawTimeSpent, (testConfig?.maxTimePerWord || 10) * 1000) : 
+      rawTimeSpent;
+
+    // Ottieni tutti gli aiuti usati dalla modalità gioco attuale
+    const currentGameHintsUsed = Object.entries(gameHints).flatMap(([type, hints]) => 
+      (hints || []).map((hint: string) => `${type}: ${hint}`)
+    );
 
     const wordTiming: WordTiming = {
       wordId: currentWord.id,
       startTime: wordStartTimeRef.current,
       endTime,
       timeSpent,
-      usedHint: hintUsedForCurrentWord,
+      usedHint: hintUsedForCurrentWord || currentGameHintsUsed.length > 0,
+      gameHintsUsed: currentGameHintsUsed,
     };
 
     setWordTimes((prev) => [...prev, wordTiming]);
     wordStartTimeRef.current = Date.now(); // Reset for next word
-  }, [currentWord, hintUsedForCurrentWord]);
+  }, [currentWord, hintUsedForCurrentWord, gameHints, testConfig]);
 
-  // Get next word
+  // Get next word (estrazione casuale, una volta sola per parola)
   const nextWord = useCallback(() => {
     const availableWords = testWords.filter(
       (word) => !usedWordIds.has(word.id)
@@ -542,23 +905,63 @@ export const useTest = (
       return;
     }
 
-    const nextWord =
-      availableWords[Math.floor(Math.random() * availableWords.length)];
-    setCurrentWord(nextWord);
-    setUsedWordIds((prev) => new Set([...prev, nextWord.id]));
+    // Estrazione casuale dalla lista delle parole disponibili
+    const randomIndex = Math.floor(Math.random() * availableWords.length);
+    const selectedWord = availableWords[randomIndex];
+    
+    setCurrentWord(selectedWord);
+    setUsedWordIds((prev) => new Set([...prev, selectedWord.id]));
     setShowMeaning(false);
     setShowHint(false);
     setHintUsedForCurrentWord(false);
     setIsTransitioning(false);
     wordStartTimeRef.current = Date.now();
+
+    // Initialize detailed word session tracking
+    const now = new Date();
+    const currentPosition = usedWordIds.size + 1; // 1-based position
+    
+    const newWordSession: DetailedWordSession = {
+      wordId: selectedWord.id,
+      english: selectedWord.english,
+      italian: selectedWord.italian,
+      chapter: selectedWord.chapter,
+      wordShownAt: now,
+      totalTime: 0,
+      hintsUsed: [],
+      totalHintsCount: 0,
+      result: 'timeout', // Will be updated when answered
+      isCorrect: false,
+      testPosition: currentPosition,
+      timeExpired: false,
+    };
+    
+    setCurrentWordSession(newWordSession);
+    setCurrentWordStartTime(now);
+    setHintSequenceCounter(0);
+    currentWordHintsRef.current = []; // Reset ref for new word
+
+    // Reset hints for the NEW word (not the completed one)
+    if (AppConfig.app.environment === "development") {
+      console.log("🔄 RESET HINTS in nextWord() for new word:", selectedWord.english);
+    }
+    console.log(`🧹 RESET HINTS chiamato da nextWord() per: ${selectedWord.english}`);
+    console.trace("Stack trace del reset hints");
+    setHintsUsedThisWord(0);
+    setGameHints({});
+    currentWordHintsRef.current = []; // Reset ref too
+
+    if (AppConfig.app.environment === "development") {
+      console.log(`🎮 Parola estratta: ${selectedWord.english} (${availableWords.length - 1} rimanenti)`);
+    }
   }, [testWords, usedWordIds]);
 
   // Save test results
   const saveTestResultsWithStats = useCallback(
-    (finalStats: TestStats) => {
+    (finalStats: TestStats, finalDetailedSession?: DetailedTestSession) => {
       if (testSaved) return;
 
-      recordWordTime(); // Record final word time
+      recordWordTime([], false); // Record final word time (not timeout for final save)
 
       const totalTime = testStartTimeRef.current
         ? Date.now() - testStartTimeRef.current
@@ -648,7 +1051,7 @@ export const useTest = (
 
       // Call the callback if provided
       if (onTestComplete) {
-        onTestComplete(finalStats, testWords, wrongWords);
+        onTestComplete(finalStats, testWords, wrongWords, finalDetailedSession || detailedSession);
       }
 
       setTestSaved(true);
@@ -664,6 +1067,7 @@ export const useTest = (
       onTestComplete,
       recordWordTime,
       wordTimes,
+      detailedSession,
     ]
   );
 
@@ -680,16 +1084,187 @@ export const useTest = (
 
   // Handle answer
   const handleAnswer = useCallback(
-    (isCorrect: boolean) => {
+    (isCorrect: boolean, isTimeout: boolean = false) => {
       if (!currentWord) return;
 
-      recordWordTime();
+      recordWordTime([], isTimeout);
 
-      // Update stats
+      // Complete current word session tracking
+      const now = new Date();
+      
+      // Debug logging for timeout cases
+      if (isTimeout) {
+        console.log("🔍 TIMEOUT DEBUG:", {
+          currentWord: currentWord?.english,
+          currentWordSession: currentWordSession,
+          currentWordStartTime: currentWordStartTime,
+          showMeaning: showMeaning,
+          isTimeout,
+          isCorrect
+        });
+      }
+      
+      // Debug timeout scenario
+      if (isTimeout && AppConfig.app.environment === "development") {
+        console.log("🔍 TIMEOUT ANALYSIS:", {
+          currentWordSession: currentWordSession?.english,
+          hintsInSession: currentWordSession?.totalHintsCount,
+          hintsInGameHints: Object.values(gameHints).reduce((total, hints) => total + (hints?.length || 0), 0),
+          hintsUsedThisWord,
+          currentWordIsNull: !currentWordSession
+        });
+      }
+
+      // ⭐ CRITICAL FIX: Use ref data (synchronous, immediate) instead of state (async, delayed)
+      const finalCurrentWordSession = currentWordSession; 
+      const actualHintsUsed = currentWordHintsRef.current; // Use ref instead of state
+      const actualHintsCount = actualHintsUsed.length;
+      
+      console.log("🎯 FINAL HINT CALCULATION (USING REF DATA):", {
+        actualHintsUsed,
+        actualHintsCount,
+        fromState: {
+          sessionHints: finalCurrentWordSession?.hintsUsed || [],
+          sessionHintsCount: finalCurrentWordSession?.hintsUsed?.length || 0
+        },
+        fromCounters: {
+          hintsUsedThisWord,
+          gameHintsCount: Object.values(gameHints).reduce((total: number, hints: any) => total + (hints?.length || 0), 0)
+        },
+        isTimeout,
+        currentWordEnglish: currentWord?.english
+      });
+
+      const completedWordSession: DetailedWordSession | null = finalCurrentWordSession ? {
+        ...finalCurrentWordSession,
+        cardFlippedAt: finalCurrentWordSession.cardFlippedAt || (showMeaning ? finalCurrentWordSession.cardFlippedAt : now), // Keep first flip time
+        answerDeclaredAt: now,
+        totalTime: currentWordStartTime ? (
+          isTimeout ? 
+            // For timeout: clamp to timer limit in milliseconds
+            (testConfig?.maxTimePerWord || 10) * 1000 : 
+            // For normal answers: actual time
+            now.getTime() - currentWordStartTime.getTime()
+        ) : 0,
+        thinkingTime: showMeaning && finalCurrentWordSession.cardFlippedAt ? 
+          finalCurrentWordSession.cardFlippedAt.getTime() - finalCurrentWordSession.wordShownAt.getTime() : 
+          (currentWordStartTime ? (
+            isTimeout ? 
+              // For timeout: clamp to timer limit in milliseconds
+              (testConfig?.maxTimePerWord || 10) * 1000 : 
+              // For normal answers: actual time
+              now.getTime() - currentWordStartTime.getTime()
+          ) : 0),
+        evaluationTime: showMeaning && finalCurrentWordSession.cardFlippedAt ? 
+          now.getTime() - finalCurrentWordSession.cardFlippedAt.getTime() : 0,
+        result: (isTimeout ? 'timeout' : (isCorrect ? 'correct' : 'incorrect')) as 'correct' | 'incorrect' | 'timeout',
+        isCorrect,
+        timeExpired: isTimeout,
+        // ⭐ CRITICAL FIX: Use actual hints data from ref (synchronous)
+        hintsUsed: actualHintsUsed,
+        totalHintsCount: actualHintsCount
+      } : (
+        // Fallback: create session if currentWordSession is null (should not happen, but safety net)
+        console.log("⚠️ FALLBACK: Creating completedWordSession because currentWordSession is null"),
+        console.log("🔍 FALLBACK DEBUG:", {
+          actualHintsUsed,
+          actualHintsCount,
+          currentWord: currentWord?.english,
+          isTimeout
+        }),
+        currentWord ? {
+          wordId: currentWord.id,
+          english: currentWord.english,
+          italian: currentWord.italian,
+          chapter: currentWord.chapter,
+          wordShownAt: currentWordStartTime || now,
+          cardFlippedAt: showMeaning ? now : (isTimeout ? now : undefined), // Set cardFlippedAt for timeout too
+          answerDeclaredAt: now,
+          thinkingTime: currentWordStartTime ? (
+            isTimeout ? 
+              // For timeout: clamp to timer limit in milliseconds
+              (testConfig?.maxTimePerWord || 10) * 1000 : 
+              // For normal answers: actual time
+              now.getTime() - currentWordStartTime.getTime()
+          ) : (isTimeout ? (testConfig?.maxTimePerWord || 10) * 1000 : 0),
+          evaluationTime: showMeaning ? 0 : 0, // Could be enhanced later
+          totalTime: currentWordStartTime ? (
+            isTimeout ? 
+              // For timeout: clamp to timer limit in milliseconds
+              (testConfig?.maxTimePerWord || 10) * 1000 : 
+              // For normal answers: actual time
+              now.getTime() - currentWordStartTime.getTime()
+          ) : (isTimeout ? (testConfig?.maxTimePerWord || 10) * 1000 : 0),
+          hintsUsed: actualHintsUsed, // Use actual hints data
+          totalHintsCount: actualHintsCount, // Use actual count
+          result: (isTimeout ? 'timeout' : (isCorrect ? 'correct' : 'incorrect')) as 'correct' | 'incorrect' | 'timeout',
+          isCorrect,
+          testPosition: usedWordIds.size + 1, // Fix position calculation
+          timeExpired: isTimeout,
+        } : null
+      );
+
+      // Use the actual hints count from the real data
+      const gameHintsCount = actualHintsCount;
+      
+      // Update detailed session with completed word
+      if (detailedSessionRef.current && completedWordSession) {
+        // Update ref directly to avoid state sync issues
+        const currentSession = detailedSessionRef.current;
+        
+        const updatedWords = [...currentSession.words, completedWordSession];
+        const updatedWrongWords = isCorrect ? currentSession.wrongWords : [...currentSession.wrongWords, completedWordSession];
+        const newCorrect = currentSession.correctAnswers + (isCorrect ? 1 : 0);
+        const newIncorrect = currentSession.incorrectAnswers + (isCorrect ? 0 : 1);
+        const newTimeouts = currentSession.timeoutAnswers + (isTimeout ? 1 : 0);
+        const newTotalTime = currentSession.totalTimeSpent + completedWordSession.totalTime;
+        
+        // Update chapter breakdown
+        const chapter = completedWordSession.chapter || 'no-chapter';
+        const currentChapterStats = currentSession.chapterBreakdown[chapter] || {
+          correct: 0,
+          incorrect: 0,
+          totalTime: 0,
+          hintsUsed: 0,
+        };
+        
+        const updatedChapterBreakdown = {
+          ...currentSession.chapterBreakdown,
+          [chapter]: {
+            correct: currentChapterStats.correct + (isCorrect ? 1 : 0),
+            incorrect: currentChapterStats.incorrect + (isCorrect ? 0 : 1),
+            totalTime: currentChapterStats.totalTime + completedWordSession.totalTime,
+            hintsUsed: currentChapterStats.hintsUsed + completedWordSession.totalHintsCount,
+          }
+        };
+        
+        const updatedSession = {
+          ...currentSession,
+          words: updatedWords,
+          wrongWords: updatedWrongWords,
+          correctAnswers: newCorrect,
+          incorrectAnswers: newIncorrect,
+          timeoutAnswers: newTimeouts,
+          totalHintsUsed: currentSession.totalHintsUsed + completedWordSession.totalHintsCount,
+          totalTimeSpent: newTotalTime,
+          averageTimePerWord: updatedWords.length > 0 ? newTotalTime / updatedWords.length : 0,
+          accuracy: updatedWords.length > 0 ? (newCorrect / updatedWords.length) * 100 : 0,
+          chapterBreakdown: updatedChapterBreakdown,
+          performanceTrend: [...currentSession.performanceTrend, isCorrect ? 1 : 0],
+          speedTrend: [...currentSession.speedTrend, completedWordSession.totalTime],
+          hintUsagePattern: [...currentSession.hintUsagePattern, completedWordSession.totalHintsCount],
+        };
+        
+        // Update both ref and state
+        detailedSessionRef.current = updatedSession;
+        setDetailedSession(updatedSession);
+      }
+
+      // Update stats (use pre-calculated gameHintsCount)
       const newStats: TestStats = {
         correct: stats.correct + (isCorrect ? 1 : 0),
         incorrect: stats.incorrect + (isCorrect ? 0 : 1),
-        hints: stats.hints + (hintUsedForCurrentWord ? 1 : 0),
+        hints: stats.hints + (hintUsedForCurrentWord ? 1 : 0) + gameHintsCount,
       };
 
       setStats(newStats);
@@ -698,7 +1273,7 @@ export const useTest = (
       if (!isCorrect && currentWord) {
         const wrongWord = {
           ...currentWord,
-          usedHint: hintUsedForCurrentWord,
+          usedHint: hintUsedForCurrentWord || Object.values(gameHints).some(hints => hints && hints.length > 0),
         };
         setWrongWords((prev) => [...prev, wrongWord]);
       }
@@ -708,19 +1283,59 @@ export const useTest = (
       const isLastQuestion = totalAnswered >= testWords.length;
 
       if (isLastQuestion) {
-        saveTestResultsWithStats(newStats);
+        // Complete detailed session using ref data
+        if (detailedSessionRef.current) {
+          // Use the ref data which should have all the words
+          const finalDetailedSession = {
+            ...detailedSessionRef.current,
+            completedAt: new Date(),
+          };
+          
+          // Log detailed test session for statistics
+          if (AppConfig.app.environment === "development") {
+            console.log("🎯 Test Session Completed:", finalDetailedSession);
+          }
+          
+          // Update state with final session
+          setDetailedSession(finalDetailedSession);
+          
+          // Save with the complete session from ref
+          saveTestResultsWithStats(newStats, finalDetailedSession);
+        } else {
+          saveTestResultsWithStats(newStats);
+        }
+        
         setTestMode(false);
         setShowResults(true);
         setCurrentWord(null);
-      } else {
-        // Show meaning briefly, then move to next word
+      } else if (!isTimeout) {
+        // Show meaning briefly, ensure card is face-down, then move to next word
         setIsTransitioning(true);
-        setTimeout(
-          () => {
+        
+        if (showMeaning) {
+          // If meaning is showing, wait a bit then flip to face-down
+          setTimeout(() => {
+            setShowMeaning(false); // Flip to face-down
+            setTimeout(() => {
+              nextWord();
+            }, 400); // Wait for flip animation
+          }, 800); // Show meaning for a bit
+        } else {
+          // If already face-down, move immediately
+          setTimeout(() => {
             nextWord();
-          },
-          showMeaning ? 1000 : 600
-        );
+          }, 300);
+        }
+      } else {
+        // For timeout: ensure card is face-down before moving to next word
+        if (AppConfig.app.environment === "development") {
+          console.log("⏱️ TIMEOUT: Ensuring card is face-down before next word");
+        }
+        setIsTransitioning(true);
+        setShowMeaning(false); // Ensure card is face-down
+        setTimeout(() => {
+          nextWord();
+        }, 300); // Short delay for animation
       }
     },
     [
@@ -732,6 +1347,10 @@ export const useTest = (
       recordWordTime,
       saveTestResultsWithStats,
       nextWord,
+      gameHints,
+      currentWordSession,
+      detailedSession,
+      currentWordStartTime,
     ]
   );
 
@@ -751,16 +1370,33 @@ export const useTest = (
     setShowMeaning(false);
     setShowHint(false);
     setHintUsedForCurrentWord(false);
-    setStats({ correct: 0, incorrect: 0, hints: 0 });
+    setStats({ 
+      correct: 0, 
+      incorrect: 0, 
+      hints: 0
+    });
     setTestWords([]);
     setTestSaved(false);
     setWordTimes([]);
     setIsTransitioning(false);
     setError(null);
 
+    // Reset game mode hints
+    setGameHints({});
+    setTotalHintsUsed(0);
+    setHintsUsedThisWord(0);
+    setTestConfig(null);
+
     // Reset timing refs
     testStartTimeRef.current = null;
     wordStartTimeRef.current = null;
+
+    // Reset enhanced tracking
+    setDetailedSession(null);
+    detailedSessionRef.current = null;
+    setCurrentWordSession(null);
+    setCurrentWordStartTime(null);
+    setHintSequenceCounter(0);
 
     if (AppConfig.app.environment === "development") {
       console.log("🧪 Test reset");
@@ -772,16 +1408,25 @@ export const useTest = (
     setShowResults(false);
     setWrongWords([]);
     setTestSaved(false);
-    setStats({ correct: 0, incorrect: 0, hints: 0 });
+    setStats({ 
+      correct: 0, 
+      incorrect: 0, 
+      hints: 0
+    });
     setUsedWordIds(new Set());
     setCurrentWord(null);
     setWordTimes([]);
     setIsTransitioning(false);
     setError(null);
 
-    // Restart with same test words
-    startTest(testWords);
-  }, [testWords, startTest]);
+    // Reset game mode hints
+    setGameHints({});
+    setTotalHintsUsed(0);
+    setHintsUsedThisWord(0);
+
+    // Restart with same test words and config
+    startTest(testWords, testConfig);
+  }, [testWords, testConfig, startTest]);
 
   // Get test progress
   const getTestProgress = useCallback((): TestProgress => {
@@ -798,21 +1443,66 @@ export const useTest = (
 
   // Get test summary
   const getTestSummary = useCallback((): TestSummary => {
+    // Use DetailedTestSession data if available, otherwise fallback to legacy stats
+    if (detailedSessionRef.current && detailedSessionRef.current.words.length > 0) {
+      const session = detailedSessionRef.current;
+      const totalQuestions = session.totalWords;
+      const totalAnswered = session.correctAnswers + session.incorrectAnswers; // timeoutAnswers già inclusi in incorrectAnswers
+      const accuracy = session.accuracy;
+      const score = totalQuestions > 0 ? Math.round((session.correctAnswers / totalQuestions) * 100) : 0;
+
+      return {
+        totalQuestions,
+        correctAnswers: session.correctAnswers,
+        incorrectAnswers: session.incorrectAnswers, // timeoutAnswers già inclusi
+        hintsUsed: session.totalHintsUsed,
+        accuracy: Math.round(accuracy),
+        score,
+        timeSpent: session.totalTimeSpent,
+        averageTimePerWord: Math.round(session.averageTimePerWord),
+        wrongWords: session.wrongWords.map(wordSession => ({
+          id: wordSession.wordId,
+          english: wordSession.english,
+          italian: wordSession.italian,
+          chapter: wordSession.chapter,
+          usedHint: wordSession.totalHintsCount > 0,
+          // Default Word properties
+          learned: false,
+          difficult: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          // Optional properties
+          notes: undefined,
+          group: undefined,
+          pronunciation: undefined,
+          sentences: []
+        })),
+        // Enhanced properties from DetailedTestSession
+        correct: session.correctAnswers,
+        incorrect: session.incorrectAnswers, // timeoutAnswers già inclusi
+        hints: session.totalHintsUsed,
+        totalTime: Math.round(session.totalTimeSpent / 1000), // Convert to seconds
+        avgTimePerWord: Math.round(session.averageTimePerWord / 1000), // Convert to seconds
+        maxTimePerWord: session.speedTrend.length > 0 ? Math.round(Math.max(...session.speedTrend) / 1000) : 0,
+        minTimePerWord: session.speedTrend.length > 0 ? Math.round(Math.min(...session.speedTrend) / 1000) : 0,
+        totalRecordedTime: Math.round(session.totalTimeSpent / 1000), // Convert to seconds
+        total: session.totalWords,
+        answered: totalAnswered,
+        percentage: Math.round(accuracy)
+      };
+    }
+
+    // Fallback to legacy stats calculation
     const totalQuestions = testWords.length;
     const totalAnswered = stats.correct + stats.incorrect;
-    const accuracy =
-      totalAnswered > 0 ? (stats.correct / totalAnswered) * 100 : 0;
-    const score =
-      totalQuestions > 0
-        ? Math.round((stats.correct / totalQuestions) * 100)
-        : 0;
+    const accuracy = totalAnswered > 0 ? (stats.correct / totalAnswered) * 100 : 0;
+    const score = totalQuestions > 0 ? Math.round((stats.correct / totalQuestions) * 100) : 0;
 
     const totalTime = testStartTimeRef.current
       ? Date.now() - testStartTimeRef.current
       : wordTimes.reduce((sum, timing) => sum + timing.timeSpent, 0);
 
-    const averageTimePerWord =
-      totalAnswered > 0 ? totalTime / totalAnswered : 0;
+    const averageTimePerWord = totalAnswered > 0 ? totalTime / totalAnswered : 0;
 
     return {
       totalQuestions,
@@ -824,6 +1514,18 @@ export const useTest = (
       timeSpent: totalTime,
       averageTimePerWord: Math.round(averageTimePerWord),
       wrongWords,
+      // Enhanced properties (legacy fallback)
+      correct: stats.correct,
+      incorrect: stats.incorrect,
+      hints: stats.hints,
+      totalTime: Math.round(totalTime / 1000),
+      avgTimePerWord: Math.round(averageTimePerWord / 1000),
+      maxTimePerWord: 0,
+      minTimePerWord: 0,
+      totalRecordedTime: Math.round(totalTime / 1000),
+      total: totalQuestions,
+      answered: totalAnswered,
+      percentage: Math.round(accuracy)
     };
   }, [testWords.length, stats, wrongWords, wordTimes]);
 
@@ -849,17 +1551,45 @@ export const useTest = (
     isInitialized,
     error,
 
+    // Game mode hints state
+    gameHints,
+    totalHintsUsed,
+    hintsUsedThisWord,
+    testConfig,
+
+    // Enhanced tracking per tutti i test
+    currentWordSession,
+    detailedSession,
+    currentWordStartTime,
+    hintSequenceCounter,
+
     // Operations
     startTest,
     handleAnswer,
     resetTest,
     startNewTest,
     toggleHint,
-    setShowMeaning,
+    setShowMeaning: useCallback((show: boolean) => {
+      // ⭐ CRITICAL FIX: Record card flip timestamp ONLY on first flip
+      if (show && !showMeaning && currentWordSession) {
+        setCurrentWordSession(prev => {
+          if (!prev || prev.cardFlippedAt) return prev; // Don't override if already set
+          return {
+            ...prev,
+            cardFlippedAt: new Date()
+          };
+        });
+      }
+      setShowMeaning(show);
+    }, [showMeaning, currentWordSession]),
+    handleGameHintRequest,
 
     // Getters
     getTestProgress: useCallback(() => progressData, [progressData]),
-    getTestSummary: useCallback(() => summaryData, [summaryData]),
+    getTestSummary: useCallback(() => {
+      // Always get fresh data, don't use memoized version for critical results
+      return getTestSummary();
+    }, [getTestSummary]),
 
     // Alias for AppContext compatibility
     hintUsed: hintUsedForCurrentWord,
