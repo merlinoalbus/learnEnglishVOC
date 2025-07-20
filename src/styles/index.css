@@ -22,12 +22,16 @@
 /* COMPONENTS */
 @import './components/buttons.css';
 @import './components/test-selector.css';
+@import './components/test-card.css';
+@import './components/test-view.css';
+@import './components/test-results.css';
 
 /* PAGES */
 @import './pages/start-test.css';
 
 /* UTILITIES */
 @import './utilities/animations.css';
+@import './utilities/common.css';
 
 /* TAILWIND CUSTOM UTILITIES */
 @layer utilities {
