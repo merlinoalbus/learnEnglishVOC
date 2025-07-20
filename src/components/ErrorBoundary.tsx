@@ -53,9 +53,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-pink-50 flex items-center justify-center p-6">
+        <div className="error-page-background">
           <Card className="max-w-lg w-full bg-white/90 backdrop-blur-sm border-0 shadow-2xl rounded-3xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-center py-8">
+            <CardHeader className="error-card-header">
               <div className="text-6xl mb-4">
                 <AlertTriangle className="w-16 h-16 mx-auto" />
               </div>
@@ -88,7 +88,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 <div className="flex gap-4 justify-center">
                   <Button
                     onClick={this.handleReset}
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+                    className="error-action-button"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Riprova

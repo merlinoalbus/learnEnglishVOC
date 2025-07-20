@@ -24,7 +24,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (!isReady || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="auth-protected-background">
         <Card className="w-96 text-center">
           <CardHeader>
             <CardTitle className="flex items-center justify-center gap-2">
@@ -53,7 +53,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (isAuthenticated && userProfile && !userProfile.isActive) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50">
+      <div className="auth-error-background">
         <Card className="w-96 text-center border-red-200">
           <CardHeader>
             <CardTitle className="flex items-center justify-center gap-2 text-red-600">
@@ -76,7 +76,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (isAuthenticated && userProfile && !userProfile.emailVerified) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+      <div className="auth-warning-background">
         <Card className="w-96 text-center border-yellow-200">
           <CardHeader>
             <CardTitle className="flex items-center justify-center gap-2 text-yellow-600">
@@ -99,7 +99,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (requiredRole && role !== requiredRole) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50">
+      <div className="auth-error-background">
         <Card className="w-96 text-center border-red-200">
           <CardHeader>
             <CardTitle className="flex items-center justify-center gap-2 text-red-600">

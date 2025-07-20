@@ -48,7 +48,7 @@
 }
 
 .dashboard-card {
-  @apply glass-container p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105;
+  @apply glass-container p-3 hover:shadow-2xl transition-all duration-300 transform hover:scale-105;
 }
 
 /* ===================
@@ -233,7 +233,7 @@
 
 /* Stat card */
 .stat-card {
-  @apply glass-container p-6 text-center;
+  @apply glass-container p-3 text-center;
 }
 
 .stat-card-value {
@@ -266,7 +266,7 @@
 
 /* Feature card */
 .feature-card {
-  @apply glass-container p-8 text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1;
+  @apply glass-container p-6 text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1;
 }
 
 .feature-card-icon {

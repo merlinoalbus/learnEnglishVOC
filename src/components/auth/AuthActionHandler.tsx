@@ -108,7 +108,7 @@ export const AuthActionHandler: React.FC<AuthActionHandlerProps> = ({
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="auth-page-background">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
@@ -121,7 +121,7 @@ export const AuthActionHandler: React.FC<AuthActionHandlerProps> = ({
 
   if (success) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="auth-page-background">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
           <div className="text-center">
             <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
@@ -135,7 +135,7 @@ export const AuthActionHandler: React.FC<AuthActionHandlerProps> = ({
             </p>
             <Button
               onClick={onComplete}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="auth-button-action"
             >
               Continua
             </Button>
@@ -147,7 +147,7 @@ export const AuthActionHandler: React.FC<AuthActionHandlerProps> = ({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="auth-page-background">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
@@ -176,7 +176,7 @@ export const AuthActionHandler: React.FC<AuthActionHandlerProps> = ({
   // Form per reset password
   if (mode === "resetPassword") {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="auth-page-background">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
           <div className="text-center mb-6">
             <Lock className="w-12 h-12 text-blue-600 mx-auto mb-4" />
@@ -241,7 +241,7 @@ export const AuthActionHandler: React.FC<AuthActionHandlerProps> = ({
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="auth-button-action"
               disabled={loading}
             >
               {loading ? (

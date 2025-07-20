@@ -171,7 +171,7 @@
 
 /* Dropdown header */
 .app-nav-dropdown-header {
-  @apply bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white;
+  @apply bg-gradient-to-r from-indigo-500 to-purple-600 p-4 text-white;
 }
 
 .nav-container {

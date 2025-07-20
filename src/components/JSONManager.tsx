@@ -300,7 +300,7 @@ const JSONManager: React.FC<JSONManagerProps> = ({ words, onImportWords }) => {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <FileDown className="w-6 h-6 text-indigo-600 dark:text-purple-400" />
-            <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="json-manager-title">
               Gestione Dati JSON
             </span>
           </div>

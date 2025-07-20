@@ -323,7 +323,7 @@ export const AuthenticatorWrapper: React.FC<AuthenticatorWrapperProps> = ({
   );
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="auth-page-background">
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
         {currentStep === "setup-start" && renderSetupStart()}
         {currentStep === "show-qr" && renderQRCode()}

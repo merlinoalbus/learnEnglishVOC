@@ -17,7 +17,7 @@
 
 /* List header */
 .list-header {
-  @apply p-6 border-b border-gray-100;
+  @apply p-3 border-b border-gray-100;
   background: var(--glass-light);
 }
 
@@ -65,7 +65,7 @@
 
 /* List item */
 .list-item {
-  @apply p-6 hover:bg-gray-50 transition-colors cursor-pointer;
+  @apply p-3 hover:bg-gray-50 transition-colors cursor-pointer;
 }
 
 .dark .list-item {
@@ -253,7 +253,7 @@
  * =================== */
 
 .list-pagination {
-  @apply flex items-center justify-between p-6 border-t border-gray-100;
+  @apply flex items-center justify-between p-3 border-t border-gray-100;
   background: var(--glass-light);
 }
 
@@ -340,7 +340,7 @@
 
 /* Skeleton loading for list items */
 .list-skeleton-item {
-  @apply p-6 animate-pulse;
+  @apply p-3 animate-pulse;
 }
 
 .list-skeleton-content {
@@ -537,4 +537,13 @@
 
 .dark .words-list-chapter-title {
   @apply text-transparent bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text;
+}
+
+/* ===================
+ * JSONManager Component
+ * =================== */
+
+/* JSON manager title */
+.json-manager-title {
+  @apply bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent;
 }

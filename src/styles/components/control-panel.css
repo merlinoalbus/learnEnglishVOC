@@ -26,7 +26,7 @@
 
 /* Alert container */
 .control-panel-alert {
-  @apply mb-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl;
+  @apply mb-6 p-3 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl;
 }
 
 .dark .control-panel-alert {
@@ -39,7 +39,7 @@
 
 /* Primary action button */
 .control-panel-action-button {
-  @apply bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white p-6 h-auto rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+  @apply bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white p-3 h-auto rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
 }
 
 /* ===================

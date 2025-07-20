@@ -1,0 +1,92 @@
+/* =====================================================
+ * 📁 ErrorBoundary Component - Error Display Styles
+ * ===================================================== */
+
+/* ===================
+ * Error Page Layout
+ * =================== */
+
+/* Error page background */
+.error-page-background {
+  @apply min-h-screen bg-gradient-to-br from-red-50 via-white to-pink-50 flex items-center justify-center p-4;
+}
+
+.dark .error-page-background {
+  @apply from-red-900/20 via-gray-900 to-pink-900/20;
+}
+
+/* ===================
+ * Error Card Components
+ * =================== */
+
+/* Error header */
+.error-card-header {
+  @apply bg-gradient-to-r from-red-500 to-pink-500 text-white text-center py-8;
+}
+
+/* ===================
+ * Error Action Buttons
+ * =================== */
+
+/* Primary error action button */
+.error-action-button {
+  @apply bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105;
+}
+
+/* ===================
+ * Error Icon Styling
+ * =================== */
+
+/* Error icon container */
+.error-icon-container {
+  @apply w-16 h-16 mx-auto mb-4 text-red-500;
+}
+
+/* ===================
+ * Error Message Styling
+ * =================== */
+
+/* Error title */
+.error-title {
+  @apply text-3xl font-bold text-red-600 mb-4;
+}
+
+.dark .error-title {
+  @apply text-red-400;
+}
+
+/* Error message */
+.error-message {
+  @apply text-gray-600 mb-6 leading-relaxed;
+}
+
+.dark .error-message {
+  @apply text-gray-400;
+}
+
+/* Error details */
+.error-details {
+  @apply bg-gray-100 p-4 rounded-lg text-sm text-gray-700 font-mono max-h-40 overflow-y-auto;
+}
+
+.dark .error-details {
+  @apply bg-gray-800 text-gray-300;
+}
+
+/* ===================
+ * Responsive Design
+ * =================== */
+
+@media (max-width: 640px) {
+  .error-page-background {
+    @apply p-4;
+  }
+  
+  .error-card-header {
+    @apply py-6;
+  }
+  
+  .error-title {
+    @apply text-2xl;
+  }
+}

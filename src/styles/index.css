@@ -35,6 +35,8 @@
 @import './components/lists.css';
 @import './components/control-panel.css';
 @import './components/test-history.css';
+@import './components/error-boundary.css';
+@import './components/chapter-test-selector.css';
 @import './components/test-selector.css';
 @import './components/test-selector-advanced.css';
 @import './components/test-card.css';

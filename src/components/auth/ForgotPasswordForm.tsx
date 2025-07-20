@@ -181,7 +181,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
       {/* Submit Button */}
       <Button
         type="submit"
-        className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+        className="auth-button-secondary"
         disabled={isResettingPassword}
       >
         {isResettingPassword ? (

@@ -75,7 +75,7 @@
 .card-section {
   background: var(--glass-light);
   backdrop-filter: blur(var(--backdrop-blur-sm));
-  @apply rounded-xl p-4 border border-white/20;
+  @apply rounded-xl p-3 border border-white/20;
 }
 
 :root.dark .card-section {

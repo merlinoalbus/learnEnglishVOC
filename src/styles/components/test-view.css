@@ -176,7 +176,7 @@
 
 /* Test summary */
 .test-view-summary {
-  @apply p-6 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200/30;
+  @apply p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200/30;
 }
 
 :root.dark .test-view-summary {

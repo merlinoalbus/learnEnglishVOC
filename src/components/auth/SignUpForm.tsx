@@ -177,7 +177,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <div className="mx-auto w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
+        <div className="auth-icon-container">
           <UserPlus className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-gray-800 mb-2">
@@ -435,7 +435,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
       {/* Submit Button */}
       <Button
         type="submit"
-        className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+        className="auth-button-primary"
         disabled={currentLoading}
       >
         {currentLoading ? (

@@ -193,7 +193,7 @@ const ChapterTestSelector: React.FC<ChapterTestSelectorProps> = ({ words, onStar
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl">
-        <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-2xl">
+        <CardHeader className="chapter-test-header">
           <CardTitle className="text-2xl font-bold flex items-center gap-3">
             <Target className="w-8 h-8" />
             Seleziona Capitoli per il Test
@@ -364,7 +364,7 @@ const ChapterTestSelector: React.FC<ChapterTestSelectorProps> = ({ words, onStar
           </div>
 
           {/* Riepilogo */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+          <div className="chapter-test-summary">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Parole selezionate per il test</p>
@@ -382,7 +382,7 @@ const ChapterTestSelector: React.FC<ChapterTestSelectorProps> = ({ words, onStar
             <Button
               onClick={handleStartTest}
               disabled={selectedChapters.size === 0 || totalSelectedWords === 0}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 text-lg font-semibold rounded-xl transition-all duration-300 transform hover:scale-105"
+              className="chapter-test-start-button"
             >
               <Play className="w-5 h-5 mr-2" />
               Inizia Test ({totalSelectedWords} parole)
