@@ -313,7 +313,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
               <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                 <Target className="w-6 h-6" />
               </div>
-              <span className="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              <span className="header-title-gradient">
                 Configurazione Test
               </span>
               <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />
@@ -340,12 +340,12 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                 <div className="test-selector-section h-full flex flex-col overflow-hidden">
                   <div className="space-y-6 flex-1 overflow-y-auto pr-3 custom-scrollbar">
                 {/* Modalità Test con design premium */}
-                <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-900/30 dark:to-indigo-900/30 backdrop-blur-sm rounded-xl p-4 border border-blue-200/30 dark:border-blue-700/30">
-                  <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-                    <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg shadow-md">
+                <div className="test-mode-container">
+                  <h3 className="test-mode-header">
+                    <div className="test-mode-icon">
                       <GraduationCap className="w-4 h-4 text-white" />
                     </div>
-                    <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    <span className="test-mode-title">
                       Modalità Test
                     </span>
                   </h3>
@@ -353,10 +353,10 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                   <div className="space-y-3">
                     <button
                       onClick={() => setTestMode('normal')}
-                      className={`group w-full p-4 rounded-xl border-2 transition-all duration-300 text-left transform hover:scale-[1.02] ${
+                      className={`test-mode-button group ${
                         testMode === 'normal'
-                          ? 'border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40 text-blue-700 dark:text-blue-300 shadow-lg shadow-blue-200/50 dark:shadow-blue-900/30'
-                          : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-400 text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 hover:shadow-md'
+                          ? 'test-mode-button-active'
+                          : 'test-mode-button-inactive'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -377,10 +377,10 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                     
                     <button
                       onClick={() => setTestMode('difficult-only')}
-                      className={`group w-full p-4 rounded-xl border-2 transition-all duration-300 text-left transform hover:scale-[1.02] ${
+                      className={`test-mode-button group ${
                         testMode === 'difficult-only'
-                          ? 'border-orange-400 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/40 dark:to-red-900/40 text-orange-700 dark:text-orange-300 shadow-lg shadow-orange-200/50 dark:shadow-orange-900/30'
-                          : 'border-gray-200 dark:border-gray-600 hover:border-orange-300 dark:hover:border-orange-400 text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 hover:shadow-md'
+                          ? 'test-mode-button-active'
+                          : 'test-mode-button-inactive'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -402,13 +402,13 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                 </div>
 
                 {/* Opzioni (sempre visibili ma collassabili) */}
-                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-900/30 dark:to-emerald-900/30 backdrop-blur-sm rounded-xl p-4 border border-green-200/30 dark:border-green-700/30 flex flex-col min-h-0">
+                <div className="test-options-container">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                      <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg shadow-md">
+                    <h3 className="test-options-header">
+                      <div className="test-options-icon">
                         <Settings className="w-4 h-4 text-white" />
                       </div>
-                      <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                      <span className="test-options-title">
                         Opzioni
                       </span>
                     </h3>
@@ -455,7 +455,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                       <div className="border-t border-green-200/30 dark:border-green-700/30 pt-4">
                         <div className="mb-3">
                           <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                            <div className="p-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-md">
+                            <div className="purple-icon">
                               <Sparkles className="w-3 h-3 text-white" />
                             </div>
                             <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -466,7 +466,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
 
                         <div className="space-y-3">
                             {/* Timer con design elegante */}
-                            <div className="p-3 bg-gradient-to-r from-blue-100/80 to-cyan-100/80 dark:from-blue-900/40 dark:to-cyan-900/40 rounded-lg border border-blue-200/50 dark:border-blue-700/50 shadow-inner">
+                            <div className="timer-config-container">
                               <button
                                 onClick={() => setEnableTimer(!enableTimer)}
                                 className="w-full flex items-center gap-2 text-left group"
@@ -496,7 +496,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                                     step="10"
                                     value={maxTimePerWord}
                                     onChange={(e) => setMaxTimePerWord(parseInt(e.target.value))}
-                                    className="w-full h-1.5 bg-gradient-to-r from-blue-200 to-cyan-200 dark:from-blue-700 dark:to-cyan-700 rounded-lg appearance-none cursor-pointer slider"
+                                    className="timer-slider"
                                   />
                                   <div className="flex justify-between text-xs text-blue-600 dark:text-blue-400 mt-1">
                                     <span>10s</span>
@@ -508,10 +508,10 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                             </div>
 
                             {/* Aiuti con design elegante */}
-                            <div className="p-3 bg-gradient-to-r from-green-100/80 to-emerald-100/80 dark:from-green-900/40 dark:to-emerald-900/40 rounded-lg border border-green-200/50 dark:border-green-700/50 shadow-inner">
+                            <div className="hint-config-container">
                               <div className="space-y-2">
                                 <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
-                                  <div className="p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg shadow-md">
+                                  <div className="config-icon">
                                     <HelpCircle className="w-3 h-3 text-white" />
                                   </div>
                                   <span className="font-medium text-sm">Suggerimenti</span>
@@ -601,13 +601,13 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
 
               {/* Colonna 2-3: Selezione Capitoli con design premium */}
               <div className="col-span-2">
-                <div className="h-full flex flex-col bg-gradient-to-br from-white/70 to-indigo-50/70 dark:from-gray-800/70 dark:to-indigo-900/70 backdrop-blur-sm rounded-2xl p-6 border border-white/30 dark:border-gray-700/30 shadow-lg max-h-full overflow-hidden" id="chapters-section">
+                <div className="chapters-main-container" id="chapters-section">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
-                      <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl shadow-lg">
+                    <h3 className="chapters-header text-lg gap-3">
+                      <div className="chapters-icon">
                         <BookOpen className="w-5 h-5 text-white" />
                       </div>
-                      <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      <span className="chapters-title">
                         Capitoli ({selectedChapters.size} selezionati)
                       </span>
                     </h3>
@@ -616,7 +616,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                         variant="ghost" 
                         size="sm" 
                         onClick={selectAllChapters}
-                        className="h-8 px-4 text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 rounded-lg shadow-md transition-all duration-300 hover:scale-105"
+                        className="select-all-button"
                       >
                         Tutti
                       </Button>
@@ -649,7 +649,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                         >
                           {/* Badge selezionato */}
                           {isSelected && (
-                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
+                            <div className="chapter-badge">
                               <Check className="w-3 h-3 text-white" />
                             </div>
                           )}
@@ -677,7 +677,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                                 {stats.totalWords} tot
                               </span>
                               {stats.difficultWords > 0 && (
-                                <span className="bg-gradient-to-r from-orange-400 to-red-400 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <span className="difficult-badge">
                                   <Star className="w-2 h-2" />
                                   {stats.difficultWords}
                                 </span>
@@ -699,7 +699,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                         }`}
                       >
                         {selectedChapters.has('no-chapter') && (
-                          <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                          <div className="chapter-badge-purple">
                             <Check className="w-3 h-3 text-white" />
                           </div>
                         )}
@@ -727,7 +727,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                               {wordsWithoutChapterStats.totalWords} tot
                             </span>
                             {wordsWithoutChapterStats.difficultWords > 0 && (
-                              <span className="bg-gradient-to-r from-orange-400 to-red-400 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span className="difficult-badge">
                                 <Star className="w-2 h-2" />
                                 {wordsWithoutChapterStats.difficultWords}
                               </span>
@@ -748,7 +748,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                 <div className="flex items-center gap-8 text-sm">
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                      <div className="stats-avatar">
                         <span className="text-white font-bold text-lg">{totalSelectedWords}</span>
                       </div>
                       <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
@@ -762,7 +762,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center shadow-md">
+                    <div className="stats-icon-small">
                       <span className="text-white font-bold">{selectedChapters.size}</span>
                     </div>
                     <div>
@@ -774,9 +774,9 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                   <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
                     <div className="flex items-center gap-2">
                       {testMode === 'difficult-only' ? (
-                        <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-full">⚡ Solo difficili</span>
+                        <span className="mode-badge-difficult">⚡ Solo difficili</span>
                       ) : (
-                        <span className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-2 py-1 rounded-full">📚 Normale</span>
+                        <span className="mode-badge-normal">📚 Normale</span>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
@@ -803,7 +803,7 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
                   <Button
                     onClick={handleStartTest}
                     disabled={selectedChapters.size === 0 || totalSelectedWords === 0}
-                    className="px-8 py-3 text-sm font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg shadow-purple-300/30 dark:shadow-purple-900/30 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed"
+                    className="start-test-button"
                   >
                     <Play className="w-5 h-5 mr-2" />
                     <span>Inizia Test</span>

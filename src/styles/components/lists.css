@@ -475,3 +475,66 @@
     transform: translateX(0);
   }
 }
+
+/* ===================
+ * WordsList Specific Components
+ * =================== */
+
+/* Title gradient text */
+.words-list-title {
+  @apply text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+}
+
+/* Header title with stats */
+.words-list-header-title {
+  @apply bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent font-bold;
+}
+
+.dark .words-list-header-title {
+  @apply from-indigo-400 to-purple-400;
+}
+
+/* Empty state title */
+.words-list-empty-title {
+  @apply text-2xl font-bold text-gray-700;
+}
+
+.dark .words-list-empty-title {
+  @apply text-transparent bg-gradient-to-r from-gray-200 to-gray-400 bg-clip-text;
+}
+
+/* Add word button */
+.words-list-add-button {
+  @apply bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-8 py-4 text-lg rounded-2xl shadow-xl;
+}
+
+.dark .words-list-add-button {
+  @apply bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600;
+}
+
+/* Filter card container */
+.words-list-filter-card {
+  @apply bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200;
+}
+
+.dark .words-list-filter-card {
+  @apply bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-700;
+}
+
+/* Chapter section styling */
+.words-list-chapter-section {
+  @apply flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-2xl border border-indigo-200;
+}
+
+.dark .words-list-chapter-section {
+  @apply bg-gradient-to-r from-indigo-900/20 to-purple-900/20 border-indigo-700;
+}
+
+/* Chapter title */
+.words-list-chapter-title {
+  @apply font-bold text-indigo-800 text-lg;
+}
+
+.dark .words-list-chapter-title {
+  @apply text-transparent bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text;
+}

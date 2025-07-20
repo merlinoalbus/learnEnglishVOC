@@ -196,8 +196,8 @@ const TestResults: React.FC<TestResultsProps> = ({ stats, wrongWords, onStartNew
     <div className="stack-lg">
       <Card className="test-results-card relative overflow-hidden">
         {/* Background animato */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 opacity-50"></div>
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+        <div className="test-results-bg-overlay"></div>
+        <div className="test-results-header-stripe"></div>
         
         <CardHeader className="test-results-header relative py-12">
           <div className="text-8xl mb-6 animate-bounce">
@@ -246,33 +246,33 @@ const TestResults: React.FC<TestResultsProps> = ({ stats, wrongWords, onStartNew
         <CardContent className="relative pb-12">
           {/* ⭐ ENHANCED: Statistiche complete con timing dettagliato */}
           <div className="test-results-stats grid-cols-2 md:grid-cols-5 max-w-6xl mx-auto mb-8">
-            <div className="bg-gradient-to-br from-green-500 to-emerald-500 p-6 rounded-2xl text-white text-center shadow-xl interactive-scale">
+            <div className="test-results-stat-correct">
               <div className="test-results-stat-value text-white">{finalStats.correct}</div>
               <div className="text-green-100">Corrette</div>
               <Check className="w-8 h-8 mx-auto mt-2 opacity-80" />
             </div>
-            <div className="bg-gradient-to-br from-red-500 to-pink-500 p-6 rounded-2xl text-white text-center shadow-xl interactive-scale">
+            <div className="test-results-stat-wrong">
               <div className="test-results-stat-value text-white">{finalStats.incorrect}</div>
               <div className="text-red-100">Sbagliate</div>
               <X className="w-8 h-8 mx-auto mt-2 opacity-80" />
             </div>
             
             {/* ⭐ ENHANCED: Hints card con percentuale */}
-            <div className="bg-gradient-to-br from-orange-500 to-yellow-500 p-6 rounded-2xl text-white text-center shadow-xl interactive-scale">
+            <div className="test-results-stat-hints">
               <div className="test-results-stat-value text-white">{finalStats.hints}</div>
               <div className="text-orange-100">Aiuti</div>
               <Lightbulb className="w-8 h-8 mx-auto mt-2 opacity-80" />
             </div>
             
             {/* ⭐ ENHANCED: Time card con dettagli */}
-            <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-6 rounded-2xl text-white text-center shadow-xl interactive-scale">
+            <div className="test-results-stat-time">
               <div className="test-results-stat-value text-white">{performanceMetrics.totalTime}</div>
               <div className="text-blue-100">Tempo Totale</div>
               <Clock className="w-8 h-8 mx-auto mt-2 opacity-80" />
             </div>
 
             {/* ⭐ ENHANCED: Efficiency card */}
-            <div className="bg-gradient-to-br from-purple-500 to-indigo-500 p-6 rounded-2xl text-white text-center shadow-xl interactive-scale">
+            <div className="test-results-stat-score">
               <div className="test-results-stat-value text-white">{Math.round(performanceMetrics.efficiency)}%</div>
               <div className="text-purple-100">Efficienza</div>
               <Zap className="w-8 h-8 mx-auto mt-2 opacity-80" />
@@ -282,7 +282,7 @@ const TestResults: React.FC<TestResultsProps> = ({ stats, wrongWords, onStartNew
           {/* ⭐ ENHANCED: Detailed Timing Analysis */}
           {(finalStats.avgTimePerWord > 0 || finalStats.hints > 0) && (
             <Card className="test-results-analysis rounded-3xl overflow-hidden mb-8">
-              <CardHeader className="test-results-analysis-title bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+              <CardHeader className="test-results-analysis-title">
                 <CardTitle className="flex items-center gap-3 text-white">
                   <Target className="w-6 h-6" />
                   Analisi Dettagliata Performance
@@ -403,8 +403,8 @@ const TestResults: React.FC<TestResultsProps> = ({ stats, wrongWords, onStartNew
           {/* ⭐ ENHANCED: Parole Sbagliate con info hints e timing */}
           {wrongWords && wrongWords.length > 0 && (
             <div className="test-results-wrong-words">
-              <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 rounded-3xl overflow-hidden shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
+              <Card className="test-results-tips-card">
+                <CardHeader className="test-results-tips-header">
                   <CardTitle className="test-results-wrong-words-title text-white">
                     <Trophy className="w-6 h-6" />
                     Parole da Ripassare ({wrongWords.length})

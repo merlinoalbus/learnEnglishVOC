@@ -48,6 +48,72 @@
   @apply text-gray-400;
 }
 
+/* ===================
+ * Background and Overlay Elements
+ * =================== */
+
+/* Background overlay */
+.test-results-bg-overlay {
+  @apply absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 opacity-50;
+}
+
+/* Header stripe */
+.test-results-header-stripe {
+  @apply absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500;
+}
+
+/* ===================
+ * Statistics Cards
+ * =================== */
+
+/* Correct answers card */
+.test-results-stat-correct {
+  @apply bg-gradient-to-br from-green-500 to-emerald-500 p-6 rounded-2xl text-white text-center shadow-xl transition-transform hover:scale-105;
+}
+
+/* Wrong answers card */
+.test-results-stat-wrong {
+  @apply bg-gradient-to-br from-red-500 to-pink-500 p-6 rounded-2xl text-white text-center shadow-xl transition-transform hover:scale-105;
+}
+
+/* Hints used card */
+.test-results-stat-hints {
+  @apply bg-gradient-to-br from-orange-500 to-yellow-500 p-6 rounded-2xl text-white text-center shadow-xl transition-transform hover:scale-105;
+}
+
+/* Average time card */
+.test-results-stat-time {
+  @apply bg-gradient-to-br from-blue-500 to-cyan-500 p-6 rounded-2xl text-white text-center shadow-xl transition-transform hover:scale-105;
+}
+
+/* Score card */
+.test-results-stat-score {
+  @apply bg-gradient-to-br from-purple-500 to-indigo-500 p-6 rounded-2xl text-white text-center shadow-xl transition-transform hover:scale-105;
+}
+
+/* ===================
+ * Analysis Section
+ * =================== */
+
+/* Analysis header */
+.test-results-analysis-title {
+  @apply bg-gradient-to-r from-indigo-500 to-purple-500 text-white;
+}
+
+/* ===================
+ * Improvement Tips Section
+ * =================== */
+
+/* Tips card container */
+.test-results-tips-card {
+  @apply bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 rounded-3xl overflow-hidden shadow-xl;
+}
+
+/* Tips header */
+.test-results-tips-header {
+  @apply bg-gradient-to-r from-orange-500 to-red-500 text-white;
+}
+
 /* Score display */
 .test-results-score {
   @apply text-center mb-8;

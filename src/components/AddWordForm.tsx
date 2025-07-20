@@ -576,7 +576,7 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
   return (
     <FormErrorBoundary formName="AddWord" onFormError={(error) => showError(error instanceof Error ? error : new Error(String(error)), 'Word Form')}>
       <Card className="backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-0 shadow-xl rounded-3xl overflow-hidden">
-        <CardHeader className={editingWord ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white" : ""}>
+        <CardHeader className={editingWord ? "add-word-form-header-editing" : "add-word-form-header-default"}>
           <CardTitle className={`flex items-center justify-between ${editingWord ? "text-white" : "text-gray-900 dark:text-gray-100"}`}>
             {editingWord ? (
               <div className="flex items-center gap-3">
@@ -586,7 +586,7 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
             ) : (
               <div className="flex items-center gap-3">
                 <Plus className="w-6 h-6 text-green-600 dark:text-green-400" />
-                <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                <span className="add-word-form-title-ai">
                   Aggiungi Nuove Parole
                 </span>
               </div>
@@ -688,7 +688,7 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
                 <Button
                   onClick={handleAiAssist}
                   disabled={!formData.english.trim() || !aiServiceStatus?.configured || aiLoading.isLoading}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-4 text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="add-word-ai-special-button"
                   title="💰 Questa operazione costa denaro (chiamata API Google)"
                 >
                   <Sparkles className="w-6 h-6 mr-3" />
@@ -699,8 +699,8 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
 
             {/* Advanced Form */}
             {showAdvancedForm && (
-              <div className="space-y-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 rounded-2xl border-2 border-blue-200 dark:border-blue-700">
-                <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 border-2 border-green-200 dark:border-green-700 rounded-2xl">
+              <div className="add-word-advanced-section">
+                <div className="add-word-info-box">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-2xl">📚</span>
                     <h4 className="font-bold text-green-800 dark:text-green-200">Gestione Avanzata</h4>
