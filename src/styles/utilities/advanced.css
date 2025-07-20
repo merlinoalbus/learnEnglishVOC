@@ -1,0 +1,469 @@
+/* =====================================================
+ * 📁 Advanced Utilities - Complex Component Patterns
+ * ===================================================== */
+
+/* ===================
+ * Advanced Layout Patterns
+ * =================== */
+
+/* Glass morphism container */
+.glass-container {
+  background: var(--glass-strong);
+  backdrop-filter: blur(var(--backdrop-blur-lg));
+  @apply rounded-2xl border border-white/20 shadow-xl;
+}
+
+.dark .glass-container {
+  @apply border-gray-700/50;
+}
+
+/* Hero section layout */
+.hero-section {
+  @apply relative overflow-hidden;
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.1) 0%,
+    rgba(139, 92, 246, 0.1) 25%,
+    rgba(236, 72, 153, 0.1) 50%,
+    rgba(59, 130, 246, 0.1) 75%,
+    rgba(16, 185, 129, 0.1) 100%
+  );
+}
+
+.dark .hero-section {
+  background: linear-gradient(
+    135deg,
+    rgba(17, 24, 39, 0.95) 0%,
+    rgba(30, 41, 59, 0.9) 25%,
+    rgba(51, 65, 85, 0.9) 50%,
+    rgba(71, 85, 105, 0.9) 75%,
+    rgba(17, 24, 39, 0.95) 100%
+  );
+}
+
+/* Dashboard grid layout */
+.dashboard-grid {
+  @apply grid gap-6;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.dashboard-card {
+  @apply glass-container p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105;
+}
+
+/* ===================
+ * Advanced Typography
+ * =================== */
+
+/* Display text with gradient */
+.text-display-gradient {
+  @apply text-4xl md:text-6xl font-bold leading-tight;
+  background: var(--gradient-primary);
+  @apply bg-clip-text text-transparent;
+  text-shadow: none;
+}
+
+/* Subtitle with enhanced styling */
+.text-subtitle-enhanced {
+  @apply text-xl md:text-2xl text-gray-600;
+  text-shadow: var(--text-shadow-base);
+}
+
+.dark .text-subtitle-enhanced {
+  @apply text-gray-300;
+}
+
+/* Caption text */
+.text-caption {
+  @apply text-sm text-gray-500 uppercase tracking-wider font-medium;
+}
+
+.dark .text-caption {
+  @apply text-gray-400;
+}
+
+/* ===================
+ * Advanced Buttons
+ * =================== */
+
+/* Floating action button */
+.btn-floating {
+  @apply fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white z-50 transition-all duration-300 hover:scale-110;
+  background: var(--gradient-primary);
+}
+
+.btn-floating:hover {
+  box-shadow: var(--shadow-2xl);
+}
+
+/* Glass button */
+.btn-glass {
+  @apply px-6 py-3 rounded-xl font-medium transition-all duration-200;
+  background: var(--glass-medium);
+  backdrop-filter: blur(var(--backdrop-blur-sm));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-glass:hover {
+  background: var(--glass-strong);
+  @apply transform -translate-y-px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Gradient border button */
+.btn-gradient-border {
+  @apply relative px-6 py-3 rounded-xl font-medium transition-all duration-200 overflow-hidden;
+  background: transparent;
+}
+
+.btn-gradient-border::before {
+  content: '';
+  @apply absolute inset-0 rounded-xl p-0.5;
+  background: var(--gradient-primary);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+}
+
+.btn-gradient-border:hover {
+  @apply transform -translate-y-px;
+}
+
+/* ===================
+ * Form Enhancements
+ * =================== */
+
+/* Enhanced input group */
+.input-group-enhanced {
+  @apply relative;
+}
+
+.input-group-enhanced input {
+  @apply w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:border-blue-500 transition-all duration-200;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.input-group-enhanced input:focus {
+  @apply ring-2 ring-blue-500/20 shadow-lg;
+  background: rgba(255, 255, 255, 1);
+}
+
+.dark .input-group-enhanced input {
+  @apply border-gray-600 bg-gray-700/80 text-white focus:border-purple-500 focus:ring-purple-500/20;
+}
+
+.input-group-enhanced .input-icon {
+  @apply absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400;
+}
+
+/* Floating label input */
+.input-floating-label {
+  @apply relative;
+}
+
+.input-floating-label input {
+  @apply w-full px-4 pt-6 pb-2 rounded-xl border border-gray-300 focus:border-blue-500 transition-all duration-200 placeholder-transparent;
+}
+
+.input-floating-label label {
+  @apply absolute left-4 top-2 text-xs text-gray-500 transition-all duration-200;
+}
+
+.input-floating-label input:placeholder-shown + label {
+  @apply top-4 text-base text-gray-400;
+}
+
+/* ===================
+ * Status Indicators
+ * =================== */
+
+/* Status dot */
+.status-dot {
+  @apply w-3 h-3 rounded-full;
+}
+
+.status-dot-online {
+  @apply bg-green-500;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+}
+
+.status-dot-offline {
+  @apply bg-gray-400;
+}
+
+.status-dot-busy {
+  @apply bg-red-500;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+}
+
+.status-dot-away {
+  @apply bg-yellow-500;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+}
+
+/* Progress ring */
+.progress-ring {
+  @apply relative w-16 h-16;
+}
+
+.progress-ring svg {
+  @apply w-full h-full transform -rotate-90;
+}
+
+.progress-ring circle {
+  @apply fill-transparent stroke-current;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.progress-ring .progress-ring-background {
+  @apply text-gray-200;
+}
+
+.dark .progress-ring .progress-ring-background {
+  @apply text-gray-700;
+}
+
+.progress-ring .progress-ring-fill {
+  @apply text-blue-500 transition-all duration-500;
+}
+
+/* ===================
+ * Card Variants
+ * =================== */
+
+/* Stat card */
+.stat-card {
+  @apply glass-container p-6 text-center;
+}
+
+.stat-card-value {
+  @apply text-3xl font-bold text-gray-900;
+}
+
+.dark .stat-card-value {
+  @apply text-gray-100;
+}
+
+.stat-card-label {
+  @apply text-sm text-gray-600 mt-2;
+}
+
+.dark .stat-card-label {
+  @apply text-gray-400;
+}
+
+.stat-card-change {
+  @apply text-xs font-medium mt-1 flex items-center justify-center gap-1;
+}
+
+.stat-card-change-positive {
+  @apply text-green-600;
+}
+
+.stat-card-change-negative {
+  @apply text-red-600;
+}
+
+/* Feature card */
+.feature-card {
+  @apply glass-container p-8 text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1;
+}
+
+.feature-card-icon {
+  @apply w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center text-white;
+  background: var(--gradient-primary);
+}
+
+.feature-card-title {
+  @apply text-xl font-bold text-gray-900 mb-3;
+}
+
+.dark .feature-card-title {
+  @apply text-gray-100;
+}
+
+.feature-card-description {
+  @apply text-gray-600;
+}
+
+.dark .feature-card-description {
+  @apply text-gray-400;
+}
+
+/* ===================
+ * Advanced Animations
+ * =================== */
+
+/* Pulse animation */
+.animate-pulse-gentle {
+  animation: pulseGentle 2s ease-in-out infinite;
+}
+
+@keyframes pulseGentle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Floating animation */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Shimmer animation */
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Reveal animation */
+.animate-reveal {
+  animation: reveal 0.6s ease-out;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===================
+ * Utility Combinations
+ * =================== */
+
+/* Loading overlay */
+.loading-overlay {
+  @apply absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-2xl z-10;
+}
+
+.dark .loading-overlay {
+  @apply bg-gray-900/80;
+}
+
+/* Error state */
+.error-state {
+  @apply text-center py-12;
+}
+
+.error-state-icon {
+  @apply w-16 h-16 mx-auto mb-4 text-red-500;
+}
+
+.error-state-title {
+  @apply text-xl font-bold text-gray-900 mb-2;
+}
+
+.dark .error-state-title {
+  @apply text-gray-100;
+}
+
+.error-state-message {
+  @apply text-gray-600 mb-6;
+}
+
+.dark .error-state-message {
+  @apply text-gray-400;
+}
+
+/* Success state */
+.success-state {
+  @apply text-center py-12;
+}
+
+.success-state-icon {
+  @apply w-16 h-16 mx-auto mb-4 text-green-500;
+}
+
+.success-state-title {
+  @apply text-xl font-bold text-gray-900 mb-2;
+}
+
+.dark .success-state-title {
+  @apply text-gray-100;
+}
+
+.success-state-message {
+  @apply text-gray-600 mb-6;
+}
+
+.dark .success-state-message {
+  @apply text-gray-400;
+}
+
+/* ===================
+ * Responsive Utilities
+ * =================== */
+
+/* Mobile-first containers */
+.container-mobile {
+  @apply px-4;
+}
+
+.container-tablet {
+  @apply md:px-6;
+}
+
+.container-desktop {
+  @apply lg:px-8;
+}
+
+/* Responsive text sizing */
+.text-responsive-xs {
+  @apply text-xs sm:text-sm;
+}
+
+.text-responsive-sm {
+  @apply text-sm sm:text-base;
+}
+
+.text-responsive-base {
+  @apply text-base sm:text-lg;
+}
+
+.text-responsive-lg {
+  @apply text-lg sm:text-xl;
+}
+
+.text-responsive-xl {
+  @apply text-xl sm:text-2xl;
+}
+
+/* ===================
+ * Performance Optimizations
+ * =================== */
+
+/* Hardware acceleration */
+.hw-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Smooth scrolling */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Optimized transforms */
+.transform-gpu {
+  transform: translate3d(0, 0, 0);
+}

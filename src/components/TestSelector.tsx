@@ -303,49 +303,11 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
   }, []);
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-          }
-          
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(229, 231, 235, 0.5);
-            border-radius: 10px;
-            margin: 4px 0;
-          }
-          
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #60a5fa 0%, #818cf8 100%);
-            border-radius: 10px;
-            box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.1);
-          }
-          
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #3b82f6 0%, #6366f1 100%);
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-          }
-          
-          .dark .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(55, 65, 81, 0.5);
-          }
-          
-          .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #3b82f6 0%, #6366f1 100%);
-          }
-          
-          .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #60a5fa 0%, #818cf8 100%);
-          }
-        `
-      }} />
-    <div className="fixed inset-0 bg-gradient-to-br from-black/60 via-purple-900/30 to-blue-900/40 dark:from-black/80 dark:via-purple-950/50 dark:to-blue-950/60 flex items-center justify-center p-4 z-50 backdrop-blur-lg animate-fade-in">
-      <Card className="w-full max-w-7xl h-[90vh] overflow-hidden bg-gradient-to-br from-white/95 via-blue-50/90 to-purple-50/95 dark:from-gray-900/95 dark:via-blue-950/90 dark:to-purple-950/95 backdrop-blur-xl border-2 border-white/20 dark:border-gray-700/30 rounded-3xl shadow-2xl animate-slide-up">
+    <div className="test-selector-overlay">
+      <Card className="test-selector-card">
         {/* Header con gradiente avanzato */}
-        <CardHeader className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-700 dark:via-purple-700 dark:to-pink-700 text-white rounded-t-3xl p-6 relative overflow-hidden">
+        <CardHeader className="test-selector-header">
           {/* Effetto sparkle */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
           <div className="relative flex items-center justify-between">
             <CardTitle className="text-2xl font-bold flex items-center gap-3 drop-shadow-lg">
               <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
@@ -367,20 +329,16 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
           </div>
         </CardHeader>
         
-        <div className="h-[calc(90vh-100px)] max-h-[calc(90vh-100px)] flex flex-col overflow-hidden">
+        <div className="test-selector-content h-[calc(90vh-100px)] max-h-[calc(90vh-100px)] flex flex-col overflow-hidden">
           <CardContent className="p-6 h-full flex flex-col">
             {/* Layout principale con gradients */}
-            <div className="flex-1 grid grid-cols-3 gap-8 h-full max-h-full overflow-hidden">
+            <div className="test-selector-grid flex-1 h-full max-h-full overflow-hidden">
               
               {/* Colonna 1: Modalità e Opzioni - Design elegante */}
               <div className="flex flex-col h-full overflow-hidden">
                 {/* Container con altezza che corrisponde alla sezione capitoli */}
-                <div className="bg-gradient-to-br from-white/70 to-gray-50/70 dark:from-gray-800/70 dark:to-gray-900/70 backdrop-blur-sm rounded-2xl p-5 border border-white/30 dark:border-gray-700/30 shadow-lg h-full flex flex-col overflow-hidden">
-                  <div className="space-y-6 flex-1 overflow-y-auto pr-3 custom-scrollbar"
-                    style={{
-                      scrollbarWidth: 'thin',
-                      scrollbarColor: 'rgb(147 197 253) rgb(243 244 246)'
-                    }}>
+                <div className="test-selector-section h-full flex flex-col overflow-hidden">
+                  <div className="space-y-6 flex-1 overflow-y-auto pr-3 custom-scrollbar">
                 {/* Modalità Test con design premium */}
                 <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-900/30 dark:to-indigo-900/30 backdrop-blur-sm rounded-xl p-4 border border-blue-200/30 dark:border-blue-700/30">
                   <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
@@ -858,7 +816,6 @@ const TestSelector: React.FC<TestSelectorProps> = ({ words, onStartTest, onClose
         </div>
       </Card>
     </div>
-    </>
   );
 };
 

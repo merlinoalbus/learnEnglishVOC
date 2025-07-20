@@ -52,14 +52,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       {/* Header e Navigation sempre se autenticato */}
       {effectiveIsAuthenticated && (
         <>
-          <div className="relative z-10 pb-8">
-            <div className="max-w-7xl mx-auto px-4 pt-8" style={{ maxWidth: '1400px' }}>
+          <div className="app-header-section">
+            <div className="app-container-header">
               <AppHeader />
             </div>
           </div>
 
-          <div className="relative z-10 pb-8">
-            <div className="max-w-7xl mx-auto px-4" style={{ maxWidth: '1400px' }}>
+          <div className="app-navigation-section">
+            <div className="app-container">
               <AppNavigation />
             </div>
           </div>
@@ -67,12 +67,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       )}
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col min-h-screen">
+      <div className="app-main-section">
         <div
-          className={`flex-1 max-w-7xl mx-auto px-4 w-full ${
-            effectiveIsAuthenticated && !testMode && !showResults ? "pt-4" : "pt-8"
+          className={`app-content-container ${
+            effectiveIsAuthenticated && !testMode && !showResults ? "app-content-authenticated" : "app-content-default"
           }`}
-          style={{ maxWidth: '1400px' }}
         >
           <main>{children}</main>
         </div>

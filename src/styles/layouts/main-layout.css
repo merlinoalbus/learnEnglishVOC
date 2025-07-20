@@ -16,6 +16,61 @@
   width: 100%;
 }
 
+/* ===================
+ * App Container Sizing
+ * =================== */
+
+/* Standard app container width */
+.app-container {
+  @apply max-w-7xl mx-auto px-4;
+  max-width: 1400px;
+}
+
+/* App container with top padding for headers */
+.app-container-header {
+  @apply max-w-7xl mx-auto px-4 pt-8;
+  max-width: 1400px;
+}
+
+/* Main content container */
+.app-content-container {
+  @apply flex-1 max-w-7xl mx-auto px-4 w-full;
+  max-width: 1400px;
+}
+
+/* ===================
+ * Layout Sections
+ * =================== */
+
+/* Header section */
+.app-header-section {
+  @apply relative z-10 pb-8;
+}
+
+/* Navigation section */
+.app-navigation-section {
+  @apply relative z-10 pb-8;
+}
+
+/* Main content section */
+.app-main-section {
+  @apply relative z-10 flex flex-col min-h-screen;
+}
+
+/* ===================
+ * Dynamic Content Spacing
+ * =================== */
+
+/* Content with authentication padding */
+.app-content-authenticated {
+  @apply pt-4;
+}
+
+/* Content with default padding */
+.app-content-default {
+  @apply pt-8;
+}
+
 .section-indicator {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);

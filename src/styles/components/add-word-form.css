@@ -1,0 +1,392 @@
+/* =====================================================
+ * 📁 AddWordForm Component - Optimized Styles
+ * ===================================================== */
+
+/* ===================
+ * Base Form Components
+ * =================== */
+
+/* Main form container */
+.add-word-form-container {
+  @apply backdrop-blur-sm bg-white/90 border-0 shadow-xl rounded-3xl overflow-hidden;
+}
+
+.dark .add-word-form-container {
+  @apply bg-gray-800/90;
+}
+
+/* Form headers */
+.add-word-form-header-default {
+  @apply text-gray-900;
+}
+
+.dark .add-word-form-header-default {
+  @apply text-gray-100;
+}
+
+.add-word-form-header-editing {
+  background: var(--gradient-primary);
+  @apply text-white;
+}
+
+/* ===================
+ * Input Field Components
+ * =================== */
+
+/* Base input field styling */
+.add-word-input-base {
+  @apply border-2 rounded-xl h-12 transition-colors px-4;
+}
+
+/* Normal input state */
+.add-word-input-normal {
+  @apply border-gray-200 focus:border-blue-500;
+}
+
+.dark .add-word-input-normal {
+  @apply border-gray-600 focus:border-purple-500;
+}
+
+/* Error input state */
+.add-word-input-error {
+  @apply border-red-300 bg-red-50 focus:border-red-400;
+}
+
+.dark .add-word-input-error {
+  @apply border-red-700 bg-red-900/30 focus:border-red-500;
+}
+
+/* Textarea styling */
+.add-word-textarea-base {
+  @apply border-2 rounded-xl transition-colors p-4 min-h-[100px] resize-y;
+}
+
+.add-word-textarea-normal {
+  @apply border-gray-200 focus:border-blue-500;
+}
+
+.dark .add-word-textarea-normal {
+  @apply border-gray-600 focus:border-purple-500;
+}
+
+.add-word-textarea-error {
+  @apply border-red-300 bg-red-50 focus:border-red-400;
+}
+
+.dark .add-word-textarea-error {
+  @apply border-red-700 bg-red-900/30 focus:border-red-500;
+}
+
+/* ===================
+ * Button Components
+ * =================== */
+
+/* Base button styling */
+.add-word-button-base {
+  @apply w-full py-4 text-lg rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-white;
+}
+
+/* AI Assistant button */
+.add-word-button-ai {
+  background: var(--gradient-secondary);
+  @apply w-full py-4 text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-white;
+}
+
+.add-word-button-ai:hover {
+  background: linear-gradient(to right, #9333ea, #db2777);
+}
+
+/* Submit button - Add mode */
+.add-word-button-submit-add {
+  background: var(--gradient-success);
+}
+
+.add-word-button-submit-add:hover {
+  background: linear-gradient(to right, #059669, #047857);
+}
+
+/* Submit button - Edit mode */
+.add-word-button-submit-edit {
+  background: var(--gradient-primary);
+}
+
+.add-word-button-submit-edit:hover {
+  background: linear-gradient(to right, #2563eb, #7c3aed);
+}
+
+/* Add item button (dashed border) */
+.add-word-button-add-item {
+  @apply w-full border-dashed border-2 border-gray-300 text-gray-600 py-3 rounded-xl transition-all duration-200 hover:border-gray-400 hover:text-gray-800 hover:bg-gray-50;
+}
+
+.dark .add-word-button-add-item {
+  @apply border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300 hover:bg-gray-700;
+}
+
+/* Remove item button */
+.add-word-button-remove {
+  @apply text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-lg transition-all duration-200;
+}
+
+.dark .add-word-button-remove {
+  @apply hover:bg-red-900/30 hover:text-red-400;
+}
+
+/* ===================
+ * Custom Checkbox Components
+ * =================== */
+
+/* Base checkbox styling */
+.add-word-checkbox-base {
+  @apply w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer;
+}
+
+/* Learned checkbox states */
+.add-word-checkbox-learned-unchecked {
+  @apply border-gray-300 bg-white;
+}
+
+.dark .add-word-checkbox-learned-unchecked {
+  @apply border-gray-600 bg-gray-800;
+}
+
+.add-word-checkbox-learned-checked {
+  @apply bg-green-500 border-green-500 text-white;
+}
+
+/* Difficult checkbox states */
+.add-word-checkbox-difficult-unchecked {
+  @apply border-orange-300 bg-white;
+}
+
+.dark .add-word-checkbox-difficult-unchecked {
+  @apply border-orange-600 bg-gray-800;
+}
+
+.add-word-checkbox-difficult-checked {
+  @apply bg-orange-500 border-orange-500 text-white;
+}
+
+/* ===================
+ * Layout Sections
+ * =================== */
+
+/* Advanced form container */
+.add-word-advanced-section {
+  @apply space-y-6 p-6 rounded-2xl border-2;
+  background: linear-gradient(to right, rgba(239, 246, 255, 0.8), rgba(243, 232, 255, 0.8));
+  border-color: rgba(147, 197, 253, 0.5);
+}
+
+.dark .add-word-advanced-section {
+  background: linear-gradient(to right, rgba(30, 58, 138, 0.3), rgba(88, 28, 135, 0.3));
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Info box */
+.add-word-info-box {
+  @apply p-4 rounded-2xl border-2;
+  background: linear-gradient(to right, rgba(240, 253, 244, 0.8), rgba(239, 246, 255, 0.8));
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.dark .add-word-info-box {
+  background: linear-gradient(to right, rgba(20, 83, 45, 0.3), rgba(30, 58, 138, 0.3));
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+/* Status containers */
+.add-word-status-learned {
+  @apply flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl bg-gray-50;
+}
+
+.dark .add-word-status-learned {
+  @apply border-gray-600 bg-gray-800;
+}
+
+.add-word-status-difficult {
+  @apply flex items-center gap-3 p-3 border-2 border-orange-200 rounded-xl bg-orange-50;
+}
+
+.dark .add-word-status-difficult {
+  @apply border-orange-700 bg-orange-900/30;
+}
+
+/* ===================
+ * Dynamic List Items
+ * =================== */
+
+/* List item container */
+.add-word-list-item {
+  @apply flex items-center gap-3 p-3 bg-gray-50 rounded-xl;
+}
+
+.dark .add-word-list-item {
+  @apply bg-gray-700;
+}
+
+/* List item input */
+.add-word-list-input {
+  @apply flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none transition-colors;
+}
+
+.dark .add-word-list-input {
+  @apply border-gray-600 bg-gray-800 focus:border-purple-500;
+}
+
+/* ===================
+ * Validation & Error States
+ * =================== */
+
+/* Validation error message */
+.add-word-validation-error {
+  @apply text-red-600 text-xs flex items-center gap-1 animate-fade-in mt-1;
+}
+
+.dark .add-word-validation-error {
+  @apply text-red-400;
+}
+
+/* Required field indicator */
+.add-word-required-indicator {
+  @apply text-red-500 ml-1;
+}
+
+/* ===================
+ * AI Assistant Styling
+ * =================== */
+
+/* AI status indicators */
+.add-word-ai-status-healthy {
+  @apply text-green-600;
+}
+
+.dark .add-word-ai-status-healthy {
+  @apply text-green-400;
+}
+
+.add-word-ai-status-degraded {
+  @apply text-orange-600;
+}
+
+.dark .add-word-ai-status-degraded {
+  @apply text-orange-400;
+}
+
+.add-word-ai-status-down {
+  @apply text-red-600;
+}
+
+.dark .add-word-ai-status-down {
+  @apply text-red-400;
+}
+
+.add-word-ai-status-unknown {
+  @apply text-gray-600;
+}
+
+.dark .add-word-ai-status-unknown {
+  @apply text-gray-400;
+}
+
+/* AI loading container */
+.add-word-ai-loading {
+  @apply p-4 rounded-xl border;
+  background: rgba(243, 232, 255, 0.5);
+  border-color: rgba(147, 51, 234, 0.3);
+}
+
+.dark .add-word-ai-loading {
+  background: rgba(88, 28, 135, 0.3);
+  border-color: rgba(147, 51, 234, 0.5);
+}
+
+/* ===================
+ * Form Sections
+ * =================== */
+
+/* Section headers */
+.add-word-section-header {
+  @apply text-lg font-bold text-gray-800 mb-4 flex items-center gap-2;
+}
+
+.dark .add-word-section-header {
+  @apply text-gray-200;
+}
+
+/* Form grid layout */
+.add-word-form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+/* Single column layout */
+.add-word-form-column {
+  @apply space-y-6;
+}
+
+/* ===================
+ * Responsive Design
+ * =================== */
+
+@media (max-width: 768px) {
+  .add-word-form-container {
+    @apply rounded-2xl;
+  }
+  
+  .add-word-form-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .add-word-advanced-section {
+    @apply p-4;
+  }
+  
+  .add-word-button-base {
+    @apply py-3 text-base;
+  }
+}
+
+/* ===================
+ * Animation Enhancements
+ * =================== */
+
+/* Form entrance animation */
+.add-word-form-container {
+  @apply animate-fade-in;
+}
+
+/* Button hover effects */
+.add-word-button-base:hover {
+  @apply shadow-2xl;
+}
+
+/* Input focus effects */
+.add-word-input-base:focus,
+.add-word-textarea-base:focus {
+  @apply outline-none ring-2 ring-opacity-50;
+}
+
+.add-word-input-normal:focus,
+.add-word-textarea-normal:focus {
+  @apply ring-blue-500;
+}
+
+.dark .add-word-input-normal:focus,
+.dark .add-word-textarea-normal:focus {
+  @apply ring-purple-500;
+}
+
+.add-word-input-error:focus,
+.add-word-textarea-error:focus {
+  @apply ring-red-500;
+}
+
+/* List item animations */
+.add-word-list-item {
+  @apply animate-slide-in;
+}
+
+/* Checkbox hover effects */
+.add-word-checkbox-base:hover {
+  @apply transform scale-105;
+}

@@ -2,6 +2,145 @@
  * 📁 src/styles/layouts/navigation.css - NAVIGATION STYLES
  * ===================================================== */
 
+/* ===================
+ * Modern Navigation Components
+ * =================== */
+
+/* Base navigation button styling */
+.nav-button-base {
+  @apply flex items-center justify-center gap-2 h-12 px-4 rounded-2xl text-base font-semibold transition-all duration-300 relative;
+}
+
+/* Navigation button normal state */
+.nav-button-normal {
+  @apply bg-gray-100 hover:bg-gray-200 text-gray-700;
+}
+
+.dark .nav-button-normal {
+  @apply bg-gray-700 hover:bg-gray-600 text-gray-300;
+}
+
+/* Navigation button active state */
+.nav-button-active {
+  @apply text-white shadow-lg transform scale-105;
+}
+
+/* User menu button */
+.nav-user-button {
+  @apply flex items-center justify-center gap-2 h-12 px-4 rounded-2xl transition-all duration-300 border-0;
+  background: linear-gradient(to right, rgb(243, 244, 246), rgb(229, 231, 235));
+}
+
+.nav-user-button:hover {
+  background: linear-gradient(to right, rgb(229, 231, 235), rgb(209, 213, 219));
+}
+
+.dark .nav-user-button {
+  background: linear-gradient(to right, rgb(55, 65, 81), rgb(75, 85, 99));
+}
+
+.dark .nav-user-button:hover {
+  background: linear-gradient(to right, rgb(75, 85, 99), rgb(107, 114, 128));
+}
+
+/* Dropdown menu */
+.nav-dropdown {
+  @apply fixed w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden;
+  z-index: 9999;
+}
+
+.dark .nav-dropdown {
+  @apply bg-gray-800 border-gray-700;
+}
+
+/* ===================
+ * Gradient Color Variants
+ * =================== */
+
+/* Brand gradient (main) */
+.nav-gradient-brand {
+  background: linear-gradient(to right, #2563eb, #7c3aed);
+}
+
+/* Success gradient (green) */
+.nav-gradient-success {
+  background: linear-gradient(to right, #059669, #0d9488);
+}
+
+/* Warning gradient (orange) */
+.nav-gradient-warning {
+  background: linear-gradient(to right, #ea580c, #dc2626);
+}
+
+/* Info gradient (blue) */
+.nav-gradient-info {
+  background: linear-gradient(to right, #0ea5e9, #3b82f6);
+}
+
+/* Purple gradient */
+.nav-gradient-purple {
+  background: linear-gradient(to right, #7c3aed, #a855f7);
+}
+
+/* Pink gradient */
+.nav-gradient-pink {
+  background: linear-gradient(to right, #ec4899, #f43f5e);
+}
+
+/* ===================
+ * Layout Components
+ * =================== */
+
+/* Navigation container */
+.app-navigation-container {
+  @apply relative;
+}
+
+/* Navigation inner content */
+.app-navigation-content {
+  @apply flex items-center justify-between h-16 backdrop-blur-sm;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 0.5rem;
+}
+
+.dark .app-navigation-content {
+  background: rgba(17, 24, 39, 0.9);
+  border-color: rgba(107, 114, 128, 0.3);
+}
+
+/* Navigation items container */
+.app-navigation-items {
+  @apply flex items-center gap-2;
+}
+
+/* ===================
+ * Dropdown Positioning
+ * =================== */
+
+/* Use CSS custom properties for dynamic positioning */
+.nav-dropdown-positioned {
+  top: var(--dropdown-top, 0px);
+  right: var(--dropdown-right, 0px);
+}
+
+/* ===================
+ * Z-Index Management
+ * =================== */
+
+.nav-layer-dropdown {
+  z-index: 9999;
+}
+
+.nav-layer-backdrop {
+  z-index: 9998;
+}
+
+.nav-layer-overlay {
+  z-index: 9997;
+}
+
 .app-nav {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);

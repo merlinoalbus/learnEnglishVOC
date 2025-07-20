@@ -1,0 +1,320 @@
+/* =====================================================
+ * 📁 TestSelector Advanced Styles - Scrollbar & Modals
+ * ===================================================== */
+
+/* ===================
+ * Custom Scrollbar Styling
+ * =================== */
+
+/* Base scrollbar styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(229, 231, 235, 0.5);
+  border-radius: 10px;
+  margin: 4px 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #60a5fa 0%, #818cf8 100%);
+  border-radius: 10px;
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #3b82f6 0%, #6366f1 100%);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode scrollbar variants */
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(55, 65, 81, 0.5);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3b82f6 0%, #6366f1 100%);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #60a5fa 0%, #818cf8 100%);
+}
+
+/* ===================
+ * Modal & Overlay Styles
+ * =================== */
+
+/* Modal overlay with enhanced backdrop */
+.test-selector-overlay {
+  @apply fixed inset-0 flex items-center justify-center p-4 z-50 backdrop-blur-lg animate-fade-in;
+  background: linear-gradient(
+    to bottom right,
+    rgba(0, 0, 0, 0.6),
+    rgba(88, 28, 135, 0.3),
+    rgba(30, 58, 138, 0.4)
+  );
+}
+
+.dark .test-selector-overlay {
+  background: linear-gradient(
+    to bottom right,
+    rgba(0, 0, 0, 0.8),
+    rgba(88, 28, 135, 0.5),
+    rgba(30, 58, 138, 0.6)
+  );
+}
+
+/* Main modal card */
+.test-selector-card {
+  @apply w-full max-w-7xl h-[90vh] overflow-hidden rounded-3xl shadow-2xl;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0.95),
+    rgba(239, 246, 255, 0.9),
+    rgba(243, 232, 255, 0.95)
+  );
+  backdrop-filter: blur(40px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .test-selector-card {
+  background: linear-gradient(
+    to bottom right,
+    rgba(17, 24, 39, 0.95),
+    rgba(30, 58, 138, 0.9),
+    rgba(88, 28, 135, 0.95)
+  );
+  border-color: rgba(107, 114, 128, 0.3);
+}
+
+/* ===================
+ * Header Styling
+ * =================== */
+
+/* Header with advanced gradient */
+.test-selector-header {
+  @apply text-white rounded-t-3xl p-6 relative overflow-hidden;
+  background: linear-gradient(
+    to right,
+    #2563eb,
+    #7c3aed,
+    #db2777
+  );
+}
+
+.dark .test-selector-header {
+  background: linear-gradient(
+    to right,
+    #1d4ed8,
+    #6d28d9,
+    #be185d
+  );
+}
+
+/* Sparkle effect overlay */
+.test-selector-header::before {
+  content: '';
+  @apply absolute inset-0 animate-pulse;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+}
+
+/* ===================
+ * Content Area Styling
+ * =================== */
+
+/* Scrollable content area */
+.test-selector-content {
+  @apply flex-1 overflow-y-auto p-6;
+}
+
+/* Grid layout for content sections */
+.test-selector-grid {
+  @apply grid gap-6;
+  grid-template-columns: 1fr 2fr 1fr;
+}
+
+@media (max-width: 1024px) {
+  .test-selector-grid {
+    @apply grid-cols-1 gap-4;
+  }
+}
+
+/* ===================
+ * Section Cards
+ * =================== */
+
+/* Individual section styling */
+.test-selector-section {
+  background: var(--glass-medium);
+  backdrop-filter: blur(var(--backdrop-blur-sm));
+  @apply rounded-2xl p-6 border border-white/30 shadow-lg;
+}
+
+.dark .test-selector-section {
+  @apply bg-gray-800/60 border-gray-600/50;
+}
+
+/* Section headers */
+.test-selector-section-header {
+  @apply text-xl font-bold mb-4 text-gray-800;
+  text-shadow: var(--text-shadow-base);
+}
+
+.dark .test-selector-section-header {
+  @apply text-gray-200;
+}
+
+/* ===================
+ * Interactive Elements
+ * =================== */
+
+/* Checkbox and radio button containers */
+.test-selector-option {
+  @apply flex items-center gap-3 p-3 rounded-xl transition-all duration-200;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.test-selector-option:hover {
+  @apply transform scale-105;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow-lg);
+}
+
+.dark .test-selector-option {
+  background: rgba(17, 24, 39, 0.5);
+}
+
+.dark .test-selector-option:hover {
+  background: rgba(17, 24, 39, 0.8);
+}
+
+/* ===================
+ * Button Styling
+ * =================== */
+
+/* Action buttons */
+.test-selector-button-primary {
+  @apply text-lg px-8 py-4 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105;
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-lg);
+  min-width: 200px;
+}
+
+.test-selector-button-primary:hover {
+  box-shadow: var(--shadow-xl);
+}
+
+.test-selector-button-secondary {
+  @apply text-lg px-8 py-4 bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 rounded-xl font-medium transition-all duration-200 transform hover:scale-105;
+  min-width: 200px;
+}
+
+.dark .test-selector-button-secondary {
+  @apply bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700;
+}
+
+/* Button container */
+.test-selector-actions {
+  @apply flex items-center justify-center gap-6 p-6 border-t border-white/20;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.dark .test-selector-actions {
+  @apply border-gray-700/50;
+  background: rgba(17, 24, 39, 0.3);
+}
+
+/* ===================
+ * Statistics Display
+ * =================== */
+
+/* Stats cards */
+.test-selector-stat {
+  @apply text-center p-4 rounded-xl;
+  background: var(--glass-light);
+  backdrop-filter: blur(var(--backdrop-blur-sm));
+}
+
+.dark .test-selector-stat {
+  @apply bg-gray-800/40;
+}
+
+.test-selector-stat-value {
+  @apply text-3xl font-bold;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.test-selector-stat-label {
+  @apply text-sm text-gray-600 mt-1;
+}
+
+.dark .test-selector-stat-label {
+  @apply text-gray-400;
+}
+
+/* ===================
+ * Responsive Design
+ * =================== */
+
+@media (max-width: 768px) {
+  .test-selector-card {
+    @apply h-[95vh] max-w-full mx-2;
+  }
+  
+  .test-selector-header {
+    @apply p-4;
+  }
+  
+  .test-selector-content {
+    @apply p-4;
+  }
+  
+  .test-selector-section {
+    @apply p-4;
+  }
+  
+  .test-selector-actions {
+    @apply flex-col gap-3 p-4;
+  }
+  
+  .test-selector-button-primary,
+  .test-selector-button-secondary {
+    @apply w-full text-base px-6 py-3;
+    min-width: auto;
+  }
+}
+
+/* ===================
+ * Animation Enhancements
+ * =================== */
+
+/* Staggered animations for options */
+.test-selector-option:nth-child(odd) {
+  animation-delay: 0.1s;
+}
+
+.test-selector-option:nth-child(even) {
+  animation-delay: 0.2s;
+}
+
+/* Loading states */
+.test-selector-loading {
+  @apply animate-pulse;
+}
+
+.test-selector-loading .test-selector-option {
+  @apply bg-gray-200;
+}
+
+.dark .test-selector-loading .test-selector-option {
+  @apply bg-gray-700;
+}

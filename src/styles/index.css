@@ -10,6 +10,7 @@
 @import './utilities/components.css';
 @import './utilities/animations.css';
 @import './utilities/common.css';
+@import './utilities/advanced.css';
 
 @tailwind utilities;
 
@@ -28,7 +29,12 @@
 
 /* COMPONENTS */
 @import './components/buttons.css';
+@import './components/add-word-form.css';
+@import './components/auth.css';
+@import './components/modals.css';
+@import './components/lists.css';
 @import './components/test-selector.css';
+@import './components/test-selector-advanced.css';
 @import './components/test-card.css';
 @import './components/test-view.css';
 @import './components/test-results.css';

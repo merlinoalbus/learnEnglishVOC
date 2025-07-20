@@ -1,0 +1,477 @@
+/* =====================================================
+ * 📁 List Components - WordsList, Search, Filters
+ * ===================================================== */
+
+/* ===================
+ * Base List Components
+ * =================== */
+
+/* Main list container */
+.list-container {
+  @apply bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden;
+}
+
+.dark .list-container {
+  @apply bg-gray-800 border-gray-700;
+}
+
+/* List header */
+.list-header {
+  @apply p-6 border-b border-gray-100;
+  background: var(--glass-light);
+}
+
+.dark .list-header {
+  @apply border-gray-700 bg-gray-800/60;
+}
+
+.list-title {
+  @apply text-2xl font-bold text-gray-900 mb-4;
+}
+
+.dark .list-title {
+  @apply text-gray-100;
+}
+
+/* Search and filter section */
+.list-search-section {
+  @apply flex flex-col md:flex-row gap-4 items-center;
+}
+
+.list-search-input {
+  @apply flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-colors;
+}
+
+.dark .list-search-input {
+  @apply border-gray-600 bg-gray-700 text-white focus:border-purple-500;
+}
+
+.list-filter-group {
+  @apply flex items-center gap-2 flex-wrap;
+}
+
+/* ===================
+ * List Content
+ * =================== */
+
+/* List body */
+.list-content {
+  @apply divide-y divide-gray-100;
+}
+
+.dark .list-content {
+  @apply divide-gray-700;
+}
+
+/* List item */
+.list-item {
+  @apply p-6 hover:bg-gray-50 transition-colors cursor-pointer;
+}
+
+.dark .list-item {
+  @apply hover:bg-gray-700/50;
+}
+
+.list-item-selected {
+  @apply bg-blue-50 border-l-4 border-blue-500;
+}
+
+.dark .list-item-selected {
+  @apply bg-blue-900/30 border-purple-500;
+}
+
+/* List item content */
+.list-item-content {
+  @apply flex items-center justify-between;
+}
+
+.list-item-main {
+  @apply flex-1 min-w-0;
+}
+
+.list-item-actions {
+  @apply flex items-center gap-2 ml-4;
+}
+
+/* ===================
+ * Word List Specific
+ * =================== */
+
+/* Word item container */
+.word-item {
+  @apply flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200;
+}
+
+.dark .word-item {
+  @apply bg-gray-800 border-gray-700 hover:border-purple-400;
+}
+
+.word-item-selected {
+  @apply border-blue-500 bg-blue-50 shadow-lg;
+}
+
+.dark .word-item-selected {
+  @apply border-purple-500 bg-purple-900/20;
+}
+
+/* Word content */
+.word-main-content {
+  @apply flex-1 min-w-0;
+}
+
+.word-english {
+  @apply text-lg font-semibold text-gray-900;
+}
+
+.dark .word-english {
+  @apply text-gray-100;
+}
+
+.word-italian {
+  @apply text-gray-600 mt-1;
+}
+
+.dark .word-italian {
+  @apply text-gray-400;
+}
+
+.word-metadata {
+  @apply flex items-center gap-4 mt-2 text-sm text-gray-500;
+}
+
+.dark .word-metadata {
+  @apply text-gray-500;
+}
+
+/* Word category badge */
+.word-category {
+  @apply inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium;
+}
+
+.word-category-default {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.dark .word-category-default {
+  @apply bg-gray-700 text-gray-300;
+}
+
+/* Status indicators */
+.word-status-learned {
+  @apply w-3 h-3 bg-green-500 rounded-full;
+}
+
+.word-status-difficult {
+  @apply w-3 h-3 bg-orange-500 rounded-full;
+}
+
+.word-status-new {
+  @apply w-3 h-3 bg-blue-500 rounded-full;
+}
+
+/* ===================
+ * Action Buttons
+ * =================== */
+
+/* Action button base */
+.list-action-button {
+  @apply p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors;
+}
+
+.dark .list-action-button {
+  @apply text-gray-400 hover:text-gray-200 hover:bg-gray-700;
+}
+
+/* Action button variants */
+.list-action-edit {
+  @apply hover:text-blue-600 hover:bg-blue-50;
+}
+
+.dark .list-action-edit {
+  @apply hover:text-blue-400 hover:bg-blue-900/30;
+}
+
+.list-action-delete {
+  @apply hover:text-red-600 hover:bg-red-50;
+}
+
+.dark .list-action-delete {
+  @apply hover:text-red-400 hover:bg-red-900/30;
+}
+
+.list-action-favorite {
+  @apply hover:text-yellow-600 hover:bg-yellow-50;
+}
+
+.dark .list-action-favorite {
+  @apply hover:text-yellow-400 hover:bg-yellow-900/30;
+}
+
+/* ===================
+ * Filter Components
+ * =================== */
+
+/* Filter dropdown */
+.list-filter-dropdown {
+  @apply relative inline-block;
+}
+
+.list-filter-button {
+  @apply flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors;
+}
+
+.dark .list-filter-button {
+  @apply border-gray-600 hover:border-gray-500;
+}
+
+.list-filter-menu {
+  @apply absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10;
+}
+
+.dark .list-filter-menu {
+  @apply bg-gray-800 border-gray-700;
+}
+
+.list-filter-item {
+  @apply px-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors;
+}
+
+.dark .list-filter-item {
+  @apply hover:bg-gray-700;
+}
+
+.list-filter-item-active {
+  @apply bg-blue-50 text-blue-700;
+}
+
+.dark .list-filter-item-active {
+  @apply bg-blue-900/30 text-blue-400;
+}
+
+/* ===================
+ * Pagination
+ * =================== */
+
+.list-pagination {
+  @apply flex items-center justify-between p-6 border-t border-gray-100;
+  background: var(--glass-light);
+}
+
+.dark .list-pagination {
+  @apply border-gray-700 bg-gray-800/60;
+}
+
+.list-pagination-info {
+  @apply text-sm text-gray-600;
+}
+
+.dark .list-pagination-info {
+  @apply text-gray-400;
+}
+
+.list-pagination-controls {
+  @apply flex items-center gap-2;
+}
+
+.list-pagination-button {
+  @apply px-3 py-2 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.dark .list-pagination-button {
+  @apply border-gray-600 hover:border-gray-500;
+}
+
+.list-pagination-button-active {
+  @apply bg-blue-500 border-blue-500 text-white;
+}
+
+/* ===================
+ * Empty States
+ * =================== */
+
+.list-empty {
+  @apply text-center py-16;
+}
+
+.list-empty-icon {
+  @apply w-16 h-16 mx-auto mb-4 text-gray-400;
+}
+
+.list-empty-title {
+  @apply text-xl font-semibold text-gray-900 mb-2;
+}
+
+.dark .list-empty-title {
+  @apply text-gray-100;
+}
+
+.list-empty-message {
+  @apply text-gray-600 mb-6;
+}
+
+.dark .list-empty-message {
+  @apply text-gray-400;
+}
+
+.list-empty-action {
+  @apply inline-flex items-center gap-2 px-6 py-3 text-white rounded-xl transition-transform transform hover:scale-105;
+  background: var(--gradient-primary);
+}
+
+/* ===================
+ * Loading States
+ * =================== */
+
+.list-loading {
+  @apply text-center py-16;
+}
+
+.list-loading-spinner {
+  @apply w-8 h-8 mx-auto mb-4 animate-spin text-blue-500;
+}
+
+.list-loading-text {
+  @apply text-gray-600;
+}
+
+.dark .list-loading-text {
+  @apply text-gray-400;
+}
+
+/* Skeleton loading for list items */
+.list-skeleton-item {
+  @apply p-6 animate-pulse;
+}
+
+.list-skeleton-content {
+  @apply flex items-center gap-4;
+}
+
+.list-skeleton-avatar {
+  @apply w-12 h-12 bg-gray-200 rounded-lg;
+}
+
+.dark .list-skeleton-avatar {
+  @apply bg-gray-700;
+}
+
+.list-skeleton-text {
+  @apply flex-1 space-y-2;
+}
+
+.list-skeleton-line {
+  @apply h-4 bg-gray-200 rounded;
+}
+
+.dark .list-skeleton-line {
+  @apply bg-gray-700;
+}
+
+.list-skeleton-line-short {
+  @apply w-1/3;
+}
+
+.list-skeleton-line-medium {
+  @apply w-2/3;
+}
+
+.list-skeleton-line-long {
+  @apply w-full;
+}
+
+/* ===================
+ * Bulk Actions
+ * =================== */
+
+.list-bulk-actions {
+  @apply flex items-center gap-4 p-4 bg-blue-50 border-b border-blue-200;
+}
+
+.dark .list-bulk-actions {
+  @apply bg-blue-900/20 border-blue-700;
+}
+
+.list-bulk-info {
+  @apply text-sm text-blue-700;
+}
+
+.dark .list-bulk-info {
+  @apply text-blue-300;
+}
+
+.list-bulk-buttons {
+  @apply flex items-center gap-2;
+}
+
+.list-bulk-button {
+  @apply px-3 py-1 text-sm rounded-lg transition-colors;
+}
+
+.list-bulk-button-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.list-bulk-button-danger {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+
+/* ===================
+ * Responsive Design
+ * =================== */
+
+@media (max-width: 768px) {
+  .list-header {
+    @apply p-4;
+  }
+  
+  .list-item {
+    @apply p-4;
+  }
+  
+  .list-search-section {
+    @apply flex-col items-stretch;
+  }
+  
+  .word-item {
+    @apply flex-col items-start gap-2;
+  }
+  
+  .word-metadata {
+    @apply flex-wrap;
+  }
+  
+  .list-pagination {
+    @apply flex-col gap-4 p-4;
+  }
+  
+  .list-pagination-controls {
+    @apply justify-center;
+  }
+}
+
+/* ===================
+ * Animation Enhancements
+ * =================== */
+
+.list-item {
+  @apply transition-all duration-200;
+}
+
+.list-item:hover {
+  @apply transform translate-x-1;
+}
+
+.word-item {
+  animation: listItemSlideIn 0.3s ease-out;
+}
+
+@keyframes listItemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
