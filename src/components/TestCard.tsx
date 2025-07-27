@@ -46,43 +46,44 @@ const TestCard: React.FC<TestCardProps> = ({
   // Note: Helper functions for game mode hints are available if needed for future implementation
   
   return (
-    <div 
-      className="test-card-container interactive-scale"
-      onClick={onFlip}
-    >
-      <div 
-        className={`test-card-flip-wrapper ${showMeaning ? 'flipped' : ''}`}
-      >
-        {/* Front Card */}
-        <div className="test-card-face test-card-face-front">
-          <div className="test-card-content">
-            
-            
-            {/* Hint container - always present to maintain card positioning */}
-            {!gameMode && sentence && (
-              <div className="absolute top-6 left-6 right-6">
-                <div className={`test-card-hint-box ${!showHint ? 'opacity-0 pointer-events-none' : ''}`}>
-                  <div className="test-card-hint-header">
-                    <span className="test-card-hint-icon">💡</span>
-                    <span className="test-card-hint-label">Suggerimento:</span>
-                    {hintUsed && (
-                      <span className="test-card-hint-badge">
-                        Conteggiato
-                      </span>
-                    )}
-                  </div>
-                  <div className="test-card-hint-text">
-                    "{sentence}"
-                  </div>
-                </div>
+    <div className="test-card-outer-container">
+      {/* Hint container - always present with fixed height */}
+      {!gameMode && (
+        <div className="test-card-hint-container-wrapper">
+          {sentence && (
+            <div className={`test-card-hint-box ${!showHint ? 'test-card-hint-box-hidden' : ''} ${showMeaning ? 'test-card-hint-box-disabled' : ''}`}>
+              <div className="test-card-hint-header">
+                <span className="test-card-hint-icon">💡</span>
+                <span className="test-card-hint-label">Suggerimento:</span>
+                {hintUsed && (
+                  <span className="test-card-hint-badge">
+                    Conteggiato
+                  </span>
+                )}
               </div>
-            )}
-            
-            <div className="test-card-word">
-              <h2 className="test-card-word-text">
-                {word.english}
-              </h2>
+              <div className="test-card-hint-text">
+                "{sentence}"
+              </div>
             </div>
+          )}
+        </div>
+      )}
+      
+      <div 
+        className="test-card-container interactive-scale"
+        onClick={onFlip}
+      >
+        <div 
+          className={`test-card-flip-wrapper ${showMeaning ? 'flipped' : ''}`}
+        >
+          {/* Front Card */}
+          <div className="test-card-face test-card-face-front">
+            <div className="test-card-content">
+              <div className="test-card-word">
+                <h2 className="test-card-word-text">
+                  {word.english}
+                </h2>
+              </div>
             
             {/* Animated particles */}
             <div className="test-card-particle-top-right"></div>
@@ -100,16 +101,6 @@ const TestCard: React.FC<TestCardProps> = ({
           }}
         >
           <div className="test-card-back-overlay"></div>
-          
-          {/* Category badge */}
-          {word.group && (
-            <div className="test-card-category-badge">
-              <div className="test-card-category-content">
-                <span>{getCategoryStyle(word.group).icon}</span>
-                <span>{word.group}</span>
-              </div>
-            </div>
-          )}
           
           <div className="test-card-content">
             {/* Header */}
@@ -133,73 +124,66 @@ const TestCard: React.FC<TestCardProps> = ({
               </div>
             </div>
 
-            {/* Contenuti organizzati in griglia */}
-            <div className="test-card-content-grid">
-              
-              {/* Sinonimi */}
+            {/* Contenuto compatto */}
+            <div className="test-card-compact-content">
               {word.synonyms && word.synonyms.length > 0 && (
-                <div className="test-card-section">
-                  <div className="test-card-section-header">
-                    <span className="test-card-hint-icon">🔄</span>
-                    Sinonimi:
-                  </div>
-                  <div className="test-card-section-list">
-                    {word.synonyms.join(', ')}
-                  </div>
+                <div className="test-card-info-line">
+                  <span className="test-card-info-icon">🔄</span>
+                  <span className="test-card-info-label">Sinonimi:</span>
+                  <span className="test-card-info-value">{word.synonyms.join(', ')}</span>
                 </div>
               )}
 
-              {/* Contrari */}
               {word.antonyms && word.antonyms.length > 0 && (
-                <div className="test-card-section">
-                  <div className="test-card-section-header">
-                    <span className="test-card-hint-icon">⚡</span>
-                    Contrari:
-                  </div>
-                  <div className="test-card-section-list">
-                    {word.antonyms.join(', ')}
-                  </div>
+                <div className="test-card-info-line">
+                  <span className="test-card-info-icon">⚡</span>
+                  <span className="test-card-info-label">Contrari:</span>
+                  <span className="test-card-info-value">{word.antonyms.join(', ')}</span>
                 </div>
               )}
 
-              {/* Frasi di esempio */}
               {word.sentences && word.sentences.length > 0 && (
-                <div className="test-card-section">
-                  <div className="test-card-section-header">
-                    <span className="test-card-hint-icon">💬</span>
-                    Esempi:
+                <div className="test-card-info-block">
+                  <div className="test-card-info-line">
+                    <span className="test-card-info-icon">💬</span>
+                    <span className="test-card-info-label">Esempi:</span>
                   </div>
-                  <div className="test-card-examples-container">
+                  <div className="test-card-examples-compact">
                     {word.sentences.map((sentence, index) => (
-                      <div key={index} className="test-card-example-item">
-                        "{sentence}"
+                      <div key={index} className="test-card-example-compact">
+                        • "{sentence}"
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Note */}
               {word.notes && (
-                <div className="test-card-section">
-                  <div className="test-card-section-header">
-                    <span className="test-card-hint-icon">📝</span>
-                    Note:
-                  </div>
-                  <div className="test-card-notes-content">
-                    {formatNotes(word.notes)}
-                  </div>
+                <div className="test-card-info-line">
+                  <span className="test-card-info-icon">📝</span>
+                  <span className="test-card-info-label">Note:</span>
+                  <span className="test-card-info-value">{formatNotes(word.notes)}</span>
                 </div>
               )}
-
             </div>
 
             {/* Footer */}
             <div className="test-card-footer">
               <span className="test-card-footer-text">Clicca per tornare al fronte</span>
             </div>
+
+            {/* Category badge - below footer */}
+            {word.group && (
+              <div className="test-card-category-badge-bottom">
+                <div className="test-card-category-content-bottom">
+                  <span>{getCategoryStyle(word.group).icon}</span>
+                  <span>{word.group}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

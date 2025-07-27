@@ -85,9 +85,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
             <Button 
               onClick={onStartTest} 
               disabled={availableWords.length === 0}
-              className="control-panel-action-button"
+              variant="outline"
+              className="control-panel-start-button"
             >
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-2 text-blue-600 dark:text-blue-400">
                 <BookOpen className="w-8 h-8" />
                 <span className="font-bold">Inizia Test</span>
                 <span className="text-sm opacity-90">
@@ -101,7 +102,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
               onClick={onClearAllWords} 
               variant="outline" 
               disabled={words.length === 0}
-              className="border-2 border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600 p-6 h-auto rounded-2xl bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all duration-200 disabled:opacity-50"
+              className="control-panel-clear-button"
             >
               <div className="flex flex-col items-center gap-2 text-red-600 dark:text-red-400">
                 <RefreshCw className="w-8 h-8" />

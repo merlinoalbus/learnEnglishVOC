@@ -346,9 +346,9 @@ export const TestView: React.FC = React.memo(() => {
       </div>
 
       {/* Game Area: Card + Suggerimenti a lato */}
-      <div className="flex gap-6 items-start justify-center">
+      <div className="flex gap-4 items-start justify-center min-h-[500px]">
         {/* Test Card */}
-        <div className="test-view-card-wrapper">
+        <div className="test-view-card-wrapper flex-shrink-0">
           <TestCard
             word={currentWord}
             showMeaning={showMeaning}
@@ -362,9 +362,9 @@ export const TestView: React.FC = React.memo(() => {
         </div>
 
         {/* Pannello Suggerimenti a Lato */}
-        {!showMeaning && (
+        {(
           <div className="flex-shrink-0 w-80 stack-md">
-            <div className="card-glass border border-white/30 dark:border-gray-700/30 p-6">
+            <div className={`card-glass border border-white/30 dark:border-gray-700/30 p-6 transition-opacity duration-300 ${showMeaning ? 'opacity-50' : ''}`}>
               <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                 <span className="text-2xl">💡</span>
                 Suggerimenti
@@ -375,7 +375,7 @@ export const TestView: React.FC = React.memo(() => {
                 <div>
                   <button
                     onClick={() => handleGameHintRequest('synonym')}
-                    disabled={testConfig?.hintsMode === 'disabled' || isWordLimitReached || isTotalLimitReached}
+                    disabled={showMeaning || testConfig?.hintsMode === 'disabled' || isWordLimitReached || isTotalLimitReached}
                     className="test-view-hint-button test-view-hint-context w-full group rounded-xl p-4"
                   >
                     <div className="flex items-center gap-3">
@@ -411,7 +411,7 @@ export const TestView: React.FC = React.memo(() => {
                 <div>
                   <button
                     onClick={() => handleGameHintRequest('antonym')}
-                    disabled={testConfig?.hintsMode === 'disabled' || isWordLimitReached || isTotalLimitReached}
+                    disabled={showMeaning || testConfig?.hintsMode === 'disabled' || isWordLimitReached || isTotalLimitReached}
                     className="test-view-hint-button test-view-hint-antonym w-full group rounded-xl p-4"
                   >
                     <div className="flex items-center gap-3">
@@ -447,7 +447,7 @@ export const TestView: React.FC = React.memo(() => {
                 <div>
                   <button
                     onClick={() => handleGameHintRequest('context')}
-                    disabled={testConfig?.hintsMode === 'disabled' || isWordLimitReached || isTotalLimitReached}
+                    disabled={showMeaning || testConfig?.hintsMode === 'disabled' || isWordLimitReached || isTotalLimitReached}
                     className="test-view-hint-button test-view-hint-synonym w-full group rounded-xl p-4"
                   >
                     <div className="flex items-center gap-3">
@@ -521,28 +521,28 @@ export const TestView: React.FC = React.memo(() => {
 
       {/* Game Mode sempre attivo - non servono più i vecchi controlli */}
 
-      {/* Answer Buttons */}
-      {showMeaning && (
-        <div className="test-view-answer-buttons">
-          <Button
-            onClick={() => handleAnswerWithTimer(false)}
-            disabled={isAnswering || timeExpired}
-            className="test-view-answer-button test-view-answer-incorrect"
-          >
-            <X className="w-5 h-5 mr-2" />
-            {timeExpired ? 'Tempo scaduto' : 'Sbagliato'}
-          </Button>
-          
-          <Button
-            onClick={() => handleAnswerWithTimer(true)}
-            disabled={isAnswering || timeExpired}
-            className="test-view-answer-button test-view-answer-correct"
-          >
-            <Check className="w-5 h-5 mr-2" />
-            Corretto
-          </Button>
-        </div>
-      )}
+      {/* Answer Buttons - Always visible */}
+      <div className="test-view-answer-buttons">
+        <Button
+          onClick={() => handleAnswerWithTimer(false)}
+          disabled={!showMeaning || isAnswering || timeExpired}
+          variant="ghost"
+          className={`test-view-answer-button test-view-answer-incorrect ${!showMeaning ? 'opacity-50' : ''}`}
+        >
+          <X className="w-5 h-5 mr-2" />
+          {timeExpired ? 'Tempo scaduto' : 'Sbagliato'}
+        </Button>
+        
+        <Button
+          onClick={() => handleAnswerWithTimer(true)}
+          disabled={!showMeaning || isAnswering || timeExpired}
+          variant="ghost"
+          className={`test-view-answer-button test-view-answer-correct ${!showMeaning ? 'opacity-50' : ''}`}
+        >
+          <Check className="w-5 h-5 mr-2" />
+          Corretto
+        </Button>
+      </div>
       
       {/* Timer warning/auto-advance notification */}
       {timeExpired && (

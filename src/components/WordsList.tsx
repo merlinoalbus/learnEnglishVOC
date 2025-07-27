@@ -2,7 +2,7 @@
 // 📁 src/components/WordsList.tsx - TypeScript Migration
 // =====================================================
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Plus, Trash2, Edit3, ChevronDown, ChevronUp, BookOpen, CheckCircle, Circle, Filter, AlertTriangle, Eye, EyeOff } from 'lucide-react';
@@ -327,6 +327,11 @@ const WordsList: React.FC<WordListProps> = ({
     });
     return Array.from(groups).sort();
   }, [words]);
+
+  // Inizializza tutti i capitoli come chiusi di default
+  useEffect(() => {
+    setCollapsedChapters(new Set(availableChapters));
+  }, [availableChapters]);
 
   // Funzione per toggleare il collasso dei capitoli
   const toggleChapterCollapse = (chapter: string) => {

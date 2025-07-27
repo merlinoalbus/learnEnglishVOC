@@ -174,6 +174,48 @@
   animation: test-card-bounce 2s ease-in-out infinite;
 }
 
+/* Compact content layout */
+.test-card-compact-content {
+  @apply bg-white/10 backdrop-blur-sm rounded-xl p-4 space-y-2 text-sm;
+}
+
+.test-card-info-line {
+  @apply flex items-start gap-2;
+}
+
+.test-card-info-block {
+  @apply space-y-1;
+}
+
+.test-card-info-icon {
+  @apply text-base flex-shrink-0;
+}
+
+.test-card-info-label {
+  @apply font-semibold text-white/90 flex-shrink-0;
+}
+
+.test-card-info-value {
+  @apply text-white/80;
+}
+
+.test-card-examples-compact {
+  @apply ml-7 space-y-1;
+}
+
+.test-card-example-compact {
+  @apply text-white/80 text-sm;
+}
+
+/* Category badge at bottom center */
+.test-card-category-badge-bottom {
+  @apply flex justify-center mt-4 mb-2;
+}
+
+.test-card-category-content-bottom {
+  @apply flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-sm font-medium text-white;
+}
+
 /* Dark mode specific overrides */
 :root.dark .test-card-section {
   @apply bg-black/20;
@@ -183,9 +225,27 @@
   @apply bg-white/10;
 }
 
+/* Outer container */
+.test-card-outer-container {
+  @apply w-full;
+}
+
 /* Hint styles */
+.test-card-hint-container-wrapper {
+  @apply mb-4;
+  min-height: 100px;
+}
+
 .test-card-hint-box {
-  @apply bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/30 animate-fade-in;
+  @apply bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/30 animate-fade-in transition-all duration-300;
+}
+
+.test-card-hint-box-hidden {
+  @apply opacity-0 pointer-events-none;
+}
+
+.test-card-hint-box-disabled {
+  @apply opacity-50 bg-gray-200/20;
 }
 
 .test-card-hint-header {
