@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 export const AppNavigation = React.memo(() => {
-  const { currentView, dispatch, testHistory } = useAppContext();
+  const { currentView, dispatch, testHistory, testMode, showResults, resetTest } = useAppContext();
   const { signOut: handleSignOut, loading: authLoading, user, authUser } = useAuth();
   const { userProfile, isAdmin, role } = useUserRole();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -107,7 +107,12 @@ export const AppNavigation = React.memo(() => {
             {navItems.map((item) => (
               <Button
                 key={item.id}
-                onClick={() => dispatch({ type: "SET_VIEW", payload: item.id as any })}
+                onClick={() => {
+                  if (testMode || showResults) {
+                    resetTest();
+                  }
+                  dispatch({ type: "SET_VIEW", payload: item.id as any });
+                }}
                 className={`flex items-center justify-center gap-2 h-12 px-4 rounded-2xl text-base font-semibold transition-all duration-300 relative ${
                   currentView === item.id
                     ? `bg-gradient-to-r ${item.color} text-white shadow-lg transform scale-105`

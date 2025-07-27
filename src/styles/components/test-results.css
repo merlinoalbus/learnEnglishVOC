@@ -1,266 +1,154 @@
-/* Test Results Component Styles */
+/* =====================================================
+ * 📁 Test Results Component - Modern Responsive Styles
+ * ===================================================== */
 
-/* Main container */
+/* Main container - modern glass design */
 .test-results-container {
-  @apply min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-4;
+  @apply min-h-screen p-4;
+  background: linear-gradient(135deg, rgb(99 102 241 / 0.1) 0%, rgb(139 92 246 / 0.1) 50%, rgb(59 130 246 / 0.1) 100%);
 }
 
 .dark .test-results-container {
-  @apply from-gray-900 via-gray-800 to-indigo-900/50;
+  background: linear-gradient(135deg, rgb(17 24 39) 0%, rgb(30 41 59) 50%, rgb(15 23 42) 100%);
 }
 
-/* Back button */
-.test-results-back-button {
-  @apply mb-6 px-6 py-3 bg-white/90 backdrop-blur-sm text-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 text-sm font-medium;
-}
-
-.dark .test-results-back-button {
-  @apply bg-gray-800/90 text-gray-300 hover:bg-gray-700/90;
-}
-
-/* Results card */
+/* Results card - modern container */
 .test-results-card {
-  @apply bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-3 md:p-4 border border-purple-100;
+  @apply bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-6 border border-gray-200/50 max-w-6xl mx-auto;
 }
 
 .dark .test-results-card {
-  @apply bg-gray-800/95 border-gray-600/50 shadow-2xl;
+  @apply bg-gray-900/95 border-gray-700/50;
 }
 
-/* Header section */
+/* Header section - modern layout */
 .test-results-header {
-  @apply text-center mb-8;
+  @apply text-center mb-12;
 }
 
 .test-results-title {
-  @apply text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2;
+  @apply text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4;
 }
 
 .dark .test-results-title {
-  @apply from-purple-400 to-indigo-400;
+  @apply from-indigo-400 via-purple-400 to-pink-400;
 }
 
 .test-results-subtitle {
-  @apply text-gray-600;
+  @apply text-lg text-gray-600 font-medium;
 }
 
 .dark .test-results-subtitle {
-  @apply text-gray-400;
+  @apply text-gray-300;
 }
 
-/* ===================
- * Background and Overlay Elements
- * =================== */
-
-/* Background overlay */
-.test-results-bg-overlay {
-  @apply absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 opacity-50;
+/* Statistics grid - modern responsive layout */
+.test-results-stats-grid {
+  @apply grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8;
 }
 
-/* Header stripe */
-.test-results-header-stripe {
-  @apply absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500;
-}
-
-/* ===================
- * Statistics Cards
- * =================== */
-
-/* Correct answers card */
-.test-results-stat-correct {
-  @apply bg-gradient-to-br from-green-500 to-emerald-500 p-3 rounded-2xl text-white text-center shadow-xl transition-transform hover:scale-105;
-}
-
-/* Wrong answers card */
-.test-results-stat-wrong {
-  @apply bg-gradient-to-br from-red-500 to-pink-500 p-3 rounded-2xl text-white text-center shadow-xl transition-transform hover:scale-105;
-}
-
-/* Hints used card */
-.test-results-stat-hints {
-  @apply bg-gradient-to-br from-orange-500 to-yellow-500 p-3 rounded-2xl text-white text-center shadow-xl transition-transform hover:scale-105;
-}
-
-/* Average time card */
-.test-results-stat-time {
-  @apply bg-gradient-to-br from-blue-500 to-cyan-500 p-3 rounded-2xl text-white text-center shadow-xl transition-transform hover:scale-105;
-}
-
-/* Score card */
-.test-results-stat-score {
-  @apply bg-gradient-to-br from-purple-500 to-indigo-500 p-3 rounded-2xl text-white text-center shadow-xl transition-transform hover:scale-105;
-}
-
-/* ===================
- * Analysis Section
- * =================== */
-
-/* Analysis header */
-.test-results-analysis-title {
-  @apply bg-gradient-to-r from-indigo-500 to-purple-500 text-white;
-}
-
-/* ===================
- * Improvement Tips Section
- * =================== */
-
-/* Tips card container */
-.test-results-tips-card {
-  @apply bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 rounded-3xl overflow-hidden shadow-xl;
-}
-
-/* Tips header */
-.test-results-tips-header {
-  @apply bg-gradient-to-r from-orange-500 to-red-500 text-white;
-}
-
-/* Score display */
-.test-results-score {
-  @apply text-center mb-8;
-}
-
-.test-results-score-circle {
-  @apply relative w-48 h-48 mx-auto;
-}
-
-.test-results-score-bg {
-  @apply absolute inset-0 rounded-full;
-}
-
-.test-results-score-fill {
-  @apply absolute inset-0 rounded-full transition-all duration-1000 ease-out;
-}
-
-.test-results-score-content {
-  @apply absolute inset-0 flex flex-col items-center justify-center;
-}
-
-.test-results-score-value {
-  @apply text-5xl font-bold;
-}
-
-.test-results-score-label {
-  @apply text-sm text-gray-600 mt-1;
-}
-
-.dark .test-results-score-label {
-  @apply text-gray-400;
-}
-
-/* Score gradient classes */
-.test-results-score-excellent {
-  @apply bg-gradient-to-br from-green-400 to-emerald-500;
-}
-
-.test-results-score-good {
-  @apply bg-gradient-to-br from-blue-400 to-indigo-500;
-}
-
-.test-results-score-average {
-  @apply bg-gradient-to-br from-yellow-400 to-orange-500;
-}
-
-.test-results-score-poor {
-  @apply bg-gradient-to-br from-red-400 to-pink-500;
-}
-
-/* Stats grid */
-.test-results-stats {
-  @apply grid grid-cols-2 md:grid-cols-4 gap-4 mb-8;
-}
-
+/* Modern stat cards */
 .test-results-stat-card {
-  @apply bg-gray-50 rounded-xl p-4 text-center;
+  @apply bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-200/50 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg;
 }
 
 .dark .test-results-stat-card {
-  @apply bg-gray-700/50;
+  @apply bg-gray-800/80 border-gray-600/50;
 }
 
 .test-results-stat-value {
-  @apply text-2xl font-bold text-gray-800;
-}
-
-.dark .test-results-stat-value {
-  @apply text-gray-200;
+  @apply text-2xl md:text-3xl font-bold mb-1;
 }
 
 .test-results-stat-label {
-  @apply text-sm text-gray-600 mt-1;
+  @apply text-sm text-gray-600 font-medium;
 }
 
 .dark .test-results-stat-label {
   @apply text-gray-400;
 }
 
-/* Time stats section */
-.test-results-time-stats {
-  @apply bg-blue-50 rounded-xl p-3 mb-8;
+/* Specific stat colors */
+.test-results-stat-correct .test-results-stat-value {
+  @apply text-green-600;
 }
 
-.dark .test-results-time-stats {
-  @apply bg-blue-900/20 border border-blue-700/30;
+.dark .test-results-stat-correct .test-results-stat-value {
+  @apply text-green-400;
 }
 
-.test-results-time-title {
-  @apply text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2;
+.test-results-stat-incorrect .test-results-stat-value {
+  @apply text-red-600;
 }
 
-.dark .test-results-time-title {
-  @apply text-blue-300;
+.dark .test-results-stat-incorrect .test-results-stat-value {
+  @apply text-red-400;
 }
 
-.test-results-time-grid {
-  @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+.test-results-stat-hints .test-results-stat-value {
+  @apply text-orange-600;
 }
 
-.test-results-time-item {
-  @apply text-center;
+.dark .test-results-stat-hints .test-results-stat-value {
+  @apply text-orange-400;
 }
 
-.test-results-time-value {
-  @apply text-2xl font-bold text-blue-700;
+.test-results-stat-time .test-results-stat-value {
+  @apply text-blue-600;
 }
 
-.dark .test-results-time-value {
+.dark .test-results-stat-time .test-results-stat-value {
   @apply text-blue-400;
 }
 
-.test-results-time-label {
-  @apply text-sm text-blue-600 mt-1;
+.test-results-stat-accuracy .test-results-stat-value {
+  @apply text-purple-600;
 }
 
-.dark .test-results-time-label {
-  @apply text-blue-400/80;
+.dark .test-results-stat-accuracy .test-results-stat-value {
+  @apply text-purple-400;
 }
 
-/* Performance analysis */
-.test-results-analysis {
-  @apply bg-purple-50 rounded-xl p-3 mb-8;
+/* Action buttons - modern layout */
+.test-results-actions {
+  @apply flex flex-wrap gap-3 justify-center mb-8;
 }
 
-.dark .test-results-analysis {
-  @apply bg-purple-900/20 border border-purple-700/30;
+.test-results-action-button {
+  @apply px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg border;
+}
+
+.test-results-retry-button {
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600;
+}
+
+.dark .test-results-retry-button {
+  @apply bg-indigo-500 hover:bg-indigo-600 border-indigo-500;
+}
+
+.test-results-new-button {
+  @apply bg-white hover:bg-gray-50 text-gray-700 border-gray-300;
+}
+
+.dark .test-results-new-button {
+  @apply bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-600;
+}
+
+/* Performance analysis card */
+.test-results-analysis-card {
+  @apply bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 mb-6;
+}
+
+.dark .test-results-analysis-card {
+  @apply bg-gray-800/60 border-gray-600/50;
 }
 
 .test-results-analysis-title {
-  @apply text-lg font-semibold text-purple-900 mb-4 flex items-center gap-2;
+  @apply text-xl font-bold text-gray-800 mb-4 flex items-center gap-2;
 }
 
 .dark .test-results-analysis-title {
-  @apply text-purple-300;
-}
-
-.test-results-analysis-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
-}
-
-.test-results-analysis-item {
-  @apply flex items-center justify-between p-4 bg-white/50 rounded-lg;
-}
-
-.dark .test-results-analysis-item {
-  @apply bg-gray-700/60 border border-gray-600/30;
+  @apply text-gray-200;
 }
 
 /* Wrong words section */
@@ -268,117 +156,77 @@
   @apply mt-8;
 }
 
-.test-results-wrong-words-header {
-  @apply flex items-center justify-between mb-6;
+.test-results-tips-card {
+  @apply bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 overflow-hidden;
+}
+
+.dark .test-results-tips-card {
+  @apply bg-gray-800/60 border-gray-600/50;
+}
+
+.test-results-tips-header {
+  @apply bg-gradient-to-r from-red-500 to-pink-500 p-4;
 }
 
 .test-results-wrong-words-title {
-  @apply text-2xl font-bold text-gray-800 flex items-center gap-2;
+  @apply text-xl font-bold text-white flex items-center gap-2;
 }
 
-.dark .test-results-wrong-words-title {
-  @apply text-gray-200;
+.test-results-wrong-words-grid {
+  @apply grid gap-4 p-6;
 }
 
-.test-results-wrong-words-count {
-  @apply bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-medium;
+.test-results-wrong-word-card {
+  @apply bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 transition-all duration-300 hover:scale-105;
 }
 
-.dark .test-results-wrong-words-count {
-  @apply bg-red-900/40 text-red-300 border border-red-700/50;
+.dark .test-results-wrong-word-card {
+  @apply bg-gray-800/80 border-gray-600/50;
 }
 
-/* Word cards */
-.test-results-word-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+.test-results-wrong-word-header {
+  @apply flex items-center justify-between mb-3;
 }
 
-.test-results-word-card {
-  @apply bg-gray-50 rounded-xl p-3 hover:shadow-lg transition-all duration-200;
-}
-
-.dark .test-results-word-card {
-  @apply bg-gray-700/60 border border-gray-600/30 hover:bg-gray-700/80;
-}
-
-.test-results-word-header {
-  @apply flex justify-between items-start mb-4;
-}
-
-.test-results-word-title {
+.test-results-wrong-word-en {
   @apply text-xl font-bold text-gray-800;
 }
 
-.dark .test-results-word-title {
+.dark .test-results-wrong-word-en {
   @apply text-gray-200;
 }
 
-.test-results-word-chapter {
-  @apply text-sm text-gray-500;
+.test-results-wrong-word-it {
+  @apply text-lg text-gray-600;
 }
 
-.dark .test-results-word-chapter {
+.dark .test-results-wrong-word-it {
   @apply text-gray-400;
 }
 
-.test-results-word-translation {
-  @apply text-lg text-gray-700 mb-4;
+.test-results-wrong-word-hint-badge {
+  @apply inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium;
 }
 
-.dark .test-results-word-translation {
-  @apply text-gray-300;
+.dark .test-results-wrong-word-hint-badge {
+  @apply bg-orange-900/50 text-orange-300;
 }
 
-/* Word details sections */
-.test-results-word-section {
-  @apply p-4 bg-white/60 rounded-xl border;
-}
-
-.dark .test-results-word-section {
-  @apply bg-gray-800/60;
-}
-
-.test-results-word-section-examples {
-  @apply border-blue-200 bg-blue-50;
-}
-
-.dark .test-results-word-section-examples {
-  @apply border-blue-800 bg-blue-900/20;
-}
-
-.test-results-word-section-notes {
-  @apply border-yellow-200 bg-yellow-50;
-}
-
-.dark .test-results-word-section-notes {
-  @apply border-yellow-800 bg-yellow-900/20;
-}
-
-.test-results-word-section-header {
-  @apply font-semibold text-sm mb-2 flex items-center gap-2;
-}
-
-.test-results-word-section-content {
-  @apply text-sm space-y-2;
-}
-
-/* Action buttons */
-.test-results-actions {
-  @apply flex flex-col sm:flex-row gap-4 mt-8;
-}
-
-.test-results-action-button {
-  @apply flex-1 py-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2;
-}
-
-.test-results-retry-button {
-  @apply bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow-lg hover:shadow-xl;
-}
-
-.test-results-new-button {
-  @apply bg-white text-gray-700 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50;
-}
-
-.dark .test-results-new-button {
-  @apply bg-gray-800 text-gray-300 border-gray-600 hover:border-gray-500 hover:bg-gray-700;
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .test-results-stats-grid {
+    @apply grid-cols-2 gap-3;
+  }
+  
+  .test-results-actions {
+    @apply flex-col;
+  }
+  
+  .test-results-action-button {
+    @apply w-full;
+  }
+  
+  .test-results-title {
+    @apply text-3xl;
+  }
 }

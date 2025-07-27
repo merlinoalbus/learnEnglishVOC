@@ -7,7 +7,8 @@ export const ResultsView: React.FC = React.memo(() => {
     wrongWords,
     startNewTest,
     resetTest,
-    getTestSummary
+    getTestSummary,
+    dispatch
   } = useAppContext();
 
   const getTestResultData = () => {
@@ -70,6 +71,7 @@ export const ResultsView: React.FC = React.memo(() => {
       wrongWords={wrongWords}
       onStartNewTest={startNewTest}
       onResetTest={resetTest}
+      onNavigate={(view) => dispatch({ type: "SET_VIEW", payload: view as any })}
     />
   );
 });

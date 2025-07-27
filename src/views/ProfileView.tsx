@@ -216,7 +216,7 @@ export const ProfileView: React.FC = () => {
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
         <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative max-w-4xl mx-auto px-6 py-12">
+        <div className="relative max-w-full mx-auto px-8 py-12">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-6">
               {/* Enhanced Avatar */}
@@ -266,7 +266,7 @@ export const ProfileView: React.FC = () => {
       </div>
       
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-8 relative -mt-16 z-10">
+      <div className="max-w-full mx-auto px-4 py-6 space-y-6 relative -mt-16 z-10">
 
       {/* Message */}
       {message && (
@@ -282,9 +282,9 @@ export const ProfileView: React.FC = () => {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
         {/* Profile Info */}
-        <div className="lg:col-span-2">
+        <div className="xl:col-span-2">
           <Card className="h-full shadow-lg border-0 bg-white/80 backdrop-blur-sm">
             <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
               <div className="flex items-center justify-between">
@@ -383,7 +383,7 @@ export const ProfileView: React.FC = () => {
               </div>
 
               {/* Information Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* Email */}
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                   <Label className="text-sm font-medium text-blue-700 dark:text-blue-300 flex items-center gap-2">
@@ -516,55 +516,67 @@ export const ProfileView: React.FC = () => {
         {/* Enhanced Stats Grid */}
         <div className="space-y-6">
           {/* Main Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6 text-center">
-                <BookOpen className="w-8 h-8 mx-auto mb-3 text-white/80" />
-                <div className="text-3xl font-bold mb-1">{stats.testsCompleted}</div>
-                <div className="text-sm text-white/80">Test completati</div>
+              <CardContent className="p-4 min-h-[100px] flex flex-col justify-center">
+                <div className="text-center">
+                  <BookOpen className="w-6 h-6 mx-auto mt-2 mb-2 text-white/90" />
+                  <div className="text-xl font-bold text-white mb-1">{stats.testsCompleted}</div>
+                  <div className="text-xs text-white/80">Test completati</div>
+                </div>
               </CardContent>
             </Card>
             
             <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6 text-center">
-                <Calendar className="w-8 h-8 mx-auto mb-3 text-white/80" />
-                <div className="text-3xl font-bold mb-1">{stats.studyDays}</div>
-                <div className="text-sm text-white/80">Giorni di studio</div>
+              <CardContent className="p-4 min-h-[100px] flex flex-col justify-center">
+                <div className="text-center">
+                  <Calendar className="w-6 h-6 mx-auto mt-2 mb-2 text-white/90" />
+                  <div className="text-xl font-bold text-white mb-1">{stats.studyDays}</div>
+                  <div className="text-xs text-white/80">Giorni di studio</div>
+                </div>
               </CardContent>
             </Card>
             
             <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6 text-center">
-                <Target className="w-8 h-8 mx-auto mb-3 text-white/80" />
-                <div className="text-3xl font-bold mb-1">{stats.averageAccuracy}%</div>
-                <div className="text-sm text-white/80">Accuratezza media</div>
+              <CardContent className="p-4 min-h-[100px] flex flex-col justify-center">
+                <div className="text-center">
+                  <Target className="w-6 h-6 mx-auto mt-2 mb-2 text-white/90" />
+                  <div className="text-xl font-bold text-white mb-1">{stats.averageAccuracy}%</div>
+                  <div className="text-xs text-white/80">Accuratezza media</div>
+                </div>
               </CardContent>
             </Card>
             
             <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6 text-center">
-                <Zap className="w-8 h-8 mx-auto mb-3 text-white/80" />
-                <div className="text-3xl font-bold mb-1">{userProfile?.currentStreak || user?.currentStreak || 0}</div>
-                <div className="text-sm text-white/80">Streak corrente</div>
+              <CardContent className="p-4 min-h-[100px] flex flex-col justify-center">
+                <div className="text-center">
+                  <Zap className="w-6 h-6 mx-auto mt-2 mb-2 text-white/90" />
+                  <div className="text-xl font-bold text-white mb-1">{userProfile?.currentStreak || user?.currentStreak || 0}</div>
+                  <div className="text-xs text-white/80">Streak corrente</div>
+                </div>
               </CardContent>
             </Card>
           </div>
           
           {/* Secondary Stats */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6 text-center">
-                <Trophy className="w-8 h-8 mx-auto mb-3 text-white/80" />
-                <div className="text-3xl font-bold mb-1">{userProfile?.longestStreak || user?.longestStreak || 0}</div>
-                <div className="text-sm text-white/80">Streak record</div>
+              <CardContent className="p-4 min-h-[100px] flex flex-col justify-center">
+                <div className="text-center">
+                  <Trophy className="w-6 h-6 mx-auto mt-2 mb-2 text-white/90" />
+                  <div className="text-xl font-bold text-white mb-1">{userProfile?.longestStreak || user?.longestStreak || 0}</div>
+                  <div className="text-xs text-white/80">Streak record</div>
+                </div>
               </CardContent>
             </Card>
             
             <Card className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6 text-center">
-                <TrendingUp className="w-8 h-8 mx-auto mb-3 text-white/80" />
-                <div className="text-3xl font-bold mb-1">{userProfile?.progressLevel || user?.progressLevel || 1}</div>
-                <div className="text-sm text-white/80">Livello progresso</div>
+              <CardContent className="p-4 min-h-[100px] flex flex-col justify-center">
+                <div className="text-center">
+                  <TrendingUp className="w-6 h-6 mx-auto mt-2 mb-2 text-white/90" />
+                  <div className="text-xl font-bold text-white mb-1">{userProfile?.progressLevel || user?.progressLevel || 1}</div>
+                  <div className="text-xs text-white/80">Livello progresso</div>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -586,7 +598,7 @@ export const ProfileView: React.FC = () => {
                   <div className="text-xl font-bold mb-2 text-white">
                     {(userProfile?.nextMilestone || user?.nextMilestone)?.name || "Traguardo"}
                   </div>
-                  <div className="text-sm text-white/80 mb-4">
+                  <div className="text-xs text-white/80 mb-4">
                     {(userProfile?.nextMilestone || user?.nextMilestone)?.description || "Continua così!"}
                   </div>
                   <div className="w-full bg-white/30 rounded-full h-3 mb-2">

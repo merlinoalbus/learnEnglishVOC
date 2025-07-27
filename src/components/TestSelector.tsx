@@ -12,8 +12,6 @@ import {
   Clock,
   HelpCircle,
   Settings,
-  Zap,
-  Timer,
   X,
   Check,
   Star,

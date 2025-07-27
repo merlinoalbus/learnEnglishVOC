@@ -3,11 +3,11 @@
 // =====================================================
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Play, RotateCcw, Check, X, Trophy, Clock, Lightbulb, Target, Timer, Zap } from 'lucide-react';
+import { Play, Check, X, Trophy, Clock, Lightbulb, Target, Home, BarChart3, Brain } from 'lucide-react';
 import { getTestResult } from '../utils/textUtils';
 import { formatNotes } from '../utils/textUtils';
+import { getCategoryStyle } from '../utils/categoryUtils';
 import { Word } from '../types/entities/Word.types';
 
 // =====================================================
@@ -48,6 +48,7 @@ interface TestResultsProps {
   wrongWords: WrongWord[];
   onStartNewTest: () => void;
   onResetTest: () => void;
+  onNavigate?: (view: string) => void;
 }
 
 interface PerformanceMetrics {
@@ -78,7 +79,7 @@ interface ProcessedStats {
 // 🎯 MAIN COMPONENT
 // =====================================================
 
-const TestResults: React.FC<TestResultsProps> = ({ stats, wrongWords, onStartNewTest, onResetTest }) => {
+const TestResults: React.FC<TestResultsProps> = ({ stats, wrongWords, onStartNewTest, onResetTest, onNavigate }) => {
   
   // ⭐ ENHANCED: Gestione robusta dei dati stats con timing e hints completi
   const getCorrectStats = (): ProcessedStats => {
@@ -193,193 +194,134 @@ const TestResults: React.FC<TestResultsProps> = ({ stats, wrongWords, onStartNew
   };
 
   return (
-    <div className="stack-lg">
-      <Card className="test-results-card relative overflow-hidden">
-        {/* Background animato */}
-        <div className="test-results-bg-overlay"></div>
-        <div className="test-results-header-stripe"></div>
-        
-        <CardHeader className="test-results-header relative py-12">
-          <div className="text-8xl mb-6 animate-bounce">
+    <div className="test-results-container">
+      <div className="test-results-card">
+        {/* Modern Header */}
+        <div className="test-results-header">
+          <div className="text-6xl mb-4">
             {result.type === 'victory' ? '🏆' : 
              result.type === 'good' ? '🎉' : '📚'}
           </div>
-          <CardTitle className={`test-results-title text-4xl mb-4 ${result.color}`}>
+          <h1 className="test-results-title">
             {result.message}
-          </CardTitle>
-          <div className="text-6xl font-bold gradient-text-purple mb-2">
+          </h1>
+          <div className="text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
             {percentage}%
           </div>
-          <p className="test-results-subtitle text-xl">
+          <p className="test-results-subtitle">
             {finalStats.correct} corrette su {totalAnswers} domande
           </p>
-          
-          {/* ⭐ ENHANCED: Performance summary with ALL stats */}
-          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-            {finalStats.hints > 0 && (
-              <div className="flex-center gap-1 status-warning px-3 py-2 rounded-lg">
-                <Lightbulb className="w-4 h-4 text-orange-500" />
-                <span>{finalStats.hints} aiuti</span>
-              </div>
-            )}
-            {finalStats.totalTime > 0 && (
-              <div className="flex-center gap-1 status-info px-3 py-2 rounded-lg">
-                <Clock className="w-4 h-4 text-blue-500" />
-                <span>{performanceMetrics.totalTime} totale</span>
-              </div>
-            )}
-            {finalStats.avgTimePerWord > 0 && (
-              <div className="flex-center gap-1 bg-purple-100 px-3 py-2 rounded-lg">
-                <Target className="w-4 h-4 text-purple-500" />
-                <span>{finalStats.avgTimePerWord}s media ({performanceMetrics.speedRating})</span>
-              </div>
-            )}
-            {finalStats.maxTimePerWord > 0 && (
-              <div className="flex-center gap-1 status-error px-3 py-2 rounded-lg">
-                <Timer className="w-4 h-4 text-red-500" />
-                <span>{finalStats.maxTimePerWord}s massimo</span>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        
-        <CardContent className="relative pb-12">
-          {/* ⭐ ENHANCED: Statistiche complete con timing dettagliato */}
-          <div className="test-results-stats grid-cols-2 md:grid-cols-5 max-w-6xl mx-auto mb-8">
-            <div className="test-results-stat-correct">
-              <div className="test-results-stat-value text-white">{finalStats.correct}</div>
-              <div className="text-green-100">Corrette</div>
-              <Check className="w-8 h-8 mx-auto mt-2 opacity-80" />
-            </div>
-            <div className="test-results-stat-wrong">
-              <div className="test-results-stat-value text-white">{finalStats.incorrect}</div>
-              <div className="text-red-100">Sbagliate</div>
-              <X className="w-8 h-8 mx-auto mt-2 opacity-80" />
+        </div>
+          {/* Statistics Grid - Modern Layout */}
+          <div className="test-results-stats-grid">
+            <div className="test-results-stat-card test-results-stat-correct">
+              <Check className="w-6 h-6 mx-auto mb-2 text-green-600 dark:text-green-400" />
+              <div className="test-results-stat-value">{finalStats.correct}</div>
+              <div className="test-results-stat-label">Corrette</div>
             </div>
             
-            {/* ⭐ ENHANCED: Hints card con percentuale */}
-            <div className="test-results-stat-hints">
-              <div className="test-results-stat-value text-white">{finalStats.hints}</div>
-              <div className="text-orange-100">Aiuti</div>
-              <Lightbulb className="w-8 h-8 mx-auto mt-2 opacity-80" />
+            <div className="test-results-stat-card test-results-stat-incorrect">
+              <X className="w-6 h-6 mx-auto mb-2 text-red-600 dark:text-red-400" />
+              <div className="test-results-stat-value">{finalStats.incorrect}</div>
+              <div className="test-results-stat-label">Sbagliate</div>
             </div>
             
-            {/* ⭐ ENHANCED: Time card con dettagli */}
-            <div className="test-results-stat-time">
-              <div className="test-results-stat-value text-white">{performanceMetrics.totalTime}</div>
-              <div className="text-blue-100">Tempo Totale</div>
-              <Clock className="w-8 h-8 mx-auto mt-2 opacity-80" />
+            <div className="test-results-stat-card test-results-stat-hints">
+              <Lightbulb className="w-6 h-6 mx-auto mb-2 text-orange-600 dark:text-orange-400" />
+              <div className="test-results-stat-value">{finalStats.hints}</div>
+              <div className="test-results-stat-label">Aiuti</div>
+            </div>
+            
+            <div className="test-results-stat-card test-results-stat-time">
+              <Clock className="w-6 h-6 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
+              <div className="test-results-stat-value">{performanceMetrics.totalTime}</div>
+              <div className="test-results-stat-label">Tempo Totale</div>
             </div>
 
-            {/* ⭐ ENHANCED: Efficiency card */}
-            <div className="test-results-stat-score">
-              <div className="test-results-stat-value text-white">{Math.round(performanceMetrics.efficiency)}%</div>
-              <div className="text-purple-100">Efficienza</div>
-              <Zap className="w-8 h-8 mx-auto mt-2 opacity-80" />
+            <div className="test-results-stat-card test-results-stat-accuracy">
+              <Target className="w-6 h-6 mx-auto mb-2 text-purple-600 dark:text-purple-400" />
+              <div className="test-results-stat-value">{Math.round(performanceMetrics.accuracy)}%</div>
+              <div className="test-results-stat-label">Precisione</div>
             </div>
           </div>
 
-          {/* ⭐ ENHANCED: Detailed Timing Analysis */}
+          {/* Performance Analysis Card */}
           {(finalStats.avgTimePerWord > 0 || finalStats.hints > 0) && (
-            <Card className="test-results-analysis rounded-3xl overflow-hidden mb-8">
-              <CardHeader className="test-results-analysis-title">
-                <CardTitle className="flex items-center gap-3 text-white">
-                  <Target className="w-6 h-6" />
-                  Analisi Dettagliata Performance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="test-results-analysis-grid">
-                  
-                  {/* Timing Stats */}
-                  <div className="test-results-time-item">
-                    <h4 className="test-results-time-title">⏱️ Statistiche Tempo</h4>
-                    <div className="stack-sm">
-                      <div className="card-base p-3 border border-indigo-200">
-                        <div className="test-results-time-value">{performanceMetrics.avgTime}s</div>
-                        <div className="test-results-time-label">Tempo Medio</div>
-                      </div>
-                      {finalStats.maxTimePerWord > 0 && (
-                        <div className="card-base p-3 border border-red-200">
-                          <div className="text-lg font-bold text-red-600">{finalStats.maxTimePerWord}s</div>
-                          <div className="text-red-800 text-sm">Tempo Massimo</div>
-                        </div>
-                      )}
-                      {finalStats.minTimePerWord > 0 && (
-                        <div className="card-base p-3 border border-green-200">
-                          <div className="text-lg font-bold text-green-600">{finalStats.minTimePerWord}s</div>
-                          <div className="text-green-800 text-sm">Tempo Minimo</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Accuracy & Hints */}
-                  <div className="test-results-time-item">
-                    <h4 className="font-bold text-purple-800 mb-3">🎯 Accuratezza</h4>
-                    <div className="stack-sm">
-                      <div className="card-base p-3 border border-purple-200">
-                        <div className="text-lg font-bold text-purple-600">{performanceMetrics.accuracy}%</div>
-                        <div className="text-purple-800 text-sm">Precisione</div>
-                      </div>
-                      <div className="card-base p-3 border border-orange-200">
-                        <div className="text-lg font-bold text-orange-600">{performanceMetrics.hintsUsed}</div>
-                        <div className="text-orange-800 text-sm">Aiuti Utilizzati</div>
-                      </div>
-                      <div className="card-base p-3 border border-indigo-200">
-                        <div className="text-lg font-bold text-indigo-600">{Math.round(performanceMetrics.efficiency)}%</div>
-                        <div className="text-indigo-800 text-sm">Efficienza Netta</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Overall Rating */}
-                  <div className="test-results-time-item">
-                    <h4 className="font-bold text-green-800 mb-3">🏆 Valutazione</h4>
-                    <div className="stack-sm">
-                      <div className="card-base p-3 border border-green-200">
-                        <div className="text-lg font-bold text-green-600">{performanceMetrics.speedRating}</div>
-                        <div className="text-green-800 text-sm">Velocità</div>
-                      </div>
-                      <div className="card-base p-3 border border-blue-200">
-                        <div className="text-lg font-bold text-blue-600">
-                          {performanceMetrics.accuracy >= 80 && performanceMetrics.hintsUsed <= 2 ? 'Eccellente' :
-                           performanceMetrics.accuracy >= 70 ? 'Molto Buono' :
-                           performanceMetrics.accuracy >= 60 ? 'Buono' : 'Da Migliorare'}
-                        </div>
-                        <div className="text-blue-800 text-sm">Performance</div>
-                      </div>
-                    </div>
-                  </div>
+            <div className="test-results-analysis-card">
+              <div className="test-results-analysis-title">
+                <BarChart3 className="w-5 h-5" />
+                Analisi Performance
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{performanceMetrics.avgTime}s</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Tempo Medio</div>
                 </div>
-                
-                {/* ⭐ ENHANCED: Performance tips */}
-                <div className="mt-6 p-4 card-base border border-indigo-200">
-                  <h4 className="font-bold text-indigo-800 mb-2">💡 Analisi e Suggerimenti:</h4>
-                  <div className="text-sm text-indigo-700 stack-sm">
-                    {percentage < 60 && (
-                      <p>• 📚 Ripassa le parole sbagliate prima del prossimo test</p>
-                    )}
-                    {performanceMetrics.hintsUsed > 2 && (
-                      <p>• 💭 Prova a riflettere di più prima di usare gli aiuti (usati: {performanceMetrics.hintsUsed})</p>
-                    )}
-                    {finalStats.avgTimePerWord > 25 && (
-                      <p>• ⚡ Pratica per migliorare i tempi di risposta (media attuale: {finalStats.avgTimePerWord}s)</p>
-                    )}
-                    {finalStats.maxTimePerWord > 60 && (
-                      <p>• ⏰ Alcune parole richiedono troppo tempo (max: {finalStats.maxTimePerWord}s) - ripassa quelle più difficili</p>
-                    )}
-                    {percentage >= 80 && performanceMetrics.hintsUsed <= 2 && finalStats.avgTimePerWord <= 20 && (
-                      <p>• 🏆 Performance eccellente! Considera di aggiungere parole più difficili al tuo vocabolario</p>
-                    )}
-                    {performanceMetrics.efficiency > 70 && (
-                      <p>• ✨ Ottima efficienza ({Math.round(performanceMetrics.efficiency)}%) - equilibrio perfetto tra precisione e autonomia</p>
-                    )}
+                {finalStats.maxTimePerWord > 0 && (
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-red-600 dark:text-red-400">{finalStats.maxTimePerWord}s</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Tempo Max</div>
                   </div>
+                )}
+                {finalStats.minTimePerWord > 0 && (
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-green-600 dark:text-green-400">{finalStats.minTimePerWord}s</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Tempo Min</div>
+                  </div>
+                )}
+                <div className="text-center">
+                  <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{Math.round(performanceMetrics.efficiency)}%</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Efficienza</div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
+
+          {/* Performance Tips and Analysis */}
+          <div className="test-results-analysis-card">
+            <div className="test-results-analysis-title">
+              <Lightbulb className="w-5 h-5" />
+              Analisi e Suggerimenti
+            </div>
+            <div className="space-y-3 text-sm">
+              {percentage < 60 && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800/50">
+                  <span className="text-red-600 dark:text-red-400">📚</span>
+                  <span className="text-red-700 dark:text-red-300">Ripassa le parole sbagliate prima del prossimo test</span>
+                </div>
+              )}
+              {performanceMetrics.hintsUsed > 2 && (
+                <div className="flex items-start gap-2 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800/50">
+                  <span className="text-orange-600 dark:text-orange-400">💭</span>
+                  <span className="text-orange-700 dark:text-orange-300">Prova a riflettere di più prima di usare gli aiuti (usati: {performanceMetrics.hintsUsed})</span>
+                </div>
+              )}
+              {finalStats.avgTimePerWord > 25 && (
+                <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/50">
+                  <span className="text-blue-600 dark:text-blue-400">⚡</span>
+                  <span className="text-blue-700 dark:text-blue-300">Pratica per migliorare i tempi di risposta (media attuale: {finalStats.avgTimePerWord}s)</span>
+                </div>
+              )}
+              {finalStats.maxTimePerWord > 60 && (
+                <div className="flex items-start gap-2 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800/50">
+                  <span className="text-purple-600 dark:text-purple-400">⏰</span>
+                  <span className="text-purple-700 dark:text-purple-300">Alcune parole richiedono troppo tempo (max: {finalStats.maxTimePerWord}s) - ripassa quelle più difficili</span>
+                </div>
+              )}
+              {percentage >= 80 && performanceMetrics.hintsUsed <= 2 && finalStats.avgTimePerWord <= 20 && (
+                <div className="flex items-start gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/50">
+                  <span className="text-green-600 dark:text-green-400">🏆</span>
+                  <span className="text-green-700 dark:text-green-300">Performance eccellente! Considera di aggiungere parole più difficili al tuo vocabolario</span>
+                </div>
+              )}
+              {performanceMetrics.efficiency > 70 && (
+                <div className="flex items-start gap-2 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800/50">
+                  <span className="text-indigo-600 dark:text-indigo-400">✨</span>
+                  <span className="text-indigo-700 dark:text-indigo-300">Ottima efficienza ({Math.round(performanceMetrics.efficiency)}%) - equilibrio perfetto tra precisione e autonomia</span>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Bottoni azione */}
           <div className="test-results-actions justify-center">
@@ -395,90 +337,111 @@ const TestResults: React.FC<TestResultsProps> = ({ stats, wrongWords, onStartNew
               variant="outline"
               className="test-results-action-button test-results-new-button px-8 py-4 text-lg rounded-2xl"
             >
-              <RotateCcw className="w-5 h-5 mr-2" />
-              Torna al Menu
+              <Home className="w-5 h-5 mr-2" />
+              Home
             </Button>
           </div>
 
-          {/* ⭐ ENHANCED: Parole Sbagliate con info hints e timing */}
+          {/* Wrong Words Section - Full detailed formatting */}
           {wrongWords && wrongWords.length > 0 && (
             <div className="test-results-wrong-words">
-              <Card className="test-results-tips-card">
-                <CardHeader className="test-results-tips-header">
-                  <CardTitle className="test-results-wrong-words-title text-white">
+              <div className="test-results-tips-card">
+                <div className="test-results-tips-header">
+                  <h3 className="test-results-wrong-words-title">
                     <Trophy className="w-6 h-6" />
-                    Parole da Ripassare ({wrongWords.length})
-                  </CardTitle>
-                  <p className="text-orange-100">
-                    Studia queste parole per migliorare nel prossimo test!
+                    📚 Parole da Ripassare ({wrongWords.length})
+                  </h3>
+                  <p className="text-indigo-100 text-sm mt-2">
+                    ✨ Studia queste parole per migliorare nel prossimo test!
                   </p>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="test-results-word-grid">
-                    {wrongWords.map((word, index) => (
-                      <div
-                        key={`${word.id}-${index}`}
-                        className="test-results-word-card interactive-lift"
-                      >
-                        <div className="test-results-word-header">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-3">
-                              <span className="test-results-word-title gradient-text-purple">{word.english}</span>
-                              <span className="text-orange-400">→</span>
-                              <span className="test-results-word-translation">{word.italian}</span>
-                            </div>
-                            
+                </div>
+                <div className="space-y-2 p-4">
+                  {wrongWords.map((word, index) => (
+                    <div key={index} className={`${word.group ? getCategoryStyle(word.group).bgGradient : 'bg-gradient-to-br from-gray-500 to-gray-600'} backdrop-blur-sm rounded-lg p-3 border border-white/30 dark:border-white/30`}>
+                      {/* Layout compatto orizzontale */}
+                      <div className="flex items-center justify-between gap-4">
+                        {/* Info principale compatta */}
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-white font-semibold text-lg truncate">{word.english}</span>
+                            <span className="text-white/60 text-sm">→</span>
+                            <span className="text-white/90 font-medium truncate">{word.italian}</span>
+                          </div>
+                          
+                          {/* Badges compatti */}
+                          <div className="flex items-center gap-1 flex-shrink-0">
                             {word.group && (
-                              <div className="mb-3">
-                                <span className="test-results-word-chapter status-info px-3 py-1 rounded-full text-sm font-medium">
-                                  📂 {word.group}
-                                </span>
-                              </div>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-white/20 text-white">
+                                📂 {word.group}
+                              </span>
                             )}
-                            
-                            {word.sentences && word.sentences.length > 0 && (
-                              <div className="test-results-word-section test-results-word-section-examples mb-3">
-                                <div className="test-results-word-section-header text-green-600">
-                                  <span>💬</span> Esempio:
-                                </div>
-                                <div className="text-green-800 italic">"{word.sentences[0]}"</div>
-                              </div>
+                            {word.usedHint && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-yellow-400/20 text-yellow-200">
+                                💡 Aiuto
+                              </span>
                             )}
-                            
-                            {(word.notes || (word.synonyms && word.synonyms.length > 0) || (word.antonyms && word.antonyms.length > 0)) && (
-                              <div className="test-results-word-section test-results-word-section-notes">
-                                <div className="test-results-word-section-header text-yellow-600">
-                                  <span>📝</span> Note:
-                                </div>
-                                <div className="test-results-word-section-content text-yellow-800">
-                                  {word.notes && (
-                                    <div className="whitespace-pre-line">{formatNotes(word.notes)}</div>
-                                  )}
-                                  {word.synonyms && word.synonyms.length > 0 && (
-                                    <div>
-                                      <span className="font-semibold">Sinonimi:</span> {word.synonyms.join(', ')}
-                                    </div>
-                                  )}
-                                  {word.antonyms && word.antonyms.length > 0 && (
-                                    <div>
-                                      <span className="font-semibold">Contrari:</span> {word.antonyms.join(', ')}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+                            {word.difficult && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-red-400/20 text-red-200">
+                                🎯 Difficile
+                              </span>
                             )}
                           </div>
-                          <div className="text-3xl text-orange-500 ml-4">❌</div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      
+                      {/* Contenuto compatto - layout linea per linea come TestCard */}
+                      <div className="mt-2 space-y-1 text-sm">
+                        {/* Sinonimi */}
+                        {word.synonyms && word.synonyms.length > 0 && (
+                          <div className="flex items-start gap-2">
+                            <span className="text-white/80 flex-shrink-0">🔄</span>
+                            <span className="text-white/90 font-semibold flex-shrink-0 min-w-[60px]">Sinonimi:</span>
+                            <span className="text-white/80">{word.synonyms.join(', ')}</span>
+                          </div>
+                        )}
+                        
+                        {/* Contrari */}
+                        {word.antonyms && word.antonyms.length > 0 && (
+                          <div className="flex items-start gap-2">
+                            <span className="text-white/80 flex-shrink-0">⚡</span>
+                            <span className="text-white/90 font-semibold flex-shrink-0 min-w-[60px]">Contrari:</span>
+                            <span className="text-white/80">{word.antonyms.join(', ')}</span>
+                          </div>
+                        )}
+                        
+                        {/* Esempi */}
+                        {word.sentences && word.sentences.length > 0 && (
+                          <div className="space-y-0.5">
+                            <div className="flex items-start gap-2">
+                              <span className="text-white/80 flex-shrink-0">💬</span>
+                              <span className="text-white/90 font-semibold">Esempi:</span>
+                            </div>
+                            <div className="ml-7 space-y-0.5">
+                              {word.sentences.map((sentence, sentenceIndex) => (
+                                <div key={sentenceIndex} className="text-white/80 italic text-sm">
+                                  • "{sentence}"
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Note */}
+                        {word.notes && (
+                          <div className="flex items-start gap-2">
+                            <span className="text-white/80 flex-shrink-0">📝</span>
+                            <span className="text-white/90 font-semibold flex-shrink-0 min-w-[60px]">Note:</span>
+                            <span className="text-white/80">{formatNotes(word.notes)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 };

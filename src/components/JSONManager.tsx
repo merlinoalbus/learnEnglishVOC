@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { FileDown, ChevronDown, ChevronUp, Upload, Download } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
-import { Word, WordExportData } from '../types/entities/Word.types';
+import { Word } from '../types/entities/Word.types';
 
 // =====================================================
 // 🔧 TYPES & INTERFACES
