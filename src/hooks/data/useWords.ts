@@ -100,14 +100,16 @@ export const useWords = (): WordsResult => {
     null
   );
   const STATS_CACHE_TTL = 5000; // 5 seconds
+  
+  // Invalidate cache when data changes
+  useEffect(() => {
+    statsCache.current = null;
+  }, [firestoreHook.data.length]);
 
   // Initialize when Firebase is ready
   useEffect(() => {
     if (isReady && !isInitialized) {
       setIsInitialized(true);
-      if (AppConfig.app.environment === "development") {
-        console.log("🔄 useWords initialized with Firebase");
-      }
     }
   }, [isReady, isInitialized]);
 
@@ -459,10 +461,6 @@ export const useWords = (): WordsResult => {
 
     const words = firestoreHook.data;
     
-    // Debug log
-    console.log('useWords - calculating stats for words:', words.length);
-    console.log('useWords - sample words:', words.slice(0, 2));
-    
     const stats: WordStats = {
       total: words.length,
       learned: words.filter((w) => w.learned).length,
@@ -487,9 +485,9 @@ export const useWords = (): WordsResult => {
 
     // Cache the result
     statsCache.current = { stats, timestamp: now };
-
+    
     return stats;
-  }, [firestoreHook.data, refreshTrigger]);
+  }, [firestoreHook.data, firestoreHook.data.length, refreshTrigger]);
 
   // Getter functions
   const getAvailableChapters = useCallback((): string[] => {

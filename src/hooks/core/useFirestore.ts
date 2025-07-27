@@ -159,19 +159,9 @@ export function useFirestore<T extends { id: string }>(
 
       const userId = getCurrentUserId();
       if (!userId) {
-        if (debug) {
-          console.log(
-            `🔥 [useFirestore] No user authenticated for ${collectionName}, returning empty array`
-          );
-        }
         return [];
       }
 
-      if (debug) {
-        console.log(
-          `🔥 [useFirestore] Fetching ${collectionName} for user ${userId}`
-        );
-      }
 
       const collectionRef = collection(db, collectionName);
       let q: Query<DocumentData> = query(
@@ -217,11 +207,6 @@ export function useFirestore<T extends { id: string }>(
 
       statsRef.current.totalFetches++;
 
-      if (debug) {
-        console.log(
-          `🔥 [useFirestore] Fetched ${docs.length} documents from ${collectionName}`
-        );
-      }
 
       return docs;
     },
@@ -240,12 +225,6 @@ export function useFirestore<T extends { id: string }>(
         throw new Error("🔐 User not authenticated for create operation");
       }
 
-      if (debug) {
-        console.log(
-          `🔥 [useFirestore] Creating document in ${collectionName}:`,
-          data
-        );
-      }
 
       const now = new Date();
       const documentData = {
@@ -319,12 +298,6 @@ export function useFirestore<T extends { id: string }>(
         throw new Error("🔥 Firebase not ready for update operation");
       }
 
-      if (debug) {
-        console.log(
-          `🔥 [useFirestore] Updating document ${id} in ${collectionName}:`,
-          updates
-        );
-      }
 
       const docRef = doc(db, collectionName, id);
       const updateData = {
@@ -350,7 +323,6 @@ export function useFirestore<T extends { id: string }>(
               "firestoreMetadata.updatedAt": new Date(),
             };
             await setDoc(docRef, createData);
-            console.log(`✅ [useFirestore] Created missing document ${id} in Firestore`);
           } else {
             throw new Error(`Local item ${id} not found to create in Firestore`);
           }
@@ -369,7 +341,6 @@ export function useFirestore<T extends { id: string }>(
             error.code === 'cancelled' ||
             error.message?.includes('Failed to get document') ||
             error.message?.includes('network')) {
-          console.log(`🔥 [useFirestore] Network/connection error, updating local state only for ${id}`, error);
         } else if (error.message?.includes('No document to update')) {
           console.warn(`🔥 [useFirestore] Document ${id} does not exist in Firestore, creating it instead`);
           try {
@@ -384,8 +355,7 @@ export function useFirestore<T extends { id: string }>(
               };
               await setDoc(docRef, createData);
               firestoreUpdateSuccess = true;
-              console.log(`✅ [useFirestore] Created missing document ${id} in Firestore`);
-            } else {
+              } else {
               throw new Error(`Local item ${id} not found to create in Firestore`);
             }
           } catch (createError: any) {
@@ -464,11 +434,6 @@ export function useFirestore<T extends { id: string }>(
         throw new Error("🔥 Firebase not ready for delete operation");
       }
 
-      if (debug) {
-        console.log(
-          `🔥 [useFirestore] Soft deleting document ${id} in ${collectionName}`
-        );
-      }
 
       const docRef = doc(db, collectionName, id);
       await updateDoc(docRef, {
@@ -526,11 +491,6 @@ export function useFirestore<T extends { id: string }>(
         throw new Error("🔐 User not authenticated for batch operation");
       }
 
-      if (debug) {
-        console.log(
-          `🔥 [useFirestore] Batch update with ${operations.length} operations`
-        );
-      }
 
       const batch = writeBatch(db);
 
@@ -539,9 +499,6 @@ export function useFirestore<T extends { id: string }>(
           ? doc(db, collectionName, operation.id)
           : doc(collection(db, collectionName));
 
-        if (debug && operation.id) {
-          console.log(`🔥 [useFirestore] Batch operation ${operation.type} for document ID: ${operation.id}`);
-        }
 
         switch (operation.type) {
           case "create":
@@ -557,9 +514,6 @@ export function useFirestore<T extends { id: string }>(
                   custom: {},
                 },
               });
-              if (debug) {
-                console.log(`🔥 [useFirestore] Added create operation for: ${operation.id || 'auto-generated-id'}`);
-              }
             }
             break;
           case "update":
@@ -580,22 +534,13 @@ export function useFirestore<T extends { id: string }>(
         }
       });
 
-      if (debug) {
-        console.log(`🔥 [useFirestore] Committing batch with ${operations.length} operations...`);
-      }
       
       await batch.commit();
 
-      if (debug) {
-        console.log(`🔥 [useFirestore] Batch committed successfully, refreshing data...`);
-      }
 
       // Force refresh after batch operation
       await refresh();
 
-      if (debug) {
-        console.log(`🔥 [useFirestore] Batch update completed and data refreshed`);
-      }
     },
     [isReady, collectionName, debug, getCurrentUserId]
   );
@@ -604,11 +549,6 @@ export function useFirestore<T extends { id: string }>(
   const fetch = useCallback(async (): Promise<T[]> => {
     // Previeni fetch multipli simultanei
     if (fetchOperation.loading || isInitializing.current) {
-      if (debug) {
-        console.log(
-          `🔥 [useFirestore] Fetch already in progress for ${collectionName}, skipping`
-        );
-      }
       return state.data;
     }
 
@@ -637,9 +577,6 @@ export function useFirestore<T extends { id: string }>(
   const clearCache = useCallback(() => {
     cacheRef.current.clear();
     statsRef.current.cacheHits = 0;
-    if (debug) {
-      console.log(`🔥 [useFirestore] Cleared cache for ${collectionName}`);
-    }
   }, [collectionName, debug]);
 
   const refresh = useCallback(async (): Promise<void> => {
@@ -658,11 +595,6 @@ export function useFirestore<T extends { id: string }>(
       return;
     }
 
-    if (debug) {
-      console.log(
-        `🔥 [useFirestore] Starting real-time listener for ${collectionName}`
-      );
-    }
 
     const collectionRef = collection(db, collectionName);
     const q = query(
@@ -715,11 +647,6 @@ export function useFirestore<T extends { id: string }>(
           }
         }
 
-        if (debug) {
-          console.log(
-            `🔥 [useFirestore] Real-time update ${collectionName}: ${docs.length} docs`
-          );
-        }
       },
       (error) => {
         setState((prev) => ({
@@ -759,11 +686,6 @@ export function useFirestore<T extends { id: string }>(
       listenerRef.current();
       listenerRef.current = null;
       setState((prev) => ({ ...prev, listening: false }));
-      if (debug) {
-        console.log(
-          `🔥 [useFirestore] Stopped real-time listener for ${collectionName}`
-        );
-      }
     }
   }, [collectionName, debug]);
 
@@ -806,28 +728,13 @@ export function useFirestore<T extends { id: string }>(
       isInitializing.current = true;
       fetchAttempts.current++;
 
-      if (debug) {
-        console.log(
-          `🔥 [useFirestore] Auto-fetching data for ${collectionName} (attempt ${fetchAttempts.current}/${MAX_FETCH_ATTEMPTS})`
-        );
-      }
 
       fetch()
         .then(() => {
           hasInitialFetch.current = true;
-          if (debug) {
-            console.log(
-              `🔥 [useFirestore] Auto-fetch completed for ${collectionName}`
-            );
-          }
         })
         .catch((error) => {
-          if (debug) {
-            console.error(
-              `🔥 [useFirestore] Auto-fetch failed for ${collectionName}:`,
-              error
-            );
-          }
+          // Error handling without debug logs
         })
         .finally(() => {
           isInitializing.current = false;

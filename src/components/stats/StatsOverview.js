@@ -16,12 +16,31 @@ const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUp
   const [selectedView, setSelectedView] = useState('overview');
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [localRefresh, setLocalRefresh] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setLocalRefresh(prev => prev + 1);
   }, [testHistory.length, forceUpdate]);
 
-  // Se non ci sono test, mostra empty state
+  // Wait for initial data load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000); // Give 2 seconds for data to load
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show loading state initially
+  if (isLoading) {
+    return (
+      <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+        Caricamento dati...
+      </div>
+    );
+  }
+
+  // Se non ci sono test dopo il caricamento, mostra empty state
   if (testHistory.length === 0) {
     return (
       <EmptyState 

@@ -14,7 +14,9 @@ import { initializeApp, type FirebaseApp } from "firebase/app";
 import {
   getFirestore,
   connectFirestoreEmulator,
-  enableMultiTabIndexedDbPersistence,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   type Firestore,
 } from "firebase/firestore";
 import {
@@ -106,10 +108,14 @@ export const firebaseApp: FirebaseApp = initializeApp(firebaseConfig);
 export const adminFirebaseApp: FirebaseApp = initializeApp(firebaseConfig, "admin");
 
 /**
- * Initialize Firestore with types
- * Type-safe Firestore instance
+ * Initialize Firestore with types and persistence
+ * Type-safe Firestore instance with multi-tab support
  */
-export const db: Firestore = getFirestore(firebaseApp);
+export const db: Firestore = initializeFirestore(firebaseApp, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
 
 /**
  * Initialize Auth with types
@@ -128,28 +134,6 @@ export const adminAuth: Auth = getAuth(adminFirebaseApp);
 // 🔧 SETUP & PERSISTENCE
 // =====================================================
 
-/**
- * Setup Firestore persistence
- * Returns Promise<boolean> per error handling type-safe
- */
-async function setupFirestorePersistence(): Promise<boolean> {
-  try {
-    await enableMultiTabIndexedDbPersistence(db);
-    console.log("✅ Firestore offline persistence enabled");
-    return true;
-  } catch (error: any) {
-    if (error.code === "failed-precondition") {
-      console.warn(
-        "⚠️ Multiple tabs open, persistence can only be enabled in one tab"
-      );
-    } else if (error.code === "unimplemented") {
-      console.warn("⚠️ Browser doesn't support persistence");
-    } else {
-      console.warn("⚠️ Failed to enable Firestore persistence:", error);
-    }
-    return false;
-  }
-}
 
 /**
  * Setup Auth persistence
@@ -158,7 +142,6 @@ async function setupFirestorePersistence(): Promise<boolean> {
 async function setupAuthPersistence(): Promise<boolean> {
   try {
     await setPersistence(auth, browserLocalPersistence);
-    console.log("✅ Auth persistence enabled");
     return true;
   } catch (error) {
     console.warn("⚠️ Failed to enable Auth persistence:", error);
@@ -219,15 +202,11 @@ export async function initializeFirebase(): Promise<FirebaseInitResult> {
     // Setup in sequenza
     await setupDevelopment();
 
-    const [firestorePersistence, authPersistence] = await Promise.all([
-      setupFirestorePersistence(),
-      setupAuthPersistence(),
-    ]);
+    const authPersistence = await setupAuthPersistence();
 
-  
     return {
       success: true,
-      firestorePersistence,
+      firestorePersistence: true, // Always true now with new API
       authPersistence,
     };
   } catch (error) {

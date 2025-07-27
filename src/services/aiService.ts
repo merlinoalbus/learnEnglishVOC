@@ -75,14 +75,6 @@ class AIService {
       this.healthStatus = "healthy";
     }
 
-    if (AppConfig.app.environment === "development") {
-      console.log("🤖 Enhanced AI Service Status (NO AUTO-PING):", {
-        configured: this.isConfigured,
-        canUseAI: this.canUseAI,
-        apiKeyPresent: !!this.config.apiKey,
-        healthStatus: this.healthStatus,
-      });
-    }
   }
 
   // ⭐ PASSIVE HEALTH CHECK - NO API CALLS

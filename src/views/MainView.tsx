@@ -26,11 +26,6 @@ export const MainView: React.FC = React.memo(() => {
 
   const { showSuccess, showError, showWarning } = useNotification();
 
-  // Debug wordStats
-  React.useEffect(() => {
-    console.log('MainView - wordStats:', wordStats);
-    console.log('MainView - words length:', words.length);
-  }, [wordStats, words]);
 
   const handleStartTest = React.useCallback(() => {
     const availableWords = words.filter(word => !word.learned);

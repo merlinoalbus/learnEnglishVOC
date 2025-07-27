@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { db } from "../../config/firebase";
 import { useFirestore } from "../core/useFirestore";
 import { useFirebase } from "../../contexts/FirebaseContext";
 import { useAuth } from "../integration/useAuth";
@@ -149,15 +151,11 @@ export const useStats = (): StatsResult => {
     autoFetch: true,
     debug: process.env.NODE_ENV === "development",
   });
+  
 
-  // Dedicated collection for DetailedTestSession analytics
-  const detailedSessionFirestore = useFirestore<any>({
-    collection: "detailedTestSessions",
-    realtime: false,
-    enableCache: false,
-    autoFetch: false, // Manual fetch only when needed
-    debug: process.env.NODE_ENV === "development",
-  });
+  // Manual handling for detailedTestSessions since they don't use firestoreMetadata structure
+  const [detailedTestSessions, setDetailedTestSessions] = useState<any[]>([]);
+  const [detailedSessionsLoading, setDetailedSessionsLoading] = useState(false);
 
   const { isReady } = useFirebase();
   const { user, authUser } = useAuth();
@@ -174,10 +172,18 @@ export const useStats = (): StatsResult => {
     timestamp: number;
   } | null>(null);
 
-  const currentStats = statsFirestore.data[0] || {
-    id: "temp",
-    ...INITIAL_STATS,
-  };
+
+  // Get the most recent statistics document
+  const currentStats = statsFirestore.data.length > 0 
+    ? statsFirestore.data.sort((a, b) => {
+        const aDate = new Date(a.lastStudyDate || 0);
+        const bDate = new Date(b.lastStudyDate || 0);
+        return bDate.getTime() - aDate.getTime();
+      })[0]
+    : {
+        id: "temp",
+        ...INITIAL_STATS,
+      };
 
   const isInitialized = statsFirestore.data.length > 0 && isReady;
 
@@ -741,6 +747,7 @@ export const useStats = (): StatsResult => {
           await statsFirestore.create(updatedStats);
         }
 
+
         // Salva la detailed session se disponibile
         if (detailedSession) {
           try {
@@ -771,18 +778,9 @@ export const useStats = (): StatsResult => {
                 return value === undefined ? null : value;
               }));
               
-              await detailedSessionFirestore.create(cleanedSession);
+              // Direct save to detailedTestSessions collection
+              const docRef = await addDoc(collection(db, "detailedTestSessions"), cleanedSession);
               
-              if (AppConfig.app.environment === "development") {
-                console.log("✅ DetailedTestSession saved to Firestore:", {
-                  sessionId: completedDetailedSession.sessionId,
-                  userId: currentUserId,
-                  duration: completedDetailedSession.totalTimeSpent,
-                  accuracy: completedDetailedSession.accuracy,
-                  totalHints: completedDetailedSession.totalHintsUsed,
-                  wordsCount: completedDetailedSession.words.length,
-                });
-              }
             } catch (saveError) {
               console.error("❌ Failed to save DetailedTestSession to Firestore:", saveError);
               // Don't block main test completion if DetailedTestSession save fails
@@ -922,10 +920,9 @@ export const useStats = (): StatsResult => {
   const refreshData = useCallback(() => {
     statsFirestore.refresh();
     performanceFirestore.refresh();
-    detailedSessionFirestore.refresh();
     calculatedStatsCache.current = null;
     setLastSync(new Date());
-  }, [statsFirestore, performanceFirestore, detailedSessionFirestore]);
+  }, [statsFirestore, performanceFirestore]);
 
   const resetStats = useCallback(async (): Promise<OperationResult<void>> => {
     const startTime = Date.now();
@@ -983,7 +980,7 @@ export const useStats = (): StatsResult => {
     } finally {
       setIsProcessing(false);
     }
-  }, [statsFirestore, performanceFirestore, detailedSessionFirestore]);
+  }, [statsFirestore, performanceFirestore]);
 
   const clearHistoryOnly = useCallback(async (): Promise<
     OperationResult<void>
@@ -1125,10 +1122,9 @@ export const useStats = (): StatsResult => {
   const getDetailedTestSessions = useCallback(async (): Promise<OperationResult<any[]>> => {
     const startTime = Date.now();
     try {
-      await detailedSessionFirestore.fetch();
       return {
         success: true,
-        data: detailedSessionFirestore.data,
+        data: detailedTestSessions,
         metadata: {
           operation: "getDetailedTestSessions",
           timestamp: new Date(),
@@ -1146,18 +1142,17 @@ export const useStats = (): StatsResult => {
         },
       };
     }
-  }, [detailedSessionFirestore]);
+  }, [detailedTestSessions]);
 
   const getDetailedSessionById = useCallback(async (sessionId: string): Promise<OperationResult<any>> => {
     const startTime = Date.now();
     try {
-      await detailedSessionFirestore.fetch();
-      const session = detailedSessionFirestore.data.find(s => s.sessionId === sessionId);
+      const session = detailedTestSessions.find((s: any) => s.sessionId === sessionId);
       
       if (!session) {
         return {
           success: false,
-          error: { message: "Session not found", code: "not-found" } as FirestoreError,
+          error: { message: "Session not found", code: "not-found" as any, operation: "read" as any, recoverable: false, timestamp: new Date() } as FirestoreError,
           metadata: {
             operation: "getDetailedSessionById",
             timestamp: new Date(),
@@ -1186,30 +1181,15 @@ export const useStats = (): StatsResult => {
         },
       };
     }
-  }, [detailedSessionFirestore]);
+  }, [detailedTestSessions]);
 
   const deleteDetailedSession = useCallback(async (sessionId: string): Promise<OperationResult<void>> => {
     const startTime = Date.now();
     try {
-      await detailedSessionFirestore.fetch();
-      const session = detailedSessionFirestore.data.find(s => s.sessionId === sessionId);
-      
-      if (!session) {
-        return {
-          success: false,
-          error: { message: "Session not found", code: "not-found" } as FirestoreError,
-          metadata: {
-            operation: "deleteDetailedSession",
-            timestamp: new Date(),
-            duration: Date.now() - startTime,
-          },
-        };
-      }
-
-      await detailedSessionFirestore.remove(session.id);
-
+      // This function is kept for compatibility but actual deletion should be done through admin interface
       return {
-        success: true,
+        success: false,
+        error: { message: "Delete not implemented in client", code: "not-found" as any, operation: "delete" as any, recoverable: false, timestamp: new Date() } as FirestoreError,
         metadata: {
           operation: "deleteDetailedSession",
           timestamp: new Date(),
@@ -1227,15 +1207,13 @@ export const useStats = (): StatsResult => {
         },
       };
     }
-  }, [detailedSessionFirestore]);
+  }, []);
 
   const exportDetailedSessions = useCallback(async (): Promise<OperationResult<any[]>> => {
     const startTime = Date.now();
     try {
-      await detailedSessionFirestore.fetch();
-      
-      // Export only user's own data (security ensured by useFirestore)
-      const exportData = detailedSessionFirestore.data.map(session => ({
+      // Export only user's own data 
+      const exportData = detailedTestSessions.map((session: any) => ({
         ...session,
         // Remove sensitive system information from export
         deviceInfo: undefined,
@@ -1262,7 +1240,7 @@ export const useStats = (): StatsResult => {
         },
       };
     }
-  }, [detailedSessionFirestore]);
+  }, [detailedTestSessions]);
 
   const getAllWordsPerformance = useCallback((): WordPerformanceAnalysis[] => {
     return Object.values(wordPerformance).map((perf) => {
@@ -1370,17 +1348,73 @@ export const useStats = (): StatsResult => {
       });
       setWordPerformance(performanceMap);
     }
-  }, [performanceFirestore.data]);
+  }, [performanceFirestore.data, performanceFirestore.loading, performanceFirestore.error, user?.id, authUser?.uid]);
+
+  // Manual fetch for detailedTestSessions
+  useEffect(() => {
+    if (!isReady || (!user?.id && !authUser?.uid) || detailedSessionsLoading) return;
+    
+    const loadDetailedSessions = async () => {
+      setDetailedSessionsLoading(true);
+      try {
+        const userId = user?.id || authUser?.uid;
+        
+        // Direct query for detailedTestSessions with userId field (not firestoreMetadata.userId)
+        const collectionRef = collection(db, "detailedTestSessions");
+        const q = query(collectionRef, where("userId", "==", userId));
+        const snapshot = await getDocs(q);
+        
+        const sessions: any[] = [];
+        snapshot.forEach((doc) => {
+          sessions.push({ id: doc.id, ...doc.data() });
+        });
+        
+        setDetailedTestSessions(sessions);
+        
+        if (sessions.length > 0) {
+          // Convert to TestResult format
+          const testResults: TestResult[] = sessions.map(session => ({
+            testId: session.sessionId || session.id,
+            userId: session.userId,
+            timestamp: session.completedAt || session.startedAt,
+            percentage: session.accuracy || 0,
+            score: session.accuracy || 0,
+            correct: session.correctAnswers || 0,
+            incorrect: session.incorrectAnswers || 0,
+            total: session.totalWords || 0,
+            hintsUsed: session.totalHintsUsed || 0,
+            timeSpent: session.totalTimeSpent || 0,
+            chapterStats: session.chapterBreakdown || {},
+            completedSession: null as any,
+            config: null as any,
+            finalScore: null as any,
+            feedback: null as any,
+            analytics: null as any,
+            exportData: null as any,
+          }));
+
+          setTestHistory(testResults);
+        }
+      } catch (error) {
+        console.error('Error loading detailedTestSessions:', error);
+      } finally {
+        setDetailedSessionsLoading(false);
+      }
+    };
+    
+    loadDetailedSessions();
+  }, [isReady, user?.id, authUser?.uid]);
+
 
   return {
     stats: currentStats,
     testHistory,
     wordPerformance,
     isInitialized,
-    isLoading: statsFirestore.loading || performanceFirestore.loading || detailedSessionFirestore.loading,
+    isLoading: statsFirestore.loading || performanceFirestore.loading || detailedSessionsLoading,
     isProcessing,
     lastSync: lastSync || statsFirestore.lastSync,
-    error: statsFirestore.error || performanceFirestore.error || detailedSessionFirestore.error,
+    error: statsFirestore.error || performanceFirestore.error,
     fromCache: statsFirestore.fromCache,
     handleTestComplete,
     addTestToHistory,

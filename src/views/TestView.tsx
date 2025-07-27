@@ -35,15 +35,6 @@ export const TestView: React.FC = React.memo(() => {
   const timePerWord = testConfig?.maxTimePerWord || 30;
   const autoAdvanceEnabled = true; // Sempre abilitato per modalità gioco
   
-  // Debug configurazione timer
-  React.useEffect(() => {
-    console.log('🔧 Timer Config:', {
-      timerEnabled,
-      timePerWord,
-      autoAdvanceEnabled,
-      testConfig: testConfig
-    });
-  }, [timerEnabled, timePerWord, autoAdvanceEnabled, testConfig]);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const wordStartTimeRef = useRef<number | null>(null);
@@ -78,7 +69,6 @@ export const TestView: React.FC = React.memo(() => {
       timeExpiredRef.current = false; // Sync ref with state
       wordStartTimeRef.current = Date.now();
       
-      console.log(`🔄 TIMER RESET per nuova parola: ${currentWord.english}, timeExpired reset a false`);
       
       // Start timer
       timerRef.current = setInterval(() => {
@@ -86,14 +76,9 @@ export const TestView: React.FC = React.memo(() => {
           const elapsed = Math.floor((Date.now() - wordStartTimeRef.current) / 1000);
           setCurrentWordTime(elapsed);
           
-          // Debug logging per timer
-          if (elapsed % 5 === 0 && elapsed > 0) { // Log ogni 5 secondi
-            console.log(`🕒 Timer debug - Elapsed: ${elapsed}s, Limit: ${timePerWord}s, Enabled: ${timerEnabled}, AutoAdvance: ${autoAdvanceEnabled}, TimeExpired: ${timeExpiredRef.current}`);
-          }
           
           // Check if timer enabled and time limit exceeded
           if (timerEnabled && elapsed >= timePerWord && !timeExpiredRef.current) {
-            console.log(`⏰ TIMER SCADUTO! Elapsed: ${elapsed}, Limit: ${timePerWord}, Triggering auto-advance...`);
             setTimeExpired(true);
             timeExpiredRef.current = true; // Sync ref with state
             
@@ -101,13 +86,10 @@ export const TestView: React.FC = React.memo(() => {
             if (timerRef.current) {
               clearInterval(timerRef.current);
               timerRef.current = null;
-              console.log(`🛑 Timer fermato dopo scadenza`);
             }
             
             // Auto-advance se abilitato
             if (autoAdvanceEnabled) {
-              console.log(`🚀 Auto-advance abilitato, mostrando traduzione per lettura...`);
-              
               // ⭐ CRITICAL FIX: Gira immediatamente la card e blocca input utente
               if (!showMeaning) {
                 setShowMeaning(true);
@@ -115,22 +97,17 @@ export const TestView: React.FC = React.memo(() => {
               
               // Mantieni 6 secondi per permettere lettura, ma input già bloccato da timeExpired
               autoAdvanceTimeoutRef.current = setTimeout(() => {
-                console.log(`🔄 Girando carta coperta prima di passare alla parola successiva`);
                 // Prima gira la carta coperta
                 setShowMeaning(false);
                 
                 // Aspetta 500ms per l'animazione di flip, poi processa la risposta
                 setTimeout(() => {
-                  console.log(`🎯 Processando risposta sbagliata dopo flip`);
                   handleAnswer(false, true); // Segna come sbagliato per timeout
                 }, 500);
               }, 6000); // Ripristinato a 6 secondi per lettura
-            } else {
-              console.log(`🚫 Auto-advance disabilitato`);
             }
           } else if (timerEnabled && elapsed > timePerWord && !timeExpiredRef.current) {
             // ⭐ CRITICAL FIX: Additional safety check - only if not already expired
-            console.log(`🚨 TIMER SAFETY STOP! Elapsed: ${elapsed} > Limit: ${timePerWord}, but timeExpired not set yet`);
             setTimeExpired(true);
             timeExpiredRef.current = true;
             if (timerRef.current) {
@@ -172,11 +149,8 @@ export const TestView: React.FC = React.memo(() => {
   }, []);
 
   const handleAnswerWithTimer = (isCorrect: boolean) => {
-    console.log(`📝 handleAnswerWithTimer chiamato - isCorrect: ${isCorrect}, timeExpired: ${timeExpired}, showMeaning: ${showMeaning}`);
-    
     // Se il timer è scaduto, non permettere più risposte manuali dell'utente
     if (timeExpired) {
-      console.log(`🚫 Timer scaduto - risposta utente ignorata`);
       return;
     }
     
@@ -187,7 +161,6 @@ export const TestView: React.FC = React.memo(() => {
       timerRef.current = null;
     }
     
-    console.log(`✅ Processando risposta utente normalmente`);
     // Chiamata normale
     handleAnswer(isCorrect);
     setTimeout(() => {

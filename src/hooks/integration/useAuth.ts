@@ -137,7 +137,6 @@ export const useAuth = () => {
         } else {
           document.documentElement.classList.remove('dark');
         }
-        console.log("User preferences loaded and theme applied:", preferences.theme);
       }
     } catch (error) {
       console.error("Error loading user preferences:", error);

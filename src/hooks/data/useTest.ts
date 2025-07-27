@@ -284,9 +284,6 @@ export const useTest = (
   useEffect(() => {
     if (isReady && !isInitialized) {
       setIsInitialized(true);
-      if (AppConfig.app.environment === "development") {
-        console.log("🧪 useTest initialized with Firebase");
-      }
     }
   }, [isReady, isInitialized]);
 
@@ -608,78 +605,37 @@ export const useTest = (
   // Handle game hint request con supporto click multipli
   const handleGameHintRequest = useCallback((type: 'synonym' | 'antonym' | 'context') => {
     if (!currentWord || !testConfig) {
-      if (AppConfig.app.environment === "development") {
-        console.log('🚫 Mancano currentWord o testConfig:', { currentWord: !!currentWord, testConfig: !!testConfig });
-      }
       return;
     }
     
     // Controlla i limiti di configurazione
     const { hintsMode, maxHintsPerWord, maxTotalHints, enableTotalHintsLimit } = testConfig;
     
-    if (AppConfig.app.environment === "development") {
-      console.log('🔍 INIZIO CONTROLLO LIMITI - Configurazione completa:', {
-        hintsMode,
-        maxHintsPerWord,
-        maxTotalHints,
-        enableTotalHintsLimit,
-        configCompleto: testConfig
-      });
-    }
     
     if (hintsMode === 'disabled') {
-      if (AppConfig.app.environment === "development") {
-        console.log('🚫 Suggerimenti disabilitati');
-      }
       return;
     }
     
     // Calcola hintsUsedThisWord correnti
     const currentHintsThisWord = Object.values(gameHints).reduce((total, hints) => total + (hints?.length || 0), 0);
     
-    // Debug logging dettagliato
-    if (AppConfig.app.environment === "development") {
-      console.log(`🔍 Debug limiti - Tipo richiesto: ${type}`);
-      console.log(`🔍 Hint correnti questa parola: ${currentHintsThisWord}`);
-      console.log(`🔍 Limit per parola: ${maxHintsPerWord}`);
-      console.log(`🔍 Hint totali usati: ${totalHintsUsed}`);
-      console.log(`🔍 Limite totale: ${maxTotalHints}`);
-      console.log(`🔍 Modalità: ${hintsMode} (tipo: ${typeof hintsMode})`);
-      console.log(`🔍 enableTotalHintsLimit: ${enableTotalHintsLimit}`);
-      console.log(`🔍 Condizione limite parola: hintsMode === 'limited' && maxHintsPerWord && currentHintsThisWord >= maxHintsPerWord`);
-      console.log(`🔍 Valori: ${hintsMode === 'limited'} && ${!!maxHintsPerWord} && ${currentHintsThisWord >= maxHintsPerWord}`);
-      console.log(`🔍 Condizione limite totale: hintsMode === 'limited' && enableTotalHintsLimit && maxTotalHints && totalHintsUsed >= maxTotalHints`);
-      console.log(`🔍 Valori: ${hintsMode === 'limited'} && ${enableTotalHintsLimit} && ${!!maxTotalHints} && ${totalHintsUsed >= maxTotalHints}`);
-    }
     
     // Controlla limite per parola PRIMA di aggiungere il nuovo hint
     if (hintsMode === 'limited' && maxHintsPerWord && currentHintsThisWord >= maxHintsPerWord) {
-      if (AppConfig.app.environment === "development") {
-        console.log(`🚫 LIMITE PER PAROLA RAGGIUNTO: ${currentHintsThisWord}/${maxHintsPerWord} - BLOCCO RICHIESTA`);
-      }
       return;
     }
     
     // Controlla limite totale PRIMA di aggiungere il nuovo hint
     if (hintsMode === 'limited' && enableTotalHintsLimit && maxTotalHints && totalHintsUsed >= maxTotalHints) {
-      if (AppConfig.app.environment === "development") {
-        console.log(`🚫 LIMITE TOTALE RAGGIUNTO: ${totalHintsUsed}/${maxTotalHints} - BLOCCO RICHIESTA`);
-      }
       return;
     }
     
     // Genera un nuovo aiuto casuale
     const newHint = generateGameHint(type);
     if (!newHint) {
-      if (AppConfig.app.environment === "development") {
-        console.log(`🚫 Nessun suggerimento disponibile per ${type}`);
-      }
       return;
     }
     
-    if (AppConfig.app.environment === "development") {
-      console.log(`✅ LIMITI OK - Procedo con l'aggiunta del hint: ${newHint}`);
-    }
     
     // Create detailed hint tracking
     const now = new Date();
@@ -718,11 +674,6 @@ export const useTest = (
     setHintsUsedThisWord(prev => prev + 1);
     setHintSequenceCounter(prev => prev + 1);
     
-    if (AppConfig.app.environment === "development") {
-      console.log(`💡 Aiuto ${type} fornito: ${newHint}`);
-      console.log(`💡 Nuovi contatori - Parola: ${currentHintsThisWord + 1}, Totale: ${totalHintsUsed + 1}`);
-      console.log(`📊 Detailed hint tracked: ${JSON.stringify(detailedHint)}`);
-    }
   }, [currentWord, testConfig, gameHints, totalHintsUsed, generateGameHint, currentWordStartTime, currentWordSession, hintSequenceCounter]);
 
   // Reset hints when word changes
@@ -847,14 +798,8 @@ export const useTest = (
           setHintSequenceCounter(0);
           currentWordHintsRef.current = []; // Reset ref for first word
           
-          if (AppConfig.app.environment === "development") {
-            console.log(`🎮 Prima parola estratta: ${firstWord.english} (${selectedWords.length - 1} rimanenti)`);
-          }
         }
 
-        if (AppConfig.app.environment === "development") {
-          console.log(`🧪 Test started with ${selectedWords.length} words`);
-        }
       } catch (err) {
         const error = err as Error;
         setError(error);
@@ -942,18 +887,10 @@ export const useTest = (
     currentWordHintsRef.current = []; // Reset ref for new word
 
     // Reset hints for the NEW word (not the completed one)
-    if (AppConfig.app.environment === "development") {
-      console.log("🔄 RESET HINTS in nextWord() for new word:", selectedWord.english);
-    }
-    console.log(`🧹 RESET HINTS chiamato da nextWord() per: ${selectedWord.english}`);
-    console.trace("Stack trace del reset hints");
     setHintsUsedThisWord(0);
     setGameHints({});
     currentWordHintsRef.current = []; // Reset ref too
 
-    if (AppConfig.app.environment === "development") {
-      console.log(`🎮 Parola estratta: ${selectedWord.english} (${availableWords.length - 1} rimanenti)`);
-    }
   }, [testWords, usedWordIds]);
 
   // Save test results
@@ -1056,9 +993,6 @@ export const useTest = (
 
       setTestSaved(true);
 
-      if (AppConfig.app.environment === "development") {
-        console.log("🧪 Test completed:", testResult);
-      }
     },
     [
       testSaved,
@@ -1092,48 +1026,13 @@ export const useTest = (
       // Complete current word session tracking
       const now = new Date();
       
-      // Debug logging for timeout cases
-      if (isTimeout) {
-        console.log("🔍 TIMEOUT DEBUG:", {
-          currentWord: currentWord?.english,
-          currentWordSession: currentWordSession,
-          currentWordStartTime: currentWordStartTime,
-          showMeaning: showMeaning,
-          isTimeout,
-          isCorrect
-        });
-      }
       
-      // Debug timeout scenario
-      if (isTimeout && AppConfig.app.environment === "development") {
-        console.log("🔍 TIMEOUT ANALYSIS:", {
-          currentWordSession: currentWordSession?.english,
-          hintsInSession: currentWordSession?.totalHintsCount,
-          hintsInGameHints: Object.values(gameHints).reduce((total, hints) => total + (hints?.length || 0), 0),
-          hintsUsedThisWord,
-          currentWordIsNull: !currentWordSession
-        });
-      }
 
       // ⭐ CRITICAL FIX: Use ref data (synchronous, immediate) instead of state (async, delayed)
       const finalCurrentWordSession = currentWordSession; 
       const actualHintsUsed = currentWordHintsRef.current; // Use ref instead of state
       const actualHintsCount = actualHintsUsed.length;
       
-      console.log("🎯 FINAL HINT CALCULATION (USING REF DATA):", {
-        actualHintsUsed,
-        actualHintsCount,
-        fromState: {
-          sessionHints: finalCurrentWordSession?.hintsUsed || [],
-          sessionHintsCount: finalCurrentWordSession?.hintsUsed?.length || 0
-        },
-        fromCounters: {
-          hintsUsedThisWord,
-          gameHintsCount: Object.values(gameHints).reduce((total: number, hints: any) => total + (hints?.length || 0), 0)
-        },
-        isTimeout,
-        currentWordEnglish: currentWord?.english
-      });
 
       const completedWordSession: DetailedWordSession | null = finalCurrentWordSession ? {
         ...finalCurrentWordSession,
@@ -1164,14 +1063,6 @@ export const useTest = (
         hintsUsed: actualHintsUsed,
         totalHintsCount: actualHintsCount
       } : (
-        // Fallback: create session if currentWordSession is null (should not happen, but safety net)
-        console.log("⚠️ FALLBACK: Creating completedWordSession because currentWordSession is null"),
-        console.log("🔍 FALLBACK DEBUG:", {
-          actualHintsUsed,
-          actualHintsCount,
-          currentWord: currentWord?.english,
-          isTimeout
-        }),
         currentWord ? {
           wordId: currentWord.id,
           english: currentWord.english,
@@ -1291,10 +1182,6 @@ export const useTest = (
             completedAt: new Date(),
           };
           
-          // Log detailed test session for statistics
-          if (AppConfig.app.environment === "development") {
-            console.log("🎯 Test Session Completed:", finalDetailedSession);
-          }
           
           // Update state with final session
           setDetailedSession(finalDetailedSession);
@@ -1328,9 +1215,6 @@ export const useTest = (
         }
       } else {
         // For timeout: ensure card is face-down before moving to next word
-        if (AppConfig.app.environment === "development") {
-          console.log("⏱️ TIMEOUT: Ensuring card is face-down before next word");
-        }
         setIsTransitioning(true);
         setShowMeaning(false); // Ensure card is face-down
         setTimeout(() => {
@@ -1398,9 +1282,6 @@ export const useTest = (
     setCurrentWordStartTime(null);
     setHintSequenceCounter(0);
 
-    if (AppConfig.app.environment === "development") {
-      console.log("🧪 Test reset");
-    }
   }, [stats, testSaved, saveTestResultsWithStats]);
 
   // Start new test with same words

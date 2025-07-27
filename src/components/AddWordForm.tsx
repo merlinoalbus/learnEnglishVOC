@@ -155,11 +155,6 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
       const currentStatus = aiService.getServiceStatus();
       setAiServiceStatus(currentStatus);
       
-      console.log('📊 AI Status (passive):', { 
-        health: currentStatus.health,
-        configured: currentStatus.configured,
-        consecutiveFailures: currentStatus.consecutiveFailures 
-      });
       
     } catch (error) {
       console.error('❌ Failed to get AI status:', error);
@@ -184,7 +179,6 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
     setAiServiceStatus(prev => ({ ...prev, health: 'unknown' } as AIServiceStatus));
     
     try {
-      console.log('💰 Manual AI health check (COSTS MONEY) - User confirmed');
       const isHealthy = await aiService.checkHealth();
       const updatedStatus = aiService.getServiceStatus();
       setAiServiceStatus(updatedStatus);
@@ -351,8 +345,6 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
           notes: aiData.notes || prev.notes
         }));
       } else {
-        console.log('🔄 Updating form with AI data:', aiData);
-        
         setFormData(prev => {
           const newFormData = {
             ...prev,
@@ -373,7 +365,6 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
             chapter: aiData.chapter || prev.chapter
           };
           
-          console.log('🎯 New form data:', newFormData);
           return newFormData;
         });
         
@@ -513,7 +504,6 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
     checkAIServiceStatus();
     
     // ⭐ NO automatic interval! Only manual refresh
-    console.log('🔒 AI Status: Manual refresh only (no automatic pings)');
   }, [checkAIServiceStatus]);
 
   useEffect(() => {
