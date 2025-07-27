@@ -226,6 +226,9 @@ export const AppNavigation = React.memo(() => {
                   <Button
                     onClick={() => {
                       setShowUserMenu(false);
+                      if (testMode || showResults) {
+                        resetTest();
+                      }
                       dispatch({ type: "SET_VIEW", payload: "profile" });
                     }}
                     variant="ghost"
@@ -238,6 +241,9 @@ export const AppNavigation = React.memo(() => {
                   <Button
                     onClick={() => {
                       setShowUserMenu(false);
+                      if (testMode || showResults) {
+                        resetTest();
+                      }
                       dispatch({ type: "SET_VIEW", payload: "settings" });
                     }}
                     variant="ghost"
@@ -251,6 +257,9 @@ export const AppNavigation = React.memo(() => {
                     <Button
                       onClick={() => {
                         setShowUserMenu(false);
+                        if (testMode || showResults) {
+                          resetTest();
+                        }
                         dispatch({ type: "SET_VIEW", payload: "admin" });
                       }}
                       variant="ghost"
