@@ -365,19 +365,19 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
           </div>
           
           {/* ⭐ ENHANCED: Detailed explanation of metrics with REAL data */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
+            <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
               <Target className="w-5 h-5" />
               📊 Spiegazione delle Metriche (Dati Reali)
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700 dark:text-blue-300">
               <div>
                 <h5 className="font-bold mb-2">📈 Metriche Principali (Asse Sinistro 0-100%):</h5>
                 <ul className="space-y-1 text-xs">
                   <li><strong>🎯 Precisione:</strong> % di risposte corrette nel test</li>
                   <li><strong>⚡ Efficienza:</strong> Precisione - (Aiuti × 2) - penalità per dipendenza da aiuti</li>
                   <li><strong>🚀 Velocità:</strong> Calcolata dai tempi effettivi dei test<br/>
-                      <span className="text-blue-600">• Tempo medio attuale: {performanceAnalysis.avgResponseTime}s ({performanceAnalysis.speedRating})</span></li>
+                      <span className="text-blue-600 dark:text-blue-400">• Tempo medio attuale: {performanceAnalysis.avgResponseTime}s ({performanceAnalysis.speedRating})</span></li>
                 </ul>
               </div>
               <div>
@@ -390,8 +390,8 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
                 </ul>
               </div>
             </div>
-            <div className="mt-3 p-3 bg-white rounded-lg border border-blue-200">
-              <p className="text-xs text-blue-700">
+            <div className="mt-3 p-3 bg-white dark:bg-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-600">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
                 <strong>💡 Come interpretare:</strong> Un trend positivo mostra precisione in aumento, 
                 aiuti in diminuzione ed efficienza crescente. La velocità è ora calcolata dai tempi reali di risposta.
               </p>
@@ -399,34 +399,34 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
           </div>
           
           {/* ⭐ ENHANCED: Real-time hints analysis summary */}
-          <div className="mt-6 p-4 bg-orange-50 rounded-xl border border-orange-200">
-            <h4 className="font-bold text-orange-800 mb-2 flex items-center gap-2">
+          <div className="mt-6 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-700">
+            <h4 className="font-bold text-orange-800 dark:text-orange-200 mb-2 flex items-center gap-2">
               <Lightbulb className="w-5 h-5" />
               Analisi Utilizzo Aiuti (Dati Reali)
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
               <div className="text-center">
-                <div className="text-lg font-bold text-orange-600">
+                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
                   {hintsAnalysis.totalHints}
                 </div>
-                <div className="text-orange-700">Aiuti Totali</div>
+                <div className="text-orange-700 dark:text-orange-300">Aiuti Totali</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-orange-600">{hintsAnalysis.hintsUsagePercentage}%</div>
-                <div className="text-orange-700">% Risposte con Aiuto</div>
+                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">{hintsAnalysis.hintsUsagePercentage}%</div>
+                <div className="text-orange-700 dark:text-orange-300">% Risposte con Aiuto</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-orange-600">
+                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
                   {hintsAnalysis.avgHintsPerTest}
                 </div>
-                <div className="text-orange-700">Media Aiuti/Test</div>
+                <div className="text-orange-700 dark:text-orange-300">Media Aiuti/Test</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-orange-600">{performanceAnalysis.hintEfficiency}%</div>
-                <div className="text-orange-700">Efficienza Aiuti</div>
+                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">{performanceAnalysis.hintEfficiency}%</div>
+                <div className="text-orange-700 dark:text-orange-300">Efficienza Aiuti</div>
               </div>
             </div>
-            <div className="mt-3 text-xs text-orange-600">
+            <div className="mt-3 text-xs text-orange-600 dark:text-orange-400">
               💡 <strong>Suggerimento:</strong> Un uso efficiente degli aiuti è sopra l'80% di efficienza. 
               Gli aiuti dovrebbero diminuire con l'esperienza.
             </div>
@@ -492,10 +492,10 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
                 </div>
                 
                 {/* Summary */}
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg text-center">
+                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
                   <div className="text-sm text-gray-600 dark:text-gray-400">
                     Su <strong>{multiMetricData.length} test totali</strong>, hai ottenuto risultati eccellenti o buoni nel 
-                    <strong className="text-green-600 mx-1">
+                    <strong className="text-green-600 dark:text-green-400 mx-1">
                       {summaryStats.excellentAndGoodPercentage}%
                     </strong>
                     dei casi
@@ -606,9 +606,9 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
             </div>
 
             {/* Overall Assessment */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
-              <h4 className="font-bold text-indigo-800 mb-2">📊 Valutazione Complessiva</h4>
-              <p className="text-sm text-indigo-700">
+            <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-indigo-200 dark:border-indigo-700">
+              <h4 className="font-bold text-indigo-800 dark:text-indigo-200 mb-2">📊 Valutazione Complessiva</h4>
+              <p className="text-sm text-indigo-700 dark:text-indigo-300">
                 {performanceAnalysis.performanceIndex >= 85 ? 
                   '🏆 Performance eccellenti! Continua così e considera di aumentare la difficoltà.' :
                  performanceAnalysis.performanceIndex >= 70 ?
@@ -674,29 +674,29 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
             })()}
             
             <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="text-center p-3 bg-cyan-50 rounded-xl">
-                <div className="font-bold text-cyan-600">
+              <div className="text-center p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl">
+                <div className="font-bold text-cyan-600 dark:text-cyan-400">
                   {summaryStats.mostActiveDay}
                 </div>
-                <div className="text-cyan-700 text-xs">Giorno più attivo</div>
+                <div className="text-cyan-700 dark:text-cyan-300 text-xs">Giorno più attivo</div>
               </div>
-              <div className="text-center p-3 bg-blue-50 rounded-xl">
-                <div className="font-bold text-blue-600">
+              <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                <div className="font-bold text-blue-600 dark:text-blue-400">
                   {summaryStats.bestDay}
                 </div>
-                <div className="text-blue-700 text-xs">Giorno migliore</div>
+                <div className="text-blue-700 dark:text-blue-300 text-xs">Giorno migliore</div>
               </div>
-              <div className="text-center p-3 bg-green-50 rounded-xl">
-                <div className="font-bold text-green-600">
+              <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                <div className="font-bold text-green-600 dark:text-green-400">
                   {summaryStats.weeklyAverage}%
                 </div>
-                <div className="text-green-700 text-xs">Media settimanale</div>
+                <div className="text-green-700 dark:text-green-300 text-xs">Media settimanale</div>
               </div>
-              <div className="text-center p-3 bg-purple-50 rounded-xl">
-                <div className="font-bold text-purple-600">
+              <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                <div className="font-bold text-purple-600 dark:text-purple-400">
                   {summaryStats.totalWeeklyTests}
                 </div>
-                <div className="text-purple-700 text-xs">Test totali</div>
+                <div className="text-purple-700 dark:text-purple-300 text-xs">Test totali</div>
               </div>
             </div>
           </CardContent>
