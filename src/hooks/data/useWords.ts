@@ -185,7 +185,37 @@ export const useWords = (): WordsResult => {
       const startTime = Date.now();
 
       try {
+        // Prima trova la parola per ottenere l'english
+        const word = firestoreHook.data.find((w) => w.id === wordId);
+        
         await firestoreHook.remove(wordId);
+        
+        // Se la parola esiste e ha un english, cancella anche la performance
+        if (word?.english) {
+          try {
+            const { collection, query, where, getDocs, deleteDoc, doc } = await import("firebase/firestore");
+            const { db } = await import("../../config/firebase");
+            
+            // Query per trovare la performance associata
+            const performanceRef = collection(db, "performance");
+            const q = query(
+              performanceRef, 
+              where("english", "==", word.english)
+            );
+            const snapshot = await getDocs(q);
+            
+            // Cancella tutti i documenti performance trovati per questa parola
+            const deletePromises = snapshot.docs.map(docSnap => 
+              deleteDoc(doc(db, "performance", docSnap.id))
+            );
+            await Promise.all(deletePromises);
+            
+            console.log(`✅ Cancellata performance per la parola: ${word.english} (${snapshot.size} documenti)`);
+          } catch (perfError) {
+            console.error("⚠️ Errore nella cancellazione della performance:", perfError);
+            // Non bloccare l'operazione se la cancellazione performance fallisce
+          }
+        }
 
         // Clear editing word if it was the removed one
         if (editingWord?.id === wordId) {
@@ -216,7 +246,7 @@ export const useWords = (): WordsResult => {
         };
       }
     },
-    [firestoreHook.remove, editingWord?.id]
+    [firestoreHook.remove, firestoreHook.data, editingWord?.id]
   );
 
   // Update word

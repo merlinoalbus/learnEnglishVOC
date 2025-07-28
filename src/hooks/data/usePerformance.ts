@@ -886,6 +886,7 @@ export const usePerformance = (): PerformanceResult => {
         difficulty: accuracy < 50 ? "hard" : accuracy < 80 ? "medium" : "easy",
         needsWork: accuracy < 70,
         mastered: accuracy >= 90,
+        hasPerformanceData: totalAttempts > 0,
         recommendations: [],
       };
     },

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode } fr
 import { useWords } from "../hooks/data/useWords";
 import { useTest } from "../hooks/data/useTest";
 import { useStats } from "../hooks/data/useStats";
-import { Word, TestResult, Statistics, WordPerformance, TestStats } from "../types";
+import { Word, TestHistoryItem, Statistics, WordPerformance, TestStats } from "../types";
 
 // =====================================================
 // 🎯 TYPE DEFINITIONS
@@ -55,7 +55,7 @@ interface AppContextType extends AppState {
   currentWordIndex: number;
   showAnswer: boolean;
   testSettings: any;
-  testResults: TestResult | null;
+  testResults: TestHistoryItem | null;
   isTestActive: boolean;
   testMode: boolean;
   showResults: boolean;
@@ -93,7 +93,7 @@ interface AppContextType extends AppState {
 
   // Stats API
   stats: Statistics;
-  testHistory: TestResult[];
+  testHistory: TestHistoryItem[];
   wordPerformance: any;
   calculatedStats: any;
   refreshData: () => void;
@@ -102,7 +102,7 @@ interface AppContextType extends AppState {
   importStats: (data: any) => Promise<any>;
   handleTestComplete: (testStats: any, testWords: Word[], wrongWords: Word[], detailedSession?: any) => void;
   clearHistoryOnly: () => Promise<any>;
-  addTestToHistory: (testResult: TestResult) => void;
+  addTestToHistory: (testResult: TestHistoryItem) => void;
   getAllWordsPerformance: () => any;
   getWordAnalysis: (wordId: string) => any;
   recordWordPerformance: (wordId: string, performance: any) => void;

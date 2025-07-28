@@ -763,6 +763,66 @@ export interface TestResult {
 }
 
 /**
+ * LEGACY: Test history item per componenti stats esistenti
+ * Mantiene la struttura di dati che i componenti stats si aspettano
+ * Sarà rimosso quando i componenti saranno aggiornati per usare TestResult
+ */
+export interface TestHistoryItem {
+  /** Timestamp del test */
+  timestamp: number;
+  
+  /** Percentuale di successo */
+  percentage: number;
+  
+  /** Numero parole corrette */
+  correctWords: number;
+  
+  /** Numero parole sbagliate */
+  incorrectWords: number;
+  
+  /** Numero hint utilizzati */
+  hintsUsed: number;
+  
+  /** Tempo totale test (ms) */
+  totalTime?: number;
+  
+  /** Tempo medio per parola (secondi) */
+  avgTimePerWord?: number;
+  
+  /** Parole sbagliate */
+  wrongWords?: any[];
+  
+  /** Tempi parole individuali */
+  wordTimes?: any[];
+  
+  /** Parametri test */
+  testParameters?: {
+    selectedChapters?: string[];
+  };
+  
+  /** Totale parole */
+  totalWords?: number;
+  
+  /** Difficoltà test */
+  difficulty?: 'easy' | 'medium' | 'hard';
+  
+  /** Tipo test */
+  testType?: string;
+  
+  /** ID test */
+  id?: string;
+  
+  /** Statistiche per capitolo */
+  chapterStats?: Record<string, {
+    totalWords?: number;
+    correctWords?: number;
+    incorrectWords?: number;
+    hintsUsed?: number;
+    percentage?: number;
+  }>;
+}
+
+/**
  * Score finale calcolato
  */
 export interface FinalScore {

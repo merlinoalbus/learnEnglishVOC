@@ -2,24 +2,46 @@ import React from 'react';
 import { Card, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { BarChart3, Database } from 'lucide-react';
-import { useStatsData } from './hooks/useStatsData';
+import { useStats } from '../../hooks/data/useStats';
 import StatisticCard from './components/StatisticCard';
+import type { TestHistoryItem } from '../../types';
 
-const StatsHeader = ({ 
+type ColorType = 'blue' | 'emerald' | 'green' | 'purple' | 'yellow' | 'indigo';
+
+interface StatsHeaderProps {
+  testHistory: TestHistoryItem[];
+  showDataManagement: boolean;
+  setShowDataManagement: (show: boolean) => void;
+  onClearHistory: () => void;
+}
+
+const StatsHeader: React.FC<StatsHeaderProps> = ({ 
   testHistory, 
   showDataManagement, 
   setShowDataManagement,
   onClearHistory 
 }) => {
-  const { advancedStats } = useStatsData(testHistory);
+  const { stats, calculatedStats, getAllWordsPerformance, testHistory: dbTestHistory, getDetailedTestSessions, correctStatsData, detailedSessions } = useStats();
+  
+  // ⭐ USA I DATI CORRETTI DAL SERVICE
+  const {
+    testCompletati,
+    paroleStudiate,
+    mediaCorretta,
+    recordScore,
+    aiutiTotali,
+    maxHintsPercentage
+  } = correctStatsData;
 
-  const mainStats = [
-    { label: 'Test Completati', value: advancedStats.totalTests, color: 'blue' },
-    { label: '📚 Parole Studiate', value: advancedStats.totalWordsStudied, color: 'emerald' },
-    { label: 'Media', value: `${advancedStats.averageScore}%`, color: 'green' },
-    { label: 'Record', value: `${advancedStats.bestScore}%`, color: 'purple' },
-    { label: 'Aiuti', value: advancedStats.totalHints, color: 'yellow' },
-    { label: '% Aiuti', value: `${advancedStats.hintsPercentage}%`, color: 'indigo' }
+  // Logs removed as requested
+
+  const mainStats: Array<{label: string; value: string | number; color: ColorType}> = [
+    { label: 'Test Completati', value: testCompletati, color: 'blue' },
+    { label: '📚 Parole Studiate', value: paroleStudiate, color: 'emerald' },
+    { label: 'Media', value: `${mediaCorretta}%`, color: 'green' },
+    { label: 'Record', value: `${recordScore}%`, color: 'purple' },
+    { label: 'Aiuti', value: aiutiTotali, color: 'yellow' },
+    { label: '% Aiuti', value: `${maxHintsPercentage}%`, color: 'indigo' }
   ];
 
   return (

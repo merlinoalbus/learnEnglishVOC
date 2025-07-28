@@ -1,8 +1,10 @@
 // ===================================================== 
-// 📁 src/components/stats/sections/WordsSection.js - REFACTORED Clean Data Flow
-// =====================================================  
+// 📁 src/components/stats/sections/WordsSection.tsx - REFACTORED Clean Data Flow
+// =====================================================
 
-import React, { useState, useMemo, useEffect } from 'react'; 
+import React, { useState, useMemo, useEffect } from 'react';
+import type { Word } from '../../../types';
+import type { WordPerformanceAnalysis } from '../../../types/entities/Performance.types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'; 
 import { Button } from '../../ui/button'; 
 import { Input } from '../../ui/input'; 
@@ -12,19 +14,35 @@ import { useNotification } from '../../../contexts/NotificationContext';
 import { getCategoryStyle } from '../../../utils/categoryUtils'; 
 import WordDetailSection from '../components/WordDetailSection';
 
-const WordsSection = ({ localRefresh }) => {
+interface CollapsedChaptersState {
+  [chapter: string]: boolean;
+}
+
+interface WordsSectionProps {
+  localRefresh: number;
+}
+
+interface CompactWordCardProps {
+  word: WordPerformanceAnalysis;
+  isSelected: boolean;
+  onClick: () => void;
+  onToggleLearned: () => void;
+  onToggleDifficult: () => void;
+}
+
+const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
   // ⭐ ENHANCED: State management
   const [searchWord, setSearchWord] = useState('');
   const [filterChapter, setFilterChapter] = useState('');
   const [filterLearned, setFilterLearned] = useState('all');
   const [filterDifficult, setFilterDifficult] = useState('all');
   const [filterGroup, setFilterGroup] = useState('');
-  const [selectedWordId, setSelectedWordId] = useState(null);
+  const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
   const [showFiltersPanel, setShowFiltersPanel] = useState(true);
   const [internalRefresh, setInternalRefresh] = useState(0);
    
   // ⭐ FIXED: Stato per capitoli collassabili - NESSUNA RESTRIZIONE
-  const [collapsedChapters, setCollapsedChapters] = useState({});
+  const [collapsedChapters, setCollapsedChapters] = useState<CollapsedChaptersState>({});
 
   // ⭐ REFACTORED: Clean data flow from AppContext - single source of truth
   const {
@@ -49,7 +67,7 @@ const WordsSection = ({ localRefresh }) => {
   }, []);
 
   // ⭐ REFACTORED: Enhanced word performance data using ONLY AppContext data
-  const wordsAnalysis = useMemo(() => {
+  const wordsAnalysis = useMemo((): WordPerformanceAnalysis[] => {
     if (!getAllWordsPerformance || !words) {
       return [];
     }
@@ -57,26 +75,26 @@ const WordsSection = ({ localRefresh }) => {
     const performanceData = getAllWordsPerformance();
      
     // ⭐ CRITICAL: Better debugging of the mapping process
-    const performanceMap = new Map(performanceData.map(p => [p.wordId, p]));
+    const performanceMap = new Map(performanceData.map((p: any) => [p.wordId, p]));
      
     // ⭐ ENHANCED: Better word merging with detailed logging
     const analyzed = words.map((word, index) => {
       const performance = performanceMap.get(word.id);
        
       // ⭐ CRITICAL: Multiple ways to detect if word has performance data
-      const hasAttempts = performance && performance.attempts && performance.attempts.length > 0;
-      const hasTotalAttempts = performance && performance.totalAttempts > 0;
-      const hasAccuracy = performance && typeof performance.accuracy === 'number';
+      const hasAttempts = performance && (performance as any).attempts && (performance as any).attempts.length > 0;
+      const hasTotalAttempts = performance && (performance as any).totalAttempts > 0;
+      const hasAccuracy = performance && typeof (performance as any).accuracy === 'number';
       const hasData = hasAttempts || hasTotalAttempts || hasAccuracy;
                
       return {
         ...word,
-        totalAttempts: performance?.totalAttempts || performance?.attempts?.length || 0,
-        accuracy: performance?.accuracy || 0,
-        hintsPercentage: performance?.hintsPercentage || 0,
-        currentStreak: performance?.currentStreak || 0,
-        status: performance?.status || 'new',
-        avgTime: performance?.avgTime || 0,
+        totalAttempts: (performance as any)?.totalAttempts || (performance as any)?.attempts?.length || 0,
+        accuracy: (performance as any)?.accuracy || 0,
+        hintsPercentage: (performance as any)?.hintsPercentage || 0,
+        currentStreak: (performance as any)?.currentStreak || 0,
+        status: (performance as any)?.status || 'new',
+        avgTime: (performance as any)?.avgTime || 0,
         hasPerformanceData: hasData,
         // ⭐ DEBUG: Include raw performance for debugging
         _rawPerformance: performance
@@ -95,7 +113,7 @@ const WordsSection = ({ localRefresh }) => {
         if (hasRawData) {
           const attempts = rawPerformance.attempts;
           const totalAttempts = attempts.length;
-          const correctAttempts = attempts.filter(a => a.correct).length;
+          const correctAttempts = attempts.filter((a: any) => a.correct).length;
           const accuracy = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
                    
           return {
@@ -123,10 +141,10 @@ const WordsSection = ({ localRefresh }) => {
       });
        
       const fallbackWithData = fallbackAnalysis.filter(w => w.hasPerformanceData).length;
-      return fallbackAnalysis;
+      return fallbackAnalysis as any;
     }
      
-    return analyzed;
+    return analyzed as any;
   }, [getAllWordsPerformance, words, wordPerformance, localRefresh]);
 
   // ⭐ SAME: Filtering logic
@@ -161,9 +179,9 @@ const WordsSection = ({ localRefresh }) => {
       if (word.chapter) chapters.add(word.chapter);
     });
     return Array.from(chapters).sort((a, b) => {
-      const aNum = parseInt(a);
-      const bNum = parseInt(b);
-      return !isNaN(aNum) && !isNaN(bNum) ? aNum - bNum : a.localeCompare(b);
+      const aNum = parseInt(a as string);
+      const bNum = parseInt(b as string);
+      return !isNaN(aNum) && !isNaN(bNum) ? aNum - bNum : (a as string).localeCompare(b as string);
     });
   }, [wordsAnalysis]);
 
@@ -198,12 +216,12 @@ const WordsSection = ({ localRefresh }) => {
 
   // ⭐ SAME: Grouped words
   const groupedWords = useMemo(() => {
-    return filteredWords.reduce((groups, word) => {
+    return filteredWords.reduce((groups: any, word) => {
       const chapter = word.chapter || 'Senza Capitolo';
       if (!groups[chapter]) groups[chapter] = [];
       groups[chapter].push(word);
       return groups;
-    }, {});
+    }, {} as any);
   }, [filteredWords]);
 
   // ⭐ SAME: Clear filters
@@ -216,7 +234,7 @@ const WordsSection = ({ localRefresh }) => {
   };
 
   // ⭐ SAME: Handle word actions
-  const handleToggleLearned = (id) => {
+  const handleToggleLearned = (id: string) => {
     const word = wordsAnalysis.find(w => w.id === id);
     if (word) {
       toggleWordLearned(id);
@@ -228,7 +246,7 @@ const WordsSection = ({ localRefresh }) => {
     }
   };
 
-  const handleToggleDifficult = (id) => {
+  const handleToggleDifficult = (id: string) => {
     const word = wordsAnalysis.find(w => w.id === id);
     if (word) {
       toggleWordDifficult(id);
@@ -241,7 +259,7 @@ const WordsSection = ({ localRefresh }) => {
   };
 
   // ⭐ FIXED: Handle chapter collapse - NESSUNA RESTRIZIONE
-  const toggleChapterCollapse = (chapter) => {
+  const toggleChapterCollapse = (chapter: string) => {
     setCollapsedChapters(prev => ({
       ...prev,
       [chapter]: !prev[chapter]
@@ -254,17 +272,17 @@ const WordsSection = ({ localRefresh }) => {
   const allExpanded = allChapters.every(chapter => !collapsedChapters[chapter]);
 
   const expandAllChapters = () => {
-    const newState = {};
+    const newState: any = {};
     allChapters.forEach(chapter => {
-      newState[chapter] = false; // false = expanded
+      (newState as any)[chapter] = false; // false = expanded
     });
     setCollapsedChapters(newState);
   };
 
   const collapseAllChapters = () => {
-    const newState = {};
+    const newState: any = {};
     allChapters.forEach(chapter => {
-      newState[chapter] = true; // true = collapsed
+      (newState as any)[chapter] = true; // true = collapsed
     });
     setCollapsedChapters(newState);
   };
@@ -350,7 +368,7 @@ const WordsSection = ({ localRefresh }) => {
                 >
                   <option value="">Tutti i capitoli</option>
                   {availableChapters.map(chapter => (
-                    <option key={chapter} value={chapter}>📖 {chapter}</option>
+                    <option key={chapter as string} value={chapter as string}>{`📖 ${chapter}`}</option>
                   ))}
                   {wordsWithoutChapter.length > 0 && (
                     <option value="no-chapter">📋 Senza capitolo</option>
@@ -393,8 +411,8 @@ const WordsSection = ({ localRefresh }) => {
                 >
                   <option value="">Tutte le categorie</option>
                   {availableGroups.map(group => (
-                    <option key={group} value={group}>
-                      {getCategoryStyle(group).icon} {group}
+                    <option key={group as string} value={group as string}>
+                      {`${getCategoryStyle(group).icon} ${group}`}
                     </option>
                   ))}
                 </select>
@@ -505,16 +523,16 @@ const WordsSection = ({ localRefresh }) => {
                       </div>
                       <div className="flex gap-2 text-sm">
                         <span className="bg-indigo-200 text-indigo-700 px-3 py-1 rounded-full">
-                          {chapterWords.length} parole
+                          {(chapterWords as any).length} parole
                         </span>
                         <span className="bg-green-200 text-green-700 px-3 py-1 rounded-full">
-                          {chapterWords.filter(w => w.learned).length} apprese
+                          {(chapterWords as any).filter((w: any) => w.learned).length} apprese
                         </span>
                         <span className="bg-red-200 text-red-700 px-3 py-1 rounded-full">
-                          {chapterWords.filter(w => w.difficult).length} difficili
+                          {(chapterWords as any).filter((w: any) => w.difficult).length} difficili
                         </span>
                         <span className="bg-purple-200 text-purple-700 px-3 py-1 rounded-full">
-                          {chapterWords.filter(w => w.hasPerformanceData).length} con performance
+                          {(chapterWords as any).filter((w: any) => w.hasPerformanceData).length} con performance
                         </span>
                       </div>
                     </div>
@@ -525,7 +543,7 @@ const WordsSection = ({ localRefresh }) => {
                     <CardContent className="p-4">
                       {/* ⭐ FIXED: Scrollable word list */}
                       <div className="max-h-80 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                        {chapterWords.map((word) => (
+                        {(chapterWords as any).map((word: any) => (
                           <CompactWordCard
                             key={word.id}
                             word={word}
@@ -538,9 +556,9 @@ const WordsSection = ({ localRefresh }) => {
                       </div>
                        
                       {/* ⭐ FIXED: Info parole nel capitolo */}
-                      {chapterWords.length > 5 && (
+                      {(chapterWords as any).length > 5 && (
                         <div className="mt-3 text-center text-sm text-gray-500">
-                          📊 {chapterWords.length} parole totali • Scorri per vedere tutte
+                          📊 {(chapterWords as any).length} parole totali • Scorri per vedere tutte
                         </div>
                       )}
                     </CardContent>
@@ -555,14 +573,14 @@ const WordsSection = ({ localRefresh }) => {
 };
 
 // ⭐ SAME: Compact Word Card
-const CompactWordCard = ({ 
+const CompactWordCard: React.FC<CompactWordCardProps> = ({ 
   word, 
   isSelected, 
   onClick, 
   onToggleLearned, 
   onToggleDifficult 
 }) => {
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string): string => {
     const colors = {
       critical: 'bg-red-500',
       inconsistent: 'bg-orange-500', 
@@ -572,10 +590,10 @@ const CompactWordCard = ({
       consolidated: 'bg-emerald-500',
       new: 'bg-gray-500'
     };
-    return colors[status] || 'bg-gray-500';
+    return (colors as any)[status] || 'bg-gray-500';
   };
 
-  const getStatusLabel = (status) => {
+  const getStatusLabel = (status: string): string => {
     const labels = {
       critical: '🔴',
       inconsistent: '🟠', 
@@ -585,7 +603,7 @@ const CompactWordCard = ({
       consolidated: '🟢',
       new: '⚪'
     };
-    return labels[status] || '⚪';
+    return (labels as any)[status] || '⚪';
   };
 
   return (

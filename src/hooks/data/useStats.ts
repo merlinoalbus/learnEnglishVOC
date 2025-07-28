@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useFirestore } from "../core/useFirestore";
 import { useFirebase } from "../../contexts/FirebaseContext";
 import { useAuth } from "../integration/useAuth";
+import { useWords } from "./useWords";
 import AppConfig from "../../config/appConfig";
 import { StatsAnalyticsService } from "../../services/statsAnalyticsService"; // Fixed case sensitivity
+import { StatsCalculationService } from "../../services/statsCalculationService";
 import type {
   Statistics,
   DailyProgressAggregated,
@@ -17,7 +19,7 @@ import type {
   CategoryProgressAggregated,
   DifficultyStatsAggregated,
 } from "../../types/entities/Statistics.types";
-import type { TestResult } from "../../types/entities/Test.types";
+import type { TestHistoryItem } from "../../types/entities/Test.types";
 import type { Word } from "../../types/entities/Word.types";
 import type {
   WordPerformance,
@@ -31,7 +33,7 @@ import type {
 } from "../../types/index";
 import type { FirestoreError } from "../../types/infrastructure/Firestore.types";
 
-const EMPTY_ARRAY: TestResult[] = [];
+const EMPTY_ARRAY: TestHistoryItem[] = [];
 const INITIAL_WORD_PERFORMANCE: Record<string, WordPerformance> = {};
 
 // Fixed categoriesProgress - now properly typed as empty object that will be populated
@@ -79,7 +81,7 @@ const INITIAL_STATS: Omit<Statistics, "id"> = {
 
 interface StatsState {
   stats: Statistics;
-  testHistory: TestResult[];
+  testHistory: TestHistoryItem[];
   wordPerformance: Record<string, WordPerformance>;
   isInitialized: boolean;
   isLoading: boolean;
@@ -96,7 +98,7 @@ interface StatsOperations {
     wrongWords: Word[],
     detailedSession?: any
   ) => Promise<OperationResult<void>>;
-  addTestToHistory: (testResult: TestResult) => Promise<OperationResult<void>>;
+  addTestToHistory: (testResult: TestHistoryItem) => Promise<OperationResult<void>>;
   recordWordPerformance: (
     wordId: string,
     attempt: PerformanceAttempt
@@ -113,6 +115,7 @@ interface StatsOperations {
   getDetailedSessionById: (sessionId: string) => Promise<OperationResult<any>>;
   deleteDetailedSession: (sessionId: string) => Promise<OperationResult<void>>;
   exportDetailedSessions: () => Promise<OperationResult<any[]>>;
+  // Bonifica
 }
 
 interface StatsGetters {
@@ -125,6 +128,16 @@ interface StatsGetters {
   hintsRate: number;
   weeklyProgress: WeeklyProgressAnalysis | null;
   isMigrated: boolean;
+  // ⭐ NUOVO: Statistiche corrette calcolate dal service
+  correctStatsData: {
+    testCompletati: number;
+    paroleStudiate: number;
+    mediaCorretta: number;
+    recordScore: number;
+    aiutiTotali: number;
+    maxHintsPercentage: number;
+  };
+  detailedSessions: any[];
 }
 
 interface StatsResult extends StatsState, StatsOperations, StatsGetters {}
@@ -156,11 +169,13 @@ export const useStats = (): StatsResult => {
   // Manual handling for detailedTestSessions since they don't use firestoreMetadata structure
   const [detailedTestSessions, setDetailedTestSessions] = useState<any[]>([]);
   const [detailedSessionsLoading, setDetailedSessionsLoading] = useState(false);
+  const [manualWordPerformances, setManualWordPerformances] = useState<any[]>([]);
 
   const { isReady } = useFirebase();
   const { user, authUser } = useAuth();
+  const { words: wordsData } = useWords();
 
-  const [testHistory, setTestHistory] = useState<TestResult[]>(EMPTY_ARRAY);
+  const [testHistory, setTestHistory] = useState<TestHistoryItem[]>(EMPTY_ARRAY);
   const [wordPerformance, setWordPerformance] = useState<
     Record<string, WordPerformance>
   >(INITIAL_WORD_PERFORMANCE);
@@ -275,400 +290,55 @@ export const useStats = (): StatsResult => {
         // Get current user ID for security and data isolation
         const currentUserId = authUser?.uid || user?.id || currentStats.id || "anonymous";
 
-        const testResult: TestResult = {
-          testId: `test_${Date.now()}`,
-          userId: currentUserId,
-          completedSession: {
-            // TestSession complete structure with all required properties
-            currentQuestion: null,
-            timeMetrics: detailedSession ? {
-              // Usa dati reali dalla detailed session
-              totalTestTime: detailedSession.totalTimeSpent || 0,
-              averageQuestionTime: detailedSession.averageTimePerWord || 0,
-              fastestQuestion: detailedSession.words.length > 0 ? 
-                Math.min(...detailedSession.words.map((w: any) => w.totalTime)) : 1000,
-              slowestQuestion: detailedSession.words.length > 0 ? 
-                Math.max(...detailedSession.words.map((w: any) => w.totalTime)) : 5000,
-              timeDistribution: {
-                byCategory: {},
-                byDifficulty: {},
-                percentiles: calculateTimePercentiles(detailedSession.words.map((w: any) => w.totalTime)),
-              },
-              speedTrend: {
-                direction: calculateSpeedTrend(detailedSession.speedTrend),
-                changePercentage: calculateSpeedChangePercentage(detailedSession.speedTrend),
-                dataPoints: detailedSession.speedTrend || [],
-              },
-            } : {
-              // Fallback ai dati esistenti
-              totalTestTime: testStats.timeSpent || 0,
-              averageQuestionTime: (testStats.timeSpent || 0) / testWords.length,
-              fastestQuestion: 1000,
-              slowestQuestion: 5000,
-              timeDistribution: {
-                byCategory: {},
-                byDifficulty: {},
-                percentiles: {
-                  p25: 2000,
-                  p50: 3000,
-                  p75: 4000,
-                  p90: 5000,
-                },
-              },
-              speedTrend: {
-                direction: "stable",
-                changePercentage: 0,
-                dataPoints: [],
-              },
-            },
-            progress: {
-              basic: {
-                questionsAnswered: testWords.length,
-                questionsRemaining: 0,
-                currentQuestion: testWords.length,
-                totalQuestions: testWords.length,
-                completionPercentage: 100,
-              },
-              performance: {
-                correctAnswers: testStats.correct || 0,
-                currentAccuracy:
-                  ((testStats.correct || 0) / testWords.length) * 100,
-                incorrectAnswers: testStats.incorrect || 0,
-                currentStreak: 0,
-                bestStreak: 0,
-                efficiency: 0,
-                currentScore: 0,
-              },
-              predictions: {
-                predictedFinalAccuracy: testStats.score || 0,
-                confidence: 0.8,
-                estimatedTimeToCompletion: 0,
-                predictedFinalScore: testStats.score || 0,
-              },
-              milestones: [],
-            },
-            // Added missing properties for TestSession
-            wordPool: {
-              allWords: testWords,
-              usedWords: testWords,
-              incorrectWords: wrongWords,
-              remainingWords: [],
-              currentIndex: testWords.length,
-              selectionStrategy: "random",
-            },
-            answerHistory: detailedSession?.words ? 
-              // Usa dati reali dalla detailed session
-              detailedSession.words.map((wordSession: any, index: number) => ({
-                id: `answer_${index}`,
-                questionId: wordSession.wordId,
-                wordId: wordSession.wordId,
-                result: {
-                  isCorrect: wordSession.isCorrect,
-                  confidence: wordSession.timeExpired ? 0.3 : (wordSession.isCorrect ? 0.9 : 0.7),
-                },
-                hintsUsed: wordSession.hintsUsed.map((hint: any) => ({
-                  type: hint.type,
-                  content: hint.content,
-                  usedAt: hint.requestedAt,
-                  effective: wordSession.isCorrect && hint.sequenceOrder === 1, // First hint più efficace
-                })),
-                timing: {
-                  startedAt: wordSession.wordShownAt,
-                  cardFlippedAt: wordSession.cardFlippedAt || wordSession.answerDeclaredAt,
-                  declaredAt: wordSession.answerDeclaredAt || wordSession.wordShownAt,
-                  totalTime: wordSession.totalTime,
-                  thinkingTime: wordSession.thinkingTime || wordSession.totalTime,
-                  declarationTime: wordSession.evaluationTime || 0,
-                },
-                metadata: {
-                  timeOfDay: getTimeOfDay(wordSession.wordShownAt),
-                  sessionPosition: wordSession.testPosition,
-                  contextFactors: [
-                    ...(wordSession.timeExpired ? ['timeout'] : []),
-                    ...(wordSession.hintsUsed.length > 0 ? ['hints_used'] : []),
-                  ],
-                },
-              })) :
-              // Fallback ai dati esistenti se gameSession non disponibile
-              testWords.map((word, index) => ({
-                id: `answer_${index}`,
-                questionId: word.id!,
-                wordId: word.id!,
-                result: {
-                  isCorrect: !wrongWords.some((w) => w.id === word.id),
-                  confidence: 0.8,
-                },
-                hintsUsed: [],
-                timing: {
-                  startedAt: new Date(),
-                  cardFlippedAt: new Date(),
-                  declaredAt: new Date(),
-                  totalTime: Math.random() * 5000 + 1000,
-                  thinkingTime: Math.random() * 3000 + 500,
-                  declarationTime: Math.random() * 1000 + 500,
-                },
-                metadata: {
-                  timeOfDay: "afternoon",
-                  sessionPosition: index + 1,
-                  contextFactors: [],
-                },
-              })),
-            hintSystem: {
-              globalState: {
-                totalHintsUsed: testStats.hints || 0,
-                hintsRemaining: 5,
-                usagePattern: {
-                  preferredType: "balanced",
-                  frequency: "moderate",
-                  effectiveness: {
-                    sentence: 0.8,
-                    synonym: 0.7,
-                  },
-                },
-              },
-              config: {
-                enabled: true,
-                maxHintsPerQuestion: 2,
-                cooldownBetweenHints: 0,
-                availableHintTypes: ["sentence", "synonym"],
-                hintCosts: {
-                  sentence: 1,
-                  synonym: 1,
-                },
-              },
-              statistics: {
-                usage: {
-                  sentence: testStats.hints || 0,
-                  synonym: 0,
-                },
-                accuracyAfterHint: {
-                  sentence: 0,
-                  synonym: 0,
-                  overall: 0,
-                },
-                averageTimeWithHint: {
-                  sentence: 0,
-                  synonym: 0,
-                  overall: 0,
-                },
-                averageTimeWithoutHint: 0,
-              },
-            },
+        // Create a TestHistoryItem from the test data
+        const testResult: TestHistoryItem = {
+          id: `test_${Date.now()}`,
+          timestamp: Date.now(),
+          percentage: testStats.percentage || 0,
+          correctWords: testStats.correctAnswers || 0,
+          incorrectWords: testStats.incorrectAnswers || 0,
+          hintsUsed: testStats.hintsUsed || 0,
+          totalTime: testStats.timeSpent || 0,
+          avgTimePerWord: testWords.length > 0 ? (testStats.timeSpent || 0) / testWords.length / 1000 : 0,
+          wrongWords: wrongWords.map(w => ({
+            id: w.id,
+            english: w.english,
+            italian: w.italian
+          })),
+          wordTimes: detailedSession?.words?.map((w: any) => ({
+            wordId: w.word?.id,
+            time: w.totalTime
+          })) || [],
+          testParameters: {
+            selectedChapters: Array.from(new Set(testWords.map(w => w.chapter).filter((ch): ch is string => Boolean(ch))))
           },
-          config: {
-            mode: "normal",
-            hints: {
-              enabled: true,
-              maxHintsPerQuestion: 2,
-              cooldownBetweenHints: 0,
-              availableHintTypes: ["sentence", "synonym"],
-              hintCosts: {
-                sentence: 1,
-                synonym: 1,
-              },
-            },
-            wordSelection: {
-              categories: [],
-              chapters: [],
-              unlearnedOnly: false,
-              difficultOnly: false,
-              randomOrder: true,
-              selectionStrategy: "random",
-            },
-            timing: {
-              autoAdvance: false,
-              showTimer: false,
-              autoAdvanceDelay: 1000,
-              wordTimeLimit: 30000,
-              showMeaning: false,
-              meaningDisplayDuration: 2000,
-            },
-            ui: {
-              theme: "light" as const,
-              animations: true,
-              showDetailedProgress: true,
-              sounds: false,
-              showRealTimeStats: true,
-            },
-            scoring: {
-              accuracyWeight: 0.7,
-              speedWeight: 0.3,
-              streakBonus: 0.1,
-              hintPenalty: 0.1,
-              thresholds: {
-                excellent: 90,
-                good: 80,
-                average: 70,
-              },
-            },
-          },
-          finalScore: {
-            total: testStats.score || 0,
-            category:
-              testStats.score >= 90
-                ? "excellent"
-                : testStats.score >= 80
-                ? "good"
-                : testStats.score >= 70
-                ? "average"
-                : "poor",
-            breakdown: {
-              accuracy: ((testStats.correct || 0) / testWords.length) * 100,
-              speed: 50,
-              efficiency: 50,
-              consistency: 50,
-              bonus: 0,
-              penalties: 0,
-            },
-          },
-          feedback: {
-            tone: testStats.score >= 80 ? "celebratory" : "encouraging",
-            color: testStats.score >= 80 ? "#22c55e" : "#3b82f6",
-            wordsToReview: wrongWords.map((w) => w.english),
-            message: "Great job!",
-            icon: "check",
-            nextGoals: ["Keep practicing", "Review difficult words"],
-          },
-          analytics: {
-            insights: [],
-            performancePatterns: {
-              timePatterns: {
-                totalTestTime: testStats.timeSpent || 0,
-                averageQuestionTime:
-                  (testStats.timeSpent || 0) / testWords.length,
-                fastestQuestion: 1000,
-                slowestQuestion: 5000,
-                timeDistribution: {
-                  byCategory: {},
-                  byDifficulty: {},
-                  percentiles: {
-                    p25: 2000,
-                    p50: 3000,
-                    p75: 4000,
-                    p90: 5000,
-                  },
-                },
-                speedTrend: {
-                  direction: "stable",
-                  changePercentage: 0,
-                  dataPoints: [],
-                },
-              },
-              accuracyPatterns: {
-                overallAccuracy:
-                  ((testStats.correct || 0) / testWords.length) * 100,
-                accuracyByPosition: [],
-                accuracyTrend: {
-                  direction: "stable",
-                  changePercentage: 0,
-                  dataPoints: [],
-                },
-                difficultWordsBias: 0,
-              },
-              hintPatterns: {
-                usage: {
-                  sentence: testStats.hints || 0,
-                  synonym: 0,
-                },
-                accuracyAfterHint: {
-                  sentence: 0,
-                  synonym: 0,
-                  overall: 0,
-                },
-                averageTimeWithHint: {
-                  sentence: 0,
-                  synonym: 0,
-                  overall: 0,
-                },
-                averageTimeWithoutHint: 0,
-              },
-              categoryPatterns: [],
-            },
-            recommendations: [],
-          },
-          exportData: {
-            summary: {
-              testId: `test_${Date.now()}`,
-              duration: testStats.timeSpent || 0,
-              totalQuestions: testWords.length,
-              correctAnswers: testStats.correct || 0,
-              accuracy: ((testStats.correct || 0) / testWords.length) * 100,
-              hintsUsed: testStats.hints || 0,
-              averageTime: (testStats.timeSpent || 0) / testWords.length,
-              score: testStats.score || 0,
-              category:
-                testStats.score >= 90
-                  ? "excellent"
-                  : testStats.score >= 80
-                  ? "good"
-                  : testStats.score >= 70
-                  ? "average"
-                  : "poor",
-            },
-            detailedAnswers: [],
-            analytics: {
-              insights: [],
-              performancePatterns: {
-                timePatterns: {
-                  totalTestTime: testStats.timeSpent || 0,
-                  averageQuestionTime:
-                    (testStats.timeSpent || 0) / testWords.length,
-                  fastestQuestion: 1000,
-                  slowestQuestion: 5000,
-                  timeDistribution: {
-                    byCategory: {},
-                    byDifficulty: {},
-                    percentiles: {
-                      p25: 2000,
-                      p50: 3000,
-                      p75: 4000,
-                      p90: 5000,
-                    },
-                  },
-                  speedTrend: {
-                    direction: "stable",
-                    changePercentage: 0,
-                    dataPoints: [],
-                  },
-                },
-                accuracyPatterns: {
-                  overallAccuracy:
-                    ((testStats.correct || 0) / testWords.length) * 100,
-                  accuracyByPosition: [],
-                  accuracyTrend: {
-                    direction: "stable",
-                    changePercentage: 0,
-                    dataPoints: [],
-                  },
-                  difficultWordsBias: 0,
-                },
-                hintPatterns: {
-                  usage: {
-                    sentence: testStats.hints || 0,
-                    synonym: 0,
-                  },
-                  accuracyAfterHint: {
-                    sentence: 0,
-                    synonym: 0,
-                    overall: 0,
-                  },
-                  averageTimeWithHint: {
-                    sentence: 0,
-                    synonym: 0,
-                    overall: 0,
-                  },
-                  averageTimeWithoutHint: 0,
-                },
-                categoryPatterns: [],
-              },
-              recommendations: [],
-            },
-            exportedAt: new Date(),
-            format: "json",
-          },
+          totalWords: testWords.length,
+          difficulty: testWords.length > 20 ? 'hard' : testWords.length > 10 ? 'medium' : 'easy',
+          testType: 'normal',
+          chapterStats: testWords.reduce((stats: any, word) => {
+            const chapter = word.chapter || 'Senza Capitolo';
+            if (!stats[chapter]) {
+              stats[chapter] = {
+                totalWords: 0,
+                correctWords: 0,
+                incorrectWords: 0,
+                hintsUsed: 0,
+                percentage: 0
+              };
+            }
+            stats[chapter].totalWords++;
+            if (wrongWords.find(w => w.id === word.id)) {
+              stats[chapter].incorrectWords++;
+            } else {
+              stats[chapter].correctWords++;
+            }
+            stats[chapter].percentage = stats[chapter].totalWords > 0 ? 
+              Math.round((stats[chapter].correctWords / stats[chapter].totalWords) * 100) : 0;
+            return stats;
+          }, {})
         };
 
-        setTestHistory((prev) => [...prev, testResult]);
+        // Add to history
 
         for (const word of testWords) {
           const isWrong = wrongWords.some((w) => w.id === word.id);
@@ -759,7 +429,7 @@ export const useStats = (): StatsResult => {
               // Add device/browser info if available
               deviceInfo: navigator.userAgent,
               sessionMetadata: {
-                testResultId: testResult.testId,
+                testResultId: testResult.id,
                 totalDuration: detailedSession.totalTimeSpent,
                 wordsCompleted: detailedSession.words.length,
                 finalAccuracy: detailedSession.accuracy,
@@ -821,7 +491,7 @@ export const useStats = (): StatsResult => {
   );
 
   const addTestToHistory = useCallback(
-    async (testResult: TestResult): Promise<OperationResult<void>> => {
+    async (testResult: TestHistoryItem): Promise<OperationResult<void>> => {
       const startTime = Date.now();
       try {
         setTestHistory((prev) => [...prev, testResult]);
@@ -1041,7 +711,25 @@ export const useStats = (): StatsResult => {
         }
 
         if (data.sourceData?.testResults) {
-          setTestHistory(data.sourceData.testResults);
+          // Convert TestResult[] to TestHistoryItem[]
+          const testHistoryItems: TestHistoryItem[] = data.sourceData.testResults.map(result => ({
+            id: result.testId,
+            timestamp: Date.now(),
+            percentage: result.finalScore?.total || 0,
+            correctWords: result.completedSession?.progress?.performance?.correctAnswers || 0,
+            incorrectWords: result.completedSession?.progress?.performance?.incorrectAnswers || 0,
+            hintsUsed: result.completedSession?.hintSystem?.globalState?.totalHintsUsed || 0,
+            totalTime: result.completedSession?.timeMetrics?.totalTestTime || 0,
+            avgTimePerWord: result.completedSession?.timeMetrics?.averageQuestionTime || 0,
+            totalWords: result.completedSession?.progress?.basic?.totalQuestions || 0,
+            difficulty: 'medium',
+            testType: 'normal',
+            wrongWords: [],
+            wordTimes: [],
+            testParameters: { selectedChapters: [] },
+            chapterStats: {}
+          }));
+          setTestHistory(testHistoryItems);
         }
 
         if (data.sourceData?.wordPerformances) {
@@ -1242,6 +930,7 @@ export const useStats = (): StatsResult => {
     }
   }, [detailedTestSessions]);
 
+
   const getAllWordsPerformance = useCallback((): WordPerformanceAnalysis[] => {
     return Object.values(wordPerformance).map((perf) => {
       const totalAttempts = perf.attempts.length;
@@ -1290,6 +979,7 @@ export const useStats = (): StatsResult => {
         difficulty: accuracy < 50 ? "hard" : accuracy < 80 ? "medium" : "easy",
         needsWork: accuracy < 70,
         mastered: accuracy >= 90,
+        hasPerformanceData: totalAttempts > 0,
         recommendations: [],
       };
     });
@@ -1340,6 +1030,27 @@ export const useStats = (): StatsResult => {
     return calculatedStats.temporalAnalytics.weeklyProgress;
   }, [calculatedStats]);
 
+  // ⭐ NUOVO: Calcolo statistiche corrette dal service
+  const correctStatsData = useMemo(() => {
+    if (detailedTestSessions.length === 0 && manualWordPerformances.length === 0) {
+      return {
+        testCompletati: 0,
+        paroleStudiate: 0,
+        mediaCorretta: 0,
+        recordScore: 0,
+        aiutiTotali: 0,
+        maxHintsPercentage: 0
+      };
+    }
+
+    const result = StatsCalculationService.calculateStats(detailedTestSessions, manualWordPerformances);
+    
+    // Debug log
+    StatsCalculationService.logCalculationDetails(detailedTestSessions, manualWordPerformances, result);
+    
+    return result;
+  }, [detailedTestSessions, manualWordPerformances]);
+
   useEffect(() => {
     if (performanceFirestore.data.length > 0) {
       const performanceMap: Record<string, WordPerformance> = {};
@@ -1350,60 +1061,105 @@ export const useStats = (): StatsResult => {
     }
   }, [performanceFirestore.data, performanceFirestore.loading, performanceFirestore.error, user?.id, authUser?.uid]);
 
-  // Manual fetch for detailedTestSessions
+  // Manual fetch for detailedTestSessions and performance
   useEffect(() => {
     if (!isReady || (!user?.id && !authUser?.uid) || detailedSessionsLoading) return;
     
-    const loadDetailedSessions = async () => {
+    const loadData = async () => {
       setDetailedSessionsLoading(true);
       try {
         const userId = user?.id || authUser?.uid;
         
-        // Direct query for detailedTestSessions with userId field (not firestoreMetadata.userId)
-        const collectionRef = collection(db, "detailedTestSessions");
-        const q = query(collectionRef, where("userId", "==", userId));
-        const snapshot = await getDocs(q);
+        // 1. Load detailedTestSessions
+        const sessionsRef = collection(db, "detailedTestSessions");
+        const sessionsQuery = query(sessionsRef, where("userId", "==", userId));
+        const sessionsSnapshot = await getDocs(sessionsQuery);
         
         const sessions: any[] = [];
-        snapshot.forEach((doc) => {
-          sessions.push({ id: doc.id, ...doc.data() });
+        sessionsSnapshot.forEach((doc) => {
+          const data = doc.data();
+          // FILTRA SOLO SESSIONI NON CANCELLATE
+          if (!data.deleted && !data.firestoreMetadata?.deleted) {
+            sessions.push({ id: doc.id, ...data });
+          }
         });
         
         setDetailedTestSessions(sessions);
         
+        // 2. Load performance data
+        const performanceRef = collection(db, "performance");
+        const performanceQuery = query(performanceRef, where("firestoreMetadata.userId", "==", userId));
+        const performanceSnapshot = await getDocs(performanceQuery);
+        
+        const performances: any[] = [];
+        const performanceMap: Record<string, WordPerformance> = {};
+        
+        performanceSnapshot.forEach((doc) => {
+          const data = doc.data();
+          // FILTRA SOLO DOCUMENTI NON CANCELLATI
+          if (data.firestoreMetadata?.deleted !== true) {
+            // Trova la parola corrispondente per aggiungere il flag learned
+            const correspondingWord = wordsData.find((word: any) => 
+              word.id === data.wordId || word.english === data.english
+            );
+            
+            const performanceWithLearned = {
+              ...data,
+              learned: correspondingWord?.learned || false
+            };
+            
+            performances.push({ id: doc.id, ...performanceWithLearned });
+            
+            // Create proper WordPerformance object
+            const wordPerformance: WordPerformance = {
+              wordId: data.wordId || '',
+              english: data.english || '',
+              italian: data.italian || '',
+              chapter: data.chapter,
+              attempts: data.attempts || [],
+              updatedAt: data.updatedAt,
+              firestoreMetadata: data.firestoreMetadata
+            };
+            performanceMap[data.english] = wordPerformance;
+          }
+        });
+        
+        setManualWordPerformances(performances);
+        setWordPerformance(performanceMap);
+        
+        // Performance data loaded
+        
         if (sessions.length > 0) {
-          // Convert to TestResult format
-          const testResults: TestResult[] = sessions.map(session => ({
-            testId: session.sessionId || session.id,
-            userId: session.userId,
+          // Convert to TestHistoryItem format
+          const testResults: TestHistoryItem[] = sessions.map(session => ({
+            id: session.sessionId || session.id,
             timestamp: session.completedAt || session.startedAt,
             percentage: session.accuracy || 0,
-            score: session.accuracy || 0,
-            correct: session.correctAnswers || 0,
-            incorrect: session.incorrectAnswers || 0,
-            total: session.totalWords || 0,
+            correctWords: session.correctAnswers || 0,
+            incorrectWords: session.incorrectAnswers || 0,
+            totalWords: session.totalWords || 0,
             hintsUsed: session.totalHintsUsed || 0,
-            timeSpent: session.totalTimeSpent || 0,
+            totalTime: session.totalTimeSpent || 0,
+            avgTimePerWord: session.averageTimePerWord || 0,
             chapterStats: session.chapterBreakdown || {},
-            completedSession: null as any,
-            config: null as any,
-            finalScore: null as any,
-            feedback: null as any,
-            analytics: null as any,
-            exportData: null as any,
+            difficulty: 'medium',
+            testType: 'normal',
+            wrongWords: [],
+            wordTimes: [],
+            testParameters: { selectedChapters: [] }
           }));
 
           setTestHistory(testResults);
         }
       } catch (error) {
-        console.error('Error loading detailedTestSessions:', error);
+        console.error('Error loading data:', error);
       } finally {
         setDetailedSessionsLoading(false);
       }
     };
     
-    loadDetailedSessions();
-  }, [isReady, user?.id, authUser?.uid]);
+    loadData();
+  }, [isReady, user?.id, authUser?.uid, wordsData]);
 
 
   return {
@@ -1439,6 +1195,10 @@ export const useStats = (): StatsResult => {
     hintsRate,
     weeklyProgress,
     isMigrated,
+    // ⭐ NUOVO: Dati corretti
+    correctStatsData,
+    detailedSessions: detailedTestSessions,
+    // Bonifica
   };
 };
 

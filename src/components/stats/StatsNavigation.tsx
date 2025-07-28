@@ -1,7 +1,12 @@
 import React from 'react';
 import { Button } from '../ui/button';
 
-const StatsNavigation = ({ selectedView, setSelectedView }) => {
+interface StatsNavigationProps {
+  selectedView: string;
+  setSelectedView: (view: string) => void;
+}
+
+const StatsNavigation: React.FC<StatsNavigationProps> = ({ selectedView, setSelectedView }) => {
   const tabs = [
     { id: 'overview', label: 'Panoramica', icon: '📈' },
     { id: 'chapters', label: 'Per Capitoli', icon: '📚' },

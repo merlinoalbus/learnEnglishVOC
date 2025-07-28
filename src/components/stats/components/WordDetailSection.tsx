@@ -1,12 +1,52 @@
 // ===================================================== 
-// 📁 src/components/stats/components/WordDetailSection.js - REFACTORED Clean Data Flow
-// =====================================================  
+// 📁 src/components/stats/components/WordDetailSection.tsx - REFACTORED Clean Data Flow
+// =====================================================
 import React from 'react';
+import type { Word, TestHistoryItem } from '../../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'; 
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Bar } from 'recharts'; 
 import { Award, TrendingUp, Target } from 'lucide-react';
 
-const WordDetailSection = ({ wordId, getWordAnalysis, testHistory, wordInfo, localRefresh }) => {
+interface WordDetailSectionProps {
+  wordId: string;
+  getWordAnalysis: (wordId: string) => any;
+  testHistory: TestHistoryItem[];
+  wordInfo: any;
+  localRefresh: number | string;
+}
+
+interface AttemptData {
+  timestamp: string;
+  correct: boolean;
+  usedHint: boolean;
+  timeSpent: number;
+  testId?: string;
+}
+
+interface ChartDataPoint {
+  attempt: string;
+  attemptNumber: number;
+  success: number;
+  globalPrecision: number;
+  hint: number;
+  time: number;
+  fullDate: string;
+  isCorrect: boolean;
+  usedHint: boolean;
+  timestamp: string;
+}
+
+interface TooltipPayload {
+  payload: ChartDataPoint;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
+}
+
+const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAnalysis, testHistory, wordInfo, localRefresh }) => {
   // ⭐ REFACTORED: Use ONLY data from props - no localStorage access
   const wordAnalysis = getWordAnalysis ? getWordAnalysis(wordId) : null;
    
@@ -50,14 +90,14 @@ const WordDetailSection = ({ wordId, getWordAnalysis, testHistory, wordInfo, loc
   const finalWordInfo = getWordInfoFromProps();
 
   // ⭐ REFACTORED: Build timeline from testHistory prop instead of localStorage
-  const buildTimelineFromHistory = () => {
-    const attempts = [];
+  const buildTimelineFromHistory = (): AttemptData[] => {
+    const attempts: AttemptData[] = [];
      
     // ⭐ REFACTORED: Use testHistory from props instead of localStorage
     const allTests = testHistory || [];
      
     // ⭐ FIXED: Sort from oldest to newest (opposite of what was before)
-    const sortedTests = [...allTests].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const sortedTests = [...allTests].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
      
     sortedTests.forEach((test, testIndex) => {
       let wasInTest = false;
@@ -73,7 +113,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, testHistory, wordInfo, loc
           wasCorrect = false; // Was wrong
           // ⭐ NEW: Estimate hint usage for wrong words (assume higher chance of hint usage)
           usedHint = (test.hintsUsed > 0) && Math.random() > 0.7; // 30% chance if hints were used in test
-          timeSpent = test.totalTime ? Math.floor((test.totalTime * 1000) / test.totalWords) : 0;
+          timeSpent = test.totalTime && test.totalWords ? Math.floor((test.totalTime * 1000) / test.totalWords) : 0;
         }
       }
        
@@ -112,7 +152,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, testHistory, wordInfo, loc
       // Add attempt if word was in test
       if (wasInTest) {
         attempts.push({
-          timestamp: test.timestamp,
+          timestamp: new Date(test.timestamp).toISOString(),
           correct: wasCorrect,
           usedHint: usedHint,
           timeSpent: Math.max(timeSpent, 0), // Ensure non-negative
@@ -149,7 +189,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, testHistory, wordInfo, loc
   }
 
   // ⭐ FIXED: Better timeline data calculation with REAL dates
-  const timelineData = actualAttempts.map((attempt, index) => {
+  const timelineData: ChartDataPoint[] = actualAttempts.map((attempt, index) => {
     // ⭐ CRITICAL: Calculate cumulative precision up to this attempt
     const attemptsUpToHere = actualAttempts.slice(0, index + 1);
     const correctUpToHere = attemptsUpToHere.filter(a => a.correct).length;
@@ -236,7 +276,7 @@ const WordDetailSection = ({ wordId, getWordAnalysis, testHistory, wordInfo, loc
   };
 
   // ⭐ ENHANCED: Custom tooltip for better data display
-  const CustomTooltip = ({ active, payload, label }) => {
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

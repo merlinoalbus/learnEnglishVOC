@@ -2,11 +2,12 @@
 // DataManagementPanel.js - FIXED File Import/Export
 // =====================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Shield, AlertTriangle, Download, Upload, RefreshCw } from 'lucide-react';
 import { useDataManagement } from './hooks/useDataManagement';
+import { useStats } from '../../hooks/data/useStats';
 
 const DataManagementPanel = () => {
   const {
@@ -19,6 +20,7 @@ const DataManagementPanel = () => {
     handleReset,
     fileInputRef
   } = useDataManagement();
+
 
   return (
     <Card className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 border-2 border-indigo-200 dark:border-indigo-700 rounded-2xl animate-fade-in">

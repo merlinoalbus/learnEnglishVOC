@@ -1,15 +1,26 @@
 // =====================================================
-// 📁 src/components/stats/components/WordPerformanceCard.js - ENHANCED
+// 📁 src/components/stats/components/WordPerformanceCard.tsx - ENHANCED
 // =====================================================
 
 import React from 'react';
+import type { WordPerformanceAnalysis } from '../../../types/entities/Performance.types';
 import { Button } from '../../ui/button';
 import { BookOpen, TrendingUp, Clock, Lightbulb, Target, AlertTriangle, CheckCircle, Circle, Edit3, Eye } from 'lucide-react';
 import { getCategoryStyle } from '../../../utils/categoryUtils';
 
-const WordPerformanceCard = ({ word, isSelected, onClick, onToggleLearned, onToggleDifficult, onEdit, showActions = false }) => {
-  const getStatusColor = (status) => {
-    const colors = {
+interface WordPerformanceCardProps {
+  word: WordPerformanceAnalysis;
+  isSelected: boolean;
+  onClick: () => void;
+  onToggleLearned: () => void;
+  onToggleDifficult: () => void;
+  onEdit: () => void;
+  showActions?: boolean;
+}
+
+const WordPerformanceCard: React.FC<WordPerformanceCardProps> = ({ word, isSelected, onClick, onToggleLearned, onToggleDifficult, onEdit, showActions = false }) => {
+  const getStatusColor = (status: string): string => {
+    const colors: Record<string, string> = {
       critical: 'bg-red-500',
       inconsistent: 'bg-orange-500',
       struggling: 'bg-yellow-500',
@@ -21,8 +32,8 @@ const WordPerformanceCard = ({ word, isSelected, onClick, onToggleLearned, onTog
     return colors[status] || 'bg-gray-500';
   };
 
-  const getStatusLabel = (status) => {
-    const labels = {
+  const getStatusLabel = (status: string): string => {
+    const labels: Record<string, string> = {
       critical: '🔴 Critica',
       inconsistent: '🟠 Instabile',
       struggling: '🟡 In difficoltà',
@@ -34,7 +45,7 @@ const WordPerformanceCard = ({ word, isSelected, onClick, onToggleLearned, onTog
     return labels[status] || '⚪ Sconosciuto';
   };
 
-  const getPerformanceInsight = (word) => {
+  const getPerformanceInsight = (word: WordPerformanceAnalysis) => {
     if (!word.totalAttempts || word.totalAttempts === 0) {
       return { text: 'Nessun test completato', color: 'text-gray-500', icon: '📊' };
     }

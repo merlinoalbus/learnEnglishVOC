@@ -110,6 +110,9 @@ export interface WordPerformanceAnalysis {
   /** Array tentativi per trend analysis */
   attempts: PerformanceAttempt[];
 
+  /** Flag che indica se ci sono dati di performance */
+  hasPerformanceData: boolean;
+
   /** Raccomandazioni */
   recommendations: string[];
 }

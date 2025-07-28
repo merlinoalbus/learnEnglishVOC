@@ -22,100 +22,92 @@ import {
   ComposedChart
 } from 'recharts';
 import { TrendingUp, Target, Clock, Lightbulb, Zap, Award, Info } from 'lucide-react';
-import { useStatsData } from '../hooks/useStatsData';
+import { useStats } from '../../../hooks/data/useStats';
+import { StatsCalculationService, type PerformanceIndexResult, type ChartDataPoint } from '../../../services/statsCalculationService';
+import type { TestHistoryItem, Word } from '../../../types';
 
-const OverviewSection = ({ testHistory, localRefresh }) => {
-  const [showPerformanceExplanation, setShowPerformanceExplanation] = useState(false);
-  const { advancedStats } = useStatsData(testHistory);
+interface OverviewSectionProps {
+  testHistory: TestHistoryItem[];
+  words?: Word[];
+  localRefresh: number;
+  onClearHistory?: () => void;
+}
 
-  // ⭐ FIXED: Rebuild timeline with REAL data from test history (same logic as WordDetailSection)
-  const buildRealTimelineData = () => {
-    if (!testHistory || testHistory.length === 0) return [];
-    
-    // Sort tests chronologically (oldest to newest)
-    const sortedTests = [...testHistory].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    
-    return sortedTests.map((test, index) => {
-      const testDate = new Date(test.timestamp);
+const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRefresh }) => {
+  const [showPerformanceExplanation, setShowPerformanceExplanation] = useState<boolean>(false);
+  const { stats, calculatedStats, detailedSessions, testHistory: dbTestHistory } = useStats();
+
+  // ⭐ USE SERVICE: Get chart data from service only (ultimi 30 giorni)
+  const multiMetricData = useMemo((): ChartDataPoint[] => {
+    // PRIORITÀ: dbTestHistory dall'hook useStats (ha i dati reali!)
+    if (dbTestHistory && dbTestHistory.length > 0) {
+      return StatsCalculationService.processTestHistoryData(dbTestHistory, 30);
+    } else if (detailedSessions && detailedSessions.length > 0) {
+      return StatsCalculationService.processChartData(detailedSessions, 30);
+    } else if (testHistory && testHistory.length > 0) {
+      return StatsCalculationService.processTestHistoryData(testHistory, 30);
+    }
+    return [];
+  }, [detailedSessions, dbTestHistory, testHistory]);
+
+  // ⭐ PERFORMANCE ANALYSIS using centralized service only
+  const performanceAnalysis = useMemo((): {
+    learningVelocity: number;
+    consistency: number;
+    hintEfficiency: number;
+    avgResponseTime: number;
+    speedRating: string;
+    speedScore: number;
+    performanceIndex: number;
+    trend: string;
+    breakdown: {
+      precisione: { value: number; weight: number; contribution: number };
+      consistenza: { value: number; weight: number; contribution: number };
+      efficienza: { value: number; weight: number; contribution: number };
+      velocita: { value: number; weight: number; contribution: number };
+    };
+  } | null => {
+    if (multiMetricData.length === 0) return null;
+
+    // Use centralized service for Performance Index calculation
+    let performanceIndexResult: PerformanceIndexResult;
+    try {
+      // Use the same data source as multiMetricData
+      const dataToUse = dbTestHistory && dbTestHistory.length > 0 ? dbTestHistory : testHistory;
+      performanceIndexResult = StatsCalculationService.calculatePerformanceIndex(dataToUse);
+    } catch (error) {
+      console.error('Error calculating Performance Index:', error);
+      return null;
+    }
+
+    // Calculate learning velocity using linear regression
+    const calculateLearningVelocity = (data: typeof multiMetricData): number => {
+      if (data.length < 3) return 0;
       
-      // ⭐ FIXED: Calculate REAL average time from test data
-      let avgTime = 0;
-      if (test.totalTime && test.totalWords) {
-        avgTime = (test.totalTime * 1000) / test.totalWords; // Convert to milliseconds per word
-      } else if (test.wordTimes && test.wordTimes.length > 0) {
-        // Use actual word times if available
-        const totalTime = test.wordTimes.reduce((sum, wt) => sum + (wt.timeSpent || 0), 0);
-        avgTime = totalTime / test.wordTimes.length;
-      } else {
-        // Fallback estimation based on test difficulty
-        const totalWords = test.totalWords || 1;
-        avgTime = totalWords > 50 ? 15000 : totalWords > 20 ? 12000 : 8000; // ms per word
-      }
+      // Convert timestamps to days from first test
+      const startTime = data[0].timestamp.getTime();
+      const points = data.map((test, index) => ({
+        x: (test.timestamp.getTime() - startTime) / (1000 * 60 * 60 * 24), // days
+        y: test.percentage,
+        index
+      }));
       
-      // Convert to seconds
-      avgTime = Math.round(avgTime / 1000);
+      // Linear regression: y = mx + b
+      const n = points.length;
+      const sumX = points.reduce((sum, p) => sum + p.x, 0);
+      const sumY = points.reduce((sum, p) => sum + p.y, 0);
+      const sumXY = points.reduce((sum, p) => sum + p.x * p.y, 0);
+      const sumXX = points.reduce((sum, p) => sum + p.x * p.x, 0);
       
-      // ⭐ FIXED: Calculate hints from actual test data
-      let hintsCount = 0;
-      if (test.hintsUsed !== undefined) {
-        hintsCount = test.hintsUsed;
-      } else if (test.wordTimes && test.wordTimes.length > 0) {
-        hintsCount = test.wordTimes.filter(wt => wt.usedHint).length;
-      }
+      const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
       
-      // ⭐ FIXED: Use actual test date for formatting
-      const dateLabel = testDate.toLocaleDateString('it-IT', { 
-        day: '2-digit', 
-        month: '2-digit'
-      });
-      
-      return {
-        test: `Test ${index + 1}`,
-        date: dateLabel,
-        fullDate: testDate.toLocaleDateString('it-IT', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
-        timestamp: test.timestamp,
-        percentage: test.percentage || 0,
-        efficiency: Math.max(0, (test.percentage || 0) - (hintsCount * 2)), // Reduced penalty per hint
-        speed: avgTime ? Math.max(20, 100 - Math.min(80, (avgTime - 5) * 4)) : 50, // Speed score based on actual time
-        hintsCount: hintsCount, // Raw number for line chart
-        hints: hintsCount, // Keep for backward compatibility
-        avgTime: avgTime,
-        correct: test.correctWords || 0,
-        incorrect: test.incorrectWords || 0,
-        totalWords: test.totalWords || 0
-      };
-    });
-  };
+      // Return slope * 7 to get percentage improvement per week
+      return isFinite(slope) ? slope * 7 : 0;
+    };
 
-  const realTimelineData = buildRealTimelineData();
+    const learningVelocity = calculateLearningVelocity(multiMetricData);
 
-  // ⭐ ENHANCED: Performance Analysis with DETAILED explanation
-  const performanceAnalysis = useMemo(() => {
-    if (realTimelineData.length === 0) return null;
-
-    // Calcolo velocità di apprendimento (miglioramento nel tempo)
-    const learningVelocity = realTimelineData.length > 5 ? 
-      realTimelineData[realTimelineData.length - 1].percentage - realTimelineData[0].percentage : 0;
-
-    // Consistenza (variazione standard dei risultati)
-    const scores = realTimelineData.map(t => t.percentage);
-    const avgScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    const variance = scores.reduce((sum, score) => sum + Math.pow(score - avgScore, 2), 0) / scores.length;
-    const consistency = Math.max(0, 100 - Math.sqrt(variance));
-
-    // Efficienza negli aiuti
-    const totalHints = realTimelineData.reduce((sum, t) => sum + (t.hintsCount || 0), 0);
-    const totalAnswers = realTimelineData.reduce((sum, t) => sum + (t.totalWords || 0), 0);
-    const hintEfficiency = totalAnswers > 0 ? Math.max(0, 100 - (totalHints / totalAnswers * 100)) : 100;
-
-    // Analisi velocità di risposta REALE
-    const validTimes = realTimelineData.filter(t => t.avgTime > 0);
+    const validTimes = multiMetricData.filter(t => t.avgTime > 0);
     const avgResponseTime = validTimes.length > 0 ? 
       validTimes.reduce((sum, t) => sum + t.avgTime, 0) / validTimes.length : 15;
     
@@ -123,119 +115,32 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                        avgResponseTime <= 12 ? 'Veloce' : 
                        avgResponseTime <= 18 ? 'Normale' : 
                        avgResponseTime <= 25 ? 'Lento' : 'Molto Lento';
-    
-    const speedScore = avgResponseTime <= 8 ? 100 : 
-                      avgResponseTime <= 12 ? 85 : 
-                      avgResponseTime <= 18 ? 70 : 
-                      avgResponseTime <= 25 ? 55 : 40;
-
-    // ⭐ ENHANCED: Performance Index con formula DETTAGLIATA
-    const performanceIndex = Math.round(
-      (avgScore * 0.4) +           // 40% Precisione media
-      (consistency * 0.25) +       // 25% Consistenza
-      (hintEfficiency * 0.2) +     // 20% Efficienza aiuti
-      (speedScore * 0.15)          // 15% Velocità
-    );
 
     return {
       learningVelocity: Math.round(learningVelocity * 10) / 10,
-      consistency: Math.round(consistency),
-      hintEfficiency: Math.round(hintEfficiency),
+      consistency: performanceIndexResult.consistency.value,
+      hintEfficiency: performanceIndexResult.efficiency.value,
       avgResponseTime: Math.round(avgResponseTime * 10) / 10,
       speedRating,
-      speedScore: Math.round(speedScore),
-      performanceIndex,
+      speedScore: performanceIndexResult.speed.value,
+      performanceIndex: performanceIndexResult.performanceIndex,
       trend: learningVelocity > 0 ? 'Miglioramento' : learningVelocity < 0 ? 'Calo' : 'Stabile',
-      // ⭐ NEW: Detailed breakdown for explanation
-      breakdown: {
-        precisione: { value: Math.round(avgScore), weight: 40, contribution: Math.round(avgScore * 0.4) },
-        consistenza: { value: Math.round(consistency), weight: 25, contribution: Math.round(consistency * 0.25) },
-        efficienza: { value: Math.round(hintEfficiency), weight: 20, contribution: Math.round(hintEfficiency * 0.2) },
-        velocita: { value: Math.round(speedScore), weight: 15, contribution: Math.round(speedScore * 0.15) }
-      }
+      breakdown: performanceIndexResult.breakdown
     };
-  }, [realTimelineData]);
+  }, [multiMetricData, testHistory]);
 
-  // ⭐ FIXED: Multi-metric data with REAL dates and times
-  const multiMetricData = useMemo(() => {
-    return realTimelineData.slice(-20).map((item, index) => ({
-      ...item,
-      // Use date as X-axis label instead of test number
-      test: item.date,
-      testNumber: index + 1,
-      efficiency: Math.max(0, item.percentage - (item.hintsCount * 2)), // More realistic efficiency calculation
-      speed: item.speed, // Use calculated speed score
-      consistency: item.percentage,
-      hintsCount: item.hintsCount || 0  // Raw number of hints used in this test
-    }));
-  }, [realTimelineData]);
+  // ⭐ USE SERVICE: Get all analytics from service
+  const overviewAnalytics = useMemo(() => {
+    return StatsCalculationService.calculateOverviewAnalytics(multiMetricData, performanceAnalysis);
+  }, [multiMetricData, performanceAnalysis]);
 
-  // ⭐ FIXED: Performance distribution with SIMPLIFIED labels
-  const performanceDistribution = useMemo(() => {
-    const ranges = { excellent: 0, good: 0, average: 0, poor: 0 };
-    realTimelineData.forEach(test => {
-      if (test.percentage >= 90) ranges.excellent++;
-      else if (test.percentage >= 75) ranges.good++;
-      else if (test.percentage >= 60) ranges.average++;
-      else ranges.poor++;
-    });
+  // Extract data from service
+  const { performanceDistribution, weeklyPattern, hintsAnalysis, summaryStats } = overviewAnalytics;
 
-    const total = realTimelineData.length;
-    return [
-      { 
-        name: 'Eccellente', 
-        fullName: 'Eccellente (90%+)', 
-        value: ranges.excellent, 
-        percentage: total > 0 ? Math.round((ranges.excellent / total) * 100) : 0,
-        color: '#10B981' 
-      },
-      { 
-        name: 'Buono', 
-        fullName: 'Buono (75-89%)', 
-        value: ranges.good, 
-        percentage: total > 0 ? Math.round((ranges.good / total) * 100) : 0,
-        color: '#3B82F6' 
-      },
-      { 
-        name: 'Medio', 
-        fullName: 'Medio (60-74%)', 
-        value: ranges.average, 
-        percentage: total > 0 ? Math.round((ranges.average / total) * 100) : 0,
-        color: '#F59E0B' 
-      },
-      { 
-        name: 'Da migliorare', 
-        fullName: 'Da migliorare (<60%)', 
-        value: ranges.poor, 
-        percentage: total > 0 ? Math.round((ranges.poor / total) * 100) : 0,
-        color: '#EF4444' 
-      }
-    ].filter(item => item.value > 0);
-  }, [realTimelineData]);
 
-  // ⭐ NEW: Weekly pattern analysis
-  const weeklyPattern = useMemo(() => {
-    const pattern = {};
-    realTimelineData.forEach(test => {
-      const date = new Date(test.timestamp);
-      const dayOfWeek = date.toLocaleDateString('it-IT', { weekday: 'short' });
-      if (!pattern[dayOfWeek]) {
-        pattern[dayOfWeek] = { tests: 0, totalScore: 0 };
-      }
-      pattern[dayOfWeek].tests++;
-      pattern[dayOfWeek].totalScore += test.percentage;
-    });
+  // ⭐ REMOVED: Now calculated by service
 
-    return Object.entries(pattern).map(([day, data]) => ({
-      day,
-      tests: data.tests,
-      avgScore: Math.round(data.totalScore / data.tests),
-      frequency: data.tests
-    })).sort((a, b) => {
-      const dayOrder = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
-      return dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day);
-    });
-  }, [realTimelineData]);
+  // ⭐ REMOVED: Now calculated by service
 
   if (!performanceAnalysis) {
     return (
@@ -359,10 +264,10 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
         <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
           <CardTitle className="flex items-center gap-3 text-white">
             <TrendingUp className="w-6 h-6" />
-            Andamento Multi-Metrica (Ultimi {multiMetricData.length} Test)
+            Andamento Multi-Metrica (Ultimi 30 giorni - {multiMetricData.length} Test)
           </CardTitle>
           <p className="text-blue-100 text-sm">
-            Monitoraggio di precisione, efficienza, velocità REALE e aiuti nel tempo
+            Monitoraggio di precisione, efficienza, velocità e aiuti nel tempo
           </p>
         </CardHeader>
         <CardContent className="p-6">
@@ -385,10 +290,10 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                     return [`${value} aiuti`, 'Aiuti Utilizzati'];
                   }
                   return [
-                    `${Math.round(value)}%`,
+                    `${Math.round(Number(value))}%`,
                     name === 'percentage' ? 'Precisione' :
                     name === 'efficiency' ? 'Efficienza' :
-                    name === 'speed' ? 'Velocità Reale' : name
+                    name === 'speed' ? 'Velocità' : name
                   ];
                 }}
                 labelFormatter={(label, payload) => {
@@ -451,7 +356,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
             </div>
             <div className="flex items-center justify-center gap-2">
               <div className="w-4 h-4 bg-purple-500 rounded"></div>
-              <span>Velocità Reale (%)</span>
+              <span>Velocità (%)</span>
             </div>
             <div className="flex items-center justify-center gap-2">
               <div className="w-4 h-4 border-2 border-yellow-500 bg-white rounded"></div>
@@ -471,9 +376,8 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                 <ul className="space-y-1 text-xs">
                   <li><strong>🎯 Precisione:</strong> % di risposte corrette nel test</li>
                   <li><strong>⚡ Efficienza:</strong> Precisione - (Aiuti × 2) - penalità per dipendenza da aiuti</li>
-                  <li><strong>🚀 Velocità Reale:</strong> Calcolata dai tempi effettivi dei test<br/>
-                      <span className="text-blue-600">• Tempo medio attuale: {performanceAnalysis.avgResponseTime}s ({performanceAnalysis.speedRating})</span><br/>
-                      <span className="text-blue-600">• ≤8s=100% • ≤12s=85% • ≤18s=70% • ≤25s=55% • +25s=40%</span></li>
+                  <li><strong>🚀 Velocità:</strong> Calcolata dai tempi effettivi dei test<br/>
+                      <span className="text-blue-600">• Tempo medio attuale: {performanceAnalysis.avgResponseTime}s ({performanceAnalysis.speedRating})</span></li>
                 </ul>
               </div>
               <div>
@@ -482,7 +386,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                   <li><strong>Numero reale</strong> di aiuti utilizzati nel test</li>
                   <li><strong>Obiettivo:</strong> Diminuzione nel tempo = maggiore autonomia</li>
                   <li><strong>Efficienza aiuti:</strong> {performanceAnalysis.hintEfficiency}%</li>
-                  <li><strong>Media aiuti:</strong> {multiMetricData.length > 0 ? Math.round(multiMetricData.reduce((sum, t) => sum + t.hintsCount, 0) / multiMetricData.length * 10) / 10 : 0}/test</li>
+                  <li><strong>Media aiuti:</strong> {hintsAnalysis.avgHintsPerTest}/test</li>
                 </ul>
               </div>
             </div>
@@ -503,17 +407,17 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
               <div className="text-center">
                 <div className="text-lg font-bold text-orange-600">
-                  {multiMetricData.reduce((sum, t) => sum + t.hintsCount, 0)}
+                  {hintsAnalysis.totalHints}
                 </div>
                 <div className="text-orange-700">Aiuti Totali</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-orange-600">{Math.round(100 - performanceAnalysis.hintEfficiency)}%</div>
+                <div className="text-lg font-bold text-orange-600">{hintsAnalysis.hintsUsagePercentage}%</div>
                 <div className="text-orange-700">% Risposte con Aiuto</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-orange-600">
-                  {multiMetricData.length > 0 ? Math.round(multiMetricData.reduce((sum, t) => sum + t.hintsCount, 0) / multiMetricData.length * 10) / 10 : 0}
+                  {hintsAnalysis.avgHintsPerTest}
                 </div>
                 <div className="text-orange-700">Media Aiuti/Test</div>
               </div>
@@ -543,6 +447,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
           <CardContent className="p-6">
             {performanceDistribution.length > 0 ? (
               <>
+                
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie
@@ -569,28 +474,29 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                 
                 {/* ⭐ ENHANCED: Detailed breakdown below the chart */}
                 <div className="mt-4 space-y-2">
-                  {performanceDistribution.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm p-2 rounded-lg" style={{ backgroundColor: `${item.color}15` }}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }}></div>
-                        <span className="font-medium">{item.fullName}</span>
+                  {performanceDistribution.map((item, index) => {
+                    
+                    return (
+                      <div key={index} className="flex items-center justify-between text-sm p-2 rounded-lg" style={{ backgroundColor: `${item.color}15` }}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }}></div>
+                          <span className="font-medium">{item.fullName}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold" style={{ color: item.color }}>{item.value} test</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">{item.percentage}% del totale</div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold" style={{ color: item.color }}>{item.value} test</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">{item.percentage}% del totale</div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 
                 {/* Summary */}
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg text-center">
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Su <strong>{realTimelineData.length} test totali</strong>, hai ottenuto risultati eccellenti o buoni nel 
+                    Su <strong>{multiMetricData.length} test totali</strong>, hai ottenuto risultati eccellenti o buoni nel 
                     <strong className="text-green-600 mx-1">
-                      {Math.round(((performanceDistribution.find(p => p.name === 'Eccellente')?.value || 0) + 
-                                   (performanceDistribution.find(p => p.name === 'Buono')?.value || 0)) / 
-                                   realTimelineData.length * 100)}%
+                      {summaryStats.excellentAndGoodPercentage}%
                     </strong>
                     dei casi
                   </div>
@@ -613,6 +519,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
+            
             <div className="space-y-6">
               
               {/* Learning Velocity */}
@@ -693,7 +600,7 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
                   ></div>
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {Math.round(100 - performanceAnalysis.hintEfficiency)}% aiuti utilizzati di media
+                  {hintsAnalysis.hintsUsagePercentage}% aiuti utilizzati di media
                 </div>
               </div>
             </div>
@@ -729,6 +636,9 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
             </p>
           </CardHeader>
           <CardContent className="p-6">
+            {/* 🕰️ CONSOLE LOGS: Weekly Study Pattern */}
+            {/* Weekly Pattern Analysis */}
+            
             <ResponsiveContainer width="100%" height={250}>
               <ComposedChart data={weeklyPattern}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -746,28 +656,45 @@ const OverviewSection = ({ testHistory, localRefresh }) => {
               </ComposedChart>
             </ResponsiveContainer>
             
+            {/* Log per le metriche di riepilogo */}
+            {(() => {
+              
+              // Trova i dati dettagliati per ogni metrica
+              const mostActiveDayData = weeklyPattern.find(d => d.day === summaryStats.mostActiveDay);
+              const bestDayData = weeklyPattern.find(d => d.day === summaryStats.bestDay);
+              
+              
+              // Calcolo della media settimanale
+              const totalScore = weeklyPattern.reduce((sum, day) => sum + (day.avgScore * day.tests), 0);
+              const totalTests = weeklyPattern.reduce((sum, day) => sum + day.tests, 0);
+              const calculatedWeeklyAvg = totalTests > 0 ? Math.round(totalScore / totalTests) : 0;
+              
+              
+              return null;
+            })()}
+            
             <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div className="text-center p-3 bg-cyan-50 rounded-xl">
                 <div className="font-bold text-cyan-600">
-                  {weeklyPattern.reduce((max, day) => day.tests > max.tests ? day : max, weeklyPattern[0])?.day || 'N/A'}
+                  {summaryStats.mostActiveDay}
                 </div>
                 <div className="text-cyan-700 text-xs">Giorno più attivo</div>
               </div>
               <div className="text-center p-3 bg-blue-50 rounded-xl">
                 <div className="font-bold text-blue-600">
-                  {weeklyPattern.reduce((max, day) => day.avgScore > max.avgScore ? day : max, weeklyPattern[0])?.day || 'N/A'}
+                  {summaryStats.bestDay}
                 </div>
                 <div className="text-blue-700 text-xs">Giorno migliore</div>
               </div>
               <div className="text-center p-3 bg-green-50 rounded-xl">
                 <div className="font-bold text-green-600">
-                  {Math.round(weeklyPattern.reduce((sum, day) => sum + day.avgScore, 0) / weeklyPattern.length)}%
+                  {summaryStats.weeklyAverage}%
                 </div>
                 <div className="text-green-700 text-xs">Media settimanale</div>
               </div>
               <div className="text-center p-3 bg-purple-50 rounded-xl">
                 <div className="font-bold text-purple-600">
-                  {weeklyPattern.reduce((sum, day) => sum + day.tests, 0)}
+                  {summaryStats.totalWeeklyTests}
                 </div>
                 <div className="text-purple-700 text-xs">Test totali</div>
               </div>

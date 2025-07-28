@@ -4,8 +4,16 @@
 
 import React from 'react';
 
-const StatisticCard = ({ label, value, color = 'blue' }) => {
-  const colorClasses = {
+type ColorType = 'blue' | 'emerald' | 'green' | 'purple' | 'yellow' | 'indigo';
+
+interface StatisticCardProps {
+  label: string;
+  value: string | number;
+  color?: ColorType;
+}
+
+const StatisticCard: React.FC<StatisticCardProps> = ({ label, value, color = 'blue' }) => {
+  const colorClasses: Record<ColorType, string> = {
     blue: 'from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 text-blue-100',
     emerald: 'from-emerald-500 to-green-500 dark:from-emerald-600 dark:to-green-600 text-emerald-100',
     green: 'from-green-500 to-emerald-500 dark:from-green-600 dark:to-emerald-600 text-green-100',

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import StatsHeader from './StatsHeader';
 import StatsNavigation from './StatsNavigation';
 import DataManagementPanel from './DataManagementPanel';
-import EmptyState from '../stats/components/EmptyState';
+import EmptyState from './components/EmptyState';
+import type { TestHistoryItem, Word } from '../../types';
 
 
 // Lazy loading delle sezioni
@@ -12,15 +13,23 @@ const WordsSection = React.lazy(() => import('./sections/WordsSection'));
 const PerformanceSection = React.lazy(() => import('./sections/PerformanceSection'));
 const TrendsSection = React.lazy(() => import('./sections/TrendsSection'));
 
-const StatsOverview = ({ testHistory, words, onClearHistory, onGoToMain, forceUpdate }) => {
-  const [selectedView, setSelectedView] = useState('overview');
-  const [showDataManagement, setShowDataManagement] = useState(false);
-  const [localRefresh, setLocalRefresh] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+interface StatsOverviewProps {
+  testHistory: TestHistoryItem[];
+  words: Word[];
+  onClearHistory: () => void;
+  onGoToMain: () => void;
+  forceUpdate: number | (() => void);
+}
+
+const StatsOverview: React.FC<StatsOverviewProps> = ({ testHistory, words, onClearHistory, onGoToMain, forceUpdate }) => {
+  const [selectedView, setSelectedView] = useState<string>('overview');
+  const [showDataManagement, setShowDataManagement] = useState<boolean>(false);
+  const [localRefresh, setLocalRefresh] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     setLocalRefresh(prev => prev + 1);
-  }, [testHistory.length, forceUpdate]);
+  }, [testHistory.length, typeof forceUpdate === 'function' ? 0 : forceUpdate]);
 
   // Wait for initial data load
   useEffect(() => {

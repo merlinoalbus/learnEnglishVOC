@@ -9,7 +9,13 @@ import { Button } from '../../ui/button';
 import { Play, Database } from 'lucide-react';
 import DataManagementPanel from '../DataManagementPanel';
 
-const EmptyState = ({ onGoToMain, showDataManagement, setShowDataManagement }) => {
+interface EmptyStateProps {
+  onGoToMain: () => void;
+  showDataManagement: boolean;
+  setShowDataManagement: (show: boolean) => void;
+}
+
+const EmptyState: React.FC<EmptyStateProps> = ({ onGoToMain, showDataManagement, setShowDataManagement }) => {
   return (
     <Card className="backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-0 shadow-2xl rounded-3xl overflow-hidden">
       <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-1">

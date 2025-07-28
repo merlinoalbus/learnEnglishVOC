@@ -19,12 +19,32 @@ import {
   ComposedChart
 } from 'recharts';
 import { Clock, Sparkles, TrendingUp, TrendingDown, Target, Lightbulb } from 'lucide-react';
-import { useStatsData } from '../hooks/useStatsData';
+import { useStats } from '../../../hooks/data/useStats';
+import type { TestHistoryItem, Word } from '../../../types';
 
-const TrendsSection = ({ testHistory, localRefresh }) => {
-  const { advancedStats, timelineData } = useStatsData(testHistory);
+interface TrendsSectionProps {
+  testHistory: TestHistoryItem[];
+  words?: Word[];
+  localRefresh: number;
+  onClearHistory?: () => void;
+}
+
+const TrendsSection: React.FC<TrendsSectionProps> = ({ testHistory, localRefresh }) => {
+  const { stats, calculatedStats, testHistory: dbTestHistory, getAllWordsPerformance } = useStats();
+
+  // ⭐ CALCOLI CORRETTI secondo le specifiche
+  const wordsWithPerformance = getAllWordsPerformance();
+  const correctAnswers = stats.correctAnswers;
+  const totalAnswers = stats.correctAnswers + stats.incorrectAnswers;
+  const mediaCorretta = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0;
+  const maxHintsPercentage = dbTestHistory.length > 0 ? 
+    Math.max(...dbTestHistory.map(test => {
+      const totalWords = (test.correctWords || 0) + (test.incorrectWords || 0);
+      return totalWords > 0 ? Math.round(((test.hintsUsed || 0) / totalWords) * 100) : 0;
+    })) : 0;
 
   // ⭐ ENHANCED: Analisi trend dettagliata
+  const timelineData = dbTestHistory || testHistory;
   const trendAnalysis = useMemo(() => {
     if (timelineData.length < 3) return null;
 
@@ -33,7 +53,7 @@ const TrendsSection = ({ testHistory, localRefresh }) => {
     const previous = timelineData.slice(-10, -5); // 5 test precedenti
     const early = timelineData.slice(0, 5); // Primi 5 test
 
-    const calculateAverage = (data, field) => {
+    const calculateAverage = (data: any[], field: string) => {
       const values = data.map(item => item[field] || 0).filter(v => v > 0);
       return values.length > 0 ? values.reduce((sum, val) => sum + val, 0) / values.length : 0;
     };
@@ -85,7 +105,7 @@ const TrendsSection = ({ testHistory, localRefresh }) => {
 
   // ⭐ ENHANCED: Dati per analisi mensile
   const monthlyTrends = useMemo(() => {
-    const monthlyData = {};
+    const monthlyData: Record<string, any> = {};
     
     testHistory.forEach(test => {
       const date = new Date(test.timestamp);
@@ -107,7 +127,7 @@ const TrendsSection = ({ testHistory, localRefresh }) => {
       monthlyData[monthKey].totalTime += test.avgTimePerWord || 0;
     });
 
-    return Object.values(monthlyData).map(month => ({
+    return Object.values(monthlyData).map((month: any) => ({
       ...month,
       avgAccuracy: Math.round(month.totalAccuracy / month.tests),
       avgHints: Math.round((month.totalHints / month.tests) * 10) / 10,
@@ -118,7 +138,7 @@ const TrendsSection = ({ testHistory, localRefresh }) => {
 
   // ⭐ NEW: Analisi prestazioni per fascia oraria
   const hourlyPattern = useMemo(() => {
-    const hourlyData = {};
+    const hourlyData: Record<string, any> = {};
     
     testHistory.forEach(test => {
       const hour = new Date(test.timestamp).getHours();
@@ -140,7 +160,7 @@ const TrendsSection = ({ testHistory, localRefresh }) => {
       hourlyData[timeSlot].totalHints += test.hintsUsed || 0;
     });
 
-    return Object.values(hourlyData).map(slot => ({
+    return Object.values(hourlyData).map((slot: any) => ({
       ...slot,
       avgAccuracy: Math.round(slot.totalAccuracy / slot.tests),
       avgHints: Math.round((slot.totalHints / slot.tests) * 10) / 10
@@ -428,9 +448,9 @@ const TrendsSection = ({ testHistory, localRefresh }) => {
             Insights e Raccomandazioni Avanzate
           </h3>
           <div className="space-y-3 text-yellow-700">
-            <p>🎯 <strong>Precisione attuale:</strong> {advancedStats.averageScore}% (target: 80%+)</p>
-            <p>💡 <strong>Uso aiuti:</strong> {advancedStats.hintsPercentage}% (ideale: sotto 20%)</p>
-            <p>⚡ <strong>Efficienza netta:</strong> {Math.max(0, advancedStats.averageScore - advancedStats.hintsPercentage)}%</p>
+            <p>🎯 <strong>Precisione attuale:</strong> {mediaCorretta}% (target: 80%+)</p>
+            <p>💡 <strong>Uso aiuti:</strong> {maxHintsPercentage}% (ideale: sotto 20%)</p>
+            <p>⚡ <strong>Efficienza netta:</strong> {Math.max(0, mediaCorretta - maxHintsPercentage)}%</p>
             
             {/* Dynamic recommendations based on trends */}
             {trendAnalysis && (
@@ -464,7 +484,7 @@ const TrendsSection = ({ testHistory, localRefresh }) => {
             <div className="mt-4 p-4 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-xl border border-indigo-300">
               <h4 className="font-bold text-indigo-800 mb-2">📊 Stato attuale del tuo apprendimento:</h4>
               <p className="text-indigo-700 text-sm">
-                Hai completato <strong>{advancedStats.totalTests} test</strong> studiando <strong>{advancedStats.totalWordsStudied} parole</strong> con <strong>{advancedStats.totalHints} aiuti utilizzati</strong>.
+                Hai completato <strong>{stats.testsCompleted} test</strong> studiando <strong>{wordsWithPerformance.length} parole</strong> con <strong>{stats.hintsUsed} aiuti utilizzati</strong>.
                 {trendAnalysis && trendAnalysis.longTerm.accuracy > 10 && 
                   ` Il tuo miglioramento di ${Math.round(trendAnalysis.longTerm.accuracy)}% dall'inizio mostra eccellenti progressi!`
                 }

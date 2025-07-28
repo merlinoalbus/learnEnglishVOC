@@ -1,14 +1,31 @@
 // =====================================================
-// 📁 hooks/useDataManagement.js - FIXED Import/Export (WORKING VERSION)
+// 📁 hooks/useDataManagement.ts - TYPESCRIPT VERSION
 // =====================================================
 
 import { useState, useRef } from 'react';
 import { useAppContext } from '../../../contexts/AppContext';
+import type { ChangeEvent } from 'react';
 
-export const useDataManagement = () => {
-  const [isImporting, setIsImporting] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const fileInputRef = useRef(null);
+interface UseDataManagementReturn {
+  // States
+  isExporting: boolean;
+  isImporting: boolean;
+  isProcessing: boolean;
+  
+  // Actions
+  handleExport: () => Promise<void>;
+  handleImportClick: () => void;
+  handleFileSelect: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
+  handleReset: () => Promise<void>;
+  
+  // Refs
+  fileInputRef: React.RefObject<HTMLInputElement>;
+}
+
+export const useDataManagement = (): UseDataManagementReturn => {
+  const [isImporting, setIsImporting] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     exportStats,
@@ -37,7 +54,8 @@ export const useDataManagement = () => {
       }
     } catch (error) {
       console.error('❌ Errore export:', error);
-      alert(`Errore durante l'esportazione: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
+      alert(`Errore durante l'esportazione: ${errorMessage}`);
     } finally {
       setIsExporting(false);
     }
@@ -50,8 +68,8 @@ export const useDataManagement = () => {
   };
 
   // ⭐ FIXED: Proper file reading and data passing
-  const handleFileSelect = async (event) => {
-    const file = event.target.files[0];
+  const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     console.log('📁 File selected:', file.name, 'Type:', file.type);
@@ -67,12 +85,12 @@ export const useDataManagement = () => {
       console.log('🔍 Reading file content...');
       
       // ⭐ FIXED: Read file content as text
-      const fileContent = await new Promise((resolve, reject) => {
+      const fileContent = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         
         reader.onload = (e) => {
           console.log('✅ File read successfully');
-          resolve(e.target.result);
+          resolve(e.target?.result as string);
         };
         
         reader.onerror = () => {
@@ -105,7 +123,8 @@ export const useDataManagement = () => {
       
     } catch (error) {
       console.error('❌ Errore importazione:', error);
-      alert(`Errore durante l'importazione: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
+      alert(`Errore durante l'importazione: ${errorMessage}`);
     } finally {
       setIsImporting(false);
       if (event.target) {
@@ -145,18 +164,11 @@ export const useDataManagement = () => {
       }
     } catch (error) {
       console.error('❌ Errore reset:', error);
-      alert(`Errore durante il reset: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
+      alert(`Errore durante il reset: ${errorMessage}`);
     }
   };
 
-  // ⭐ DEBUG: Log available functions
-  console.log('🔍 useDataManagement - Available functions:', {
-    exportStats: typeof exportStats,
-    importStats: typeof importStats,
-    resetStats: typeof resetStats,
-    refreshData: typeof refreshData,
-    isProcessing
-  });
 
   return {
     // States

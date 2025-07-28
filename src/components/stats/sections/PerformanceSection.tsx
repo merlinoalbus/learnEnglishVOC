@@ -24,10 +24,18 @@ import {
   Scatter
 } from 'recharts';
 import { Trophy, Lightbulb, Zap, Clock, Target, TrendingUp } from 'lucide-react';
-import { useStatsData } from '../hooks/useStatsData';
+import { useStats } from '../../../hooks/data/useStats';
+import type { TestHistoryItem, Word } from '../../../types';
+
+interface PerformanceSectionProps {
+  testHistory: TestHistoryItem[];
+  words?: Word[];
+  localRefresh: number;
+  onClearHistory?: () => void;
+}
 
 // ⭐ SAFE: Create Performance-specific data processing WITHOUT modifying useStatsData
-const usePerformanceData = (testHistory) => {
+const usePerformanceData = (testHistory: TestHistoryItem[]) => {
   return useMemo(() => {
     if (testHistory.length === 0) return [];
 
@@ -73,7 +81,7 @@ const usePerformanceData = (testHistory) => {
 };
 
 // ⭐ KEEP: Original helper functions
-const calculateBestStreak = (data) => {
+const calculateBestStreak = (data: any[]) => {
   let currentStreak = 0;
   let bestStreak = 0;
   const threshold = 75;
@@ -90,7 +98,7 @@ const calculateBestStreak = (data) => {
   return bestStreak;
 };
 
-const calculateDifficultyHandling = (history) => {
+const calculateDifficultyHandling = (history: TestHistoryItem[]) => {
   const hardTests = history.filter(test => (test.totalWords || 0) >= 20);
   if (hardTests.length === 0) return 70;
   
@@ -98,67 +106,198 @@ const calculateDifficultyHandling = (history) => {
   return Math.min(100, hardTestsAvg + 10);
 };
 
-const calculateOverallRating = (accuracy, consistency, hintEff, speed) => {
+const calculateOverallRating = (accuracy: number, consistency: number, hintEff: number, speed: number) => {
   const weighted = (accuracy * 0.4) + (consistency * 0.25) + (hintEff * 0.2) + (speed * 0.15);
   return Math.round(weighted);
 };
 
-const PerformanceSection = ({ testHistory, localRefresh }) => {
-  const { advancedStats } = useStatsData(testHistory); // Keep using original for compatibility
-  const performanceTimelineData = usePerformanceData(testHistory); // Performance-specific data
+const PerformanceSection: React.FC<PerformanceSectionProps> = ({ testHistory, localRefresh }) => {
+  const { stats, calculatedStats, testHistory: dbTestHistory, getAllWordsPerformance } = useStats();
+  const performanceTimelineData = usePerformanceData(dbTestHistory || testHistory);
+
+  // ⭐ PRECISION: Media dei punteggi di tutti i test
+  const calculatePrecision = () => {
+    if (performanceTimelineData.length === 0) {
+      console.log('🎯 PRECISIONE - Nessun test trovato, ritorno 0%');
+      return 0;
+    }
+    
+    const totalScore = performanceTimelineData.reduce((sum, test) => sum + test.percentage, 0);
+    const precision = Math.round(totalScore / performanceTimelineData.length);
+    
+    console.log('🎯 PRECISIONE - Calcolo dettagliato:');
+    console.log(`• Numero test: ${performanceTimelineData.length}`);
+    console.log(`• Punteggi: [${performanceTimelineData.map(t => t.percentage + '%').join(', ')}]`);
+    console.log(`• Somma totale: ${totalScore}%`);
+    console.log(`• Media: ${totalScore} ÷ ${performanceTimelineData.length} = ${precision}%`);
+    
+    return precision;
+  };
+
+  const precision = calculatePrecision();
+
+
+  // ⭐ CONSISTENCY: Quanto stabili sono le performance (100 - deviazione standard)
+  const calculateConsistency = () => {
+    if (performanceTimelineData.length < 2) {
+      console.log('🎯 CONSISTENZA - Dati insufficienti (< 2 test), ritorno 100%');
+      return 100; // Perfect consistency with limited data
+    }
+    
+    const scores = performanceTimelineData.map(t => t.percentage);
+    const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
+    const standardDeviation = Math.sqrt(variance);
+    const consistency = Math.max(0, Math.round(100 - standardDeviation));
+    
+    console.log('🎯 CONSISTENZA - Calcolo dettagliato:');
+    console.log(`• Punteggi test: [${scores.join(', ')}]`);
+    console.log(`• Media punteggi: ${mean.toFixed(2)}%`);
+    console.log(`• Varianza: ${variance.toFixed(2)}`);
+    console.log(`• Deviazione standard: ${standardDeviation.toFixed(2)}`);
+    console.log(`• Consistenza finale: 100 - ${standardDeviation.toFixed(2)} = ${consistency}%`);
+    
+    return consistency;
+  };
+
+  // ⭐ EFFICIENCY: Risposte corrette senza aiuti
+  const calculateEfficiency = () => {
+    const totalQuestions = performanceTimelineData.reduce((sum, t) => sum + t.totalWords, 0);
+    const totalHints = performanceTimelineData.reduce((sum, t) => sum + (t.hints || 0), 0);
+    
+    if (totalQuestions === 0) {
+      console.log('🎯 EFFICIENZA - Nessuna domanda trovata, ritorno 100%');
+      return 100;
+    }
+    
+    const hintPercentage = (totalHints / totalQuestions) * 100;
+    const efficiency = Math.max(0, Math.round(100 - hintPercentage));
+    
+    console.log('🎯 EFFICIENZA - Calcolo dettagliato:');
+    console.log(`• Domande totali: ${totalQuestions}`);
+    console.log(`• Aiuti utilizzati: ${totalHints}`);
+    console.log(`• Percentuale aiuti: ${hintPercentage.toFixed(2)}%`);
+    console.log(`• Efficienza finale: 100 - ${hintPercentage.toFixed(2)} = ${efficiency}%`);
+    
+    // Log dettaglio per test
+    console.log('• Dettaglio per test:');
+    performanceTimelineData.forEach((test, index) => {
+      console.log(`  Test ${index + 1}: ${test.totalWords} parole, ${test.hints || 0} aiuti (${test.hints && test.totalWords ? ((test.hints / test.totalWords) * 100).toFixed(1) : 0}%)`);
+    });
+    
+    return efficiency;
+  };
+
+  // ⭐ SPEED: Score basato sul tempo medio di risposta
+  const calculateSpeed = () => {
+    if (performanceTimelineData.length === 0) {
+      console.log('🎯 VELOCITÀ - Nessun test trovato, ritorno 50%');
+      return 50;
+    }
+    
+    const avgResponseTime = performanceTimelineData.reduce((sum, t) => sum + (t.avgTime || 0), 0) / performanceTimelineData.length;
+    
+    // Score mapping based on average response time
+    let speedScore = 30; // Default extremely slow
+    if (avgResponseTime <= 5) speedScore = 100;   // Excellent
+    else if (avgResponseTime <= 8) speedScore = 90;    // Very good
+    else if (avgResponseTime <= 12) speedScore = 80;   // Good
+    else if (avgResponseTime <= 16) speedScore = 70;   // Average
+    else if (avgResponseTime <= 20) speedScore = 60;   // Below average
+    else if (avgResponseTime <= 25) speedScore = 50;   // Slow
+    else if (avgResponseTime <= 30) speedScore = 40;   // Very slow
+    
+    console.log('🎯 VELOCITÀ - Calcolo dettagliato:');
+    console.log(`• Tempo medio di risposta: ${avgResponseTime.toFixed(2)} secondi`);
+    console.log(`• Score velocità: ${speedScore}%`);
+    console.log(`• Classificazione: ${
+      speedScore >= 90 ? 'Eccellente (≤8s)' :
+      speedScore >= 80 ? 'Buona (≤12s)' :
+      speedScore >= 70 ? 'Media (≤16s)' :
+      speedScore >= 60 ? 'Sotto la media (≤20s)' :
+      speedScore >= 50 ? 'Lenta (≤25s)' :
+      speedScore >= 40 ? 'Molto lenta (≤30s)' : 'Estremamente lenta (>30s)'
+    }`);
+    
+    // Log dettaglio per test
+    console.log('• Dettaglio tempi per test:');
+    performanceTimelineData.forEach((test, index) => {
+      console.log(`  Test ${index + 1}: ${test.avgTime || 0}s (${test.hasRealTime ? 'reale' : 'stimato'})`);
+    });
+    
+    return speedScore;
+  };
 
   const performanceMetrics = useMemo(() => {
     if (testHistory.length === 0) return null;
 
-    // ⭐ USE: Performance-specific timeline data for calculations
+    // Calculate the four main metrics
+    const precisionScore = precision;
+    const consistencyScore = calculateConsistency();
+    const efficiencyScore = calculateEfficiency();
+    const speedScore = calculateSpeed();
+
+    // ⭐ PERFORMANCE INDEX FORMULA
+    // Index = (Precisione × 40%) + (Consistenza × 25%) + (Efficienza × 20%) + (Velocità × 15%)
+    const precisionPoints = Math.round(precisionScore * 0.40);
+    const consistencyPoints = Math.round(consistencyScore * 0.25);
+    const efficiencyPoints = Math.round(efficiencyScore * 0.20);
+    const speedPoints = Math.round(speedScore * 0.15);
+    const performanceIndex = precisionPoints + consistencyPoints + efficiencyPoints + speedPoints;
+
+    // ⭐ VALIDATION LOGS for Performance Index calculation
+    console.log('\n📊 PERFORMANCE INDEX CALCULATION VALIDATION:');
+    console.log('====================================================');
+    console.log(`🎯 Precisione: ${precisionScore}% × 40% = ${precisionPoints} punti`);
+    console.log(`🎯 Consistenza: ${consistencyScore}% × 25% = ${consistencyPoints} punti`);
+    console.log(`🎯 Efficienza: ${efficiencyScore}% × 20% = ${efficiencyPoints} punti`);
+    console.log(`🎯 Velocità: ${speedScore}% × 15% = ${speedPoints} punti`);
+    console.log(`====================================================`);
+    console.log(`🏆 Performance Index Totale: ${performanceIndex} punti`);
+    console.log('\n🔍 METRICHE DETTAGLIATE:');
+    console.log(`• Precisione (media punteggi test): ${precisionScore}%`);
+    console.log(`• Consistenza (100 - std dev): ${consistencyScore}%`);
+    console.log(`• Efficienza (100 - % aiuti): ${efficiencyScore}%`);
+    console.log(`• Velocità (score tempo medio): ${speedScore}%`);
+    
+    // Calculate additional metrics for UI
     const recentTests = performanceTimelineData.slice(-10);
     const oldTests = performanceTimelineData.slice(0, Math.min(10, performanceTimelineData.length - 10));
-    
-    // Trend di miglioramento
     const recentAvg = recentTests.reduce((sum, t) => sum + t.percentage, 0) / Math.max(1, recentTests.length);
     const oldAvg = oldTests.length > 0 ? oldTests.reduce((sum, t) => sum + t.percentage, 0) / oldTests.length : recentAvg;
     const improvementTrend = recentAvg - oldAvg;
-
-    // Consistenza (standard deviation)
-    const scores = performanceTimelineData.map(t => t.percentage);
-    const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
-    const consistency = Math.max(0, 100 - Math.sqrt(variance));
-
-    // ⭐ FIXED: Efficienza aiuti with REAL data
-    const totalHints = performanceTimelineData.reduce((sum, t) => sum + (t.hints || 0), 0);
-    const totalQuestions = performanceTimelineData.reduce((sum, t) => sum + (t.correct || 0) + (t.incorrect || 0), 0);
-    const hintEfficiency = totalQuestions > 0 ? Math.max(0, 100 - (totalHints / totalQuestions * 100)) : 100;
-
-    // ⭐ FIXED: Velocità di risposta with realistic estimates
-    const avgSpeed = performanceTimelineData.reduce((sum, t) => sum + (t.avgTime || 0), 0) / Math.max(1, performanceTimelineData.length);
-    const speedScore = avgSpeed <= 8 ? 100 : avgSpeed <= 15 ? 80 : avgSpeed <= 25 ? 60 : 40;
-
-    // Other metrics using Performance-specific data
+    
     const bestStreak = calculateBestStreak(performanceTimelineData);
+    const difficultyScore = calculateDifficultyHandling(testHistory);
+    const avgSpeed = performanceTimelineData.reduce((sum, t) => sum + (t.avgTime || 0), 0) / Math.max(1, performanceTimelineData.length);
     
     const learningVelocity = performanceTimelineData.length > 5 ? 
       (performanceTimelineData.slice(-5).reduce((sum, t) => sum + t.percentage, 0) / 5) -
       (performanceTimelineData.slice(0, 5).reduce((sum, t) => sum + t.percentage, 0) / 5) : 0;
 
-    const difficultyScore = calculateDifficultyHandling(testHistory);
-
     return {
-      accuracy: Math.round(advancedStats.averageScore),
-      consistency: Math.round(consistency),
-      hintEfficiency: Math.round(hintEfficiency),
-      speedScore: Math.round(speedScore),
+      accuracy: precisionScore,
+      consistency: consistencyScore,
+      hintEfficiency: efficiencyScore,
+      speedScore: speedScore,
+      performanceIndex: performanceIndex,
       improvementTrend: Math.round(improvementTrend * 10) / 10,
       learningVelocity: Math.round(learningVelocity * 10) / 10,
       bestStreak,
       difficultyScore: Math.round(difficultyScore),
       avgSpeed: Math.round(avgSpeed * 10) / 10,
       recentPerformance: Math.round(recentAvg),
-      overallRating: calculateOverallRating(advancedStats.averageScore, consistency, hintEfficiency, speedScore),
-      // ⭐ DEBUG: Add info about data quality
-      realTimePercentage: Math.round((performanceTimelineData.filter(t => t.hasRealTime).length / performanceTimelineData.length) * 100)
+      overallRating: performanceIndex,
+      realTimePercentage: Math.round((performanceTimelineData.filter(t => t.hasRealTime).length / performanceTimelineData.length) * 100),
+      // Add breakdown for display
+      calculationBreakdown: {
+        precision: { value: precisionScore, points: precisionPoints },
+        consistency: { value: consistencyScore, points: consistencyPoints },
+        efficiency: { value: efficiencyScore, points: efficiencyPoints },
+        speed: { value: speedScore, points: speedPoints }
+      }
     };
-  }, [testHistory, performanceTimelineData, advancedStats]);
+  }, [testHistory, performanceTimelineData, precision]);
 
   const radarData = useMemo(() => {
     if (!performanceMetrics) return [];
@@ -215,7 +354,7 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
   }, [performanceTimelineData]);
 
   const difficultyAnalysis = useMemo(() => {
-    const analysis = { easy: [], medium: [], hard: [] };
+    const analysis: Record<string, any[]> = { easy: [], medium: [], hard: [] };
     
     testHistory.forEach(test => {
       const totalWords = test.totalWords || 0;
@@ -231,7 +370,7 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
       });
     });
 
-    return Object.entries(analysis).map(([difficulty, tests]) => {
+    return Object.entries(analysis).map(([difficulty, tests]: [string, any[]]) => {
       if (tests.length === 0) return null;
       
       const avgPercentage = tests.reduce((sum, t) => sum + t.percentage, 0) / tests.length;
@@ -264,13 +403,25 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
       <Card className="bg-gradient-to-br from-purple-500 via-indigo-600 to-blue-500 text-white">
         <CardContent className="p-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold mb-2">Performance Score</h2>
-            <div className="text-6xl font-bold mb-2">{performanceMetrics.overallRating}/100</div>
+            <h2 className="text-3xl font-bold mb-2">Performance Index</h2>
+            <div className="text-6xl font-bold mb-2">{performanceMetrics.performanceIndex}</div>
+            <div className="text-sm opacity-75 mb-2">
+              📊 Formula: (Precisione × 40%) + (Consistenza × 25%) + (Efficienza × 20%) + (Velocità × 15%)
+            </div>
+            {/* ⭐ CALCULATION BREAKDOWN DISPLAY */}
+            <div className="text-xs opacity-80 bg-white/10 rounded-lg p-3 mb-2">
+              <div className="font-semibold mb-1">Il tuo calcolo:</div>
+              <div>{performanceMetrics.calculationBreakdown.precision.value}% × 40% = {performanceMetrics.calculationBreakdown.precision.points} punti</div>
+              <div>{performanceMetrics.calculationBreakdown.consistency.value}% × 25% = {performanceMetrics.calculationBreakdown.consistency.points} punti</div>
+              <div>{performanceMetrics.calculationBreakdown.efficiency.value}% × 20% = {performanceMetrics.calculationBreakdown.efficiency.points} punti</div>
+              <div>{performanceMetrics.calculationBreakdown.speed.value}% × 15% = {performanceMetrics.calculationBreakdown.speed.points} punti</div>
+              <div className="border-t border-white/20 pt-1 mt-1 font-semibold">Totale = {performanceMetrics.performanceIndex} punti</div>
+            </div>
             <div className="text-xl opacity-90">
-              {performanceMetrics.overallRating >= 90 ? '🏆 Performance Eccezionale!' :
-               performanceMetrics.overallRating >= 80 ? '🌟 Performance Ottima' :
-               performanceMetrics.overallRating >= 70 ? '👍 Performance Buona' :
-               performanceMetrics.overallRating >= 60 ? '📈 Performance Discreta' : '📚 Performance da Migliorare'}
+              {performanceMetrics.performanceIndex >= 90 ? '🏆 Performance Eccezionale!' :
+               performanceMetrics.performanceIndex >= 80 ? '🌟 Performance Ottima' :
+               performanceMetrics.performanceIndex >= 70 ? '👍 Performance Buona' :
+               performanceMetrics.performanceIndex >= 60 ? '📈 Performance Discreta' : '📚 Performance da Migliorare'}
             </div>
             {performanceMetrics.improvementTrend !== 0 && (
               <div className={`mt-2 text-lg flex items-center justify-center gap-2 ${
@@ -289,25 +440,29 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm">
+            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm" title="Media dei punteggi di tutti i test">
               <Trophy className="w-8 h-8 mx-auto mb-2" />
               <div className="text-2xl font-bold">{performanceMetrics.accuracy}%</div>
               <div className="text-white/80 text-sm">Precisione</div>
+              <div className="text-white/60 text-xs mt-1">Media punteggi test</div>
             </div>
-            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm">
+            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm" title="Quanto stabili sono le tue performance (100 - deviazione standard)">
               <Target className="w-8 h-8 mx-auto mb-2" />
               <div className="text-2xl font-bold">{performanceMetrics.consistency}%</div>
               <div className="text-white/80 text-sm">Consistenza</div>
+              <div className="text-white/60 text-xs mt-1">Stabilità performance</div>
             </div>
-            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm">
+            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm" title="Quanto bene rispondi senza aiuti">
               <Lightbulb className="w-8 h-8 mx-auto mb-2" />
               <div className="text-2xl font-bold">{performanceMetrics.hintEfficiency}%</div>
               <div className="text-white/80 text-sm">Efficienza</div>
+              <div className="text-white/60 text-xs mt-1">Risposte senza aiuti</div>
             </div>
-            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm">
+            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm" title="Score basato sul tempo medio di risposta">
               <Clock className="w-8 h-8 mx-auto mb-2" />
               <div className="text-2xl font-bold">{performanceMetrics.speedScore}%</div>
               <div className="text-white/80 text-sm">Velocità</div>
+              <div className="text-white/60 text-xs mt-1">Tempo medio risposta</div>
             </div>
             <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm">
               <Zap className="w-8 h-8 mx-auto mb-2" />
@@ -449,7 +604,7 @@ const PerformanceSection = ({ testHistory, localRefresh }) => {
             </ResponsiveContainer>
             
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-              {difficultyAnalysis.map((level, index) => (
+              {difficultyAnalysis.map((level, index) => level && (
                 <div key={index} className="text-center p-4 bg-gray-50 rounded-xl">
                   <div className="font-bold text-lg text-gray-800">{level.difficulty}</div>
                   <div className="text-sm text-gray-600 space-y-1">

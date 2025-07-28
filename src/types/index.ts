@@ -112,6 +112,7 @@ export type {
   ScoringConfig,
   TestEvent,
   TestResult,
+  TestHistoryItem,
   FinalScore,
   ScoreBreakdown,
   ScoreComparison,

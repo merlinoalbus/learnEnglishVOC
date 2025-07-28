@@ -18,18 +18,24 @@ import {
 } from 'recharts';
 import { BookOpen, TrendingUp, Award, Target, Info } from 'lucide-react';
 
-const ChaptersSection = ({ testHistory, words, localRefresh }) => {
+interface ChaptersSectionProps {
+  testHistory: any[];
+  words: any[];
+  localRefresh: number;
+}
+
+const ChaptersSection: React.FC<ChaptersSectionProps> = ({ testHistory, words, localRefresh }) => {
   const [selectedChapterForTrend, setSelectedChapterForTrend] = useState(null);
 
   // ⭐ FIXED: Calcolo corretto dei dati per capitoli
   const chapterAnalysis = useMemo(() => {
-    const chapterStats = {};
-    const chapterFirstTestDate = {};
-    const chapterDetailedHistory = {};
+    const chapterStats: any = {};
+    const chapterFirstTestDate: any = {};
+    const chapterDetailedHistory: any = {};
 
 
     // 1️⃣ STEP 1: Raccolta dati base per capitolo dalle parole
-    words.forEach(word => {
+    words.forEach((word: any) => {
       const chapter = word.chapter || 'Senza Capitolo';
       if (!chapterStats[chapter]) {
         chapterStats[chapter] = {
@@ -54,7 +60,7 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
       const testDate = new Date(test.timestamp);
       
       if (test.chapterStats) {
-        Object.entries(test.chapterStats).forEach(([chapter, stats]) => {
+        Object.entries(test.chapterStats).forEach(([chapter, stats]: [string, any]) => {
           if (!chapterStats[chapter]) {
             // If chapter exists in tests but not in words, create entry
             chapterStats[chapter] = {
@@ -80,7 +86,7 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
           // ⭐ CRITICAL: Distribute hints proportionally across chapters in test
           if (test.hintsUsed > 0) {
             const totalWordsInAllChapters = Object.values(test.chapterStats)
-              .reduce((sum, chStats) => sum + (chStats.correctWords || 0) + (chStats.incorrectWords || 0), 0);
+              .reduce((sum: number, chStats: any) => sum + (chStats.correctWords || 0) + (chStats.incorrectWords || 0), 0);
             const wordsInThisChapter = (stats.correctWords || 0) + (stats.incorrectWords || 0);
             
             if (totalWordsInAllChapters > 0) {
@@ -108,7 +114,7 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
     });
 
     // 3️⃣ STEP 3: Calcolo metriche finali CORRETTE
-    const processedData = Object.entries(chapterStats).map(([chapter, data]) => {
+    const processedData = Object.entries(chapterStats).map(([chapter, data]: [string, any]) => {
       // ⭐ FIXED: Use correct denominators
       const totalAnswers = data.totalCorrect + data.totalIncorrect;
       const accuracy = totalAnswers > 0 ? Math.round((data.totalCorrect / totalAnswers) * 100) : 0;
@@ -533,7 +539,7 @@ const ChaptersSection = ({ testHistory, words, localRefresh }) => {
                     onClick={() => {
                       if (chapter.testsPerformed > 0) {
                         setSelectedChapterForTrend(
-                          selectedChapterForTrend === chapter.fullChapter ? null : chapter.fullChapter
+                          selectedChapterForTrend === chapter.fullChapter ? null : chapter.fullChapter as any
                         );
                       }
                     }}
