@@ -1260,10 +1260,6 @@ export const useStats = (): StatsResult => {
               });
             }
             
-            console.log(`🔧 FIXING MAPPING - Test ${session.sessionId}:`, {
-              originalChapterBreakdown: session.chapterBreakdown,
-              mappedChapterStats: chapterStats
-            });
             
             return {
               id: session.sessionId || session.id,
@@ -1313,7 +1309,6 @@ export const useStats = (): StatsResult => {
     
     // ⭐ CORRETTO: Converte WordPerformance in WordPerformanceAnalysis
     const wordPerformancesArray = getAllWordsPerformance(); // Già convertite nel formato corretto
-    console.log(`🔧 useStats: Passando ${wordPerformancesArray.length} performance al ChapterStatsService`);
     
     return chapterStatsService.calculateChapterAnalysis({
       testHistory,

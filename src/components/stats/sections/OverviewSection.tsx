@@ -92,16 +92,9 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
       const endTime = sortedData[sortedData.length - 1].timestamp.getTime();
       const totalDays = (endTime - startTime) / (1000 * 60 * 60 * 24);
       
-      console.log('🔍 VELOCITÀ APPRENDIMENTO DEBUG:', {
-        totalTests: sortedData.length,
-        totalDays: totalDays.toFixed(2),
-        firstScore: sortedData[0].percentage,
-        lastScore: sortedData[sortedData.length - 1].percentage
-      });
       
       // ⭐ SAFETY CHECK: Se i test sono tutti nello stesso giorno o molto ravvicinati
       if (totalDays < 1) {
-        console.log('⚠️ Test troppo ravvicinati nel tempo, usando calcolo semplificato');
         // Calcolo semplificato: differenza tra primo e ultimo punteggio
         const firstScore = sortedData[0].percentage;
         const lastScore = sortedData[sortedData.length - 1].percentage;

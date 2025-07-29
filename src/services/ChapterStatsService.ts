@@ -341,10 +341,6 @@ export class ChapterStatsService {
       .sort((a, b) => a.efficiency - b.efficiency)
       .slice(0, 3);
       
-    console.log('📚 STRUGGLING CHAPTERS:');
-    strugglingChapters.forEach((chapter, index) => {
-      console.log(`   ${index + 1}. ${chapter.chapter}: ${chapter.efficiency}% efficienza, ${chapter.untestedPercentage}% non testate`);
-    });
     
     return strugglingChapters;
   }

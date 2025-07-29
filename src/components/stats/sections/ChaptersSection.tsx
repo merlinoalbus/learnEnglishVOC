@@ -47,22 +47,13 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
   
   // ⭐ CALCOLO ANALISI: Con debounce per evitare re-render eccessivi
   const chapterCalculationResult: ChapterCalculationResult = useMemo(() => {
-    console.log('🔄 ChaptersSection: Ricalcolo analisi capitoli richiesto');
     const result = calculateChapterAnalysis();
-    console.log('✅ ChaptersSection: Analisi capitoli completata, rendering componente');
     return result;
   }, [calculateChapterAnalysis]);
   
   const { analysis, overviewStats, topChapters, strugglingChapters } = chapterCalculationResult;
   const { processedData: chapterData } = analysis;
 
-  // 📊 LOG DELLE METRICHE VISUALIZZATE per validazione
-  console.log('📊 ChaptersSection: Metriche da visualizzare:', {
-    'Capitoli Totali': overviewStats.totalChapters,
-    'Miglior Efficienza': `${overviewStats.bestEfficiency}%`,
-    'Completamento Medio': `${overviewStats.averageCompletion}%`,
-    'Capitoli Testati': overviewStats.testedChapters
-  });
 
   // ⭐ TREND DATA: Service layer gestisce il calcolo cronologico
   const selectedChapterTrendData: ChapterTrendData[] = useMemo(() => {
@@ -146,7 +137,6 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                 return aChapter.localeCompare(bChapter);
               });
 
-            console.log('📊 CAPITOLI ORDINATI:', sortedTestedChapters.map(c => c.fullChapter));
 
             return (
               <>
