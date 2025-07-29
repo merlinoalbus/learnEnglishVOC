@@ -67,6 +67,9 @@ export interface PerformanceAttempt {
   /** Hint utilizzato */
   usedHint: boolean;
 
+  /** ⭐ NUOVO: Numero di hint utilizzati per questo tentativo */
+  hintsCount?: number;
+
   /** Tempo speso (ms) */
   timeSpent: number;
 }

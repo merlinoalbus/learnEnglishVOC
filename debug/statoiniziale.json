@@ -1,0 +1,4980 @@
+{
+  "timestamp": "2025-07-29T13:14:18.515Z",
+  "currentUser": {
+    "uid": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+    "email": "robertomirabella2784@gmail.com"
+  },
+  "collections": {
+    "detailedTestSessions": [
+      {
+        "id": "5enV9pnNdTL5JDsqp5WU",
+        "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+        "words": [
+          {
+            "isCorrect": true,
+            "evaluationTime": 1687,
+            "result": "correct",
+            "chapter": "1",
+            "answerDeclaredAt": "2025-07-29T13:06:59.403Z",
+            "totalTime": 5919,
+            "timeExpired": false,
+            "english": "jerk",
+            "testPosition": 1,
+            "italian": "sobbalzare/strattonare",
+            "wordId": "wrd_1737123600004_mno345",
+            "hintsUsed": [
+              {
+                "sequenceOrder": 1,
+                "content": "smooth",
+                "requestedAt": "2025-07-29T13:06:54.986Z",
+                "type": "antonym",
+                "timeFromWordStart": 1502
+              },
+              {
+                "sequenceOrder": 2,
+                "timeFromWordStart": 2143,
+                "type": "synonym",
+                "content": "pull",
+                "requestedAt": "2025-07-29T13:06:55.627Z"
+              },
+              {
+                "content": "He jerked his hand away",
+                "requestedAt": "2025-07-29T13:06:56.874Z",
+                "type": "context",
+                "sequenceOrder": 3,
+                "timeFromWordStart": 3390
+              }
+            ],
+            "thinkingTime": 4232,
+            "wordShownAt": "2025-07-29T13:06:53.484Z",
+            "totalHintsCount": 3,
+            "cardFlippedAt": "2025-07-29T13:06:57.716Z"
+          },
+          {
+            "italian": "sedersi",
+            "wordShownAt": "2025-07-29T13:07:00.613Z",
+            "totalHintsCount": 1,
+            "result": "correct",
+            "chapter": "1",
+            "cardFlippedAt": "2025-07-29T13:07:03.466Z",
+            "answerDeclaredAt": "2025-07-29T13:07:04.466Z",
+            "evaluationTime": 1000,
+            "isCorrect": true,
+            "testPosition": 2,
+            "thinkingTime": 2853,
+            "hintsUsed": [
+              {
+                "requestedAt": "2025-07-29T13:07:01.595Z",
+                "timeFromWordStart": 982,
+                "content": "seat",
+                "type": "synonym",
+                "sequenceOrder": 1
+              }
+            ],
+            "english": "sit",
+            "timeExpired": false,
+            "totalTime": 3853,
+            "wordId": "wrd_1737123600017_zab234"
+          },
+          {
+            "hintsUsed": [
+              {
+                "type": "context",
+                "content": "Shoulder pain",
+                "sequenceOrder": 1,
+                "timeFromWordStart": 1169,
+                "requestedAt": "2025-07-29T13:07:06.850Z"
+              },
+              {
+                "requestedAt": "2025-07-29T13:07:08.450Z",
+                "sequenceOrder": 2,
+                "content": "Tap on the shoulder",
+                "type": "context",
+                "timeFromWordStart": 2769
+              }
+            ],
+            "wordId": "wrd_1737123600018_cde567",
+            "english": "shoulder",
+            "cardFlippedAt": "2025-07-29T13:07:09.266Z",
+            "timeExpired": false,
+            "chapter": "1",
+            "totalTime": 4401,
+            "thinkingTime": 3585,
+            "answerDeclaredAt": "2025-07-29T13:07:10.082Z",
+            "totalHintsCount": 2,
+            "evaluationTime": 816,
+            "wordShownAt": "2025-07-29T13:07:05.681Z",
+            "result": "correct",
+            "testPosition": 3,
+            "italian": "spalla",
+            "isCorrect": true
+          },
+          {
+            "testPosition": 4,
+            "isCorrect": true,
+            "hintsUsed": [],
+            "english": "bend",
+            "italian": "piegare",
+            "wordShownAt": "2025-07-29T13:07:11.297Z",
+            "thinkingTime": 970,
+            "wordId": "wrd_1737123600016_wxy901",
+            "result": "correct",
+            "cardFlippedAt": "2025-07-29T13:07:12.267Z",
+            "totalHintsCount": 0,
+            "chapter": "1",
+            "evaluationTime": 743,
+            "totalTime": 1713,
+            "timeExpired": false,
+            "answerDeclaredAt": "2025-07-29T13:07:13.010Z"
+          },
+          {
+            "wordShownAt": "2025-07-29T13:07:14.214Z",
+            "answerDeclaredAt": "2025-07-29T13:07:15.755Z",
+            "thinkingTime": 676,
+            "testPosition": 5,
+            "italian": "afferrare",
+            "cardFlippedAt": "2025-07-29T13:07:14.890Z",
+            "english": "grab",
+            "hintsUsed": [],
+            "isCorrect": false,
+            "evaluationTime": 865,
+            "chapter": "2",
+            "result": "incorrect",
+            "totalHintsCount": 0,
+            "wordId": "wrd_1737123600044_cde345",
+            "timeExpired": false,
+            "totalTime": 1541
+          },
+          {
+            "english": "quite",
+            "answerDeclaredAt": "2025-07-29T13:07:23.706Z",
+            "timeExpired": false,
+            "isCorrect": true,
+            "thinkingTime": 4360,
+            "testPosition": 6,
+            "cardFlippedAt": "2025-07-29T13:07:21.323Z",
+            "italian": "abbastanza, piuttosto, del tutto",
+            "result": "correct",
+            "wordShownAt": "2025-07-29T13:07:16.963Z",
+            "hintsUsed": [
+              {
+                "content": "She is quite intelligent and a very quick learner.",
+                "sequenceOrder": 1,
+                "requestedAt": "2025-07-29T13:07:19.482Z",
+                "type": "context",
+                "timeFromWordStart": 2519
+              },
+              {
+                "content": "I'm quite tired after the long walk.",
+                "requestedAt": "2025-07-29T13:07:19.954Z",
+                "type": "context",
+                "sequenceOrder": 2,
+                "timeFromWordStart": 2991
+              },
+              {
+                "type": "context",
+                "requestedAt": "2025-07-29T13:07:20.410Z",
+                "content": "The movie was quite good, I enjoyed it.",
+                "timeFromWordStart": 3447,
+                "sequenceOrder": 3
+              }
+            ],
+            "chapter": "1",
+            "totalHintsCount": 3,
+            "evaluationTime": 2383,
+            "wordId": "wrd_1737123600001_def456",
+            "totalTime": 6743
+          }
+        ],
+        "accuracy": 83.33333333333334,
+        "correctAnswers": 5,
+        "chapterBreakdown": {
+          "1": {
+            "hintsUsed": 9,
+            "totalTime": 22629,
+            "incorrect": 0,
+            "correct": 5
+          },
+          "2": {
+            "totalTime": 1541,
+            "correct": 0,
+            "hintsUsed": 0,
+            "incorrect": 1
+          }
+        },
+        "performanceTrend": [
+          1,
+          1,
+          1,
+          1,
+          0,
+          1
+        ],
+        "averageTimePerWord": 4028.3333333333335,
+        "sessionMetadata": {
+          "dataSource": "learnEnglishVOC_webapp",
+          "totalDuration": 24170,
+          "testResultId": "test_1753794443708",
+          "screenResolution": "1920x1080",
+          "browserTimezone": "Europe/Rome",
+          "finalAccuracy": 83.33333333333334,
+          "wordsCompleted": 6,
+          "authStatus": "authenticated"
+        },
+        "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+        "hintUsagePattern": [
+          3,
+          1,
+          2,
+          0,
+          0,
+          3
+        ],
+        "totalWords": 6,
+        "totalTimeSpent": 24170,
+        "wrongWords": [
+          {
+            "testPosition": 5,
+            "thinkingTime": 676,
+            "timeExpired": false,
+            "answerDeclaredAt": "2025-07-29T13:07:15.755Z",
+            "totalHintsCount": 0,
+            "wordId": "wrd_1737123600044_cde345",
+            "totalTime": 1541,
+            "english": "grab",
+            "isCorrect": false,
+            "cardFlippedAt": "2025-07-29T13:07:14.890Z",
+            "hintsUsed": [],
+            "italian": "afferrare",
+            "chapter": "2",
+            "result": "incorrect",
+            "wordShownAt": "2025-07-29T13:07:14.214Z",
+            "evaluationTime": 865
+          }
+        ],
+        "completedAt": "2025-07-29T13:07:25.473Z",
+        "sessionId": "test_1753794413484_dcmpa3ddx",
+        "incorrectAnswers": 1,
+        "startedAt": "2025-07-29T13:06:53.484Z",
+        "totalHintsUsed": 9,
+        "speedTrend": [
+          5919,
+          3853,
+          4401,
+          1713,
+          1541,
+          6743
+        ],
+        "config": {
+          "enableTotalHintsLimit": true,
+          "enableHints": true,
+          "includeLearnedWords": false,
+          "wordSelection": {
+            "unlearnedOnly": true,
+            "difficultOnly": true
+          },
+          "hints": {
+            "maxTotal": 9,
+            "maxPerWord": 3,
+            "enabled": true
+          },
+          "hintsMode": "limited",
+          "maxTotalHints": 9,
+          "maxHintsPerWord": 3,
+          "enableTimer": true,
+          "testMode": "difficult-only",
+          "maxTimePerWord": 20,
+          "selectedChapters": [
+            "1",
+            "2",
+            "3"
+          ],
+          "timing": {
+            "maxTimePerWord": 20,
+            "enabled": true
+          }
+        },
+        "timeoutAnswers": 0
+      },
+      {
+        "id": "M1vjFR6KWTZHAZ8XCcVj",
+        "totalHintsUsed": 6,
+        "completedAt": "2025-07-29T13:11:54.906Z",
+        "wrongWords": [],
+        "startedAt": "2025-07-29T13:11:28.379Z",
+        "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+        "config": {
+          "testMode": "difficult-only",
+          "enableTimer": false,
+          "wordSelection": {
+            "unlearnedOnly": true,
+            "difficultOnly": true
+          },
+          "hintsMode": "limited",
+          "maxTimePerWord": null,
+          "includeLearnedWords": false,
+          "enableHints": true,
+          "timing": {
+            "maxTimePerWord": null,
+            "enabled": false
+          },
+          "enableTotalHintsLimit": false,
+          "maxHintsPerWord": 2,
+          "selectedChapters": [
+            "1",
+            "2",
+            "3"
+          ],
+          "hints": {
+            "enabled": true,
+            "maxTotal": null,
+            "maxPerWord": 2
+          },
+          "maxTotalHints": null
+        },
+        "chapterBreakdown": {
+          "1": {
+            "totalTime": 16300,
+            "hintsUsed": 6,
+            "correct": 5,
+            "incorrect": 0
+          },
+          "2": {
+            "totalTime": 2477,
+            "correct": 1,
+            "hintsUsed": 0,
+            "incorrect": 0
+          }
+        },
+        "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+        "incorrectAnswers": 0,
+        "sessionId": "test_1753794688379_ulirfzyd1",
+        "speedTrend": [
+          3832,
+          3010,
+          3753,
+          2477,
+          2289,
+          3416
+        ],
+        "averageTimePerWord": 3129.5,
+        "totalWords": 6,
+        "words": [
+          {
+            "italian": "sedersi",
+            "chapter": "1",
+            "isCorrect": true,
+            "wordShownAt": "2025-07-29T13:11:28.379Z",
+            "english": "sit",
+            "thinkingTime": 2584,
+            "cardFlippedAt": "2025-07-29T13:11:30.963Z",
+            "timeExpired": false,
+            "result": "correct",
+            "evaluationTime": 1248,
+            "hintsUsed": [],
+            "testPosition": 1,
+            "wordId": "wrd_1737123600017_zab234",
+            "answerDeclaredAt": "2025-07-29T13:11:32.211Z",
+            "totalTime": 3832,
+            "totalHintsCount": 0
+          },
+          {
+            "timeExpired": false,
+            "english": "shoulder",
+            "chapter": "1",
+            "wordShownAt": "2025-07-29T13:11:33.416Z",
+            "thinkingTime": 2099,
+            "totalHintsCount": 1,
+            "isCorrect": true,
+            "result": "correct",
+            "evaluationTime": 911,
+            "italian": "spalla",
+            "hintsUsed": [
+              {
+                "timeFromWordStart": 402,
+                "content": "Tap on the shoulder",
+                "requestedAt": "2025-07-29T13:11:33.818Z",
+                "type": "context",
+                "sequenceOrder": 1
+              }
+            ],
+            "answerDeclaredAt": "2025-07-29T13:11:36.426Z",
+            "totalTime": 3010,
+            "cardFlippedAt": "2025-07-29T13:11:35.515Z",
+            "testPosition": 2,
+            "wordId": "wrd_1737123600018_cde567"
+          },
+          {
+            "chapter": "1",
+            "answerDeclaredAt": "2025-07-29T13:11:41.386Z",
+            "cardFlippedAt": "2025-07-29T13:11:40.259Z",
+            "isCorrect": true,
+            "result": "correct",
+            "timeExpired": false,
+            "testPosition": 3,
+            "thinkingTime": 2626,
+            "english": "jerk",
+            "italian": "sobbalzare/strattonare",
+            "totalHintsCount": 2,
+            "wordShownAt": "2025-07-29T13:11:37.633Z",
+            "wordId": "wrd_1737123600004_mno345",
+            "evaluationTime": 1127,
+            "hintsUsed": [
+              {
+                "content": "He jerked his hand away",
+                "type": "context",
+                "requestedAt": "2025-07-29T13:11:38.299Z",
+                "timeFromWordStart": 666,
+                "sequenceOrder": 1
+              },
+              {
+                "sequenceOrder": 2,
+                "requestedAt": "2025-07-29T13:11:39.587Z",
+                "content": "smooth",
+                "timeFromWordStart": 1954,
+                "type": "antonym"
+              }
+            ],
+            "totalTime": 3753
+          },
+          {
+            "totalTime": 2477,
+            "timeExpired": false,
+            "wordShownAt": "2025-07-29T13:11:42.598Z",
+            "hintsUsed": [],
+            "cardFlippedAt": "2025-07-29T13:11:43.939Z",
+            "thinkingTime": 1341,
+            "chapter": "2",
+            "totalHintsCount": 0,
+            "italian": "afferrare",
+            "testPosition": 4,
+            "wordId": "wrd_1737123600044_cde345",
+            "result": "correct",
+            "evaluationTime": 1136,
+            "isCorrect": true,
+            "english": "grab",
+            "answerDeclaredAt": "2025-07-29T13:11:45.075Z"
+          },
+          {
+            "hintsUsed": [
+              {
+                "type": "synonym",
+                "content": "flex",
+                "timeFromWordStart": 768,
+                "requestedAt": "2025-07-29T13:11:47.050Z",
+                "sequenceOrder": 1
+              }
+            ],
+            "testPosition": 5,
+            "cardFlippedAt": "2025-07-29T13:11:47.716Z",
+            "evaluationTime": 855,
+            "english": "bend",
+            "isCorrect": true,
+            "chapter": "1",
+            "timeExpired": false,
+            "totalTime": 2289,
+            "wordId": "wrd_1737123600016_wxy901",
+            "thinkingTime": 1434,
+            "result": "correct",
+            "answerDeclaredAt": "2025-07-29T13:11:48.571Z",
+            "italian": "piegare",
+            "totalHintsCount": 1,
+            "wordShownAt": "2025-07-29T13:11:46.282Z"
+          },
+          {
+            "english": "quite",
+            "hintsUsed": [
+              {
+                "content": "I'm quite tired after the long walk.",
+                "requestedAt": "2025-07-29T13:11:51.059Z",
+                "type": "context",
+                "sequenceOrder": 1,
+                "timeFromWordStart": 1281
+              },
+              {
+                "timeFromWordStart": 1857,
+                "sequenceOrder": 2,
+                "type": "context",
+                "requestedAt": "2025-07-29T13:11:51.635Z",
+                "content": "She is quite intelligent and a very quick learner."
+              }
+            ],
+            "evaluationTime": 863,
+            "isCorrect": true,
+            "cardFlippedAt": "2025-07-29T13:11:52.331Z",
+            "thinkingTime": 2553,
+            "chapter": "1",
+            "timeExpired": false,
+            "italian": "abbastanza, piuttosto, del tutto",
+            "wordShownAt": "2025-07-29T13:11:49.778Z",
+            "totalTime": 3416,
+            "result": "correct",
+            "answerDeclaredAt": "2025-07-29T13:11:53.194Z",
+            "totalHintsCount": 2,
+            "testPosition": 6,
+            "wordId": "wrd_1737123600001_def456"
+          }
+        ],
+        "hintUsagePattern": [
+          0,
+          1,
+          2,
+          0,
+          1,
+          2
+        ],
+        "correctAnswers": 6,
+        "totalTimeSpent": 18777,
+        "performanceTrend": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "accuracy": 100,
+        "timeoutAnswers": 0,
+        "sessionMetadata": {
+          "authStatus": "authenticated",
+          "dataSource": "learnEnglishVOC_webapp",
+          "wordsCompleted": 6,
+          "screenResolution": "1920x1080",
+          "totalDuration": 18777,
+          "testResultId": "test_1753794713195",
+          "finalAccuracy": 100,
+          "browserTimezone": "Europe/Rome"
+        }
+      },
+      {
+        "id": "Q5y5FemgSnp61M1Ub1qC",
+        "averageTimePerWord": 5256.833333333333,
+        "totalTimeSpent": 31541,
+        "correctAnswers": 0,
+        "accuracy": 0,
+        "words": [
+          {
+            "wordId": "wrd_1737123600016_wxy901",
+            "totalTime": 8327,
+            "timeExpired": false,
+            "english": "bend",
+            "evaluationTime": 2640,
+            "hintsUsed": [
+              {
+                "requestedAt": "2025-07-29T13:01:33.483Z",
+                "type": "context",
+                "sequenceOrder": 1,
+                "timeFromWordStart": 3335,
+                "content": "The road bends left"
+              },
+              {
+                "sequenceOrder": 2,
+                "requestedAt": "2025-07-29T13:01:34.242Z",
+                "content": "curve",
+                "type": "synonym",
+                "timeFromWordStart": 4094
+              }
+            ],
+            "result": "incorrect",
+            "testPosition": 1,
+            "chapter": "1",
+            "italian": "piegare",
+            "isCorrect": false,
+            "cardFlippedAt": "2025-07-29T13:01:35.835Z",
+            "answerDeclaredAt": "2025-07-29T13:01:38.475Z",
+            "totalHintsCount": 2,
+            "wordShownAt": "2025-07-29T13:01:30.148Z",
+            "thinkingTime": 5687
+          },
+          {
+            "isCorrect": false,
+            "wordId": "wrd_1737123600044_cde345",
+            "thinkingTime": 3635,
+            "testPosition": 2,
+            "cardFlippedAt": "2025-07-29T13:01:43.316Z",
+            "timeExpired": false,
+            "english": "grab",
+            "totalTime": 4873,
+            "hintsUsed": [
+              {
+                "requestedAt": "2025-07-29T13:01:41.226Z",
+                "content": "release",
+                "sequenceOrder": 1,
+                "type": "antonym",
+                "timeFromWordStart": 1545
+              },
+              {
+                "requestedAt": "2025-07-29T13:01:42.626Z",
+                "timeFromWordStart": 2945,
+                "type": "antonym",
+                "content": "let go",
+                "sequenceOrder": 2
+              }
+            ],
+            "totalHintsCount": 2,
+            "chapter": "2",
+            "answerDeclaredAt": "2025-07-29T13:01:44.554Z",
+            "italian": "afferrare",
+            "wordShownAt": "2025-07-29T13:01:39.681Z",
+            "result": "incorrect",
+            "evaluationTime": 1238
+          },
+          {
+            "wordId": "wrd_1737123600018_cde567",
+            "testPosition": 3,
+            "timeExpired": false,
+            "totalTime": 3893,
+            "italian": "spalla",
+            "wordShownAt": "2025-07-29T13:01:45.765Z",
+            "result": "incorrect",
+            "hintsUsed": [],
+            "answerDeclaredAt": "2025-07-29T13:01:49.658Z",
+            "isCorrect": false,
+            "thinkingTime": 2853,
+            "cardFlippedAt": "2025-07-29T13:01:48.618Z",
+            "chapter": "1",
+            "english": "shoulder",
+            "totalHintsCount": 0,
+            "evaluationTime": 1040
+          },
+          {
+            "cardFlippedAt": "2025-07-29T13:01:54.562Z",
+            "wordShownAt": "2025-07-29T13:01:50.865Z",
+            "english": "jerk",
+            "result": "incorrect",
+            "thinkingTime": 3697,
+            "totalHintsCount": 3,
+            "testPosition": 4,
+            "chapter": "1",
+            "italian": "sobbalzare/strattonare",
+            "isCorrect": false,
+            "evaluationTime": 1520,
+            "timeExpired": false,
+            "wordId": "wrd_1737123600004_mno345",
+            "answerDeclaredAt": "2025-07-29T13:01:56.082Z",
+            "totalTime": 5217,
+            "hintsUsed": [
+              {
+                "timeFromWordStart": 937,
+                "content": "glide",
+                "sequenceOrder": 1,
+                "type": "antonym",
+                "requestedAt": "2025-07-29T13:01:51.802Z"
+              },
+              {
+                "content": "pull",
+                "sequenceOrder": 2,
+                "requestedAt": "2025-07-29T13:01:52.442Z",
+                "type": "synonym",
+                "timeFromWordStart": 1577
+              },
+              {
+                "timeFromWordStart": 2409,
+                "sequenceOrder": 3,
+                "content": "The car jerked to a stop",
+                "type": "context",
+                "requestedAt": "2025-07-29T13:01:53.274Z"
+              }
+            ]
+          },
+          {
+            "answerDeclaredAt": "2025-07-29T13:02:01.787Z",
+            "totalTime": 4489,
+            "chapter": "1",
+            "testPosition": 5,
+            "hintsUsed": [],
+            "totalHintsCount": 0,
+            "timeExpired": false,
+            "english": "quite",
+            "cardFlippedAt": "2025-07-29T13:02:00.026Z",
+            "thinkingTime": 2728,
+            "evaluationTime": 1761,
+            "isCorrect": false,
+            "wordId": "wrd_1737123600001_def456",
+            "wordShownAt": "2025-07-29T13:01:57.298Z",
+            "result": "incorrect",
+            "italian": "abbastanza, piuttosto, del tutto"
+          },
+          {
+            "hintsUsed": [
+              {
+                "content": "Please sit down",
+                "sequenceOrder": 1,
+                "requestedAt": "2025-07-29T13:02:04.330Z",
+                "type": "context",
+                "timeFromWordStart": 1334
+              },
+              {
+                "timeFromWordStart": 2006,
+                "type": "antonym",
+                "content": "stand",
+                "sequenceOrder": 2,
+                "requestedAt": "2025-07-29T13:02:05.002Z"
+              }
+            ],
+            "evaluationTime": 872,
+            "testPosition": 6,
+            "wordId": "wrd_1737123600017_zab234",
+            "result": "incorrect",
+            "cardFlippedAt": "2025-07-29T13:02:06.866Z",
+            "answerDeclaredAt": "2025-07-29T13:02:07.738Z",
+            "totalTime": 4742,
+            "totalHintsCount": 2,
+            "wordShownAt": "2025-07-29T13:02:02.996Z",
+            "thinkingTime": 3870,
+            "italian": "sedersi",
+            "timeExpired": false,
+            "chapter": "1",
+            "english": "sit",
+            "isCorrect": false
+          }
+        ],
+        "totalHintsUsed": 9,
+        "startedAt": "2025-07-29T13:01:30.148Z",
+        "timeoutAnswers": 0,
+        "config": {
+          "enableTotalHintsLimit": true,
+          "enableTimer": true,
+          "maxTimePerWord": 20,
+          "wordSelection": {
+            "difficultOnly": true,
+            "unlearnedOnly": true
+          },
+          "includeLearnedWords": false,
+          "maxHintsPerWord": 3,
+          "timing": {
+            "enabled": true,
+            "maxTimePerWord": 20
+          },
+          "enableHints": true,
+          "hints": {
+            "maxTotal": 9,
+            "enabled": true,
+            "maxPerWord": 3
+          },
+          "hintsMode": "limited",
+          "maxTotalHints": 9,
+          "selectedChapters": [
+            "1",
+            "2",
+            "3"
+          ],
+          "testMode": "difficult-only"
+        },
+        "hintUsagePattern": [
+          2,
+          2,
+          0,
+          3,
+          0,
+          2
+        ],
+        "chapterBreakdown": {
+          "1": {
+            "totalTime": 26668,
+            "incorrect": 5,
+            "correct": 0,
+            "hintsUsed": 7
+          },
+          "2": {
+            "totalTime": 4873,
+            "hintsUsed": 2,
+            "incorrect": 1,
+            "correct": 0
+          }
+        },
+        "performanceTrend": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "sessionMetadata": {
+          "screenResolution": "1920x1080",
+          "wordsCompleted": 6,
+          "dataSource": "learnEnglishVOC_webapp",
+          "browserTimezone": "Europe/Rome",
+          "authStatus": "authenticated",
+          "totalDuration": 31541,
+          "testResultId": "test_1753794127739",
+          "finalAccuracy": 0
+        },
+        "wrongWords": [
+          {
+            "english": "bend",
+            "wordShownAt": "2025-07-29T13:01:30.148Z",
+            "cardFlippedAt": "2025-07-29T13:01:35.835Z",
+            "isCorrect": false,
+            "totalHintsCount": 2,
+            "answerDeclaredAt": "2025-07-29T13:01:38.475Z",
+            "chapter": "1",
+            "timeExpired": false,
+            "thinkingTime": 5687,
+            "hintsUsed": [
+              {
+                "requestedAt": "2025-07-29T13:01:33.483Z",
+                "timeFromWordStart": 3335,
+                "sequenceOrder": 1,
+                "type": "context",
+                "content": "The road bends left"
+              },
+              {
+                "timeFromWordStart": 4094,
+                "sequenceOrder": 2,
+                "type": "synonym",
+                "requestedAt": "2025-07-29T13:01:34.242Z",
+                "content": "curve"
+              }
+            ],
+            "italian": "piegare",
+            "result": "incorrect",
+            "totalTime": 8327,
+            "wordId": "wrd_1737123600016_wxy901",
+            "testPosition": 1,
+            "evaluationTime": 2640
+          },
+          {
+            "testPosition": 2,
+            "answerDeclaredAt": "2025-07-29T13:01:44.554Z",
+            "thinkingTime": 3635,
+            "timeExpired": false,
+            "totalTime": 4873,
+            "english": "grab",
+            "cardFlippedAt": "2025-07-29T13:01:43.316Z",
+            "evaluationTime": 1238,
+            "italian": "afferrare",
+            "chapter": "2",
+            "wordId": "wrd_1737123600044_cde345",
+            "totalHintsCount": 2,
+            "wordShownAt": "2025-07-29T13:01:39.681Z",
+            "result": "incorrect",
+            "isCorrect": false,
+            "hintsUsed": [
+              {
+                "content": "release",
+                "timeFromWordStart": 1545,
+                "requestedAt": "2025-07-29T13:01:41.226Z",
+                "type": "antonym",
+                "sequenceOrder": 1
+              },
+              {
+                "type": "antonym",
+                "sequenceOrder": 2,
+                "content": "let go",
+                "requestedAt": "2025-07-29T13:01:42.626Z",
+                "timeFromWordStart": 2945
+              }
+            ]
+          },
+          {
+            "result": "incorrect",
+            "wordShownAt": "2025-07-29T13:01:45.765Z",
+            "cardFlippedAt": "2025-07-29T13:01:48.618Z",
+            "answerDeclaredAt": "2025-07-29T13:01:49.658Z",
+            "thinkingTime": 2853,
+            "testPosition": 3,
+            "evaluationTime": 1040,
+            "isCorrect": false,
+            "totalTime": 3893,
+            "totalHintsCount": 0,
+            "italian": "spalla",
+            "chapter": "1",
+            "english": "shoulder",
+            "hintsUsed": [],
+            "wordId": "wrd_1737123600018_cde567",
+            "timeExpired": false
+          },
+          {
+            "cardFlippedAt": "2025-07-29T13:01:54.562Z",
+            "answerDeclaredAt": "2025-07-29T13:01:56.082Z",
+            "thinkingTime": 3697,
+            "totalHintsCount": 3,
+            "isCorrect": false,
+            "totalTime": 5217,
+            "result": "incorrect",
+            "timeExpired": false,
+            "hintsUsed": [
+              {
+                "sequenceOrder": 1,
+                "type": "antonym",
+                "timeFromWordStart": 937,
+                "requestedAt": "2025-07-29T13:01:51.802Z",
+                "content": "glide"
+              },
+              {
+                "type": "synonym",
+                "content": "pull",
+                "timeFromWordStart": 1577,
+                "sequenceOrder": 2,
+                "requestedAt": "2025-07-29T13:01:52.442Z"
+              },
+              {
+                "requestedAt": "2025-07-29T13:01:53.274Z",
+                "timeFromWordStart": 2409,
+                "content": "The car jerked to a stop",
+                "type": "context",
+                "sequenceOrder": 3
+              }
+            ],
+            "testPosition": 4,
+            "wordId": "wrd_1737123600004_mno345",
+            "wordShownAt": "2025-07-29T13:01:50.865Z",
+            "italian": "sobbalzare/strattonare",
+            "english": "jerk",
+            "chapter": "1",
+            "evaluationTime": 1520
+          },
+          {
+            "totalTime": 4489,
+            "english": "quite",
+            "cardFlippedAt": "2025-07-29T13:02:00.026Z",
+            "testPosition": 5,
+            "chapter": "1",
+            "evaluationTime": 1761,
+            "answerDeclaredAt": "2025-07-29T13:02:01.787Z",
+            "hintsUsed": [],
+            "wordShownAt": "2025-07-29T13:01:57.298Z",
+            "totalHintsCount": 0,
+            "result": "incorrect",
+            "italian": "abbastanza, piuttosto, del tutto",
+            "isCorrect": false,
+            "thinkingTime": 2728,
+            "timeExpired": false,
+            "wordId": "wrd_1737123600001_def456"
+          },
+          {
+            "evaluationTime": 872,
+            "totalHintsCount": 2,
+            "chapter": "1",
+            "hintsUsed": [
+              {
+                "content": "Please sit down",
+                "timeFromWordStart": 1334,
+                "type": "context",
+                "requestedAt": "2025-07-29T13:02:04.330Z",
+                "sequenceOrder": 1
+              },
+              {
+                "content": "stand",
+                "sequenceOrder": 2,
+                "requestedAt": "2025-07-29T13:02:05.002Z",
+                "timeFromWordStart": 2006,
+                "type": "antonym"
+              }
+            ],
+            "testPosition": 6,
+            "wordId": "wrd_1737123600017_zab234",
+            "italian": "sedersi",
+            "timeExpired": false,
+            "english": "sit",
+            "result": "incorrect",
+            "wordShownAt": "2025-07-29T13:02:02.996Z",
+            "thinkingTime": 3870,
+            "isCorrect": false,
+            "answerDeclaredAt": "2025-07-29T13:02:07.738Z",
+            "cardFlippedAt": "2025-07-29T13:02:06.866Z",
+            "totalTime": 4742
+          }
+        ],
+        "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+        "incorrectAnswers": 6,
+        "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+        "completedAt": "2025-07-29T13:02:09.105Z",
+        "sessionId": "test_1753794090148_qcsja0sth",
+        "totalWords": 6,
+        "speedTrend": [
+          8327,
+          4873,
+          3893,
+          5217,
+          4489,
+          4742
+        ]
+      }
+    ],
+    "words": [
+      {
+        "id": "LQhmX2jyiAvBjepVR5PC",
+        "english": "cold",
+        "italian": "freddo",
+        "antonyms": [
+          "hot",
+          "warm"
+        ],
+        "notes": "Può riferirsi alla temperatura o a una malattia.",
+        "learned": false,
+        "firestoreMetadata": {
+          "version": 1,
+          "deleted": false,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753750498,
+            "nanoseconds": 829000000
+          },
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752952441,
+            "nanoseconds": 526000000
+          }
+        },
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1752952441,
+          "nanoseconds": 526000000
+        },
+        "group": "TEMPO_ATMOSFERICO",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1752952441,
+          "nanoseconds": 526000000
+        },
+        "sentences": [
+          "It's cold outside, you should wear a coat.",
+          "I have a cold and a sore throat.",
+          "The water was too cold for swimming."
+        ],
+        "difficult": false,
+        "chapter": "3",
+        "synonyms": [
+          "chilly",
+          "freezing",
+          "icy",
+          "frigid"
+        ]
+      },
+      {
+        "id": "wrd_1737123600000_abc123",
+        "learned": false,
+        "antonyms": [
+          "absolutely",
+          "certainly"
+        ],
+        "firestoreMetadata": {
+          "version": 1,
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 908000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752936157,
+            "nanoseconds": 111000000
+          }
+        },
+        "group": "AVVERBI_MODO",
+        "createdAt": "2025-01-17T16:00:00.000Z",
+        "chapter": "1",
+        "english": "rather",
+        "difficult": false,
+        "synonyms": [
+          "preferably",
+          "somewhat",
+          "quite",
+          "fairly",
+          "instead",
+          "sooner"
+        ],
+        "italian": "piuttosto, preferibilmente, abbastanza",
+        "notes": "Avverbio con diverse sfumature di significato, spesso usato per esprimere preferenze o per attenuare un'affermazione.",
+        "updatedAt": "2025-01-17T16:00:00.000Z",
+        "sentences": [
+          "I would rather stay home tonight.",
+          "She was rather upset by the news.",
+          "He's rather good at playing the piano."
+        ]
+      },
+      {
+        "id": "wrd_1737123600001_def456",
+        "notes": "Usato per indicare un grado di qualcosa, a volte con un significato di 'abbastanza' o 'piuttosto' e a volte con un significato di 'completamente'.",
+        "firestoreMetadata": {
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753784099,
+            "nanoseconds": 311000000
+          },
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 900000000
+          },
+          "version": 1
+        },
+        "updatedAt": "2025-01-17T16:00:01.000Z",
+        "sentences": [
+          "I'm quite tired after the long walk.",
+          "The movie was quite good, I enjoyed it.",
+          "She is quite intelligent and a very quick learner."
+        ],
+        "english": "quite",
+        "antonyms": [
+          "slightly",
+          "not at all"
+        ],
+        "createdAt": "2025-01-17T16:00:01.000Z",
+        "learned": false,
+        "italian": "abbastanza, piuttosto, del tutto",
+        "difficult": true,
+        "chapter": "1",
+        "group": "AVVERBI_MODO",
+        "synonyms": [
+          "fairly",
+          "rather",
+          "somewhat",
+          "totally",
+          "completely",
+          "fully"
+        ]
+      },
+      {
+        "id": "wrd_1737123600002_ghi789",
+        "italian": "ancora, comunque, immobile",
+        "english": "still",
+        "sentences": [
+          "I am still waiting for my package to arrive.",
+          "Even still, I think we should try again.",
+          "The water was so still that it reflected the trees perfectly."
+        ],
+        "chapter": "1",
+        "learned": false,
+        "antonyms": [
+          "moving",
+          "agitated"
+        ],
+        "updatedAt": "2025-01-17T16:00:02.000Z",
+        "createdAt": "2025-01-17T16:00:02.000Z",
+        "difficult": false,
+        "synonyms": [
+          "yet",
+          "nevertheless",
+          "motionless",
+          "calm",
+          "quiet"
+        ],
+        "notes": "La parola 'still' ha diversi significati a seconda del contesto: avverbio di tempo, congiunzione, aggettivo.",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753784176,
+            "nanoseconds": 534000000
+          },
+          "deleted": false,
+          "custom": {},
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 902000000
+          },
+          "version": 1,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "group": "AVVERBI_TEMPO"
+      },
+      {
+        "id": "wrd_1737123600003_jkl012",
+        "synonyms": [
+          "abruptly",
+          "unexpectedly",
+          "instantly",
+          "quickly",
+          "all of a sudden"
+        ],
+        "chapter": "1",
+        "english": "suddenly",
+        "antonyms": [
+          "gradually",
+          "slowly",
+          "eventually"
+        ],
+        "sentences": [
+          "Suddenly, the lights went out.",
+          "She suddenly burst into tears.",
+          "He suddenly remembered he had a meeting."
+        ],
+        "createdAt": "2025-01-17T16:00:03.000Z",
+        "group": "AVVERBI_TEMPO",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "custom": {},
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 902000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752936008,
+            "nanoseconds": 527000000
+          },
+          "version": 1
+        },
+        "notes": "Avverbio di tempo che indica un'azione che accade inaspettatamente.",
+        "learned": false,
+        "updatedAt": "2025-01-17T16:00:03.000Z",
+        "italian": "improvvisamente, all'improvviso",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600004_mno345",
+        "chapter": "1",
+        "difficult": true,
+        "createdAt": "2025-01-17T16:00:04.000Z",
+        "italian": "sobbalzare/strattonare",
+        "notes": "Jerked = forma passata. Critica consolidamento >2 settimane",
+        "group": "VERBI_MOVIMENTO",
+        "english": "jerk",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753784180,
+            "nanoseconds": 838000000
+          },
+          "custom": {},
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 903000000
+          }
+        },
+        "antonyms": [
+          "smooth",
+          "glide"
+        ],
+        "sentences": [
+          "He jerked his hand away",
+          "The car jerked to a stop"
+        ],
+        "synonyms": [
+          "yank",
+          "pull"
+        ],
+        "learned": false,
+        "updatedAt": "2025-01-17T16:00:04.000Z"
+      },
+      {
+        "id": "wrd_1737123600005_pqr678",
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 897000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910845,
+            "nanoseconds": 310000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {},
+          "version": 1
+        },
+        "difficult": false,
+        "chapter": "1",
+        "italian": "affilato, tagliente",
+        "english": "sharp",
+        "notes": "Può riferirsi sia a oggetti fisici che a qualità intellettuali.",
+        "learned": false,
+        "group": "QUALITA_OGGETTI",
+        "sentences": [
+          "The knife is very sharp.",
+          "Be careful, that edge is sharp.",
+          "She has a sharp mind."
+        ],
+        "synonyms": [
+          "keen",
+          "acute",
+          "pointed",
+          "edged"
+        ],
+        "createdAt": "2025-01-17T16:00:05.000Z",
+        "antonyms": [
+          "blunt",
+          "dull"
+        ],
+        "updatedAt": "2025-01-17T16:00:05.000Z"
+      },
+      {
+        "id": "wrd_1737123600006_stu901",
+        "italian": "lanciare",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 897000000
+          },
+          "version": 1,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 897000000
+          },
+          "deleted": false
+        },
+        "sentences": [
+          "Throw the ball",
+          "He threw it away"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:00:06.000Z",
+        "english": "throw",
+        "synonyms": [
+          "toss",
+          "hurl"
+        ],
+        "chapter": "1",
+        "notes": "Threw = forma passata. Critica consolidamento >2 settimane",
+        "group": "VERBI_MOVIMENTO",
+        "antonyms": [
+          "catch",
+          "receive"
+        ],
+        "updatedAt": "2025-01-17T16:00:06.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600007_vwx234",
+        "createdAt": "2025-01-17T16:00:07.000Z",
+        "chapter": "1",
+        "notes": "Anche: orso (sostantivo)",
+        "firestoreMetadata": {
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 895000000
+          },
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 895000000
+          },
+          "custom": {},
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "italian": "sopportare",
+        "english": "bear",
+        "antonyms": [
+          "enjoy",
+          "love"
+        ],
+        "updatedAt": "2025-01-17T16:00:07.000Z",
+        "learned": false,
+        "synonyms": [
+          "endure",
+          "tolerate"
+        ],
+        "difficult": false,
+        "group": "VERBI_SENTIMENTI",
+        "sentences": [
+          "I can't bear this pain",
+          "Bear with me"
+        ]
+      },
+      {
+        "id": "wrd_1737123600008_yza567",
+        "italian": "ampio",
+        "firestoreMetadata": {
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 915000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 915000000
+          },
+          "custom": {},
+          "deleted": false
+        },
+        "sentences": [
+          "A broad smile",
+          "The road is broad"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:00:08.000Z",
+        "english": "broad",
+        "synonyms": [
+          "wide",
+          "extensive"
+        ],
+        "chapter": "1",
+        "notes": "",
+        "group": "FORME_DIMENSIONI",
+        "antonyms": [
+          "narrow",
+          "thin"
+        ],
+        "updatedAt": "2025-01-17T16:00:08.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600009_bcd890",
+        "difficult": false,
+        "createdAt": "2025-01-17T16:00:09.000Z",
+        "chapter": "1",
+        "updatedAt": "2025-01-17T16:00:09.000Z",
+        "synonyms": [
+          "nook",
+          "bend",
+          "edge",
+          "intersection"
+        ],
+        "antonyms": [
+          "center",
+          "middle"
+        ],
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 913000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752948137,
+            "nanoseconds": 788000000
+          },
+          "custom": {},
+          "deleted": false
+        },
+        "sentences": [
+          "The shop is located on the corner of Main Street.",
+          "He was standing in the corner of the room.",
+          "I turned the corner and saw the park."
+        ],
+        "english": "corner",
+        "notes": "Può riferirsi a un angolo di una stanza o di una strada.",
+        "learned": true,
+        "italian": "angolo, cantuccio",
+        "group": "CITTA_LUOGHI"
+      },
+      {
+        "id": "wrd_1737123600010_efg123",
+        "antonyms": [
+          "praise",
+          "credit"
+        ],
+        "createdAt": "2025-01-17T16:00:10.000Z",
+        "synonyms": [
+          "accuse",
+          "fault"
+        ],
+        "notes": "Alta priorità - sempre instabile",
+        "italian": "incolpare",
+        "chapter": "1",
+        "english": "blame",
+        "difficult": false,
+        "updatedAt": "2025-01-17T16:00:10.000Z",
+        "learned": false,
+        "group": "VERBI_COMUNICAZIONE",
+        "sentences": [
+          "Don't blame me",
+          "Who's to blame?"
+        ],
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 908000000
+          },
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752916858,
+            "nanoseconds": 493000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "deleted": false
+        }
+      },
+      {
+        "id": "wrd_1737123600011_hij456",
+        "italian": "paura, timore",
+        "antonyms": [
+          "courage",
+          "bravery"
+        ],
+        "firestoreMetadata": {
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 900000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910891,
+            "nanoseconds": 198000000
+          },
+          "custom": {},
+          "deleted": false
+        },
+        "english": "fear",
+        "chapter": "1",
+        "notes": "Fear can be both a noun and a verb.",
+        "synonyms": [
+          "dread",
+          "anxiety",
+          "apprehension",
+          "terror"
+        ],
+        "sentences": [
+          "I have a great fear of heights.",
+          "She overcame her fear of public speaking.",
+          "There is no need to fear the unknown."
+        ],
+        "group": "STATI_EMOTIVI",
+        "learned": false,
+        "updatedAt": "2025-01-17T16:00:11.000Z",
+        "createdAt": "2025-01-17T16:00:11.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600012_klm789",
+        "italian": "spaventato",
+        "group": "STATI_EMOTIVI",
+        "updatedAt": "2025-01-17T16:00:12.000Z",
+        "notes": "Sinonimo: scared",
+        "synonyms": [
+          "scared",
+          "terrified"
+        ],
+        "chapter": "1",
+        "antonyms": [
+          "calm",
+          "fearless"
+        ],
+        "createdAt": "2025-01-17T16:00:12.000Z",
+        "firestoreMetadata": {
+          "custom": {},
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          }
+        },
+        "difficult": false,
+        "sentences": [
+          "She looked frightened",
+          "I'm frightened of spiders"
+        ],
+        "english": "frightened",
+        "learned": false
+      },
+      {
+        "id": "wrd_1737123600013_nop012",
+        "notes": "",
+        "antonyms": [
+          "calm",
+          "peaceful"
+        ],
+        "group": "STATI_EMOTIVI",
+        "sentences": [
+          "She's very upset",
+          "Don't upset him"
+        ],
+        "difficult": false,
+        "updatedAt": "2025-01-17T16:00:13.000Z",
+        "english": "upset",
+        "learned": false,
+        "italian": "turbato",
+        "firestoreMetadata": {
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 906000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752918587,
+            "nanoseconds": 365000000
+          },
+          "custom": {},
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "chapter": "1",
+        "synonyms": [
+          "disturbed",
+          "troubled"
+        ],
+        "createdAt": "2025-01-17T16:00:13.000Z"
+      },
+      {
+        "id": "wrd_1737123600014_qrs345",
+        "chapter": "1",
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 914000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 914000000
+          },
+          "version": 1,
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {}
+        },
+        "learned": false,
+        "createdAt": "2025-01-17T16:00:14.000Z",
+        "group": "CASA_OGGETTI",
+        "updatedAt": "2025-01-17T16:00:14.000Z",
+        "sentences": [
+          "Pull the blanket up",
+          "A warm blanket"
+        ],
+        "notes": "",
+        "synonyms": [
+          "cover",
+          "throw"
+        ],
+        "english": "blanket",
+        "antonyms": [],
+        "difficult": false,
+        "italian": "coperta"
+      },
+      {
+        "id": "wrd_1737123600015_tuv678",
+        "synonyms": [
+          "lemon candy"
+        ],
+        "chapter": "1",
+        "group": "CIBO_BEVANDE",
+        "difficult": false,
+        "learned": false,
+        "english": "sherbet lemon",
+        "antonyms": [],
+        "updatedAt": "2025-01-17T16:00:15.000Z",
+        "italian": "caramella al limone",
+        "sentences": [
+          "Dumbledore offered a sherbet lemon"
+        ],
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 911000000
+          },
+          "custom": {},
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 911000000
+          }
+        },
+        "createdAt": "2025-01-17T16:00:15.000Z",
+        "notes": "Dolce tipico inglese"
+      },
+      {
+        "id": "wrd_1737123600016_wxy901",
+        "updatedAt": "2025-01-17T16:00:16.000Z",
+        "sentences": [
+          "Bend your knees",
+          "The road bends left"
+        ],
+        "group": "VERBI_MOVIMENTO",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 910000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752917718,
+            "nanoseconds": 277000000
+          },
+          "version": 1,
+          "deleted": false,
+          "custom": {}
+        },
+        "chapter": "1",
+        "createdAt": "2025-01-17T16:00:16.000Z",
+        "difficult": true,
+        "learned": false,
+        "antonyms": [
+          "straighten",
+          "extend"
+        ],
+        "notes": "Bent = forma passata. Alta priorità",
+        "italian": "piegare",
+        "english": "bend",
+        "synonyms": [
+          "curve",
+          "flex"
+        ]
+      },
+      {
+        "id": "wrd_1737123600017_zab234",
+        "synonyms": [
+          "seat"
+        ],
+        "sentences": [
+          "Please sit down",
+          "He sat quietly"
+        ],
+        "notes": "Sat = forma passata",
+        "antonyms": [
+          "stand",
+          "rise"
+        ],
+        "italian": "sedersi",
+        "chapter": "1",
+        "english": "sit",
+        "learned": false,
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910983,
+            "nanoseconds": 477000000
+          },
+          "custom": {}
+        },
+        "difficult": true,
+        "updatedAt": "2025-01-17T16:00:17.000Z",
+        "group": "VERBI_MOVIMENTO",
+        "createdAt": "2025-01-17T16:00:17.000Z"
+      },
+      {
+        "id": "wrd_1737123600018_cde567",
+        "italian": "spalla",
+        "notes": "",
+        "updatedAt": "2025-01-17T16:00:18.000Z",
+        "antonyms": [],
+        "sentences": [
+          "Tap on the shoulder",
+          "Shoulder pain"
+        ],
+        "english": "shoulder",
+        "learned": false,
+        "difficult": true,
+        "synonyms": [],
+        "createdAt": "2025-01-17T16:00:18.000Z",
+        "chapter": "1",
+        "group": "CORPO_UMANO",
+        "firestoreMetadata": {
+          "version": 1,
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 898000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910985,
+            "nanoseconds": 285000000
+          }
+        }
+      },
+      {
+        "id": "wrd_1737123600019_fgh890",
+        "chapter": "1",
+        "sentences": [
+          "Stand up!",
+          "He stood there"
+        ],
+        "learned": false,
+        "synonyms": [
+          "rise"
+        ],
+        "updatedAt": "2025-01-17T16:00:19.000Z",
+        "antonyms": [
+          "sit",
+          "lie"
+        ],
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 898000000
+          },
+          "version": 1,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752918334,
+            "nanoseconds": 709000000
+          }
+        },
+        "createdAt": "2025-01-17T16:00:19.000Z",
+        "english": "stand",
+        "notes": "Stood = forma passata",
+        "difficult": false,
+        "group": "VERBI_MOVIMENTO",
+        "italian": "stare in piedi"
+      },
+      {
+        "id": "wrd_1737123600020_ijk123",
+        "italian": "sotto",
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 896000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 896000000
+          },
+          "version": 1,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "sentences": [
+          "Beneath the surface",
+          "Hide beneath the bed"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:00:20.000Z",
+        "english": "beneath",
+        "synonyms": [
+          "under",
+          "below",
+          "underneath"
+        ],
+        "chapter": "1",
+        "notes": "Sinonimi: under, below, underneath",
+        "group": "PREPOSIZIONI",
+        "antonyms": [
+          "above",
+          "over"
+        ],
+        "updatedAt": "2025-01-17T16:00:20.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600021_lmn456",
+        "italian": "sbattere le palpebre",
+        "group": "VERBI_AZIONE_QUOTIDIANA",
+        "updatedAt": "2025-01-17T16:00:21.000Z",
+        "notes": "",
+        "synonyms": [
+          "wink"
+        ],
+        "chapter": "1",
+        "antonyms": [
+          "stare"
+        ],
+        "createdAt": "2025-01-17T16:00:21.000Z",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 902000000
+          },
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 902000000
+          },
+          "version": 1,
+          "custom": {}
+        },
+        "difficult": false,
+        "sentences": [
+          "Don't blink",
+          "She blinked in surprise"
+        ],
+        "english": "blink",
+        "learned": false
+      },
+      {
+        "id": "wrd_1737123600022_opq789",
+        "italian": "entrambi",
+        "group": "PRONOMI_DETERMINANTI",
+        "updatedAt": "2025-01-17T16:00:22.000Z",
+        "notes": "Critica consolidamento >2 settimane",
+        "synonyms": [
+          "either"
+        ],
+        "chapter": "1",
+        "antonyms": [
+          "neither"
+        ],
+        "createdAt": "2025-01-17T16:00:22.000Z",
+        "firestoreMetadata": {
+          "version": 1,
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 901000000
+          },
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 901000000
+          }
+        },
+        "difficult": false,
+        "sentences": [
+          "Both hands",
+          "I like both options"
+        ],
+        "english": "both",
+        "learned": false
+      },
+      {
+        "id": "wrd_1737123600023_rst012",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 914000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {},
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 913000000
+          },
+          "deleted": false,
+          "version": 1
+        },
+        "difficult": false,
+        "synonyms": [
+          "cautiously",
+          "precisely"
+        ],
+        "group": "AVVERBI_MODO",
+        "antonyms": [
+          "carelessly",
+          "recklessly"
+        ],
+        "chapter": "1",
+        "italian": "attentamente",
+        "createdAt": "2025-01-17T16:00:23.000Z",
+        "updatedAt": "2025-01-17T16:00:23.000Z",
+        "sentences": [
+          "Drive carefully",
+          "Read it carefully"
+        ],
+        "english": "carefully",
+        "learned": false,
+        "notes": "Critica consolidamento >2 settimane"
+      },
+      {
+        "id": "wrd_1737123600024_uvw345",
+        "createdAt": "2025-01-17T16:00:24.000Z",
+        "difficult": false,
+        "updatedAt": "2025-01-17T16:00:24.000Z",
+        "antonyms": [
+          "hesitate",
+          "avoid"
+        ],
+        "italian": "osare",
+        "chapter": "1",
+        "firestoreMetadata": {
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 899000000
+          },
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 899000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {}
+        },
+        "english": "dare",
+        "group": "VERBI_SENTIMENTI",
+        "learned": false,
+        "synonyms": [
+          "challenge",
+          "risk"
+        ],
+        "sentences": [
+          "I dare you",
+          "How dare you!"
+        ],
+        "notes": "Dared = forma passata. Critica >2 settimane"
+      },
+      {
+        "id": "wrd_1737123600025_xyz678",
+        "createdAt": "2025-01-17T16:00:25.000Z",
+        "group": "CASA_OGGETTI",
+        "notes": "Anche: esercitazione",
+        "learned": false,
+        "difficult": false,
+        "sentences": [
+          "Use the drill",
+          "Fire drill at school"
+        ],
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 914000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 914000000
+          },
+          "custom": {}
+        },
+        "chapter": "1",
+        "italian": "trapano",
+        "antonyms": [],
+        "english": "drill",
+        "updatedAt": "2025-01-17T16:00:25.000Z",
+        "synonyms": [
+          "bore"
+        ]
+      },
+      {
+        "id": "wrd_1737123600026_abc901",
+        "italian": "cadere",
+        "group": "VERBI_MOVIMENTO",
+        "updatedAt": "2025-01-17T16:00:26.000Z",
+        "notes": "Fell = forma passata",
+        "synonyms": [
+          "drop",
+          "tumble"
+        ],
+        "chapter": "1",
+        "antonyms": [
+          "rise",
+          "climb"
+        ],
+        "createdAt": "2025-01-17T16:00:26.000Z",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 904000000
+          },
+          "version": 1,
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 904000000
+          },
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "difficult": false,
+        "sentences": [
+          "Don't fall down",
+          "Leaves fall in autumn"
+        ],
+        "english": "fall",
+        "learned": false
+      },
+      {
+        "id": "wrd_1737123600027_def234",
+        "italian": "fazzoletto",
+        "group": "VESTITI_ACCESSORI",
+        "updatedAt": "2025-01-17T16:00:27.000Z",
+        "notes": "",
+        "synonyms": [
+          "tissue"
+        ],
+        "chapter": "1",
+        "antonyms": [],
+        "createdAt": "2025-01-17T16:00:27.000Z",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 907000000
+          },
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 907000000
+          },
+          "version": 1
+        },
+        "difficult": false,
+        "sentences": [
+          "Use this handkerchief",
+          "A silk handkerchief"
+        ],
+        "english": "handkerchief",
+        "learned": false
+      },
+      {
+        "id": "wrd_1737123600028_ghi567",
+        "antonyms": [
+          "delay",
+          "dawdle"
+        ],
+        "sentences": [
+          "Hurry up!",
+          "Don't hurry me"
+        ],
+        "chapter": "1",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "custom": {},
+          "version": 1,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "english": "hurry",
+        "difficult": false,
+        "learned": false,
+        "notes": "",
+        "italian": "affrettarsi",
+        "createdAt": "2025-01-17T16:00:28.000Z",
+        "group": "VERBI_MOVIMENTO",
+        "synonyms": [
+          "rush",
+          "hasten"
+        ],
+        "updatedAt": "2025-01-17T16:00:28.000Z"
+      },
+      {
+        "id": "wrd_1737123600029_jkl890",
+        "synonyms": [
+          "minimum"
+        ],
+        "italian": "almeno/minimo",
+        "english": "least",
+        "learned": false,
+        "notes": "Alta priorità - sempre instabile",
+        "difficult": false,
+        "createdAt": "2025-01-17T16:00:29.000Z",
+        "sentences": [
+          "At least try",
+          "The least expensive"
+        ],
+        "updatedAt": "2025-01-17T16:00:29.000Z",
+        "antonyms": [
+          "most",
+          "maximum"
+        ],
+        "group": "QUANTITA_MISURE",
+        "chapter": "1",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 915000000
+          },
+          "version": 1,
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 915000000
+          },
+          "custom": {}
+        }
+      },
+      {
+        "id": "wrd_1737123600030_mno123",
+        "italian": "sollevato",
+        "firestoreMetadata": {
+          "deleted": false,
+          "version": 1,
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 908000000
+          },
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 908000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "sentences": [
+          "I'm so relieved",
+          "A relieved sigh"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:00:30.000Z",
+        "english": "relieved",
+        "synonyms": [
+          "reassured",
+          "comforted"
+        ],
+        "chapter": "1",
+        "notes": "Alta priorità - sempre instabile",
+        "group": "STATI_EMOTIVI",
+        "antonyms": [
+          "worried",
+          "anxious"
+        ],
+        "updatedAt": "2025-01-17T16:00:30.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600031_pqr456",
+        "italian": "arruffare",
+        "english": "ruffle",
+        "difficult": false,
+        "updatedAt": "2025-01-17T16:00:31.000Z",
+        "firestoreMetadata": {
+          "deleted": false,
+          "version": 1,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 901000000
+          },
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 901000000
+          }
+        },
+        "sentences": [
+          "Don't ruffle his hair",
+          "Ruffled feathers"
+        ],
+        "synonyms": [
+          "tousle",
+          "mess up"
+        ],
+        "createdAt": "2025-01-17T16:00:31.000Z",
+        "learned": false,
+        "notes": "Ruffled = arruffato. Alta priorità",
+        "antonyms": [
+          "smooth",
+          "straighten"
+        ],
+        "group": "VERBI_AZIONE_QUOTIDIANA",
+        "chapter": "1"
+      },
+      {
+        "id": "wrd_1737123600032_stu789",
+        "italian": "sparare",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 900000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 900000000
+          },
+          "custom": {},
+          "version": 1
+        },
+        "sentences": [
+          "Shoot the target",
+          "Shoot a photo"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:00:32.000Z",
+        "english": "shoot",
+        "synonyms": [
+          "fire",
+          "photograph"
+        ],
+        "chapter": "1",
+        "notes": "Anche: scattare (foto)",
+        "group": "VERBI_AZIONE_QUOTIDIANA",
+        "antonyms": [],
+        "updatedAt": "2025-01-17T16:00:32.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600033_vwx012",
+        "synonyms": [
+          "break",
+          "bark"
+        ],
+        "chapter": "1",
+        "group": "VERBI_COMUNICAZIONE",
+        "difficult": false,
+        "learned": false,
+        "english": "snap",
+        "antonyms": [
+          "whisper",
+          "bend"
+        ],
+        "updatedAt": "2025-01-17T16:00:33.000Z",
+        "sentences": [
+          "Don't snap at me",
+          "The twig snapped"
+        ],
+        "italian": "scattare/dire bruscamente",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 905000000
+          },
+          "version": 1,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 905000000
+          }
+        },
+        "createdAt": "2025-01-17T16:00:33.000Z",
+        "notes": "Alta priorità - sempre instabile"
+      },
+      {
+        "id": "wrd_1737123600034_yza345",
+        "italian": "costantemente",
+        "group": "AVVERBI_MODO",
+        "updatedAt": "2025-01-17T16:00:34.000Z",
+        "notes": "Alta priorità - sempre instabile",
+        "synonyms": [
+          "constantly",
+          "continuously"
+        ],
+        "chapter": "1",
+        "antonyms": [
+          "sporadically",
+          "irregularly"
+        ],
+        "createdAt": "2025-01-17T16:00:34.000Z",
+        "firestoreMetadata": {
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 915000000
+          },
+          "custom": {},
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 915000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "difficult": false,
+        "sentences": [
+          "Working steadily",
+          "Rain fell steadily"
+        ],
+        "english": "steadily",
+        "learned": false
+      },
+      {
+        "id": "wrd_1737123600035_bcd678",
+        "english": "stream",
+        "learned": false,
+        "synonyms": [
+          "flow",
+          "pour"
+        ],
+        "antonyms": [
+          "stop",
+          "block"
+        ],
+        "createdAt": "2025-01-17T16:00:35.000Z",
+        "group": "VERBI_MOVIMENTO",
+        "sentences": [
+          "Water streams down",
+          "A small stream"
+        ],
+        "notes": "Anche: ruscello (sostantivo)",
+        "italian": "scorrere",
+        "updatedAt": "2025-01-17T16:00:35.000Z",
+        "firestoreMetadata": {
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 901000000
+          },
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 901000000
+          },
+          "version": 1,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "difficult": false,
+        "chapter": "1"
+      },
+      {
+        "id": "wrd_1737123600036_efg901",
+        "synonyms": [
+          "gulp",
+          "consume"
+        ],
+        "italian": "inghiottire",
+        "learned": false,
+        "firestoreMetadata": {
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 905000000
+          },
+          "custom": {},
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 905000000
+          }
+        },
+        "sentences": [
+          "Swallow the pill",
+          "Hard to swallow"
+        ],
+        "group": "VERBI_AZIONE_QUOTIDIANA",
+        "english": "swallow",
+        "notes": "",
+        "createdAt": "2025-01-17T16:00:36.000Z",
+        "difficult": false,
+        "antonyms": [
+          "spit",
+          "regurgitate"
+        ],
+        "updatedAt": "2025-01-17T16:00:36.000Z",
+        "chapter": "1"
+      },
+      {
+        "id": "wrd_1737123600037_hij234",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 907000000
+          },
+          "deleted": false,
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 907000000
+          },
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "difficult": false,
+        "synonyms": [
+          "striped"
+        ],
+        "group": "ANIMALI_DOMESTICI",
+        "antonyms": [
+          "solid"
+        ],
+        "chapter": "1",
+        "italian": "tigrato",
+        "createdAt": "2025-01-17T16:00:37.000Z",
+        "updatedAt": "2025-01-17T16:00:37.000Z",
+        "sentences": [
+          "A tabby cat",
+          "Brown tabby markings"
+        ],
+        "english": "tabby",
+        "learned": false,
+        "notes": "Gatto soriano"
+      },
+      {
+        "id": "wrd_1737123600038_klm567",
+        "synonyms": [
+          "faith",
+          "confidence"
+        ],
+        "italian": "fiducia",
+        "learned": false,
+        "firestoreMetadata": {
+          "version": 1,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 907000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 907000000
+          }
+        },
+        "sentences": [
+          "I trust you",
+          "Trust your instincts"
+        ],
+        "group": "STATI_EMOTIVI",
+        "english": "trust",
+        "notes": "Verbo: fidarsi",
+        "createdAt": "2025-01-17T16:00:38.000Z",
+        "difficult": false,
+        "antonyms": [
+          "doubt",
+          "suspicion"
+        ],
+        "updatedAt": "2025-01-17T16:00:38.000Z",
+        "chapter": "1"
+      },
+      {
+        "id": "wrd_1737123600039_nop890",
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 905000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 905000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {},
+          "version": 1
+        },
+        "synonyms": [
+          "insert",
+          "hide"
+        ],
+        "difficult": false,
+        "group": "VERBI_AZIONE_QUOTIDIANA",
+        "antonyms": [
+          "pull out",
+          "expose"
+        ],
+        "chapter": "1",
+        "italian": "infilare/rimboccare",
+        "createdAt": "2025-01-17T16:00:39.000Z",
+        "updatedAt": "2025-01-17T16:00:39.000Z",
+        "sentences": [
+          "Tuck in your shirt",
+          "Tuck away the money"
+        ],
+        "english": "tuck",
+        "learned": false,
+        "notes": "Tuck in = rimboccare, tuck away = nascondere. Alta priorità"
+      },
+      {
+        "id": "wrd_1737123600040_qrs123",
+        "learned": false,
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 905000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 905000000
+          },
+          "custom": {},
+          "version": 1,
+          "deleted": false
+        },
+        "notes": "",
+        "english": "twice",
+        "updatedAt": "2025-01-17T16:00:40.000Z",
+        "group": "QUANTITA_MISURE",
+        "synonyms": [
+          "two times"
+        ],
+        "italian": "due volte",
+        "difficult": false,
+        "antonyms": [
+          "once",
+          "never"
+        ],
+        "createdAt": "2025-01-17T16:00:40.000Z",
+        "sentences": [
+          "Twice a day",
+          "Think twice"
+        ],
+        "chapter": "1"
+      },
+      {
+        "id": "wrd_1737123600041_tuv456",
+        "createdAt": "2025-01-17T16:00:41.000Z",
+        "difficult": false,
+        "updatedAt": "2025-01-17T16:00:41.000Z",
+        "antonyms": [
+          "above",
+          "on top"
+        ],
+        "italian": "sotto",
+        "firestoreMetadata": {
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 906000000
+          },
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 906000000
+          },
+          "version": 1
+        },
+        "chapter": "1",
+        "english": "underneath",
+        "group": "PREPOSIZIONI",
+        "learned": false,
+        "synonyms": [
+          "below",
+          "under",
+          "beneath"
+        ],
+        "sentences": [
+          "Look underneath",
+          "Hidden underneath"
+        ],
+        "notes": "Sinonimi: below, under, beneath"
+      },
+      {
+        "id": "wrd_1737123600042_wxy789",
+        "sentences": [
+          "Let's begin",
+          "Begin at the start"
+        ],
+        "notes": "Began = forma passata",
+        "group": "VERBI_BASE",
+        "updatedAt": "2025-01-17T16:00:42.000Z",
+        "antonyms": [
+          "end",
+          "finish"
+        ],
+        "createdAt": "2025-01-17T16:00:42.000Z",
+        "english": "begin",
+        "difficult": false,
+        "italian": "iniziare",
+        "chapter": "2",
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "custom": {},
+          "version": 1
+        },
+        "learned": false,
+        "synonyms": [
+          "start",
+          "commence"
+        ]
+      },
+      {
+        "id": "wrd_1737123600043_zab012",
+        "synonyms": [
+          "weep",
+          "shout"
+        ],
+        "italian": "piangere",
+        "english": "cry",
+        "learned": false,
+        "notes": "Cried = forma passata",
+        "difficult": false,
+        "createdAt": "2025-01-17T16:00:43.000Z",
+        "sentences": [
+          "Don't cry",
+          "Cry for help"
+        ],
+        "updatedAt": "2025-01-17T16:00:43.000Z",
+        "group": "VERBI_COMUNICAZIONE",
+        "antonyms": [
+          "laugh",
+          "whisper"
+        ],
+        "chapter": "2",
+        "firestoreMetadata": {
+          "version": 1,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 911000000
+          },
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 911000000
+          }
+        }
+      },
+      {
+        "id": "wrd_1737123600044_cde345",
+        "sentences": [
+          "Grab my hand",
+          "Grab a bite"
+        ],
+        "notes": "Media priorità Cap.2",
+        "chapter": "2",
+        "synonyms": [
+          "seize",
+          "snatch"
+        ],
+        "english": "grab",
+        "italian": "afferrare",
+        "createdAt": "2025-01-17T16:00:44.000Z",
+        "firestoreMetadata": {
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 911000000
+          },
+          "custom": {},
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753750488,
+            "nanoseconds": 853000000
+          }
+        },
+        "antonyms": [
+          "release",
+          "let go"
+        ],
+        "learned": false,
+        "difficult": true,
+        "updatedAt": "2025-01-17T16:00:44.000Z",
+        "group": "VERBI_AZIONE_QUOTIDIANA"
+      },
+      {
+        "id": "wrd_1737123600045_fgh678",
+        "synonyms": [
+          "grasp",
+          "keep"
+        ],
+        "italian": "tenere",
+        "english": "hold",
+        "learned": false,
+        "notes": "Held = forma passata. Media priorità",
+        "difficult": false,
+        "createdAt": "2025-01-17T16:00:45.000Z",
+        "sentences": [
+          "Hold this",
+          "Hold on tight"
+        ],
+        "updatedAt": "2025-01-17T16:00:45.000Z",
+        "group": "VERBI_AZIONE_QUOTIDIANA",
+        "antonyms": [
+          "drop",
+          "release"
+        ],
+        "chapter": "2",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          },
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          },
+          "version": 1
+        }
+      },
+      {
+        "id": "wrd_1737123600046_ijk901",
+        "synonyms": [
+          "unpleasant",
+          "mean"
+        ],
+        "firestoreMetadata": {
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "custom": {}
+        },
+        "createdAt": "2025-01-17T16:00:46.000Z",
+        "difficult": false,
+        "sentences": [
+          "A nasty person",
+          "Nasty weather"
+        ],
+        "learned": false,
+        "chapter": "2",
+        "group": "PERSONALITA_CARATTERE",
+        "english": "nasty",
+        "notes": "",
+        "antonyms": [
+          "nice",
+          "pleasant"
+        ],
+        "updatedAt": "2025-01-17T16:00:46.000Z",
+        "italian": "cattivo/sgradevole"
+      },
+      {
+        "id": "wrd_1737123600047_lmn234",
+        "createdAt": "2025-01-17T16:00:47.000Z",
+        "chapter": "2",
+        "notes": "",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 899000000
+          },
+          "custom": {},
+          "version": 1,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 899000000
+          }
+        },
+        "italian": "spesso",
+        "english": "often",
+        "antonyms": [
+          "rarely",
+          "seldom"
+        ],
+        "updatedAt": "2025-01-17T16:00:47.000Z",
+        "learned": false,
+        "synonyms": [
+          "frequently",
+          "regularly"
+        ],
+        "group": "AVVERBI_TEMPO",
+        "difficult": false,
+        "sentences": [
+          "I often go there",
+          "How often?"
+        ]
+      },
+      {
+        "id": "wrd_1737123600048_opq567",
+        "italian": "dire",
+        "firestoreMetadata": {
+          "deleted": false,
+          "version": 1,
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 904000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 904000000
+          }
+        },
+        "sentences": [
+          "What did you say?",
+          "Say hello"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:00:48.000Z",
+        "english": "say",
+        "synonyms": [
+          "tell",
+          "speak"
+        ],
+        "chapter": "2",
+        "notes": "Said = forma passata",
+        "group": "VERBI_COMUNICAZIONE",
+        "antonyms": [
+          "listen",
+          "hear"
+        ],
+        "updatedAt": "2025-01-17T16:00:48.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600049_rst890",
+        "createdAt": "2025-01-17T16:00:49.000Z",
+        "chapter": "2",
+        "notes": "Woke = forma passata. Media priorità",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          },
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          },
+          "version": 1,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {}
+        },
+        "italian": "svegliarsi",
+        "english": "wake",
+        "antonyms": [
+          "sleep",
+          "doze"
+        ],
+        "updatedAt": "2025-01-17T16:00:49.000Z",
+        "learned": false,
+        "synonyms": [
+          "awaken",
+          "rouse"
+        ],
+        "group": "VERBI_AZIONE_QUOTIDIANA",
+        "difficult": false,
+        "sentences": [
+          "Wake up!",
+          "Don't wake the baby"
+        ]
+      },
+      {
+        "id": "wrd_1737123600050_uvw123",
+        "italian": "strisciare",
+        "english": "creep",
+        "difficult": false,
+        "updatedAt": "2025-01-17T16:00:50.000Z",
+        "firestoreMetadata": {
+          "custom": {},
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 907000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 907000000
+          },
+          "version": 1
+        },
+        "sentences": [
+          "Creep quietly",
+          "Don't be a creep"
+        ],
+        "synonyms": [
+          "crawl",
+          "sneak"
+        ],
+        "createdAt": "2025-01-17T16:00:50.000Z",
+        "learned": false,
+        "notes": "Crept = forma passata. Media priorità",
+        "antonyms": [
+          "march",
+          "stride"
+        ],
+        "group": "VERBI_MOVIMENTO",
+        "chapter": "2"
+      },
+      {
+        "id": "wrd_1737123600051_xyz456",
+        "italian": "bussare",
+        "group": "VERBI_AZIONE_QUOTIDIANA",
+        "updatedAt": "2025-01-17T16:00:51.000Z",
+        "notes": "",
+        "synonyms": [
+          "knock",
+          "tap"
+        ],
+        "chapter": "2",
+        "antonyms": [],
+        "createdAt": "2025-01-17T16:00:51.000Z",
+        "firestoreMetadata": {
+          "custom": {},
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 906000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 906000000
+          }
+        },
+        "difficult": false,
+        "sentences": [
+          "Rap on the door",
+          "Rap music"
+        ],
+        "english": "rap",
+        "learned": false
+      },
+      {
+        "id": "wrd_1737123600052_abc789",
+        "createdAt": "2025-01-17T16:00:52.000Z",
+        "chapter": "2",
+        "notes": "Media priorità Cap.2",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 906000000
+          },
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 906000000
+          },
+          "version": 1,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {}
+        },
+        "italian": "gemere",
+        "english": "groan",
+        "antonyms": [
+          "cheer",
+          "rejoice"
+        ],
+        "updatedAt": "2025-01-17T16:00:52.000Z",
+        "learned": false,
+        "synonyms": [
+          "moan",
+          "sigh"
+        ],
+        "group": "VERBI_COMUNICAZIONE",
+        "difficult": false,
+        "sentences": [
+          "He groaned in pain",
+          "The floor groaned"
+        ]
+      },
+      {
+        "id": "wrd_1737123600053_def012",
+        "difficult": false,
+        "createdAt": "2025-01-17T16:00:53.000Z",
+        "updatedAt": "2025-01-17T16:00:53.000Z",
+        "antonyms": [
+          "sob",
+          "wail"
+        ],
+        "italian": "ridacchiare",
+        "firestoreMetadata": {
+          "custom": {},
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 904000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 904000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1
+        },
+        "chapter": "2",
+        "group": "VERBI_COMUNICAZIONE",
+        "english": "chuckle",
+        "learned": false,
+        "synonyms": [
+          "giggle",
+          "snicker"
+        ],
+        "sentences": [
+          "He chuckled softly",
+          "A quiet chuckle"
+        ],
+        "notes": "Media priorità Cap.2"
+      },
+      {
+        "id": "wrd_1737123600054_ghi345",
+        "group": "VERBI_COMUNICAZIONE",
+        "synonyms": [
+          "growl",
+          "snap"
+        ],
+        "firestoreMetadata": {
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 913000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 913000000
+          },
+          "custom": {},
+          "deleted": false
+        },
+        "createdAt": "2025-01-17T16:00:54.000Z",
+        "antonyms": [
+          "purr",
+          "coo"
+        ],
+        "notes": "",
+        "english": "snarl",
+        "difficult": false,
+        "updatedAt": "2025-01-17T16:00:54.000Z",
+        "learned": false,
+        "italian": "ringhiare",
+        "sentences": [
+          "The dog snarled",
+          "He snarled angrily"
+        ],
+        "chapter": "2"
+      },
+      {
+        "id": "wrd_1737123600055_jkl678",
+        "difficult": false,
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 914000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {},
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 914000000
+          },
+          "version": 1
+        },
+        "synonyms": [
+          "shout",
+          "scream"
+        ],
+        "group": "VERBI_COMUNICAZIONE",
+        "antonyms": [
+          "whisper",
+          "murmur"
+        ],
+        "chapter": "2",
+        "italian": "urlare",
+        "createdAt": "2025-01-17T16:00:55.000Z",
+        "updatedAt": "2025-01-17T16:00:55.000Z",
+        "sentences": [
+          "Don't yell at me",
+          "Yell for help"
+        ],
+        "english": "yell",
+        "learned": false,
+        "notes": "Media priorità Cap.2"
+      },
+      {
+        "id": "wrd_1737123600056_mno901",
+        "firestoreMetadata": {
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "version": 1,
+          "custom": {}
+        },
+        "difficult": false,
+        "synonyms": [
+          "cabinet",
+          "closet"
+        ],
+        "group": "CASA_OGGETTI",
+        "antonyms": [],
+        "chapter": "2",
+        "italian": "armadio",
+        "createdAt": "2025-01-17T16:00:56.000Z",
+        "updatedAt": "2025-01-17T16:00:56.000Z",
+        "sentences": [
+          "Open the cupboard",
+          "Kitchen cupboard"
+        ],
+        "english": "cupboard",
+        "learned": false,
+        "notes": "Credenza da cucina"
+      },
+      {
+        "id": "wrd_1737123600057_pqr234",
+        "difficult": false,
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 902000000
+          },
+          "deleted": false,
+          "version": 1,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 902000000
+          }
+        },
+        "learned": false,
+        "italian": "scale",
+        "chapter": "2",
+        "antonyms": [
+          "elevator"
+        ],
+        "createdAt": "2025-01-17T16:00:57.000Z",
+        "notes": "",
+        "synonyms": [
+          "steps",
+          "staircase"
+        ],
+        "english": "stairs",
+        "updatedAt": "2025-01-17T16:00:57.000Z",
+        "group": "CASA_STANZE",
+        "sentences": [
+          "Go up the stairs",
+          "Wooden stairs"
+        ]
+      },
+      {
+        "id": "wrd_1737123600058_stu567",
+        "italian": "rumore",
+        "group": "CASA_OGGETTI",
+        "updatedAt": "2025-01-17T16:00:58.000Z",
+        "notes": "",
+        "synonyms": [
+          "sound",
+          "racket"
+        ],
+        "chapter": "2",
+        "antonyms": [
+          "silence",
+          "quiet"
+        ],
+        "createdAt": "2025-01-17T16:00:58.000Z",
+        "firestoreMetadata": {
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 900000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 900000000
+          }
+        },
+        "difficult": false,
+        "sentences": [
+          "Too much noise",
+          "Strange noise"
+        ],
+        "english": "noise",
+        "learned": false
+      },
+      {
+        "id": "wrd_1737123600059_vwx890",
+        "italian": "magro",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 905000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 905000000
+          },
+          "custom": {}
+        },
+        "sentences": [
+          "Very skinny",
+          "Skinny jeans"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:00:59.000Z",
+        "english": "skinny",
+        "synonyms": [
+          "thin",
+          "slim"
+        ],
+        "chapter": "2",
+        "notes": "",
+        "group": "DESCRIZIONI_FISICHE",
+        "antonyms": [
+          "fat",
+          "thick"
+        ],
+        "updatedAt": "2025-01-17T16:00:59.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600060_yza123",
+        "createdAt": "2025-01-17T16:01:00.000Z",
+        "difficult": false,
+        "updatedAt": "2025-01-17T16:01:00.000Z",
+        "antonyms": [
+          "messy",
+          "untidy"
+        ],
+        "italian": "ordinato",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 903000000
+          },
+          "custom": {},
+          "version": 1,
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 903000000
+          }
+        },
+        "chapter": "2",
+        "english": "tidy",
+        "group": "AGGETTIVI_BASE",
+        "learned": false,
+        "synonyms": [
+          "neat",
+          "organized"
+        ],
+        "sentences": [
+          "Keep it tidy",
+          "Tidy up your room"
+        ],
+        "notes": "Verbo: riordinare"
+      },
+      {
+        "id": "wrd_1737123600061_bcd456",
+        "italian": "nel frattempo",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {},
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 914000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 914000000
+          },
+          "version": 1,
+          "deleted": false
+        },
+        "sentences": [
+          "Meanwhile, back home",
+          "I'll wait meanwhile"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:01:01.000Z",
+        "english": "meanwhile",
+        "synonyms": [
+          "meantime",
+          "in the interim"
+        ],
+        "chapter": "2",
+        "notes": "",
+        "group": "AVVERBI_TEMPO",
+        "antonyms": [],
+        "updatedAt": "2025-01-17T16:01:01.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600062_efg789",
+        "createdAt": "2025-01-17T16:01:02.000Z",
+        "chapter": "2",
+        "notes": "",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 913000000
+          },
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 913000000
+          },
+          "version": 1,
+          "deleted": false
+        },
+        "italian": "gridare",
+        "english": "shout",
+        "antonyms": [
+          "whisper",
+          "murmur"
+        ],
+        "updatedAt": "2025-01-17T16:01:02.000Z",
+        "learned": false,
+        "synonyms": [
+          "yell",
+          "scream"
+        ],
+        "difficult": false,
+        "group": "VERBI_COMUNICAZIONE",
+        "sentences": [
+          "Don't shout",
+          "Shout louder"
+        ]
+      },
+      {
+        "id": "wrd_1737123600063_hij012",
+        "firestoreMetadata": {
+          "custom": {},
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "version": 1,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false
+        },
+        "difficult": false,
+        "learned": false,
+        "italian": "odiare",
+        "chapter": "2",
+        "antonyms": [
+          "love",
+          "adore"
+        ],
+        "createdAt": "2025-01-17T16:01:03.000Z",
+        "notes": "Media priorità Cap.2",
+        "synonyms": [
+          "detest",
+          "loathe"
+        ],
+        "english": "hate",
+        "updatedAt": "2025-01-17T16:01:03.000Z",
+        "group": "VERBI_SENTIMENTI",
+        "sentences": [
+          "I hate spinach",
+          "Don't hate me"
+        ]
+      },
+      {
+        "id": "wrd_1737123600064_klm345",
+        "learned": false,
+        "firestoreMetadata": {
+          "custom": {},
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 903000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 903000000
+          }
+        },
+        "notes": "Worth it = ne vale la pena. Media priorità",
+        "english": "worth",
+        "group": "QUANTITA_MISURE",
+        "updatedAt": "2025-01-17T16:01:04.000Z",
+        "synonyms": [
+          "value",
+          "merit"
+        ],
+        "difficult": false,
+        "italian": "valore",
+        "sentences": [
+          "What's it worth?",
+          "Worth the effort"
+        ],
+        "antonyms": [
+          "worthless"
+        ],
+        "createdAt": "2025-01-17T16:01:04.000Z",
+        "chapter": "2"
+      },
+      {
+        "id": "wrd_1737123600065_nop678",
+        "synonyms": [
+          "although",
+          "however"
+        ],
+        "chapter": "2",
+        "group": "CONGIUNZIONI",
+        "difficult": false,
+        "learned": false,
+        "english": "though",
+        "antonyms": [],
+        "updatedAt": "2025-01-17T16:01:05.000Z",
+        "italian": "sebbene",
+        "sentences": [
+          "Even though",
+          "Difficult though it is"
+        ],
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 899000000
+          },
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 899000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "deleted": false
+        },
+        "createdAt": "2025-01-17T16:01:05.000Z",
+        "notes": "Anche: tuttavia"
+      },
+      {
+        "id": "wrd_1737123600066_qrs901",
+        "synonyms": [
+          "occur",
+          "take place"
+        ],
+        "chapter": "2",
+        "group": "VERBI_BASE",
+        "difficult": false,
+        "learned": false,
+        "english": "happen",
+        "antonyms": [
+          "prevent"
+        ],
+        "updatedAt": "2025-01-17T16:01:06.000Z",
+        "sentences": [
+          "What happened?",
+          "It might happen"
+        ],
+        "italian": "accadere",
+        "firestoreMetadata": {
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 903000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 903000000
+          },
+          "version": 1,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {}
+        },
+        "createdAt": "2025-01-17T16:01:06.000Z",
+        "notes": "Happened = forma passata. Media priorità"
+      },
+      {
+        "id": "wrd_1737123600067_tuv234",
+        "italian": "sembrare",
+        "group": "VERBI_PENSIERO",
+        "updatedAt": "2025-01-17T16:01:07.000Z",
+        "notes": "",
+        "synonyms": [
+          "appear",
+          "look"
+        ],
+        "chapter": "2",
+        "antonyms": [],
+        "createdAt": "2025-01-17T16:01:07.000Z",
+        "firestoreMetadata": {
+          "deleted": false,
+          "custom": {},
+          "version": 1,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 914000000
+          },
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 914000000
+          }
+        },
+        "difficult": false,
+        "sentences": [
+          "It seems easy",
+          "You seem tired"
+        ],
+        "english": "seem",
+        "learned": false
+      },
+      {
+        "id": "wrd_1737123600068_wxy567",
+        "synonyms": [
+          "believe",
+          "consider"
+        ],
+        "chapter": "2",
+        "group": "VERBI_PENSIERO",
+        "difficult": false,
+        "learned": false,
+        "english": "think",
+        "antonyms": [
+          "know",
+          "ignore"
+        ],
+        "updatedAt": "2025-01-17T16:01:08.000Z",
+        "sentences": [
+          "I think so",
+          "Think about it"
+        ],
+        "italian": "pensare",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          },
+          "version": 1,
+          "custom": {},
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          }
+        },
+        "createdAt": "2025-01-17T16:01:08.000Z",
+        "notes": "Thought = forma passata. Media priorità"
+      },
+      {
+        "id": "wrd_1737123600069_zab890",
+        "synonyms": [
+          "giggle",
+          "chuckle"
+        ],
+        "chapter": "2",
+        "group": "VERBI_COMUNICAZIONE",
+        "difficult": false,
+        "learned": false,
+        "english": "laugh",
+        "antonyms": [
+          "cry",
+          "weep"
+        ],
+        "updatedAt": "2025-01-17T16:01:09.000Z",
+        "italian": "ridere",
+        "sentences": [
+          "Don't laugh at me",
+          "Laugh out loud"
+        ],
+        "firestoreMetadata": {
+          "deleted": false,
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          },
+          "version": 1
+        },
+        "createdAt": "2025-01-17T16:01:09.000Z",
+        "notes": ""
+      },
+      {
+        "id": "wrd_1737123600070_cde123",
+        "synonyms": [
+          "purchase",
+          "acquire"
+        ],
+        "chapter": "2",
+        "group": "SHOPPING_DENARO",
+        "difficult": false,
+        "learned": false,
+        "english": "buy",
+        "antonyms": [
+          "sell",
+          "return"
+        ],
+        "updatedAt": "2025-01-17T16:01:10.000Z",
+        "italian": "comprare",
+        "sentences": [
+          "Buy some milk",
+          "I bought it yesterday"
+        ],
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 897000000
+          },
+          "custom": {},
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 897000000
+          }
+        },
+        "createdAt": "2025-01-17T16:01:10.000Z",
+        "notes": "Bought = forma passata. Media priorità"
+      },
+      {
+        "id": "wrd_1737123600071_fgh456",
+        "createdAt": "2025-01-17T16:01:11.000Z",
+        "chapter": "2",
+        "notes": "",
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 901000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 901000000
+          },
+          "custom": {},
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1
+        },
+        "italian": "verso",
+        "english": "towards",
+        "antonyms": [
+          "away from"
+        ],
+        "updatedAt": "2025-01-17T16:01:11.000Z",
+        "learned": false,
+        "synonyms": [
+          "toward",
+          "in direction of"
+        ],
+        "group": "PREPOSIZIONI",
+        "difficult": false,
+        "sentences": [
+          "Walk towards me",
+          "Towards the end"
+        ]
+      },
+      {
+        "id": "wrd_1737123600072_ijk789",
+        "italian": "indossare",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          },
+          "version": 1,
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          },
+          "custom": {}
+        },
+        "sentences": [
+          "Wear a coat",
+          "What to wear?"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:01:12.000Z",
+        "english": "wear",
+        "synonyms": [
+          "put on",
+          "dress in"
+        ],
+        "chapter": "2",
+        "notes": "Wore = forma passata",
+        "group": "VESTITI_ACCESSORI",
+        "antonyms": [
+          "remove",
+          "take off"
+        ],
+        "updatedAt": "2025-01-17T16:01:12.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600073_lmn012",
+        "italian": "crescere",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 911000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 911000000
+          },
+          "deleted": false,
+          "custom": {}
+        },
+        "sentences": [
+          "Plants grow",
+          "Grow up!"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:01:13.000Z",
+        "english": "grow",
+        "synonyms": [
+          "develop",
+          "increase"
+        ],
+        "chapter": "2",
+        "notes": "Grew = forma passata. Media priorità",
+        "group": "VERBI_BASE",
+        "antonyms": [
+          "shrink",
+          "decrease"
+        ],
+        "updatedAt": "2025-01-17T16:01:13.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600074_opq345",
+        "italian": "stanco",
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 915000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 915000000
+          },
+          "version": 1,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "sentences": [
+          "I'm tired",
+          "Tired of waiting"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:01:14.000Z",
+        "english": "tired",
+        "synonyms": [
+          "exhausted",
+          "weary"
+        ],
+        "chapter": "2",
+        "notes": "",
+        "group": "STATI_EMOTIVI",
+        "antonyms": [
+          "energetic",
+          "refreshed"
+        ],
+        "updatedAt": "2025-01-17T16:01:14.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600075_rst678",
+        "italian": "problema",
+        "firestoreMetadata": {
+          "deleted": false,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 911000000
+          },
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 911000000
+          }
+        },
+        "sentences": [
+          "No trouble",
+          "Trouble ahead"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:01:15.000Z",
+        "english": "trouble",
+        "synonyms": [
+          "problem",
+          "difficulty"
+        ],
+        "chapter": "2",
+        "notes": "Anche: guaio",
+        "group": "AGGETTIVI_BASE",
+        "antonyms": [
+          "solution",
+          "ease"
+        ],
+        "updatedAt": "2025-01-17T16:01:15.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600076_uvw901",
+        "synonyms": [
+          "digit"
+        ],
+        "chapter": "2",
+        "group": "CORPO_UMANO",
+        "difficult": false,
+        "learned": false,
+        "english": "finger",
+        "antonyms": [],
+        "updatedAt": "2025-01-17T16:01:16.000Z",
+        "sentences": [
+          "Point your finger",
+          "Five fingers"
+        ],
+        "italian": "dito",
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 898000000
+          },
+          "custom": {},
+          "deleted": false,
+          "version": 1,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 898000000
+          }
+        },
+        "createdAt": "2025-01-17T16:01:16.000Z",
+        "notes": "Plurale: fingers"
+      },
+      {
+        "id": "wrd_1737123600077_xyz234",
+        "antonyms": [
+          "ceiling"
+        ],
+        "sentences": [
+          "Clean the floor",
+          "Second floor"
+        ],
+        "chapter": "2",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          },
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 912000000
+          },
+          "deleted": false,
+          "version": 1,
+          "custom": {}
+        },
+        "english": "floor",
+        "difficult": false,
+        "learned": false,
+        "notes": "",
+        "italian": "pavimento",
+        "createdAt": "2025-01-17T16:01:17.000Z",
+        "group": "CASA_STANZE",
+        "synonyms": [
+          "ground",
+          "level"
+        ],
+        "updatedAt": "2025-01-17T16:01:17.000Z"
+      },
+      {
+        "id": "wrd_1737123600078_abc567",
+        "updatedAt": "2025-01-17T16:01:18.000Z",
+        "sentences": [
+          "A bald man",
+          "Going bald"
+        ],
+        "notes": "",
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 908000000
+          },
+          "deleted": false,
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 908000000
+          },
+          "custom": {}
+        },
+        "group": "DESCRIZIONI_FISICHE",
+        "difficult": false,
+        "antonyms": [
+          "hairy"
+        ],
+        "synonyms": [
+          "hairless"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:01:18.000Z",
+        "chapter": "2",
+        "italian": "calvo",
+        "english": "bald"
+      },
+      {
+        "id": "wrd_1737123600079_def890",
+        "italian": "fronte",
+        "firestoreMetadata": {
+          "version": 1,
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 915000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 915000000
+          },
+          "custom": {}
+        },
+        "sentences": [
+          "Touch your forehead",
+          "High forehead"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:01:19.000Z",
+        "english": "forehead",
+        "synonyms": [
+          "brow"
+        ],
+        "chapter": "2",
+        "notes": "",
+        "group": "CORPO_UMANO",
+        "antonyms": [],
+        "updatedAt": "2025-01-17T16:01:19.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600080_ghi123",
+        "italian": "capriccio",
+        "firestoreMetadata": {
+          "custom": {},
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 913000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 913000000
+          },
+          "version": 1,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "sentences": [
+          "Throw a tantrum",
+          "Stop the tantrum"
+        ],
+        "learned": false,
+        "createdAt": "2025-01-17T16:01:20.000Z",
+        "english": "tantrum",
+        "synonyms": [
+          "fit",
+          "outburst"
+        ],
+        "chapter": "2",
+        "notes": "Throw a tantrum = fare i capricci",
+        "group": "STATI_EMOTIVI",
+        "antonyms": [
+          "calm"
+        ],
+        "updatedAt": "2025-01-17T16:01:20.000Z",
+        "difficult": false
+      },
+      {
+        "id": "wrd_1737123600081_jkl456",
+        "createdAt": "2025-01-17T16:01:21.000Z",
+        "chapter": "2",
+        "notes": "Anche: posare. Media priorità",
+        "firestoreMetadata": {
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 913000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 913000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {}
+        },
+        "italian": "giacere",
+        "english": "lay",
+        "antonyms": [
+          "stand",
+          "lift"
+        ],
+        "updatedAt": "2025-01-17T16:01:21.000Z",
+        "learned": false,
+        "synonyms": [
+          "place",
+          "put"
+        ],
+        "difficult": false,
+        "group": "VERBI_MOVIMENTO",
+        "sentences": [
+          "Lay down",
+          "Lay the book here"
+        ]
+      },
+      {
+        "id": "wrd_1737123600082_mno789",
+        "italian": "ancora",
+        "group": "AVVERBI_TEMPO",
+        "updatedAt": "2025-01-17T16:01:22.000Z",
+        "notes": "Anche: tuttavia",
+        "synonyms": [
+          "still",
+          "however"
+        ],
+        "chapter": "2",
+        "antonyms": [
+          "already"
+        ],
+        "createdAt": "2025-01-17T16:01:22.000Z",
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 908000000
+          },
+          "custom": {},
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 908000000
+          },
+          "version": 1,
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2"
+        },
+        "difficult": false,
+        "sentences": [
+          "Not yet",
+          "Yet another problem"
+        ],
+        "english": "yet",
+        "learned": false
+      },
+      {
+        "id": "wrd_1737123600083_pqr012",
+        "synonyms": [
+          "inferior"
+        ],
+        "italian": "peggiore",
+        "learned": false,
+        "firestoreMetadata": {
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          },
+          "deleted": false,
+          "version": 1,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 909000000
+          }
+        },
+        "sentences": [
+          "Getting worse",
+          "Worse than before"
+        ],
+        "group": "AGGETTIVI_BASE",
+        "english": "worse",
+        "notes": "Comparativo di bad",
+        "difficult": false,
+        "createdAt": "2025-01-17T16:01:23.000Z",
+        "antonyms": [
+          "better",
+          "superior"
+        ],
+        "updatedAt": "2025-01-17T16:01:23.000Z",
+        "chapter": "2"
+      },
+      {
+        "id": "wrd_1737123600084_stu345",
+        "italian": "il peggiore",
+        "group": "AGGETTIVI_BASE",
+        "updatedAt": "2025-01-17T16:01:24.000Z",
+        "notes": "Superlativo di bad. Media priorità",
+        "synonyms": [
+          "terrible"
+        ],
+        "chapter": "2",
+        "antonyms": [
+          "best",
+          "finest"
+        ],
+        "createdAt": "2025-01-17T16:01:24.000Z",
+        "firestoreMetadata": {
+          "version": 1,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 907000000
+          },
+          "deleted": false,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1752910646,
+            "nanoseconds": 907000000
+          }
+        },
+        "difficult": false,
+        "sentences": [
+          "The worst day",
+          "Worst case scenario"
+        ],
+        "english": "worst",
+        "learned": false
+      }
+    ],
+    "performance": [
+      {
+        "id": "wrd_1737123600001_def456",
+        "_lastSyncedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794444,
+          "nanoseconds": 224000000
+        },
+        "attempts": [
+          {
+            "correct": false,
+            "timestamp": "2025-07-29T13:02:07.972Z",
+            "timeSpent": 4489,
+            "usedHint": false
+          },
+          {
+            "usedHint": true,
+            "timestamp": "2025-07-29T13:07:23.837Z",
+            "hintsCount": 3,
+            "correct": true,
+            "timeSpent": 6743
+          },
+          {
+            "timeSpent": 3416,
+            "timestamp": "2025-07-29T13:11:53.317Z",
+            "correct": true,
+            "hintsCount": 2,
+            "usedHint": true
+          }
+        ],
+        "totalAttempts": 3,
+        "italian": "abbastanza, piuttosto, del tutto",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794713,
+          "nanoseconds": 317000000
+        },
+        "english": "quite",
+        "correctAttempts": 2,
+        "firestoreMetadata": {
+          "custom": {},
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794127,
+            "nanoseconds": 972000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794713,
+            "nanoseconds": 317000000
+          }
+        },
+        "_firestoreStatus": "synced",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794127,
+          "nanoseconds": 972000000
+        },
+        "_pendingSync": false,
+        "chapter": "1",
+        "accuracy": 66.66666666666666,
+        "averageResponseTime": 4882.666666666667,
+        "wordId": "wrd_1737123600001_def456",
+        "lastAttemptAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794713,
+          "nanoseconds": 317000000
+        }
+      },
+      {
+        "id": "wrd_1737123600004_mno345",
+        "english": "jerk",
+        "totalAttempts": 3,
+        "lastAttemptAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794713,
+          "nanoseconds": 710000000
+        },
+        "correctAttempts": 2,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794713,
+          "nanoseconds": 710000000
+        },
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794128,
+          "nanoseconds": 260000000
+        },
+        "accuracy": 66.66666666666666,
+        "_lastSyncedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794444,
+          "nanoseconds": 504000000
+        },
+        "_firestoreStatus": "synced",
+        "chapter": "1",
+        "attempts": [
+          {
+            "correct": false,
+            "timestamp": "2025-07-29T13:02:08.260Z",
+            "timeSpent": 5217,
+            "usedHint": true
+          },
+          {
+            "hintsCount": 3,
+            "timeSpent": 5919,
+            "timestamp": "2025-07-29T13:07:24.224Z",
+            "correct": true,
+            "usedHint": true
+          },
+          {
+            "timestamp": "2025-07-29T13:11:53.710Z",
+            "timeSpent": 3753,
+            "usedHint": true,
+            "correct": true,
+            "hintsCount": 2
+          }
+        ],
+        "wordId": "wrd_1737123600004_mno345",
+        "italian": "sobbalzare/strattonare",
+        "averageResponseTime": 4963,
+        "_pendingSync": false,
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794128,
+            "nanoseconds": 260000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794713,
+            "nanoseconds": 710000000
+          },
+          "deleted": false,
+          "custom": {}
+        }
+      },
+      {
+        "id": "wrd_1737123600016_wxy901",
+        "italian": "piegare",
+        "totalAttempts": 3,
+        "lastAttemptAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794713,
+          "nanoseconds": 907000000
+        },
+        "attempts": [
+          {
+            "usedHint": true,
+            "timestamp": "2025-07-29T13:02:08.403Z",
+            "correct": false,
+            "timeSpent": 8327
+          },
+          {
+            "correct": true,
+            "timestamp": "2025-07-29T13:07:24.504Z",
+            "timeSpent": 1713,
+            "usedHint": false,
+            "hintsCount": 0
+          },
+          {
+            "usedHint": true,
+            "correct": true,
+            "timestamp": "2025-07-29T13:11:53.907Z",
+            "timeSpent": 2289,
+            "hintsCount": 1
+          }
+        ],
+        "correctAttempts": 2,
+        "accuracy": 66.66666666666666,
+        "wordId": "wrd_1737123600016_wxy901",
+        "_pendingSync": false,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794713,
+          "nanoseconds": 907000000
+        },
+        "averageResponseTime": 4109.666666666667,
+        "firestoreMetadata": {
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794128,
+            "nanoseconds": 403000000
+          },
+          "deleted": false,
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794713,
+            "nanoseconds": 907000000
+          },
+          "custom": {}
+        },
+        "english": "bend",
+        "_lastSyncedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794444,
+          "nanoseconds": 712000000
+        },
+        "_firestoreStatus": "synced",
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794128,
+          "nanoseconds": 403000000
+        },
+        "chapter": "1"
+      },
+      {
+        "id": "wrd_1737123600017_zab234",
+        "_pendingSync": false,
+        "_lastSyncedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794444,
+          "nanoseconds": 922000000
+        },
+        "accuracy": 100,
+        "correctAttempts": 3,
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794714,
+          "nanoseconds": 105000000
+        },
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794128,
+          "nanoseconds": 530000000
+        },
+        "italian": "sedersi",
+        "_firestoreStatus": "synced",
+        "lastAttemptAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794714,
+          "nanoseconds": 105000000
+        },
+        "totalAttempts": 3,
+        "attempts": [
+          {
+            "usedHint": true,
+            "timestamp": "2025-07-29T13:02:08.530Z",
+            "correct": true,
+            "timeSpent": 4742
+          },
+          {
+            "correct": true,
+            "usedHint": true,
+            "timeSpent": 3853,
+            "timestamp": "2025-07-29T13:07:24.712Z",
+            "hintsCount": 1
+          },
+          {
+            "hintsCount": 0,
+            "timestamp": "2025-07-29T13:11:54.105Z",
+            "timeSpent": 3832,
+            "usedHint": false,
+            "correct": true
+          }
+        ],
+        "english": "sit",
+        "chapter": "1",
+        "averageResponseTime": 4142.333333333333,
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794128,
+            "nanoseconds": 530000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794714,
+            "nanoseconds": 105000000
+          },
+          "deleted": false,
+          "custom": {}
+        },
+        "wordId": "wrd_1737123600017_zab234"
+      },
+      {
+        "id": "wrd_1737123600018_cde567",
+        "lastAttemptAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794714,
+          "nanoseconds": 298000000
+        },
+        "_firestoreStatus": "synced",
+        "accuracy": 66.66666666666666,
+        "wordId": "wrd_1737123600018_cde567",
+        "attempts": [
+          {
+            "correct": false,
+            "timeSpent": 3893,
+            "timestamp": "2025-07-29T13:02:08.651Z",
+            "usedHint": false
+          },
+          {
+            "timeSpent": 4401,
+            "hintsCount": 2,
+            "timestamp": "2025-07-29T13:07:24.922Z",
+            "correct": true,
+            "usedHint": true
+          },
+          {
+            "timeSpent": 3010,
+            "hintsCount": 1,
+            "timestamp": "2025-07-29T13:11:54.298Z",
+            "usedHint": true,
+            "correct": true
+          }
+        ],
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794128,
+          "nanoseconds": 651000000
+        },
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794714,
+          "nanoseconds": 298000000
+        },
+        "totalAttempts": 3,
+        "correctAttempts": 2,
+        "italian": "spalla",
+        "averageResponseTime": 3768,
+        "_lastSyncedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794445,
+          "nanoseconds": 111000000
+        },
+        "firestoreMetadata": {
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "version": 1,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794128,
+            "nanoseconds": 651000000
+          },
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794714,
+            "nanoseconds": 298000000
+          },
+          "custom": {}
+        },
+        "_pendingSync": false,
+        "chapter": "1",
+        "english": "shoulder"
+      },
+      {
+        "id": "wrd_1737123600044_cde345",
+        "_firestoreStatus": "synced",
+        "english": "grab",
+        "updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794714,
+          "nanoseconds": 510000000
+        },
+        "createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794128,
+          "nanoseconds": 773000000
+        },
+        "chapter": "2",
+        "wordId": "wrd_1737123600044_cde345",
+        "_lastSyncedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794445,
+          "nanoseconds": 296000000
+        },
+        "totalAttempts": 3,
+        "correctAttempts": 1,
+        "italian": "afferrare",
+        "firestoreMetadata": {
+          "version": 1,
+          "deleted": false,
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794128,
+            "nanoseconds": 773000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "custom": {},
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794714,
+            "nanoseconds": 510000000
+          }
+        },
+        "accuracy": 33.33333333333333,
+        "lastAttemptAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753794714,
+          "nanoseconds": 510000000
+        },
+        "attempts": [
+          {
+            "usedHint": true,
+            "timeSpent": 4873,
+            "correct": false,
+            "timestamp": "2025-07-29T13:02:08.773Z"
+          },
+          {
+            "correct": false,
+            "usedHint": false,
+            "timestamp": "2025-07-29T13:07:25.111Z",
+            "hintsCount": 0,
+            "timeSpent": 1541
+          },
+          {
+            "timeSpent": 2477,
+            "hintsCount": 0,
+            "correct": true,
+            "timestamp": "2025-07-29T13:11:54.510Z",
+            "usedHint": false
+          }
+        ],
+        "_pendingSync": false,
+        "averageResponseTime": 2963.6666666666665
+      }
+    ],
+    "statistics": [
+      {
+        "id": "temp",
+        "averageScore": 25,
+        "firestoreMetadata": {
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753001227,
+            "nanoseconds": 626000000
+          },
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "deleted": false,
+          "version": 1,
+          "custom": {},
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753001227,
+            "nanoseconds": 626000000
+          }
+        },
+        "testsCompleted": 1,
+        "lastStudyDate": "2025-07-20T08:47:07.626Z",
+        "streakDays": 0,
+        "difficultyStats": {
+          "difficultyTrends": {
+            "masteryProgression": 0,
+            "improvementRate": 0,
+            "overallDifficultyRating": 50
+          },
+          "testDifficulty": {
+            "medium": {
+              "averageAccuracy": 0,
+              "testsCompleted": 0,
+              "averageScore": 0
+            },
+            "easy": {
+              "averageAccuracy": 0,
+              "testsCompleted": 0,
+              "averageScore": 0
+            },
+            "hard": {
+              "testsCompleted": 0,
+              "averageScore": 0,
+              "averageAccuracy": 0
+            }
+          },
+          "wordDifficulty": {
+            "critical": 0,
+            "improving": 0,
+            "consolidated": 0,
+            "struggling": 0,
+            "mastered": 0
+          }
+        },
+        "categoriesProgress": {},
+        "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+        "monthlyStats": {},
+        "totalWords": 4,
+        "timeSpent": 26521,
+        "incorrectAnswers": 5,
+        "hintsUsed": 5,
+        "correctAnswers": 1,
+        "dailyProgress": {},
+        "migrated": false
+      },
+      {
+        "id": "temp",
+        "hintsUsed": 136,
+        "testsCompleted": 40,
+        "correctAnswers": 80,
+        "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+        "lastStudyDate": "2025-07-29T13:11:54.708Z",
+        "averageScore": 41.20833333333333,
+        "incorrectAnswers": 117,
+        "migrated": false,
+        "firestoreMetadata.updatedAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753002162,
+          "nanoseconds": 321000000
+        },
+        "streakDays": 0,
+        "totalWords": 195,
+        "difficultyStats": {
+          "difficultyTrends": {
+            "overallDifficultyRating": 50,
+            "improvementRate": 0,
+            "masteryProgression": 0
+          },
+          "testDifficulty": {
+            "medium": {
+              "testsCompleted": 0,
+              "averageAccuracy": 0,
+              "averageScore": 0
+            },
+            "hard": {
+              "averageScore": 0,
+              "averageAccuracy": 0,
+              "testsCompleted": 0
+            },
+            "easy": {
+              "testsCompleted": 0,
+              "averageScore": 0,
+              "averageAccuracy": 0
+            }
+          },
+          "wordDifficulty": {
+            "consolidated": 0,
+            "critical": 0,
+            "mastered": 0,
+            "struggling": 0,
+            "improving": 0
+          }
+        },
+        "firestoreMetadata.createdAt": {
+          "type": "firestore/timestamp/1.0",
+          "seconds": 1753002162,
+          "nanoseconds": 321000000
+        },
+        "timeSpent": 672210,
+        "firestoreMetadata": {
+          "createdAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753002162,
+            "nanoseconds": 321000000
+          },
+          "version": 1,
+          "deleted": false,
+          "custom": {},
+          "userId": "T4BnaLx5n0TjI6PzQZBgy7kxOPB2",
+          "updatedAt": {
+            "type": "firestore/timestamp/1.0",
+            "seconds": 1753794445,
+            "nanoseconds": 296000000
+          }
+        },
+        "categoriesProgress": {},
+        "dailyProgress": {},
+        "monthlyStats": {}
+      }
+    ]
+  }
+}

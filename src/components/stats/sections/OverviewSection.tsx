@@ -80,13 +80,37 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
       return null;
     }
 
-    // Calculate learning velocity using linear regression
+    // Calculate learning velocity using linear regression with safeguards
     const calculateLearningVelocity = (data: typeof multiMetricData): number => {
       if (data.length < 3) return 0;
       
+      // Sort data by timestamp to ensure chronological order
+      const sortedData = [...data].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      
       // Convert timestamps to days from first test
-      const startTime = data[0].timestamp.getTime();
-      const points = data.map((test, index) => ({
+      const startTime = sortedData[0].timestamp.getTime();
+      const endTime = sortedData[sortedData.length - 1].timestamp.getTime();
+      const totalDays = (endTime - startTime) / (1000 * 60 * 60 * 24);
+      
+      console.log('🔍 VELOCITÀ APPRENDIMENTO DEBUG:', {
+        totalTests: sortedData.length,
+        totalDays: totalDays.toFixed(2),
+        firstScore: sortedData[0].percentage,
+        lastScore: sortedData[sortedData.length - 1].percentage
+      });
+      
+      // ⭐ SAFETY CHECK: Se i test sono tutti nello stesso giorno o molto ravvicinati
+      if (totalDays < 1) {
+        console.log('⚠️ Test troppo ravvicinati nel tempo, usando calcolo semplificato');
+        // Calcolo semplificato: differenza tra primo e ultimo punteggio
+        const firstScore = sortedData[0].percentage;
+        const lastScore = sortedData[sortedData.length - 1].percentage;
+        const improvement = lastScore - firstScore;
+        // Limitiamo a un range ragionevole
+        return Math.max(-50, Math.min(50, improvement));
+      }
+      
+      const points = sortedData.map((test, index) => ({
         x: (test.timestamp.getTime() - startTime) / (1000 * 60 * 60 * 24), // days
         y: test.percentage,
         index
@@ -99,10 +123,35 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
       const sumXY = points.reduce((sum, p) => sum + p.x * p.y, 0);
       const sumXX = points.reduce((sum, p) => sum + p.x * p.x, 0);
       
-      const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+      const denominator = n * sumXX - sumX * sumX;
       
-      // Return slope * 7 to get percentage improvement per week
-      return isFinite(slope) ? slope * 7 : 0;
+      // ⭐ SAFETY CHECK: Evita divisioni per zero o valori molto piccoli
+      if (Math.abs(denominator) < 0.001) {
+        console.log('⚠️ Denominatore troppo piccolo, usando calcolo semplificato');
+        const firstScore = sortedData[0].percentage;
+        const lastScore = sortedData[sortedData.length - 1].percentage;
+        const improvement = (lastScore - firstScore) / totalDays * 7; // per settimana
+        return Math.max(-50, Math.min(50, improvement));
+      }
+      
+      const slope = (n * sumXY - sumX * sumY) / denominator;
+      
+      console.log('📊 CALCOLO REGRESSIONE:', {
+        slope: slope.toFixed(4),
+        slopePerWeek: (slope * 7).toFixed(2),
+        denominator: denominator.toFixed(4)
+      });
+      
+      // ⭐ SAFETY LIMITS: Limita il risultato a valori ragionevoli
+      const weeklyImprovement = slope * 7;
+      const limitedResult = Math.max(-50, Math.min(50, weeklyImprovement));
+      
+      console.log('✅ VELOCITÀ FINALE:', {
+        calculated: weeklyImprovement.toFixed(2),
+        limited: limitedResult.toFixed(2)
+      });
+      
+      return isFinite(limitedResult) ? limitedResult : 0;
     };
 
     const learningVelocity = calculateLearningVelocity(multiMetricData);

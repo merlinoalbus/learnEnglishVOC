@@ -1026,6 +1026,12 @@ export interface ChapterStats {
   estimatedHints: number;
   firstTestDate: Date;
   detailedHistory: ChapterTestEntry[];
+  // ⭐ NUOVE PROPRIETÀ AGGIUNTE
+  hasTests: boolean;
+  testedWords: number;
+  untestedWords: number;
+  totalAttempts: number;
+  untestedPercentage: number;
 }
 
 /**
@@ -1086,6 +1092,7 @@ export interface ChapterAnalysisInput {
   testHistory: TestHistoryItem[];
   words: import('./Word.types').Word[];
   wordPerformances?: import('./Performance.types').WordPerformanceAnalysis[];
+  detailedSessions?: any[]; // Sessioni dettagliate per analytics
 }
 
 /**
@@ -1097,4 +1104,6 @@ export interface ChapterCalculationResult {
   topChapters: ChapterStats[];
   strugglingChapters: ChapterStats[];
   selectedChapterTrend?: ChapterTrendData[];
+  analytics: any; // Dati per Analytics Dashboard
+  sessionStats: any; // Statistiche sessioni
 }

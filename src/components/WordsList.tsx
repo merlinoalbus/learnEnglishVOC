@@ -328,10 +328,12 @@ const WordsList: React.FC<WordListProps> = ({
     return Array.from(groups).sort();
   }, [words]);
 
-  // Inizializza tutti i capitoli come chiusi di default
+  // ⭐ FIX: Inizializza tutti i capitoli come chiusi SOLO al primo caricamento
   useEffect(() => {
-    setCollapsedChapters(new Set(availableChapters));
-  }, [availableChapters]);
+    if (availableChapters.length > 0 && collapsedChapters.size === 0) {
+      setCollapsedChapters(new Set(availableChapters));
+    }
+  }, [availableChapters.length]); // Solo quando il numero di capitoli cambia, non il contenuto
 
   // Funzione per toggleare il collasso dei capitoli
   const toggleChapterCollapse = (chapter: string) => {
