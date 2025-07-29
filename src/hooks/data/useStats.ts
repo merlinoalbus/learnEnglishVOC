@@ -1057,7 +1057,7 @@ export const useStats = (): StatsResult => {
         italian: perf.italian || "",
         chapter: perf.chapter || "",
         group: "",
-        sentence: "",
+        sentences: "",
         notes: "",
         learned: false,
         difficult: false,

@@ -28,7 +28,8 @@
       "Bash(pkill:*)",
       "Bash(true)",
       "Bash(npm run:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(awk:*)"
     ],
     "deny": []
   }

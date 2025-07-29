@@ -92,7 +92,7 @@ export interface WordPerformanceAnalysis {
   italian: string;
   chapter: string;
   group: string;
-  sentence: string;
+  sentences: string;
   notes: string;
   learned: boolean;
   difficult: boolean;

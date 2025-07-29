@@ -815,7 +815,7 @@ export const usePerformance = (): PerformanceResult => {
         italian: performance.italian || "",
         chapter: performance.chapter || "",
         group: "",
-        sentence: "",
+        sentences: "",
         notes: "",
         learned: false,
         difficult: false,

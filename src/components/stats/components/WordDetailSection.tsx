@@ -1,11 +1,12 @@
 // ===================================================== 
-// 📁 src/components/stats/components/WordDetailSection.tsx - REFACTORED Clean Data Flow
+// 📁 src/components/stats/components/WordDetailSection.tsx - REFACTORED Presentation Only
 // =====================================================
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { Word, TestHistoryItem } from '../../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'; 
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Bar } from 'recharts'; 
 import { Award, TrendingUp, Target } from 'lucide-react';
+import TimelineReconstructionService from '../../../services/TimelineReconstructionService';
 
 interface WordDetailSectionProps {
   wordId: string;
@@ -13,6 +14,7 @@ interface WordDetailSectionProps {
   testHistory: TestHistoryItem[];
   wordInfo: any;
   localRefresh: number | string;
+  wordPerformance?: Record<string, any>; // ⭐ NUOVO: Dati performance dalla collezione
 }
 
 interface AttemptData {
@@ -34,6 +36,8 @@ interface ChartDataPoint {
   isCorrect: boolean;
   usedHint: boolean;
   timestamp: string;
+  hintsInThisTest?: number;
+  totalHintsForWord?: number;
 }
 
 interface TooltipPayload {
@@ -46,24 +50,12 @@ interface CustomTooltipProps {
   label?: string;
 }
 
-const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAnalysis, testHistory, wordInfo, localRefresh }) => {
-  // ⭐ REFACTORED: Use ONLY data from props - no localStorage access
-  const wordAnalysis = getWordAnalysis ? getWordAnalysis(wordId) : null;
-   
-  if (!wordAnalysis) {
-    return (
-      <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
-        <CardContent className="text-center py-16">
-          <div className="text-6xl mb-4">📊</div>
-          <p className="text-gray-600">Nessun dato performance disponibile per questa parola</p>
-        </CardContent>
-      </Card>
-    );
-  }
+const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAnalysis, testHistory, wordInfo, localRefresh, wordPerformance }) => {
+  // ⭐ NEW: Service instance for business logic
+  const timelineService = useMemo(() => new TimelineReconstructionService(), []);
 
   // ⭐ REFACTORED: Get word information from props only
-  const getWordInfoFromProps = () => {
-    // First try to get from passed wordInfo prop
+  const finalWordInfo = useMemo(() => {
     if (wordInfo) {
       return {
         english: wordInfo.english || 'N/A',
@@ -72,7 +64,7 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
       };
     }
      
-    // Fallback to wordAnalysis
+    const wordAnalysis = getWordAnalysis ? getWordAnalysis(wordId) : null;
     if (wordAnalysis?.english) {
       return {
         english: wordAnalysis.english,
@@ -80,95 +72,37 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
         chapter: wordAnalysis.chapter
       };
     }
+    
     return {
       english: 'N/A',
       italian: 'N/A', 
       chapter: null
     };
-  };
+  }, [wordInfo, getWordAnalysis, wordId]);
 
-  const finalWordInfo = getWordInfoFromProps();
+  // ⭐ REFACTORED: Service decide la strategia migliore
+  const timelineData = useMemo(() => {
+    // ⭐ DEBUG: Log dei dati quando clicchi su una parola per il dettaglio
+    if (finalWordInfo.english === 'quite') {
+      console.log(`🔍 DEBUG [quite] - WordDetailSection - Dati in input:`, {
+        wordId,
+        finalWordInfo,
+        wordPerformance: wordPerformance ? wordPerformance[wordId] : null,
+        testHistoryLength: testHistory.length
+      });
+    }
+    
+    const result = timelineService.getOptimalTimelineData(wordId, testHistory, finalWordInfo, wordPerformance);
+    
+    if (finalWordInfo.english === 'quite') {
+      console.log(`🔍 DEBUG [quite] - WordDetailSection - Risultato timeline:`, result);
+    }
+    
+    return result;
+  }, [wordId, testHistory, finalWordInfo, timelineService, wordPerformance]);
 
-  // ⭐ REFACTORED: Build timeline from testHistory prop instead of localStorage
-  const buildTimelineFromHistory = (): AttemptData[] => {
-    const attempts: AttemptData[] = [];
-     
-    // ⭐ REFACTORED: Use testHistory from props instead of localStorage
-    const allTests = testHistory || [];
-     
-    // ⭐ FIXED: Sort from oldest to newest (opposite of what was before)
-    const sortedTests = [...allTests].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-     
-    sortedTests.forEach((test, testIndex) => {
-      let wasInTest = false;
-      let wasCorrect = false;
-      let usedHint = false;
-      let timeSpent = 0;
-       
-      // ⭐ PRIORITY 1: Check wrongWords first (most reliable)
-      if (test.wrongWords && Array.isArray(test.wrongWords)) {
-        const wrongWord = test.wrongWords.find(w => w.id === wordId);
-        if (wrongWord) {
-          wasInTest = true;
-          wasCorrect = false; // Was wrong
-          // ⭐ NEW: Estimate hint usage for wrong words (assume higher chance of hint usage)
-          usedHint = (test.hintsUsed > 0) && Math.random() > 0.7; // 30% chance if hints were used in test
-          timeSpent = test.totalTime && test.totalWords ? Math.floor((test.totalTime * 1000) / test.totalWords) : 0;
-        }
-      }
-       
-      // ⭐ PRIORITY 2: Check wordTimes for specific data (preferred but often empty)
-      if (!wasInTest && test.wordTimes && Array.isArray(test.wordTimes)) {
-        const wordTime = test.wordTimes.find(wt => wt.wordId === wordId);
-        if (wordTime) {
-          wasInTest = true;
-          wasCorrect = wordTime.isCorrect;
-          usedHint = wordTime.usedHint || false;
-          timeSpent = wordTime.timeSpent || 0;
-        }
-      }
-       
-      // ⭐ PRIORITY 3: Infer from chapter inclusion (if word wasn't in wrongWords, it was correct)
-      if (!wasInTest && test.testParameters?.selectedChapters && finalWordInfo.chapter) {
-        if (test.testParameters.selectedChapters.includes(finalWordInfo.chapter)) {
-          // ⭐ IMPORTANT: If test included the chapter but word is not in wrongWords, it was correct
-          wasInTest = true;
-          wasCorrect = true; // Wasn't wrong, so must have been correct
-           
-          // ⭐ NEW: Estimate data for correct answers from test totals
-          const totalWordsInTest = test.totalWords || 1;
-          const avgTimePerWord = test.totalTime ? (test.totalTime * 1000) / totalWordsInTest : 0;
-          timeSpent = avgTimePerWord + (Math.random() * 2000 - 1000); // Add some variation ±1s
-           
-          // ⭐ NEW: Distribute hints proportionally among correct words
-          if (test.hintsUsed > 0) {
-            const correctWordsInTest = test.correctWords || 1;
-            const hintProbability = Math.min(test.hintsUsed / correctWordsInTest, 1);
-            usedHint = Math.random() < hintProbability;
-          }
-        }
-      }
-       
-      // Add attempt if word was in test
-      if (wasInTest) {
-        attempts.push({
-          timestamp: new Date(test.timestamp).toISOString(),
-          correct: wasCorrect,
-          usedHint: usedHint,
-          timeSpent: Math.max(timeSpent, 0), // Ensure non-negative
-          testId: test.id
-        });
-      }
-    });
-     
-    return attempts;
-  };
-
-  // ⭐ REFACTORED: Use ONLY rebuilt data from props, ignore wordAnalysis.attempts if they're incorrect
-  const actualAttempts = buildTimelineFromHistory();
-  
-  // ⭐ EARLY RETURN: Se non ci sono tentativi, mostra messaggio appropriato
-  if (actualAttempts.length === 0) {
+  // ⭐ REFACTORED: Early return if no data
+  if (!timelineData.hasData) {
     return (
       <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardContent className="text-center py-16">
@@ -178,102 +112,16 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
             La parola "{finalWordInfo.english}" non è ancora stata testata o non è stata trovata nella cronologia test.
           </p>
           <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-500">
-            <div>ID Parola: {wordId}</div>
-            <div>Capitolo: {finalWordInfo.chapter || 'Nessuno'}</div>
+            <div>Capitolo: {finalWordInfo.chapter || 'Nessun capitolo'}</div>
             <div>Cronologia disponibile: {testHistory.length} test</div>
-            <div>WordAnalysis attempts: {wordAnalysis?.attempts?.length || 0}</div>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  // ⭐ FIXED: Better timeline data calculation with REAL dates
-  const timelineData: ChartDataPoint[] = actualAttempts.map((attempt, index) => {
-    // ⭐ CRITICAL: Calculate cumulative precision up to this attempt
-    const attemptsUpToHere = actualAttempts.slice(0, index + 1);
-    const correctUpToHere = attemptsUpToHere.filter(a => a.correct).length;
-    const cumulativePrecision = Math.round((correctUpToHere / attemptsUpToHere.length) * 100);
-     
-    // ⭐ FIXED: Use real date for X-axis instead of attempt numbers
-    const attemptDate = new Date(attempt.timestamp);
-    const shortDate = attemptDate.toLocaleDateString('it-IT', {
-      day: '2-digit',
-      month: '2-digit'
-    });
-     
-    return {
-      // ⭐ CRITICAL: Use actual date instead of attempt number
-      attempt: shortDate,
-      attemptNumber: index + 1,
-      // ⭐ FIXED: Individual attempt result (0 or 100 for visualization)
-      success: attempt.correct ? 100 : 0,
-      // ⭐ CRITICAL: This is the cumulative precision (Precisione Globale)
-      globalPrecision: cumulativePrecision,
-      // Hint usage
-      hint: attempt.usedHint ? 50 : 0,
-      // Time in seconds
-      time: Math.round((attempt.timeSpent || 0) / 1000),
-      // Full date for tooltip
-      fullDate: attemptDate.toLocaleDateString('it-IT', {
-        day: '2-digit',
-        month: '2-digit', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }),
-      // Raw data for analysis
-      isCorrect: attempt.correct,
-      usedHint: attempt.usedHint,
-      timestamp: attempt.timestamp
-    };
-  });
-
-  // ⭐ NEW: Take only last 10 attempts for the chart (most recent) - CORRECTLY ORDERED
-  const chartData = timelineData.slice(-10).map((data, index, array) => ({
-    ...data,
-    // ⭐ CRITICAL: Recalculate cumulative precision for just the visible attempts
-    globalPrecision: (() => {
-      const visibleAttempts = array.slice(0, index + 1);
-      const correctInVisible = visibleAttempts.filter(a => a.isCorrect).length;
-      return Math.round((correctInVisible / visibleAttempts.length) * 100);
-    })()
-  }));
-
-  // ⭐ RECALCULATE: Statistics from actual attempts (since wordAnalysis might be wrong)
-  const recalculatedStats = {
-    totalAttempts: actualAttempts.length,
-    correctAttempts: actualAttempts.filter(a => a.correct).length,
-    accuracy: actualAttempts.length > 0 ? Math.round((actualAttempts.filter(a => a.correct).length / actualAttempts.length) * 100) : 0,
-    hintsUsed: actualAttempts.filter(a => a.usedHint).length,
-    hintsPercentage: actualAttempts.length > 0 ? Math.round((actualAttempts.filter(a => a.usedHint).length / actualAttempts.length) * 100) : 0,
-    avgTime: actualAttempts.length > 0 ? Math.round(actualAttempts.reduce((sum, a) => sum + (a.timeSpent || 0), 0) / actualAttempts.length / 1000) : 0,
-    currentStreak: (() => {
-      let streak = 0;
-      for (let i = actualAttempts.length - 1; i >= 0; i--) {
-        if (actualAttempts[i].correct) {
-          streak++;
-        } else {
-          break;
-        }
-      }
-      return streak;
-    })()
-  };
-
-  // ⭐ ENHANCED: Additional statistics using recalculated data
-  const recentStats = {
-    totalAttempts: recalculatedStats.totalAttempts,
-    recentAttempts: chartData.length,
-    currentAccuracy: recalculatedStats.accuracy,
-    trend: chartData.length >= 2 
-      ? chartData[chartData.length - 1].globalPrecision - chartData[0].globalPrecision
-      : 0,
-    recentHints: chartData.filter(d => d.usedHint).length,
-    avgRecentTime: chartData.length > 0 
-      ? Math.round(chartData.reduce((sum, d) => sum + d.time, 0) / chartData.length)
-      : 0
-  };
+  // ⭐ REFACTORED: Extract data from service
+  const { attempts, chartData, reconstructedStats, recentStats, recommendations, status } = timelineData;
 
   // ⭐ ENHANCED: Custom tooltip for better data display
   const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
@@ -288,19 +136,18 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
               {`Risultato: ${data.isCorrect ? '✅ Corretto' : '❌ Sbagliato'}`}
             </p>
             <p className="text-sm text-blue-600 font-bold">
-              {`Precisione Globale: ${data.globalPrecision}%`}
+              {`Accuratezza Globale: ${data.globalPrecision}%`}
             </p>
-            {data.usedHint && (
-              <p className="text-sm text-orange-600">💡 Aiuto utilizzato</p>
+            {(data.hintsInThisTest || 0) > 0 && (
+              <p className="text-sm text-orange-600">
+                💡 {data.hintsInThisTest === 1 ? '1 aiuto utilizzato' : `${data.hintsInThisTest} aiuti utilizzati`} {data.hint > 0 ? `(${data.hint}% del totale)` : ''}
+              </p>
             )}
             <p className="text-sm text-purple-600">
               {`Tempo: ${data.time}s`}
             </p>
             <p className="text-xs text-gray-500">
-              {`Tentativo #${data.attemptNumber} di ${actualAttempts.length}`}
-            </p>
-            <p className="text-xs text-gray-400">
-              {`Test ID: ${data.timestamp}`}
+              {`Tentativo #${data.attemptNumber} di ${attempts.length}`}
             </p>
           </div>
         </div>
@@ -314,10 +161,10 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
       <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
         <CardTitle className="flex items-center gap-3 text-white">
           <Award className="w-6 h-6" />
-          Andamento Temporale: "{finalWordInfo.english}"
+          Analisi Statistiche di dettaglio parola: "{finalWordInfo.english}"
         </CardTitle>
         <p className="text-green-100 text-sm">
-          Ultimi {chartData.length} tentativi • Precisione ricostruita: {Math.round((actualAttempts.filter(a => a.correct).length / actualAttempts.length) * 100)}% • Totale tentativi: {actualAttempts.length}
+          Ultimi {chartData.length} tentativi • Accuratezza finale: {reconstructedStats.accuracy}% • Totale tentativi: {reconstructedStats.totalAttempts}
         </p>
       </CardHeader>
        
@@ -329,8 +176,8 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
             <div className="text-blue-700 text-sm">Tentativi Totali</div>
           </div>
           <div className="text-center p-3 bg-green-50 rounded-xl">
-            <div className="text-xl font-bold text-green-600">{recalculatedStats.accuracy}%</div>
-            <div className="text-green-700 text-sm">Precisione Ricostruita</div>
+            <div className="text-xl font-bold text-green-600">{reconstructedStats.accuracy}%</div>
+            <div className="text-green-700 text-sm">Accuratezza Finale</div>
           </div>
           <div className="text-center p-3 bg-orange-50 rounded-xl">
             <div className="text-xl font-bold text-orange-600">{recentStats.recentHints}</div>
@@ -392,7 +239,7 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
                     dataKey="globalPrecision"
                     stroke="#2563eb"
                     strokeWidth={4}
-                    name="Precisione Globale"
+                    name="Accuratezza Globale"
                     dot={{ fill: '#2563eb', strokeWidth: 2, r: 6 }}
                     connectNulls={false}
                   />
@@ -416,7 +263,10 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
                     dataKey="hint"
                     fill="#f59e0b"
                     fillOpacity={0.6}
-                    name="Aiuto Utilizzato"
+                    name="Aiuti Utilizzati"
+                    minPointSize={5}
+                    barSize={40}
+                    radius={[2, 2, 0, 0]}
                   />
                    
                   {/* ⭐ Time as secondary line */}
@@ -443,7 +293,7 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
             <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-1 bg-blue-600 rounded"></div>
-                <span>Precisione Globale (linea principale)</span>
+                <span>Accuratezza Globale (linea principale)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-1 bg-green-500 rounded border-dashed border"></div>
@@ -463,22 +313,22 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
             <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <h5 className="font-semibold text-sm text-blue-800 mb-2">📋 Informazioni Timeline</h5>
               <div className="text-xs text-blue-700 space-y-1">
-                <div>Parola: <span className="font-medium">"{finalWordInfo.english}" → "{finalWordInfo.italian}" (ID: {wordId})</span></div>
+                <div>Parola: <span className="font-medium">"{finalWordInfo.english}" → "{finalWordInfo.italian}"</span></div>
                 <div>Capitolo: <span className="font-medium">{finalWordInfo.chapter || 'Nessun capitolo'}</span></div>
-                <div>Tentativi ricostruiti: <span className="font-medium">{actualAttempts.length}</span></div>
-                <div>Tentativi corretti: <span className="font-medium text-green-600">{recalculatedStats.correctAttempts}</span></div>
-                <div>Precisione ricostruita: <span className="font-medium text-blue-600">{recalculatedStats.accuracy}%</span></div>
+                <div>Tentativi ricostruiti: <span className="font-medium">{attempts.length}</span></div>
+                <div>Tentativi corretti: <span className="font-medium text-green-600">{reconstructedStats.correctAttempts}</span></div>
+                <div>Accuratezza finale: <span className="font-medium text-blue-600">{reconstructedStats.accuracy}%</span></div>
                 <div>Punti mostrati nel grafico: <span className="font-medium">{chartData.length}</span></div>
                 <div>Test totali caricati: <span className="font-medium">{testHistory.length}</span></div>
-                <div>LocalRefresh: <span className="font-medium">{localRefresh}</span></div>
-                <div>WordAnalysis originale - Tentativi: <span className="font-medium">{wordAnalysis?.attempts?.length || 0}</span>, Accuratezza: <span className="font-medium">{wordAnalysis?.accuracy || 0}%</span></div>
-                {actualAttempts.length > 0 && (
+                <div>Aggiornamento locale: <span className="font-medium" title="Identificatore per forzare il refresh dei dati">{localRefresh}</span></div>
+                <div>Analisi parola originale - Tentativi: <span className="font-medium">{getWordAnalysis ? (getWordAnalysis(wordId)?.attempts?.length || 0) : 0}</span>, Accuratezza: <span className="font-medium">{getWordAnalysis ? (getWordAnalysis(wordId)?.accuracy || 0) : 0}%</span></div>
+                {attempts.length > 0 && (
                   <>
                     <div>Primo tentativo: <span className="font-medium">
-                      {new Date(actualAttempts[0].timestamp).toLocaleDateString('it-IT')}
+                      {new Date(attempts[0].timestamp).toLocaleDateString('it-IT')}
                     </span></div>
                     <div>Ultimo tentativo: <span className="font-medium">
-                      {new Date(actualAttempts[actualAttempts.length - 1].timestamp).toLocaleDateString('it-IT')}
+                      {new Date(attempts[attempts.length - 1].timestamp).toLocaleDateString('it-IT')}
                     </span></div>
                   </>
                 )}
@@ -488,10 +338,10 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
                  
                 {testHistory.length > 0 && (
                   <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
-                    <div className="font-semibold">Ultimi 3 test ID:</div>
+                    <div className="font-semibold">Ultimi 3 test:</div>
                     {testHistory.slice(0, 3).map((test, index) => (
                       <div key={test.id} className="truncate">
-                        {index + 1}. {test.id} ({new Date(test.timestamp).toLocaleDateString('it-IT')})
+                        {index + 1}. {new Date(test.timestamp).toLocaleDateString('it-IT')} alle {new Date(test.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     ))}
                   </div>
@@ -506,7 +356,7 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
                 <div className="text-xs text-gray-600 space-y-1">
                   <div>Dal: <span className="font-medium">{chartData[0]?.fullDate}</span></div>
                   <div>Al: <span className="font-medium">{chartData[chartData.length - 1]?.fullDate}</span></div>
-                  <div>Tentativi mostrati: <span className="font-medium">{chartData.length}</span> su {actualAttempts.length} totali</div>
+                  <div>Tentativi mostrati: <span className="font-medium">{chartData.length}</span> su {attempts.length} totali</div>
                 </div>
               </div>
             )}
@@ -525,19 +375,19 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
                 <h5 className="font-bold text-gray-800 mb-3">📊 Stato Attuale</h5>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
-                    <div className="text-xl font-bold text-blue-600">{recalculatedStats.accuracy}%</div>
-                    <div className="text-blue-700 text-sm">Precisione Complessiva</div>
+                    <div className="text-xl font-bold text-blue-600">{reconstructedStats.accuracy}%</div>
+                    <div className="text-blue-700 text-sm">Accuratezza Complessiva</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-orange-600">{recalculatedStats.hintsPercentage}%</div>
+                    <div className="text-xl font-bold text-orange-600">{reconstructedStats.hintsPercentage}%</div>
                     <div className="text-orange-700 text-sm">% Aiuti</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-green-600">{recalculatedStats.currentStreak}</div>
-                    <div className="text-green-700 text-sm">Streak Attuale</div>
+                    <div className="text-xl font-bold text-green-600">{reconstructedStats.currentStreak}</div>
+                    <div className="text-green-700 text-sm">Serie Consecutiva</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-purple-600">{recalculatedStats.avgTime}s</div>
+                    <div className="text-xl font-bold text-purple-600">{reconstructedStats.avgTime}s</div>
                     <div className="text-purple-700 text-sm">Tempo Medio</div>
                   </div>
                 </div>
@@ -549,43 +399,43 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-700">Tentativi totali:</span>
-                    <span className="font-bold">{recalculatedStats.totalAttempts}</span>
+                    <span className="font-bold">{reconstructedStats.totalAttempts}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-700">Risposte corrette:</span>
-                    <span className="font-bold text-green-600">{recalculatedStats.correctAttempts}</span>
+                    <span className="font-bold text-green-600">{reconstructedStats.correctAttempts}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-700">Aiuti utilizzati:</span>
-                    <span className="font-bold text-orange-600">{recalculatedStats.hintsUsed}</span>
+                    <span className="font-bold text-orange-600">{reconstructedStats.hintsUsed}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Precisione ricostruita:</span>
-                    <span className="font-bold text-blue-600">{recalculatedStats.accuracy}%</span>
+                    <span className="text-gray-700">Accuratezza finale:</span>
+                    <span className="font-bold text-blue-600">{reconstructedStats.accuracy}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Streak corrente:</span>
-                    <span className="font-bold text-green-600">{recalculatedStats.currentStreak}</span>
+                    <span className="text-gray-700">Serie consecutiva corrente:</span>
+                    <span className="font-bold text-green-600">{reconstructedStats.currentStreak}</span>
                   </div>
                 </div>
               </div>
                
-              {/* Status Badge */}
+              {/* ⭐ REFACTORED: Status Badge from service */}
               <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
                 <h5 className="font-bold text-indigo-800 mb-2">🏷️ Stato Parola (Ricostruito)</h5>
                 <div className="flex items-center gap-3">
                   <span className={`px-3 py-1 rounded-full text-white text-sm font-medium ${
-                    recalculatedStats.accuracy === 0 ? 'bg-red-500' :
-                    recalculatedStats.accuracy < 40 ? 'bg-orange-500' :
-                    recalculatedStats.accuracy < 60 ? 'bg-yellow-500' :
-                    recalculatedStats.accuracy < 80 ? 'bg-blue-500' :
-                    recalculatedStats.currentStreak >= 3 ? 'bg-emerald-500' : 'bg-green-500'
+                    status === 'Critica' ? 'bg-red-500' :
+                    status === 'Difficile' ? 'bg-orange-500' :
+                    status === 'In miglioramento' ? 'bg-yellow-500' :
+                    status === 'Buona' ? 'bg-blue-500' :
+                    status === 'Consolidata' ? 'bg-emerald-500' : 'bg-green-500'
                   }`}>
-                    {recalculatedStats.accuracy === 0 ? '🔴 Critica' :
-                     recalculatedStats.accuracy < 40 ? '🟠 Difficile' :
-                     recalculatedStats.accuracy < 60 ? '🟡 In miglioramento' :
-                     recalculatedStats.accuracy < 80 ? '🔵 Buona' :
-                     recalculatedStats.currentStreak >= 3 ? '✅ Consolidata' : '🟢 Ottima'}
+                    {status === 'Critica' ? '🔴' : 
+                     status === 'Difficile' ? '🟠' :
+                     status === 'In miglioramento' ? '🟡' :
+                     status === 'Buona' ? '🔵' :
+                     status === 'Consolidata' ? '✅' : '🟢'} {status}
                   </span>
                    
                   {recentStats.trend !== 0 && (
@@ -594,43 +444,16 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
                       {recentStats.trend > 0 ? '+' : ''}{recentStats.trend}% trend
                     </span>
                   )}
-                   
-                  {wordAnalysis?.status && (
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                      Originale: {wordAnalysis.status}
-                    </span>
-                  )}
                 </div>
               </div>
                
-              {/* Recommendations */}
+              {/* ⭐ REFACTORED: Recommendations from service */}
               <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
                 <h5 className="font-bold text-yellow-800 mb-2">💡 Raccomandazioni</h5>
                 <div className="text-sm text-yellow-700 space-y-1">
-                  {recalculatedStats.accuracy < 60 && (
-                    <p>• 📚 Rivedi questa parola più spesso - precisione {recalculatedStats.accuracy}% sotto il 60%</p>
-                  )}
-                  {recalculatedStats.hintsPercentage > 50 && (
-                    <p>• 💭 Cerca di rispondere senza aiuti - uso eccessivo di suggerimenti ({recalculatedStats.hintsPercentage}%)</p>
-                  )}
-                  {recalculatedStats.avgTime > 20 && (
-                    <p>• ⚡ Pratica per migliorare i tempi di risposta (attuale: {recalculatedStats.avgTime}s)</p>
-                  )}
-                  {recalculatedStats.currentStreak >= 5 && (
-                    <p>• 🏆 Ottimo! Continua così - streak di {recalculatedStats.currentStreak}</p>
-                  )}
-                  {recentStats.trend > 20 && (
-                    <p>• 📈 Tendenza molto positiva - stai migliorando rapidamente! (+{recentStats.trend}%)</p>
-                  )}
-                  {recalculatedStats.accuracy >= 80 && recalculatedStats.currentStreak >= 3 && (
-                    <p>• ✨ Parola ben consolidata - potresti concentrarti su altre parole difficili</p>
-                  )}
-                  {actualAttempts.length === 0 && (
-                    <p>• 🎯 Inizia a praticare questa parola per vedere l'andamento!</p>
-                  )}
-                  {actualAttempts.length > 0 && recalculatedStats.accuracy === 0 && (
-                    <p>• 🔥 Parola molto difficile - continua a praticare, migliorerai!</p>
-                  )}
+                  {recommendations.map((recommendation, index) => (
+                    <p key={index}>• {recommendation}</p>
+                  ))}
                 </div>
               </div>
             </div>
