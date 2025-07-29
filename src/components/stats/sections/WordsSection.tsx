@@ -49,14 +49,24 @@ interface WordChapterCardProps {
 }
 
 const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
-  // ⭐ UI State management only
-  const [searchWord, setSearchWord] = useState('');
-  const [filterChapter, setFilterChapter] = useState('');
-  const [filterLearned, setFilterLearned] = useState('all');
-  const [filterDifficult, setFilterDifficult] = useState('all');
-  const [filterGroup, setFilterGroup] = useState('');
+  // ⭐ UI State management - separate filters for each section
+  const [testedFilters, setTestedFilters] = useState({
+    searchWord: '',
+    filterChapter: '',
+    filterLearned: 'all',
+    filterDifficult: 'all',
+    filterGroup: ''
+  });
+  const [untestedFilters, setUntestedFilters] = useState({
+    searchWord: '',
+    filterChapter: '',
+    filterLearned: 'all',
+    filterDifficult: 'all',
+    filterGroup: ''
+  });
   const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
-  const [showFiltersPanel, setShowFiltersPanel] = useState(true);
+  const [showTestedFilters, setShowTestedFilters] = useState(true);
+  const [showUntestedFilters, setShowUntestedFilters] = useState(true);
   const [internalRefresh, setInternalRefresh] = useState(0);
   const [collapsedChapters, setCollapsedChapters] = useState<SeparateCollapsedState>({
     tested: {},
@@ -126,16 +136,18 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
 
   const wordsAnalysis = wordsData.allWords;
 
-  // ⭐ REFACTORED: Use service for filtering
+  // ⭐ REFACTORED: Separate filtering for tested and untested words
+  const filteredTestedWords = useMemo(() => {
+    return wordPerformanceService.filterWords(wordsData.wordsWithPerformance, testedFilters);
+  }, [wordsData.wordsWithPerformance, testedFilters, wordPerformanceService]);
+
+  const filteredUntestedWords = useMemo(() => {
+    return wordPerformanceService.filterWords(wordsData.wordsWithoutPerformance, untestedFilters);
+  }, [wordsData.wordsWithoutPerformance, untestedFilters, wordPerformanceService]);
+
   const filteredWords = useMemo(() => {
-    return wordPerformanceService.filterWords(wordsAnalysis, {
-      searchWord,
-      filterChapter,
-      filterLearned,
-      filterDifficult,
-      filterGroup
-    });
-  }, [wordsAnalysis, searchWord, filterChapter, filterGroup, filterLearned, filterDifficult, wordPerformanceService]);
+    return [...filteredTestedWords, ...filteredUntestedWords];
+  }, [filteredTestedWords, filteredUntestedWords]);
 
   // ⭐ REFACTORED: Use service for filter options
   const filterOptions = useMemo(() => {
@@ -153,26 +165,35 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
     };
   }, [wordsAnalysis, filteredWords.length, wordPerformanceService]);
 
-  // ⭐ NUOVO: Separazione parole testate vs mai testate per UI
+  // ⭐ NUOVO: Separazione parole testate vs mai testate per UI con filtri separati
   const separatedWords = useMemo(() => {
-    const wordsWithAttempts = filteredWords.filter(w => w.hasPerformanceData);
-    const wordsWithoutAttempts = filteredWords.filter(w => !w.hasPerformanceData);
-    
     return {
-      wordsWithAttempts: wordPerformanceService.groupWordsByChapter(wordsWithAttempts),
-      wordsWithoutAttempts: wordPerformanceService.groupWordsByChapter(wordsWithoutAttempts),
-      totalWithAttempts: wordsWithAttempts.length,
-      totalWithoutAttempts: wordsWithoutAttempts.length
+      wordsWithAttempts: wordPerformanceService.groupWordsByChapter(filteredTestedWords),
+      wordsWithoutAttempts: wordPerformanceService.groupWordsByChapter(filteredUntestedWords),
+      totalWithAttempts: filteredTestedWords.length,
+      totalWithoutAttempts: filteredUntestedWords.length
     };
-  }, [filteredWords, wordPerformanceService]);
+  }, [filteredTestedWords, filteredUntestedWords, wordPerformanceService]);
 
-  // ⭐ SAME: Clear filters
-  const clearFilters = () => {
-    setSearchWord('');
-    setFilterChapter('');
-    setFilterLearned('all');
-    setFilterDifficult('all');
-    setFilterGroup('');
+  // ⭐ SAME: Clear filters - separate functions for each section
+  const clearTestedFilters = () => {
+    setTestedFilters({
+      searchWord: '',
+      filterChapter: '',
+      filterLearned: 'all',
+      filterDifficult: 'all',
+      filterGroup: ''
+    });
+  };
+
+  const clearUntestedFilters = () => {
+    setUntestedFilters({
+      searchWord: '',
+      filterChapter: '',
+      filterLearned: 'all',
+      filterDifficult: 'all',
+      filterGroup: ''
+    });
   };
 
   // ⭐ SAME: Handle word actions
@@ -311,144 +332,51 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
         </CardHeader>
       </Card>
 
-      {/* ⭐ SAME: Filtri avanzati */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
-        <CardHeader 
-          className="cursor-pointer hover:bg-blue-100/50 transition-colors"
-          onClick={() => setShowFiltersPanel(!showFiltersPanel)}
-        >
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Filter className="w-5 h-5 text-blue-600" />
-            Filtri Avanzati ({stats.filtered} parole mostrate)
-            {showFiltersPanel ? <CheckSquare className="w-4 h-4 ml-auto" /> : <Square className="w-4 h-4 ml-auto" />}
-          </CardTitle>
-        </CardHeader>
+      {/* ⭐ SEPARATO: Dati statistici in blocco indipendente */}
+      <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-2xl border border-blue-200">
+              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+              <div className="text-blue-700 text-sm">Totale Parole</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-2xl border border-green-200">
+              <div className="text-2xl font-bold text-green-600">{stats.learned}</div>
+              <div className="text-green-700 text-sm">Apprese</div>
+            </div>
+            <div className="text-center p-4 bg-orange-50 rounded-2xl border border-orange-200">
+              <div className="text-2xl font-bold text-orange-600">{stats.notLearned}</div>
+              <div className="text-orange-700 text-sm">Da Studiare</div>
+            </div>
+            <div className="text-center p-4 bg-red-50 rounded-2xl border border-red-200">
+              <div className="text-2xl font-bold text-red-600">{stats.difficult}</div>
+              <div className="text-red-700 text-sm">⭐ Difficili</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-2xl border border-purple-200">
+              <div className="text-2xl font-bold text-purple-600">{wordsData.wordsWithPerformance.length}</div>
+              <div className="text-purple-700 text-sm">📊 Con Performance</div>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-2xl border border-gray-200">
+              <div className="text-2xl font-bold text-gray-600">{wordsData.wordsWithoutPerformance.length}</div>
+              <div className="text-gray-700 text-sm">📝 Senza Attempts</div>
+            </div>
+          </div>
           
-        {showFiltersPanel && (
-          <CardContent className="animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">🔍 Cerca Parola</label>
-                <Input
-                  placeholder="Parola inglese..."
-                  value={searchWord}
-                  onChange={(e) => setSearchWord(e.target.value)}
-                  className="border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
-                />
-              </div>
-               
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">📚 Capitolo</label>
-                <select
-                  value={filterChapter}
-                  onChange={(e) => setFilterChapter(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 dark:focus:border-purple-500 bg-white dark:bg-gray-800 dark:text-gray-100"
-                >
-                  <option value="">Tutti i capitoli</option>
-                  {availableChapters.map(chapter => (
-                    <option key={chapter as string} value={chapter as string}>{`📖 ${chapter}`}</option>
-                  ))}
-                  {wordsWithoutChapter.length > 0 && (
-                    <option value="no-chapter">📋 Senza capitolo</option>
-                  )}
-                </select>
-              </div>
-               
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">🎓 Stato Apprendimento</label>
-                <select
-                  value={filterLearned}
-                  onChange={(e) => setFilterLearned(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 dark:focus:border-purple-500 bg-white dark:bg-gray-800 dark:text-gray-100"
-                >
-                  <option value="all">Tutte le parole</option>
-                  <option value="learned">✅ Solo apprese</option>
-                  <option value="not_learned">📖 Solo da studiare</option>
-                </select>
-              </div>
-               
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">⭐ Difficoltà</label>
-                <select
-                  value={filterDifficult}
-                  onChange={(e) => setFilterDifficult(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 dark:focus:border-purple-500 bg-white dark:bg-gray-800 dark:text-gray-100"
-                >
-                  <option value="all">Tutte le parole</option>
-                  <option value="difficult">⭐ Solo difficili</option>
-                  <option value="not_difficult">📚 Solo normali</option>
-                </select>
-              </div>
-               
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">📂 Categoria</label>
-                <select
-                  value={filterGroup}
-                  onChange={(e) => setFilterGroup(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 dark:focus:border-purple-500 bg-white dark:bg-gray-800 dark:text-gray-100"
-                >
-                  <option value="">Tutte le categorie</option>
-                  {availableGroups.map(group => (
-                    <option key={group as string} value={group as string}>
-                      {`${getCategoryStyle(group).icon} ${group}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-               
-              <div className="flex items-end">
-                <Button
-                  onClick={clearFilters}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Cancella Filtri
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-2xl border border-blue-200">
-                <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-                <div className="text-blue-700 text-sm">Totale Parole</div>
-              </div>
-              <div className="text-center p-4 bg-green-50 rounded-2xl border border-green-200">
-                <div className="text-2xl font-bold text-green-600">{stats.learned}</div>
-                <div className="text-green-700 text-sm">Apprese</div>
-              </div>
-              <div className="text-center p-4 bg-orange-50 rounded-2xl border border-orange-200">
-                <div className="text-2xl font-bold text-orange-600">{stats.notLearned}</div>
-                <div className="text-orange-700 text-sm">Da Studiare</div>
-              </div>
-              <div className="text-center p-4 bg-red-50 rounded-2xl border border-red-200">
-                <div className="text-2xl font-bold text-red-600">{stats.difficult}</div>
-                <div className="text-red-700 text-sm">⭐ Difficili</div>
-              </div>
-              <div className="text-center p-4 bg-purple-50 rounded-2xl border border-purple-200">
-                <div className="text-2xl font-bold text-purple-600">{wordsData.wordsWithPerformance.length}</div>
-                <div className="text-purple-700 text-sm">📊 Con Performance</div>
-              </div>
-              <div className="text-center p-4 bg-gray-50 rounded-2xl border border-gray-200">
-                <div className="text-2xl font-bold text-gray-600">{wordsData.wordsWithoutPerformance.length}</div>
-                <div className="text-gray-700 text-sm">📝 Senza Attempts</div>
-              </div>
-            </div>
-            
-            {/* ⭐ NUOVO: Sezione dedicata accuratezza solo per parole con performance */}
-            {wordsData.wordsWithPerformance.length > 0 && (
-              <div className="mt-4 p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl border border-cyan-200">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-cyan-600">{stats.avgAccuracy}%</div>
-                  <div className="text-cyan-700 text-sm">📈 Accuratezza Media (solo parole con attempts)</div>
-                  <div className="text-xs text-cyan-600 mt-1">
-                    Ottimizzata: usa accuracy già calcolata nella collezione performance
-                  </div>
+          {/* ⭐ NUOVO: Sezione dedicata accuratezza solo per parole con performance */}
+          {wordsData.wordsWithPerformance.length > 0 && (
+            <div className="mt-4 p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl border border-cyan-200">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-cyan-600">{stats.avgAccuracy}%</div>
+                <div className="text-cyan-700 text-sm">📈 Accuratezza Media (solo parole con attempts)</div>
+                <div className="text-xs text-cyan-600 mt-1">
+                  Ottimizzata: usa accuracy già calcolata nella collezione performance
                 </div>
               </div>
-            )}
-          </CardContent>
-        )}
+            </div>
+          )}
+        </CardContent>
       </Card>
+
 
       {/* ⭐ SPOSTATO SOPRA: Word detail section PRIMA della lista delle parole */}
       {selectedWordId && (
@@ -459,6 +387,7 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
           wordInfo={wordsAnalysis.find(w => w.id === selectedWordId)}
           localRefresh={`${localRefresh}-${internalRefresh}`}
           wordPerformance={wordPerformance} // ⭐ NUOVO: Passa dati performance
+          onClose={() => setSelectedWordId(null)} // ⭐ NUOVO: Funzione per chiudere
         />
       )}
 
@@ -469,26 +398,84 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
             <div className="text-8xl mb-6">🔍</div>
             <h3 className="text-2xl font-bold text-gray-700 mb-4">Nessuna parola trovata</h3>
             <p className="text-gray-600 text-lg mb-8">Modifica i filtri per vedere altre parole</p>
-            <Button onClick={clearFilters} className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4">
-              Cancella Tutti i Filtri
-            </Button>
+            <div className="space-y-2">
+              <Button onClick={clearTestedFilters} className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 w-full">
+                Cancella Filtri Parole Testate
+              </Button>
+              <Button onClick={clearUntestedFilters} className="bg-gradient-to-r from-gray-500 to-slate-600 text-white px-6 py-3 w-full">
+                Cancella Filtri Parole Mai Testate
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-8">
           
           {/* ⭐ SEZIONE 1: PAROLE TESTATE (con attempts) */}
-          {separatedWords.totalWithAttempts > 0 && (
+          {wordsData.wordsWithPerformance.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-1 h-8 bg-gradient-to-b from-green-500 to-emerald-500 rounded"></div>
-                <h2 className="text-2xl font-bold text-gray-800">
-                  📊 Parole Testate ({separatedWords.totalWithAttempts})
-                </h2>
-                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                  Con dati di performance
-                </span>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-1 h-8 bg-gradient-to-b from-green-500 to-emerald-500 rounded"></div>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    📊 Parole Testate ({separatedWords.totalWithAttempts})
+                  </h2>
+                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
+                    Con dati di performance
+                  </span>
+                </div>
+                
+                {/* ⭐ CONTROLLI ESPANDI/COLLASSA PER PAROLE TESTATE */}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      const testedChapters = Object.keys(separatedWords.wordsWithAttempts);
+                      const newCollapsedState = { ...collapsedChapters };
+                      testedChapters.forEach(chapter => {
+                        newCollapsedState.tested[chapter] = false;
+                      });
+                      setCollapsedChapters(newCollapsedState);
+                    }}
+                    disabled={Object.keys(separatedWords.wordsWithAttempts).every(chapter => !collapsedChapters.tested[chapter])}
+                    variant="ghost"
+                    size="sm"
+                    className="text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Maximize2 className="w-4 h-4 mr-2" />
+                    Espandi Tutti
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const testedChapters = Object.keys(separatedWords.wordsWithAttempts);
+                      const newCollapsedState = { ...collapsedChapters };
+                      testedChapters.forEach(chapter => {
+                        newCollapsedState.tested[chapter] = true;  
+                      });
+                      setCollapsedChapters(newCollapsedState);
+                    }}
+                    disabled={Object.keys(separatedWords.wordsWithAttempts).every(chapter => collapsedChapters.tested[chapter])}
+                    variant="ghost"
+                    size="sm"
+                    className="text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Minimize2 className="w-4 h-4 mr-2" />
+                    Collassa Tutti
+                  </Button>
+                </div>
               </div>
+              
+              {/* ⭐ NUOVO: Filtri per parole testate */}
+              <TestedWordsFilters 
+                filters={testedFilters}
+                setFilters={setTestedFilters}
+                showFilters={showTestedFilters}
+                setShowFilters={setShowTestedFilters}
+                availableChapters={availableChapters}
+                availableGroups={availableGroups}
+                wordsWithoutChapter={wordsWithoutChapter}
+                clearFilters={clearTestedFilters}
+                totalFiltered={separatedWords.totalWithAttempts}
+              />
               
               {Object.entries(separatedWords.wordsWithAttempts)
                 .sort(([a], [b]) => {
@@ -516,17 +503,70 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
           )}
 
           {/* ⭐ SEZIONE 2: PAROLE MAI TESTATE (senza attempts) */}
-          {separatedWords.totalWithoutAttempts > 0 && (
+          {wordsData.wordsWithoutPerformance.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-1 h-8 bg-gradient-to-b from-gray-400 to-gray-500 rounded"></div>
-                <h2 className="text-2xl font-bold text-gray-800">
-                  📝 Parole Mai Testate ({separatedWords.totalWithoutAttempts})
-                </h2>
-                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                  Senza tentativi
-                </span>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-1 h-8 bg-gradient-to-b from-gray-400 to-gray-500 rounded"></div>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    📝 Parole Mai Testate ({separatedWords.totalWithoutAttempts})
+                  </h2>
+                  <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                    Senza tentativi
+                  </span>
+                </div>
+                
+                {/* ⭐ CONTROLLI ESPANDI/COLLASSA PER PAROLE MAI TESTATE */}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      const untestedChapters = Object.keys(separatedWords.wordsWithoutAttempts);
+                      const newCollapsedState = { ...collapsedChapters };
+                      untestedChapters.forEach(chapter => {
+                        newCollapsedState.untested[chapter] = false;
+                      });
+                      setCollapsedChapters(newCollapsedState);
+                    }}
+                    disabled={Object.keys(separatedWords.wordsWithoutAttempts).every(chapter => !collapsedChapters.untested[chapter])}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Maximize2 className="w-4 h-4 mr-2" />
+                    Espandi Tutti
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const untestedChapters = Object.keys(separatedWords.wordsWithoutAttempts);
+                      const newCollapsedState = { ...collapsedChapters };
+                      untestedChapters.forEach(chapter => {
+                        newCollapsedState.untested[chapter] = true;  
+                      });
+                      setCollapsedChapters(newCollapsedState);
+                    }}
+                    disabled={Object.keys(separatedWords.wordsWithoutAttempts).every(chapter => collapsedChapters.untested[chapter])}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Minimize2 className="w-4 h-4 mr-2" />
+                    Collassa Tutti
+                  </Button>
+                </div>
               </div>
+              
+              {/* ⭐ NUOVO: Filtri per parole mai testate */}
+              <UntestedWordsFilters 
+                filters={untestedFilters}
+                setFilters={setUntestedFilters}
+                showFilters={showUntestedFilters}
+                setShowFilters={setShowUntestedFilters}
+                availableChapters={availableChapters}
+                availableGroups={availableGroups}
+                wordsWithoutChapter={wordsWithoutChapter}
+                clearFilters={clearUntestedFilters}
+                totalFiltered={separatedWords.totalWithoutAttempts}
+              />
               
               {Object.entries(separatedWords.wordsWithoutAttempts)
                 .sort(([a], [b]) => {
@@ -554,6 +594,7 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
           )}
         </div>
       )}
+
     </div>
   );
 };
@@ -814,6 +855,280 @@ const WordChapterCard: React.FC<WordChapterCardProps> = ({
               📊 {chapterWords.length} parole totali • Scorri per vedere tutte
             </div>
           )}
+        </CardContent>
+      )}
+    </Card>
+  );
+};
+
+// ⭐ NUOVO: Componente filtri per parole testate
+interface TestedWordsFiltersProps {
+  filters: {
+    searchWord: string;
+    filterChapter: string;
+    filterLearned: string;
+    filterDifficult: string;
+    filterGroup: string;
+  };
+  setFilters: React.Dispatch<React.SetStateAction<{
+    searchWord: string;
+    filterChapter: string;
+    filterLearned: string;
+    filterDifficult: string;
+    filterGroup: string;
+  }>>;
+  showFilters: boolean;
+  setShowFilters: React.Dispatch<React.SetStateAction<boolean>>;
+  availableChapters: any[];
+  availableGroups: any[];
+  wordsWithoutChapter: any[];
+  clearFilters: () => void;
+  totalFiltered: number;
+}
+
+const TestedWordsFilters: React.FC<TestedWordsFiltersProps> = ({
+  filters,
+  setFilters,
+  showFilters,
+  setShowFilters,
+  availableChapters,
+  availableGroups,
+  wordsWithoutChapter,
+  clearFilters,
+  totalFiltered
+}) => {
+  return (
+    <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 mb-4">
+      <CardHeader 
+        className="cursor-pointer hover:bg-green-100/50 transition-colors"
+        onClick={() => setShowFilters(!showFilters)}
+      >
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Filter className="w-5 h-5 text-green-600" />
+          Filtri Parole Testate ({totalFiltered} parole mostrate)
+          {showFilters ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
+        </CardTitle>
+      </CardHeader>
+        
+      {showFilters && (
+        <CardContent className="animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">🔍 Cerca Parola</label>
+              <Input
+                placeholder="Parola inglese..."
+                value={filters.searchWord}
+                onChange={(e) => setFilters(prev => ({ ...prev, searchWord: e.target.value }))}
+                className="border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"
+              />
+            </div>
+             
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">📚 Capitolo</label>
+              <select
+                value={filters.filterChapter}
+                onChange={(e) => setFilters(prev => ({ ...prev, filterChapter: e.target.value }))}
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-green-500 bg-white"
+              >
+                <option value="">Tutti i capitoli</option>
+                {availableChapters.map(chapter => (
+                  <option key={chapter as string} value={chapter as string}>{`📖 ${chapter}`}</option>
+                ))}
+                {wordsWithoutChapter.length > 0 && (
+                  <option value="no-chapter">📋 Senza capitolo</option>
+                )}
+              </select>
+            </div>
+             
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">🎓 Stato Apprendimento</label>
+              <select
+                value={filters.filterLearned}
+                onChange={(e) => setFilters(prev => ({ ...prev, filterLearned: e.target.value }))}
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-green-500 bg-white"
+              >
+                <option value="all">Tutte le parole</option>
+                <option value="learned">✅ Solo apprese</option>
+                <option value="not_learned">📖 Solo da studiare</option>
+              </select>
+            </div>
+             
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">⭐ Difficoltà</label>
+              <select
+                value={filters.filterDifficult}
+                onChange={(e) => setFilters(prev => ({ ...prev, filterDifficult: e.target.value }))}
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-green-500 bg-white"
+              >
+                <option value="all">Tutte le parole</option>
+                <option value="difficult">⭐ Solo difficili</option>
+                <option value="not_difficult">📚 Solo normali</option>
+              </select>
+            </div>
+             
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">📂 Categoria</label>
+              <select
+                value={filters.filterGroup}
+                onChange={(e) => setFilters(prev => ({ ...prev, filterGroup: e.target.value }))}
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-green-500 bg-white"
+              >
+                <option value="">Tutte le categorie</option>
+                {availableGroups.map(group => (
+                  <option key={group as string} value={group as string}>
+                    {`${getCategoryStyle(group).icon} ${group}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+             
+            <div className="flex items-end">
+              <Button
+                onClick={clearFilters}
+                variant="outline"
+                className="w-full border-green-300 text-green-700 hover:bg-green-100"
+              >
+                Azzera Filtri
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+};
+
+// ⭐ NUOVO: Componente filtri per parole mai testate  
+interface UntestedWordsFiltersProps {
+  filters: {
+    searchWord: string;
+    filterChapter: string;
+    filterLearned: string;
+    filterDifficult: string;
+    filterGroup: string;
+  };
+  setFilters: React.Dispatch<React.SetStateAction<{
+    searchWord: string;
+    filterChapter: string;
+    filterLearned: string;
+    filterDifficult: string;
+    filterGroup: string;
+  }>>;
+  showFilters: boolean;
+  setShowFilters: React.Dispatch<React.SetStateAction<boolean>>;
+  availableChapters: any[];
+  availableGroups: any[];
+  wordsWithoutChapter: any[];
+  clearFilters: () => void;
+  totalFiltered: number;
+}
+
+const UntestedWordsFilters: React.FC<UntestedWordsFiltersProps> = ({
+  filters,
+  setFilters,
+  showFilters,
+  setShowFilters,
+  availableChapters,
+  availableGroups,
+  wordsWithoutChapter,
+  clearFilters,
+  totalFiltered
+}) => {
+  return (
+    <Card className="bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 mb-4">
+      <CardHeader 
+        className="cursor-pointer hover:bg-gray-100/50 transition-colors"
+        onClick={() => setShowFilters(!showFilters)}
+      >
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Filter className="w-5 h-5 text-gray-600" />
+          Filtri Parole Mai Testate ({totalFiltered} parole mostrate)
+          {showFilters ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
+        </CardTitle>
+      </CardHeader>
+        
+      {showFilters && (
+        <CardContent className="animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">🔍 Cerca Parola</label>
+              <Input
+                placeholder="Parola inglese..."
+                value={filters.searchWord}
+                onChange={(e) => setFilters(prev => ({ ...prev, searchWord: e.target.value }))}
+                className="border-2 border-gray-200 rounded-xl focus:border-gray-500 transition-colors"
+              />
+            </div>
+             
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">📚 Capitolo</label>
+              <select
+                value={filters.filterChapter}
+                onChange={(e) => setFilters(prev => ({ ...prev, filterChapter: e.target.value }))}
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-gray-500 bg-white"
+              >
+                <option value="">Tutti i capitoli</option>
+                {availableChapters.map(chapter => (
+                  <option key={chapter as string} value={chapter as string}>{`📖 ${chapter}`}</option>
+                ))}
+                {wordsWithoutChapter.length > 0 && (
+                  <option value="no-chapter">📋 Senza capitolo</option>
+                )}
+              </select>
+            </div>
+             
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">🎓 Stato Apprendimento</label>
+              <select
+                value={filters.filterLearned}
+                onChange={(e) => setFilters(prev => ({ ...prev, filterLearned: e.target.value }))}
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-gray-500 bg-white"
+              >
+                <option value="all">Tutte le parole</option>
+                <option value="learned">✅ Solo apprese</option>
+                <option value="not_learned">📖 Solo da studiare</option>
+              </select>
+            </div>
+             
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">⭐ Difficoltà</label>
+              <select
+                value={filters.filterDifficult}
+                onChange={(e) => setFilters(prev => ({ ...prev, filterDifficult: e.target.value }))}
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-gray-500 bg-white"
+              >
+                <option value="all">Tutte le parole</option>
+                <option value="difficult">⭐ Solo difficili</option>
+                <option value="not_difficult">📚 Solo normali</option>
+              </select>
+            </div>
+             
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">📂 Categoria</label>
+              <select
+                value={filters.filterGroup}
+                onChange={(e) => setFilters(prev => ({ ...prev, filterGroup: e.target.value }))}
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-gray-500 bg-white"
+              >
+                <option value="">Tutte le categorie</option>
+                {availableGroups.map(group => (
+                  <option key={group as string} value={group as string}>
+                    {`${getCategoryStyle(group).icon} ${group}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+             
+            <div className="flex items-end">
+              <Button
+                onClick={clearFilters}
+                variant="outline"
+                className="w-full border-gray-300 text-gray-700 hover:bg-gray-100"
+              >
+                Azzera Filtri
+              </Button>
+            </div>
+          </div>
         </CardContent>
       )}
     </Card>

@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import type { Word, TestHistoryItem } from '../../../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card'; 
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Bar } from 'recharts'; 
-import { Award, TrendingUp, Target } from 'lucide-react';
+import { Award, TrendingUp, Target, X } from 'lucide-react';
 import TimelineReconstructionService from '../../../services/TimelineReconstructionService';
 
 interface WordDetailSectionProps {
@@ -15,6 +15,7 @@ interface WordDetailSectionProps {
   wordInfo: any;
   localRefresh: number | string;
   wordPerformance?: Record<string, any>; // ⭐ NUOVO: Dati performance dalla collezione
+  onClose?: () => void; // ⭐ NUOVO: Funzione per chiudere il componente
 }
 
 interface AttemptData {
@@ -50,7 +51,7 @@ interface CustomTooltipProps {
   label?: string;
 }
 
-const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAnalysis, testHistory, wordInfo, localRefresh, wordPerformance }) => {
+const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAnalysis, testHistory, wordInfo, localRefresh, wordPerformance, onClose }) => {
   // ⭐ NEW: Service instance for business logic
   const timelineService = useMemo(() => new TimelineReconstructionService(), []);
 
@@ -159,9 +160,20 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
   return (
     <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden" key={`detail-${wordId}-${localRefresh}`}>
       <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
-        <CardTitle className="flex items-center gap-3 text-white">
-          <Award className="w-6 h-6" />
-          Analisi Statistiche di dettaglio parola: "{finalWordInfo.english}"
+        <CardTitle className="flex items-center justify-between text-white">
+          <div className="flex items-center gap-3">
+            <Award className="w-6 h-6" />
+            Analisi Statistiche di dettaglio parola: "{finalWordInfo.english}"
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-white/20 rounded-full transition-colors"
+              title="Chiudi analisi dettagliata"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </CardTitle>
         <p className="text-green-100 text-sm">
           Ultimi {chartData.length} tentativi • Accuratezza finale: {reconstructedStats.accuracy}% • Totale tentativi: {reconstructedStats.totalAttempts}
