@@ -350,11 +350,9 @@ export class ChapterStatsService {
   }
 
   /**
-   * 📊 ANALYTICS AVANZATE: Calcola dati per Analytics Dashboard
+   * ANALYTICS AVANZATE: Calcola dati per Analytics Dashboard
    */
   private calculateAdvancedAnalytics(chapterStats: Record<string, any>, detailedSessions: any[], words: any[]): any {
-    console.log('📊 CALCOLO ANALYTICS AVANZATE da detailedSessions');
-    console.log(`📊 Input: ${Object.keys(chapterStats).length} capitoli, ${detailedSessions.length} sessioni`);
     
     // Crea dati processati per ogni capitolo con metriche avanzate 
     const processedData = Object.entries(chapterStats).map(([chapter, stats]: [string, any]) => {
@@ -393,7 +391,6 @@ export class ChapterStatsService {
       const precisionRate = attemptsForChapter > 0 ? Math.round((correctForChapter / attemptsForChapter) * 100) : 0;
       const hintDependency = attemptsForChapter > 0 ? Math.round((attemptsWithHintsForChapter / attemptsForChapter) * 100) : 0;
       
-      console.log(`📋 ${displayName}: copertura=${coverageRate}% (${stats.testedWords}/${vocabularyWordsInChapter.length}), precisione=${precisionRate}%, aiuti=${hintDependency}%`);
       
       return {
         chapter: displayName,
@@ -416,16 +413,13 @@ export class ChapterStatsService {
       };
     }).filter(c => c.hasTests);
 
-    console.log(`📊 ANALYTICS RISULTATO: ${processedData.length} capitoli processati`);
     return { processedData };
   }
 
   /**
-   * 📈 STATISTICHE SESSIONI: Calcola pattern temporali e intensità
+   * STATISTICHE SESSIONI: Calcola pattern temporali e intensità
    */
   private calculateSessionStats(detailedSessions: any[]): any {
-    console.log('📈 CALCOLO STATISTICHE SESSIONI da detailedSessions');
-    console.log(`📊 Input: ${detailedSessions.length} sessioni dettagliate`);
     
     const totalSessions = detailedSessions.length;
     const totalWords = detailedSessions.reduce((sum, session) => sum + (session.words?.length || 0), 0);
@@ -467,8 +461,6 @@ export class ChapterStatsService {
       else light++;
     });
     
-    console.log(`📊 SessionStats RISULTATO: ${totalSessions} sessioni, ${avgWordsPerSession} parole/sessione, ${avgTimePerWord}s/parola`);
-    console.log(`🎯 Pattern: ${preferredTimeSlot}, Intensità: ${intensive}/${medium}/${light}`);
     
     return {
       totalSessions,
