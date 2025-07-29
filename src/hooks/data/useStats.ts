@@ -8,6 +8,7 @@ import { useWords } from "./useWords";
 import AppConfig from "../../config/appConfig";
 import { StatsAnalyticsService } from "../../services/statsAnalyticsService"; // Fixed case sensitivity
 import { StatsCalculationService } from "../../services/statsCalculationService";
+import ChapterStatsService from "../../services/ChapterStatsService";
 import type {
   Statistics,
   DailyProgressAggregated,
@@ -19,7 +20,12 @@ import type {
   CategoryProgressAggregated,
   DifficultyStatsAggregated,
 } from "../../types/entities/Statistics.types";
-import type { TestHistoryItem } from "../../types/entities/Test.types";
+import type { 
+  TestHistoryItem,
+  ChapterAnalysisInput,
+  ChapterCalculationResult,
+  ChapterTrendData
+} from "../../types/entities/Test.types";
 import type { Word } from "../../types/entities/Word.types";
 import type {
   WordPerformance,
@@ -138,6 +144,9 @@ interface StatsGetters {
     maxHintsPercentage: number;
   };
   detailedSessions: any[];
+  // ⭐ CHAPTER ANALYTICS: Analisi capitoli integrata
+  calculateChapterAnalysis: () => ChapterCalculationResult;
+  getChapterTrend: (chapterName: string) => ChapterTrendData[];
 }
 
 interface StatsResult extends StatsState, StatsOperations, StatsGetters {}
@@ -187,6 +196,12 @@ export const useStats = (): StatsResult => {
     timestamp: number;
   } | null>(null);
 
+  // ⭐ CHAPTER ANALYTICS CACHE: Cache per analisi capitoli
+  const chapterAnalysisCache = useRef<{
+    analysis: ChapterCalculationResult;
+    timestamp: number;
+  } | null>(null);
+
 
   // Get the most recent statistics document
   const currentStats = statsFirestore.data.length > 0 
@@ -214,12 +229,13 @@ export const useStats = (): StatsResult => {
   });
 
   const createCompleteWordPerformance = (
+    wordId: string,
     english: string,
     italian: string = "",
     chapter: string = "",
     attempts: PerformanceAttempt[] = []
   ): WordPerformance => ({
-    wordId: english, // Fixed: added missing wordId property
+    wordId, // FIXED: usa wordId univoco invece di english
     english,
     italian,
     chapter,
@@ -283,6 +299,7 @@ export const useStats = (): StatsResult => {
       wrongWords: Word[],
       detailedSession?: any // DetailedTestSession opzionale per tracking dettagliato
     ): Promise<OperationResult<void>> => {
+      
       const startTime = Date.now();
       try {
         setIsProcessing(true);
@@ -338,6 +355,16 @@ export const useStats = (): StatsResult => {
           }, {})
         };
 
+        // FIXED: Assicurati che i dati performance siano freschi prima di processare
+        try {
+          await performanceFirestore.fetch();
+        } catch (error) {
+          // Collection performance non esiste ancora - è normale per il primo test
+          if (AppConfig.app.environment === "development") {
+            console.log("📊 Performance collection not found - will create documents");
+          }
+        }
+
         // Add to history
 
         for (const word of testWords) {
@@ -348,40 +375,84 @@ export const useStats = (): StatsResult => {
             false
           );
 
-          const existingPerf = wordPerformance[word.english];
-          if (existingPerf) {
+
+          // FIXED: Controlla prima in memoria locale, poi su Firebase  
+          const existingPerfMemory = wordPerformance[word.id];
+          const existingPerfFirebase = performanceFirestore.data.find((p) => p.id === word.id);
+          
+          
+          if (existingPerfMemory || existingPerfFirebase) {
+            // FIXED: Usa i dati più completi (Firebase ha priorità)
+            const existingPerf = existingPerfFirebase || existingPerfMemory;
+            const existingAttempts = existingPerf.attempts || [];
+            const newAttempts = [...existingAttempts, attempt];
+            const totalAttempts = newAttempts.length;
+            const correctAttempts = newAttempts.filter((a) => a.correct).length;
+            
             const updatedPerf: WordPerformance = {
               ...existingPerf,
-              attempts: [...existingPerf.attempts, attempt],
+              attempts: newAttempts,
+              // FIXED: Aggiungi calcolo dati cumulativi
+              totalAttempts,
+              correctAttempts,
+              accuracy: (correctAttempts / totalAttempts) * 100,
+              averageResponseTime: newAttempts.reduce((sum, a) => sum + a.timeSpent, 0) / totalAttempts,
+              lastAttemptAt: new Date(),
+              updatedAt: new Date(),
             };
 
+            // FIXED: Aggiorna local state
             setWordPerformance((prev) => ({
               ...prev,
-              [word.english]: updatedPerf,
+              [word.id]: updatedPerf,
             }));
 
-            const perfDoc = performanceFirestore.data.find(
-              (p) => p.english === word.english
-            );
-            if (perfDoc) {
-              await performanceFirestore.update(perfDoc.id, updatedPerf);
+            // FIXED: Aggiorna o crea su Firebase
+            if (existingPerfFirebase) {
+              if (AppConfig.app.environment === "development") {
+                console.log(`📊 Updating performance for word ${word.english}:`, {
+                  existingAttempts: existingAttempts.length,
+                  newTotal: totalAttempts,
+                  accuracy: (correctAttempts / totalAttempts) * 100
+                });
+              }
+              
+              await performanceFirestore.update(word.id, updatedPerf);
             } else {
-              await performanceFirestore.create(updatedPerf);
+              if (AppConfig.app.environment === "development") {
+                console.log(`📊 Creating performance for word ${word.english} (ID: ${word.id}) - not found on Firebase`);
+              }
+              await (performanceFirestore.create as any)(updatedPerf, word.id);
             }
           } else {
+            // FIXED: Caso completamente nuovo - primo test per questa parola
+            if (AppConfig.app.environment === "development") {
+              console.log(`📊 Creating NEW performance for word ${word.english} (ID: ${word.id}) - first time`);
+            }
+            
             const newPerf = createCompleteWordPerformance(
+              word.id, // FIXED: passa word.id come primo parametro
               word.english,
               word.italian,
               word.chapter,
               [attempt]
             );
+            
+            // FIXED: Aggiungi dati cumulativi per nuove performance
+            newPerf.totalAttempts = 1;
+            newPerf.correctAttempts = attempt.correct ? 1 : 0;
+            newPerf.accuracy = attempt.correct ? 100 : 0;
+            newPerf.averageResponseTime = attempt.timeSpent;
+            newPerf.lastAttemptAt = new Date();
+            newPerf.createdAt = new Date();
+            newPerf.updatedAt = new Date();
 
             setWordPerformance((prev) => ({
               ...prev,
-              [word.english]: newPerf,
+              [word.id]: newPerf, // FIXED: usa word.id come chiave
             }));
 
-            await performanceFirestore.create(newPerf);
+            await (performanceFirestore.create as any)(newPerf, word.id); // FIXED: Usa word.id come ID documento
           }
         }
 
@@ -539,9 +610,8 @@ export const useStats = (): StatsResult => {
             attempts: [...existingPerf.attempts, attempt],
           };
         } else {
-          updatedPerf = createCompleteWordPerformance(wordId, "", "", [
-            attempt,
-          ]);
+          // SIMPLIFIED: Non serve più lookup complesso - chiediamo all'utente di passare i dati completi
+          throw new Error("Performance not found and word data not provided. Use handleTestComplete instead.");
         }
 
         setWordPerformance((prev) => ({
@@ -748,6 +818,7 @@ export const useStats = (): StatsResult => {
             (analysis) => ({
               type: "create" as const,
               data: createCompleteWordPerformance(
+                analysis.id, // wordId
                 analysis.english,
                 analysis.italian,
                 analysis.chapter,
@@ -761,7 +832,8 @@ export const useStats = (): StatsResult => {
           }
 
           data.sourceData.wordPerformances.forEach((analysis) => {
-            performanceMap[analysis.english] = createCompleteWordPerformance(
+            performanceMap[analysis.id] = createCompleteWordPerformance( // FIXED: usa analysis.id come chiave
+              analysis.id, // wordId
               analysis.english,
               analysis.italian,
               analysis.chapter,
@@ -945,7 +1017,7 @@ export const useStats = (): StatsResult => {
           : 0;
 
       return {
-        id: `perf_${perf.english}`,
+        id: perf.wordId, // ID della parola (stesso di document Firebase)
         english: perf.english,
         italian: perf.italian || "",
         chapter: perf.chapter || "",
@@ -991,7 +1063,7 @@ export const useStats = (): StatsResult => {
       if (!perf) return null;
 
       const analyses = getAllWordsPerformance();
-      return analyses.find((analysis) => analysis.english === wordId) || null;
+      return analyses.find((analysis) => analysis.id === wordId) || null; // FIXED: confronta con wordId
     },
     [wordPerformance, getAllWordsPerformance]
   );
@@ -1051,11 +1123,14 @@ export const useStats = (): StatsResult => {
     return result;
   }, [detailedTestSessions, manualWordPerformances]);
 
+
   useEffect(() => {
     if (performanceFirestore.data.length > 0) {
       const performanceMap: Record<string, WordPerformance> = {};
       performanceFirestore.data.forEach((perf) => {
-        performanceMap[perf.english] = perf;
+        // CRITICAL FIX: Use wordId as key to match with word.id, not english
+        const key = perf.wordId || perf.id; // wordId is preferred, fallback to document id
+        performanceMap[key] = perf;
       });
       setWordPerformance(performanceMap);
     }
@@ -1120,7 +1195,9 @@ export const useStats = (): StatsResult => {
               updatedAt: data.updatedAt,
               firestoreMetadata: data.firestoreMetadata
             };
-            performanceMap[data.english] = wordPerformance;
+            // CRITICAL FIX: Use wordId as key to match with word.id in handleTestComplete
+            const key = data.wordId || doc.id; // wordId is preferred, fallback to document id
+            performanceMap[key] = wordPerformance;
           }
         });
         
@@ -1161,6 +1238,37 @@ export const useStats = (): StatsResult => {
     loadData();
   }, [isReady, user?.id, authUser?.uid, wordsData]);
 
+  // ⭐ CHAPTER ANALYTICS: Implementazione delle funzioni mancanti
+  const chapterStatsService = useMemo(() => new ChapterStatsService(), []);
+  
+  const calculateChapterAnalysis = useCallback((): ChapterCalculationResult => {
+    if (!testHistory || !wordsData) {
+      return {
+        analysis: { processedData: [], chapterDetailedHistory: {} },
+        overviewStats: { totalChapters: 0, testedChapters: 0, bestEfficiency: 0, averageCompletion: 0, averageAccuracy: 0 },
+        topChapters: [],
+        strugglingChapters: []
+      };
+    }
+    
+    return chapterStatsService.calculateChapterAnalysis({
+      testHistory,
+      words: wordsData
+    });
+  }, [testHistory, wordsData, chapterStatsService]);
+  
+  const getChapterTrend = useCallback((chapterName: string): ChapterTrendData[] => {
+    if (!testHistory || !wordsData) {
+      return [];
+    }
+    
+    const { analysis } = chapterStatsService.calculateChapterAnalysis({
+      testHistory,
+      words: wordsData
+    });
+    
+    return chapterStatsService.calculateChapterTrend(chapterName, analysis.chapterDetailedHistory);
+  }, [testHistory, wordsData, chapterStatsService]);
 
   return {
     stats: currentStats,
@@ -1198,6 +1306,9 @@ export const useStats = (): StatsResult => {
     // ⭐ NUOVO: Dati corretti
     correctStatsData,
     detailedSessions: detailedTestSessions,
+    // ⭐ CHAPTER ANALYTICS: Analisi capitoli integrate
+    calculateChapterAnalysis,
+    getChapterTrend,
     // Bonifica
   };
 };

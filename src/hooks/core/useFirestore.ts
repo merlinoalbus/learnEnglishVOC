@@ -215,7 +215,7 @@ export function useFirestore<T extends { id: string }>(
 
   // 📦 CRUD OPERATIONS
   const create = useCallback(
-    async (data: Omit<T, "id">): Promise<T> => {
+    async (data: Omit<T, "id"> | T, customId?: string): Promise<T> => {
       if (!isReady) {
         throw new Error("🔥 Firebase not ready for create operation");
       }
@@ -224,7 +224,6 @@ export function useFirestore<T extends { id: string }>(
       if (!userId) {
         throw new Error("🔐 User not authenticated for create operation");
       }
-
 
       const now = new Date();
       const documentData = {
@@ -239,11 +238,23 @@ export function useFirestore<T extends { id: string }>(
         },
       };
 
-      const collectionRef = collection(db, collectionName);
-      const docRef = await addDoc(collectionRef, documentData);
+      let docRef: any;
+      let docId: string;
+
+      if (customId || (data as any).id) {
+        // FIXED: Usa ID personalizzato se fornito
+        docId = customId || (data as any).id;
+        docRef = doc(db, collectionName, docId);
+        await setDoc(docRef, documentData);
+      } else {
+        // Usa ID autogenerato come prima
+        const collectionRef = collection(db, collectionName);
+        docRef = await addDoc(collectionRef, documentData);
+        docId = docRef.id;
+      }
 
       const newDoc = {
-        id: docRef.id,
+        id: docId,
         ...documentData,
         // Add sync metadata to indicate this was successfully created in Firestore
         _lastSyncedAt: new Date(),

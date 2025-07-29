@@ -987,3 +987,114 @@ export interface TestSummary {
   score: number;
   category: ScoreCategory;
 }
+
+// =====================================================
+// 📊 CHAPTER ANALYTICS EXTENSION
+// =====================================================
+
+/**
+ * Chapter breakdown presente nel DetailedTestSession da DB
+ * Integrazione con collection detailedTestSessions.chapterBreakdown
+ */
+export interface ChapterBreakdown {
+  totalWords: number;
+  correctWords: number;
+  incorrectWords: number;
+  hintsUsed: number;
+  percentage: number;
+  totalTime?: number;
+}
+
+/**
+ * Statistiche aggregate per capitolo calcolate dal service
+ * Estende i dati base con metriche derived
+ */
+export interface ChapterStats {
+  chapter: string;
+  fullChapter: string;
+  totalWords: number;
+  learnedWords: number;
+  difficultWords: number;
+  testsPerformed: number;
+  totalAnswers: number;
+  accuracy: number;
+  hintsPercentage: number;
+  efficiency: number;
+  completionRate: number;
+  difficultyRate: number;
+  studyProgress: number;
+  estimatedHints: number;
+  firstTestDate: Date;
+  detailedHistory: ChapterTestEntry[];
+}
+
+/**
+ * Singola entry di test per un capitolo
+ */
+export interface ChapterTestEntry {
+  date: Date;
+  accuracy: number;
+  correct: number;
+  incorrect: number;
+  hints: number;
+  estimatedChapterHints: number;
+  timestamp: string;
+  testIndex: number;
+}
+
+/**
+ * Analisi completa dei capitoli calcolata dal service
+ */
+export interface ChapterAnalysis {
+  processedData: ChapterStats[];
+  chapterDetailedHistory: Record<string, ChapterTestEntry[]>;
+}
+
+/**
+ * Overview statistics per tutti i capitoli
+ */
+export interface ChapterOverviewStats {
+  totalChapters: number;
+  testedChapters: number;
+  bestEfficiency: number;
+  averageCompletion: number;
+  averageAccuracy: number;
+}
+
+/**
+ * Livelli di performance per capitoli
+ */
+export type ChapterPerformanceLevel = 'excellent' | 'good' | 'needs-improvement' | 'not-tested';
+
+/**
+ * Dati trend per visualizzazione temporale capitolo
+ */
+export interface ChapterTrendData {
+  testNumber: string;
+  date: string;
+  accuracy: number;
+  correct: number;
+  incorrect: number;
+  fullDate: string;
+  timestamp: string;
+}
+
+/**
+ * Input per calcolo analisi capitoli dal service
+ */
+export interface ChapterAnalysisInput {
+  testHistory: TestHistoryItem[];
+  words: import('./Word.types').Word[];
+  wordPerformances?: import('./Performance.types').WordPerformanceAnalysis[];
+}
+
+/**
+ * Risultato completo del calcolo capitoli dal service
+ */
+export interface ChapterCalculationResult {
+  analysis: ChapterAnalysis;
+  overviewStats: ChapterOverviewStats;
+  topChapters: ChapterStats[];
+  strugglingChapters: ChapterStats[];
+  selectedChapterTrend?: ChapterTrendData[];
+}

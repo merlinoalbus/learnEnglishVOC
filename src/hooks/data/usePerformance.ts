@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useFirestore } from "../core/useFirestore";
 import { useFirebase } from "../../contexts/FirebaseContext";
 import AppConfig from "../../config/appConfig";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../config/firebase";
 import type {
   WordPerformance,
   PerformanceAttempt,
@@ -147,8 +149,7 @@ export const usePerformance = (): PerformanceResult => {
     realtime: false,
     enableCache: true,
     autoFetch: false,
-    syncWithLocalStorage: true,
-    localStorageKey: "vocabularyPerformance",
+    syncWithLocalStorage: false, // DISMESSO: localStorage completamente rimosso
     debug: AppConfig.app.environment === "development",
   });
 
@@ -178,56 +179,7 @@ export const usePerformance = (): PerformanceResult => {
     try {
       setIsProcessing(true);
 
-      // Migration from localStorage if available
-      const savedPerformance = localStorage.getItem("vocabularyPerformance");
-      if (savedPerformance && performanceFirestore.data.length === 0) {
-        try {
-          const parsedPerformance = JSON.parse(savedPerformance);
-          if (
-            Array.isArray(parsedPerformance) &&
-            parsedPerformance.length > 0
-          ) {
-            // Migrate to Firebase
-            const migrationOps = parsedPerformance.map((perf: any) => ({
-              type: "create" as const,
-              data: {
-                english: perf.english,
-                wordId: perf.english,
-                italian: perf.italian || "",
-                attempts:
-                  perf.attempts?.map((attempt: any) => ({
-                    ...attempt,
-                    timestamp: attempt.timestamp || new Date().toISOString(),
-                  })) || [],
-                totalAttempts: perf.totalAttempts || 0,
-                correctAttempts: perf.correctAttempts || 0,
-                accuracy: perf.accuracy || 0,
-                averageResponseTime: perf.averageResponseTime || 0,
-                lastAttemptAt: perf.lastAttemptAt
-                  ? new Date(perf.lastAttemptAt)
-                  : new Date(),
-                createdAt: perf.createdAt
-                  ? new Date(perf.createdAt)
-                  : new Date(),
-                updatedAt: new Date(),
-              },
-            }));
-
-            await performanceFirestore.batchUpdate(migrationOps);
-
-            // Clear from localStorage after migration
-            localStorage.removeItem("vocabularyPerformance");
-
-            if (AppConfig.app.environment === "development") {
-              console.log(
-                `📊 Migrated ${parsedPerformance.length} performance records to Firebase`
-              );
-            }
-          }
-        } catch (error) {
-          console.warn("Failed to migrate performance data:", error);
-        }
-      }
+      // Solo Firebase - localStorage completamente dismesso
 
       setIsInitialized(true);
       setLastSync(new Date());
@@ -298,9 +250,11 @@ export const usePerformance = (): PerformanceResult => {
       try {
         setIsProcessing(true);
 
-        const existingPerformance = performanceFirestore.data.find(
-          (p) => p.english === wordId
-        );
+        // SIMPLIFIED: Accesso diretto per ID invece di search
+        // IMPORTANTE: Recupera sempre dal database per evitare dati stale
+        const docRef = doc(db, "performance", wordId);
+        const docSnap = await getDoc(docRef);
+        const existingPerformance = docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as WordPerformanceWithId : null;
 
         const newAttempt: ExtendedPerformanceAttempt = {
           correct: input.isCorrect,
@@ -336,9 +290,9 @@ export const usePerformance = (): PerformanceResult => {
         } else {
           // Create new performance record
           const newPerformanceData: Omit<WordPerformanceWithId, "id"> = {
-            english: wordId,
+            english: input.word.english,
             wordId: wordId,
-            italian: "", // This should be populated from word data
+            italian: input.word.italian || "", // This should be populated from word data
             attempts: [newAttempt],
             totalAttempts: 1,
             correctAttempts: input.isCorrect ? 1 : 0,
@@ -349,8 +303,9 @@ export const usePerformance = (): PerformanceResult => {
             updatedAt: new Date(),
           };
 
-          updatedPerformance = await performanceFirestore.create(
-            newPerformanceData
+          updatedPerformance = await (performanceFirestore.create as any)(
+            newPerformanceData,
+            wordId // FIXED: Usa word.id come ID documento Firebase
           );
         }
 
@@ -414,7 +369,7 @@ export const usePerformance = (): PerformanceResult => {
             );
 
           updates.push({
-            wordId: word.english,
+            wordId: word.id, // FIXED: usa word.id univoco invece di word.english
             input: {
               word: {
                 english: word.english,
@@ -525,8 +480,9 @@ export const usePerformance = (): PerformanceResult => {
       const startTime = Date.now();
 
       try {
+        // SIMPLIFIED: Accesso diretto per ID invece di search  
         const performance = performanceFirestore.data.find(
-          (p) => p.english === wordId
+          (p) => p.id === wordId
         );
 
         if (!performance || performance.attempts.length === 0) {
@@ -723,8 +679,9 @@ export const usePerformance = (): PerformanceResult => {
       const startTime = Date.now();
 
       try {
+        // SIMPLIFIED: Accesso diretto per ID invece di search  
         const performance = performanceFirestore.data.find(
-          (p) => p.english === wordId
+          (p) => p.id === wordId
         );
 
         if (!performance) {
@@ -827,8 +784,9 @@ export const usePerformance = (): PerformanceResult => {
   // Get word performance
   const getWordPerformance = useCallback(
     (wordId: string): WordPerformanceWithId | null => {
+      // SIMPLIFIED: Accesso diretto per ID
       return (
-        performanceFirestore.data.find((p) => p.english === wordId) || null
+        performanceFirestore.data.find((p) => p.id === wordId) || null
       );
     },
     [performanceFirestore.data]
@@ -852,7 +810,7 @@ export const usePerformance = (): PerformanceResult => {
 
       return {
         // Corretto: aggiunge tutte le proprietà mancanti
-        id: performance.id,
+        id: performance.wordId, // FIXED: usa wordId invece di performance.id
         english: performance.english,
         italian: performance.italian || "",
         chapter: performance.chapter || "",
@@ -896,8 +854,9 @@ export const usePerformance = (): PerformanceResult => {
   // Get words needing work
   const getWordsNeedingWork = useCallback(
     (limit = 10): WordPerformanceAnalysis[] => {
+      // SIMPLIFIED: Usa ID diretto 
       const analyses = performanceFirestore.data
-        .map((perf) => getWordAnalysis(perf.english))
+        .map((perf) => getWordAnalysis(perf.id))
         .filter(
           (analysis): analysis is WordPerformanceAnalysis => analysis !== null
         )
@@ -924,8 +883,9 @@ export const usePerformance = (): PerformanceResult => {
   // Get words by status
   const getWordsByStatus = useCallback(
     (status: WordPerformanceStatus): WordPerformanceAnalysis[] => {
+      // SIMPLIFIED: Usa ID diretto
       return performanceFirestore.data
-        .map((perf) => getWordAnalysis(perf.english))
+        .map((perf) => getWordAnalysis(perf.id))
         .filter(
           (analysis): analysis is WordPerformanceAnalysis =>
             analysis !== null && analysis.status === status
@@ -997,8 +957,9 @@ export const usePerformance = (): PerformanceResult => {
 
   // Get global stats
   const getGlobalStats = useCallback((): GlobalPerformanceStats => {
+    // SIMPLIFIED: Usa ID diretto
     const analyses = performanceFirestore.data
-      .map((perf) => getWordAnalysis(perf.english))
+      .map((perf) => getWordAnalysis(perf.id))
       .filter(
         (analysis): analysis is WordPerformanceAnalysis => analysis !== null
       );
@@ -1063,8 +1024,9 @@ export const usePerformance = (): PerformanceResult => {
     WordPerformanceStatus,
     WordPerformanceAnalysis[]
   > => {
+    // SIMPLIFIED: Usa ID diretto
     const analyses = performanceFirestore.data
-      .map((perf) => getWordAnalysis(perf.english))
+      .map((perf) => getWordAnalysis(perf.id))
       .filter(
         (analysis): analysis is WordPerformanceAnalysis => analysis !== null
       );
@@ -1118,8 +1080,9 @@ export const usePerformance = (): PerformanceResult => {
     }
 
     const globalPerformanceStats = getGlobalStats();
+    // SIMPLIFIED: Usa ID diretto
     const wordLevelInsights = performanceFirestore.data
-      .map((perf) => getWordAnalysis(perf.english))
+      .map((perf) => getWordAnalysis(perf.id))
       .filter(
         (analysis): analysis is WordPerformanceAnalysis => analysis !== null
       );

@@ -13,7 +13,9 @@ import {
   Settings,
   ChevronDown,
   CheckCircle,
+  Download,
 } from "lucide-react";
+import { extractDebugData } from "../../services/DebugService";
 
 export const AppNavigation = React.memo(() => {
   const { currentView, dispatch, testHistory, testMode, showResults, resetTest } = useAppContext();
@@ -267,6 +269,33 @@ export const AppNavigation = React.memo(() => {
                     >
                       <Shield className="w-4 h-4 text-purple-500 dark:text-purple-400" />
                       <span>Gestione Utenti</span>
+                    </Button>
+                  )}
+
+                  {isAdmin && (
+                    <Button
+                      onClick={async () => {
+                        setShowUserMenu(false);
+                        try {
+                          const debugData = await extractDebugData();
+                          const blob = new Blob([JSON.stringify(debugData, null, 2)], { type: 'application/json' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `debug-data-${new Date().toISOString().split('T')[0]}.json`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                        } catch (error) {
+                          console.error('Errore nell\'estrazione dei dati di debug:', error);
+                        }
+                      }}
+                      variant="ghost"
+                      className="w-full justify-start gap-3 py-3 px-3 rounded-xl font-medium text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/30"
+                    >
+                      <Download className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+                      <span>Estrai Dati Debug</span>
                     </Button>
                   )}
 

@@ -37,6 +37,14 @@ export interface WordPerformance {
   /** Array tentativi - CORE del sistema performance AS-IS */
   attempts: PerformanceAttempt[];
 
+  /** FIXED: Dati cumulativi calcolati */
+  totalAttempts?: number;
+  correctAttempts?: number;
+  accuracy?: number;
+  averageResponseTime?: number;
+  lastAttemptAt?: Date;
+  createdAt?: Date;
+
   /** Timestamp ultimo aggiornamento */
   updatedAt?: Date;
 

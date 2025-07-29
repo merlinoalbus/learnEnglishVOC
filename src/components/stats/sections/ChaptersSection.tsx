@@ -1,5 +1,6 @@
 // =====================================================
-// 📁 src/components/stats/sections/ChaptersSection.js - FIXED Dati Corretti + Date Ordinate
+// 📊 src/components/stats/sections/ChaptersSection.tsx - REFACTORED
+// Architettura: DB → types → services → hooks → components
 // =====================================================
 
 import React, { useMemo, useState } from 'react';
@@ -12,222 +13,50 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  LineChart,
   Line,
   ComposedChart
 } from 'recharts';
 import { BookOpen, TrendingUp, Award, Target, Info } from 'lucide-react';
+import { useStats } from '../../../hooks/data/useStats';
+import type { 
+  ChapterCalculationResult,
+  ChapterTrendData
+} from '../../../types/entities/Test.types';
 
 interface ChaptersSectionProps {
-  testHistory: any[];
-  words: any[];
-  localRefresh: number;
+  // Il componente è puramente presentational
+  // I dati vengono automaticamente dagli hooks che si collegano al DB
 }
 
-const ChaptersSection: React.FC<ChaptersSectionProps> = ({ testHistory, words, localRefresh }) => {
-  const [selectedChapterForTrend, setSelectedChapterForTrend] = useState(null);
+const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
+  const [selectedChapterForTrend, setSelectedChapterForTrend] = useState<string | null>(null);
+  
+  // ⭐ ARCHITETTURA CORRETTA: Usa hook integrato con service layer
+  const { calculateChapterAnalysis, getChapterTrend } = useStats();
+  
+  // ⭐ CALCOLO ANALISI: Service layer gestisce tutta la business logic automaticamente
+  const chapterCalculationResult: ChapterCalculationResult = useMemo(() => {
+    return calculateChapterAnalysis();
+  }, [calculateChapterAnalysis]);
+  
+  const { analysis, overviewStats, topChapters, strugglingChapters } = chapterCalculationResult;
+  const { processedData: chapterData } = analysis;
 
-  // ⭐ FIXED: Calcolo corretto dei dati per capitoli
-  const chapterAnalysis = useMemo(() => {
-    const chapterStats: any = {};
-    const chapterFirstTestDate: any = {};
-    const chapterDetailedHistory: any = {};
-
-
-    // 1️⃣ STEP 1: Raccolta dati base per capitolo dalle parole
-    words.forEach((word: any) => {
-      const chapter = word.chapter || 'Senza Capitolo';
-      if (!chapterStats[chapter]) {
-        chapterStats[chapter] = {
-          totalWords: 0,
-          learnedWords: 0,
-          difficultWords: 0,
-          // Performance metrics (will be calculated from tests)
-          testsPerformed: 0,
-          totalCorrect: 0,
-          totalIncorrect: 0,
-          totalTestsAnswers: 0, // Total questions answered in tests
-          estimatedHints: 0 // We'll estimate hints proportionally
-        };
-      }
-      chapterStats[chapter].totalWords++;
-      if (word.learned) chapterStats[chapter].learnedWords++;
-      if (word.difficult) chapterStats[chapter].difficultWords++;
-    });
-
-    // 2️⃣ STEP 2: Analisi test history per capitolo con distribuzione aiuti
-    testHistory.forEach((test, testIndex) => {
-      const testDate = new Date(test.timestamp);
-      
-      if (test.chapterStats) {
-        Object.entries(test.chapterStats).forEach(([chapter, stats]: [string, any]) => {
-          if (!chapterStats[chapter]) {
-            // If chapter exists in tests but not in words, create entry
-            chapterStats[chapter] = {
-              totalWords: 0, learnedWords: 0, difficultWords: 0,
-              testsPerformed: 0, totalCorrect: 0, totalIncorrect: 0,
-              totalTestsAnswers: 0, estimatedHints: 0
-            };
-          }
-          
-          const chapterStat = chapterStats[chapter];
-          
-          // Track first test date for ordering
-          if (!chapterFirstTestDate[chapter] || testDate < chapterFirstTestDate[chapter]) {
-            chapterFirstTestDate[chapter] = testDate;
-          }
-          
-          // Update chapter performance
-          chapterStat.testsPerformed++;
-          chapterStat.totalCorrect += stats.correctWords || 0;
-          chapterStat.totalIncorrect += stats.incorrectWords || 0;
-          chapterStat.totalTestsAnswers += (stats.correctWords || 0) + (stats.incorrectWords || 0);
-          
-          // ⭐ CRITICAL: Distribute hints proportionally across chapters in test
-          if (test.hintsUsed > 0) {
-            const totalWordsInAllChapters = Object.values(test.chapterStats)
-              .reduce((sum: number, chStats: any) => sum + (chStats.correctWords || 0) + (chStats.incorrectWords || 0), 0);
-            const wordsInThisChapter = (stats.correctWords || 0) + (stats.incorrectWords || 0);
-            
-            if (totalWordsInAllChapters > 0) {
-              const proportionalHints = (test.hintsUsed * wordsInThisChapter) / totalWordsInAllChapters;
-              chapterStat.estimatedHints += proportionalHints;
-            }
-          }
-          
-          // Store detailed history for trend analysis
-          if (!chapterDetailedHistory[chapter]) {
-            chapterDetailedHistory[chapter] = [];
-          }
-          chapterDetailedHistory[chapter].push({
-            date: testDate,
-            accuracy: stats.percentage || 0,
-            correct: stats.correctWords || 0,
-            incorrect: stats.incorrectWords || 0,
-            hints: test.hintsUsed || 0, // Total hints in test
-            estimatedChapterHints: chapterStat.estimatedHints,
-            timestamp: test.timestamp,
-            testIndex
-          });
-        });
-      }
-    });
-
-    // 3️⃣ STEP 3: Calcolo metriche finali CORRETTE
-    const processedData = Object.entries(chapterStats).map(([chapter, data]: [string, any]) => {
-      // ⭐ FIXED: Use correct denominators
-      const totalAnswers = data.totalCorrect + data.totalIncorrect;
-      const accuracy = totalAnswers > 0 ? Math.round((data.totalCorrect / totalAnswers) * 100) : 0;
-      const hintsPercentage = totalAnswers > 0 ? Math.round((data.estimatedHints / totalAnswers) * 100) : 0;
-      const efficiency = Math.max(0, accuracy - hintsPercentage);
-      const completionRate = data.totalWords > 0 ? Math.round((data.learnedWords / data.totalWords) * 100) : 0;
-      const difficultyRate = data.totalWords > 0 ? Math.round((data.difficultWords / data.totalWords) * 100) : 0;
-      const studyProgress = Math.min(100, completionRate + (accuracy / 3));
-      
-      // Get first test date for ordering
-      const firstTestDate = chapterFirstTestDate[chapter] || new Date();
-      return {
-        chapter: chapter === 'Senza Capitolo' ? 'Senza Cap.' : `Cap. ${chapter}`,
-        fullChapter: chapter,
-        totalWords: data.totalWords,
-        learnedWords: data.learnedWords,
-        difficultWords: data.difficultWords,
-        testsPerformed: data.testsPerformed,
-        totalAnswers: totalAnswers,
-        accuracy,
-        hintsPercentage,
-        efficiency,
-        completionRate,
-        difficultyRate,
-        studyProgress,
-        estimatedHints: Math.round(data.estimatedHints * 100) / 100,
-        firstTestDate,
-        detailedHistory: chapterDetailedHistory[chapter] || []
-      };
-    }).sort((a, b) => {
-      // ⭐ FIXED: Sort by first test date (chronological order)
-      if (a.testsPerformed === 0 && b.testsPerformed === 0) {
-        return a.fullChapter.localeCompare(b.fullChapter);
-      }
-      if (a.testsPerformed === 0) return 1;
-      if (b.testsPerformed === 0) return -1;
-      return a.firstTestDate - b.firstTestDate;
-    });
-
-    return { processedData, chapterDetailedHistory };
-  }, [testHistory, words, localRefresh]);
-
-  // ⭐ FIXED: Trend data for selected chapter only - CHRONOLOGICALLY ORDERED
-  const selectedChapterTrendData = useMemo(() => {
-    if (!selectedChapterForTrend || !chapterAnalysis.chapterDetailedHistory[selectedChapterForTrend]) {
+  // ⭐ TREND DATA: Service layer gestisce il calcolo cronologico
+  const selectedChapterTrendData: ChapterTrendData[] = useMemo(() => {
+    if (!selectedChapterForTrend) {
       return [];
     }
+    return getChapterTrend(selectedChapterForTrend);
+  }, [selectedChapterForTrend, getChapterTrend]);
 
-    const history = chapterAnalysis.chapterDetailedHistory[selectedChapterForTrend];
-    
-    // ⭐ CRITICAL: Sort chronologically (oldest to newest) BEFORE taking last 15
-    // Timestamps are ISO strings, sort them directly as Date objects
-    const sortedHistory = [...history].sort((a, b) => {
-      const dateA = new Date(a.timestamp);
-      const dateB = new Date(b.timestamp);
-      return dateA.getTime() - dateB.getTime(); // Oldest first
-    });
-    
-    // Take last 15 tests (most recent) but keep chronological order
-    const recentHistory = sortedHistory.slice(-15);
-        
-    return recentHistory.map((entry, index) => ({
-      testNumber: `Test ${index + 1}`,
-      date: entry.date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }),
-      accuracy: entry.accuracy,
-      correct: entry.correct,
-      incorrect: entry.incorrect,
-      fullDate: entry.date.toLocaleDateString('it-IT', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }),
-      timestamp: entry.timestamp
-    }));
-  }, [selectedChapterForTrend, chapterAnalysis.chapterDetailedHistory]);
-
-  // ⭐ FIXED: Statistics calculations
-  const overviewStats = useMemo(() => {
-    const testedChapters = chapterAnalysis.processedData.filter(c => c.testsPerformed > 0);
-    
-    return {
-      totalChapters: chapterAnalysis.processedData.length,
-      testedChapters: testedChapters.length,
-      bestEfficiency: testedChapters.length > 0 ? Math.max(...testedChapters.map(c => c.efficiency)) : 0,
-      averageCompletion: chapterAnalysis.processedData.length > 0 
-        ? Math.round(chapterAnalysis.processedData.reduce((sum, c) => sum + c.completionRate, 0) / chapterAnalysis.processedData.length)
-        : 0,
-      averageAccuracy: testedChapters.length > 0
-        ? Math.round(testedChapters.reduce((sum, c) => sum + c.accuracy, 0) / testedChapters.length)
-        : 0
-    };
-  }, [chapterAnalysis.processedData]);
-
-  // ⭐ FIXED: Top and struggling chapters
-  const topChapters = chapterAnalysis.processedData
-    .filter(c => c.testsPerformed > 0)
-    .sort((a, b) => b.efficiency - a.efficiency)
-    .slice(0, 5);
-
-  const strugglingChapters = chapterAnalysis.processedData
-    .filter(c => c.testsPerformed > 2) // At least 3 tests to be considered struggling
-    .sort((a, b) => a.efficiency - b.efficiency)
-    .slice(0, 3);
-
-  // Colors for charts
-  const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16'];
+  // ⭐ DATI PRONTI: Service layer ha già calcolato tutto
+  // overviewStats, topChapters, strugglingChapters vengono dal ChapterCalculationResult
 
   return (
-    <div className="space-y-8" key={`chapters-${localRefresh}`}>
+    <div className="space-y-8">
       
-      {/* ⭐ FIXED: Overview Cards with correct calculations */}
+      {/* ⭐ OVERVIEW CARDS: Dati dal service mantenendo layout originale */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
           <CardContent className="p-4 text-center">
@@ -262,7 +91,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = ({ testHistory, words, l
         </Card>
       </div>
 
-      {/* ⭐ FIXED: Performance Comparison Chart with correct data */}
+      {/* ⭐ PERFORMANCE CHART: Dati dal service mantenendo layout originale */}
       <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
           <CardTitle className="flex items-center gap-3 text-white">
@@ -277,7 +106,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = ({ testHistory, words, l
         <CardContent className="p-6">
           <ResponsiveContainer width="100%" height={400}>
             <ComposedChart 
-              data={chapterAnalysis.processedData.filter(c => c.testsPerformed > 0)} 
+              data={chapterData.filter(c => c.testsPerformed > 0)} 
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e4e7" />
@@ -323,7 +152,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = ({ testHistory, words, l
         </CardContent>
       </Card>
 
-      {/* ⭐ FIXED: Interactive Chapter Trend Analysis with correct chronological order */}
+      {/* ⭐ TREND ANALYSIS: Dati dal service mantenendo layout originale */}
       {selectedChapterForTrend && selectedChapterTrendData.length > 0 && (
         <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
@@ -387,7 +216,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = ({ testHistory, words, l
         </Card>
       )}
 
-      {/* ⭐ FIXED: Top & Struggling Chapters with correct calculations */}
+      {/* ⭐ PERFORMANCE COMPARISON: Dati dal service mantenendo layout originale */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Top Performing */}
@@ -526,7 +355,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = ({ testHistory, words, l
                 </tr>
               </thead>
               <tbody>
-                {chapterAnalysis.processedData.map((chapter, index) => (
+                {chapterData.map((chapter, index) => (
                   <tr 
                     key={chapter.fullChapter} 
                     className={`border-b border-gray-100 transition-colors ${
@@ -624,7 +453,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = ({ testHistory, words, l
             </table>
           </div>
           
-          {chapterAnalysis.processedData.some(c => c.testsPerformed > 0) && (
+          {chapterData.some(c => c.testsPerformed > 0) && (
             <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-800">
                 💡 <strong>Suggerimento:</strong> Clicca su un capitolo testato per visualizzare il suo andamento temporale dettagliato.

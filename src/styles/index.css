@@ -42,6 +42,7 @@
 @import './components/test-card.css';
 @import './components/test-view.css';
 @import './components/test-results.css';
+@import './components/chapters-section.css';
 
 /* PAGES */
 @import './pages/start-test.css';
