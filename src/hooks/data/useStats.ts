@@ -559,6 +559,8 @@ export const useStats = (): StatsResult => {
         calculatedStatsCache.current = null;
         setLastSync(new Date());
 
+        // Force refresh removed to avoid circular dependency
+
         return {
           success: true,
           metadata: {
@@ -680,12 +682,55 @@ export const useStats = (): StatsResult => {
     [wordPerformance, performanceFirestore]
   );
 
-  const refreshData = useCallback(() => {
+  // Helper function to reload detailed test sessions and update testHistory
+  const reloadDetailedSessions = useCallback(async () => {
+    try {
+      const userId = user?.id || authUser?.uid;
+      if (!userId) return;
+
+      const sessionsRef = collection(db, "detailedTestSessions");
+      const sessionsQuery = query(sessionsRef, where("userId", "==", userId));
+      const sessionsSnapshot = await getDocs(sessionsQuery);
+
+      const sessions: any[] = [];
+      sessionsSnapshot.forEach((doc) => {
+        sessions.push({ id: doc.id, ...doc.data() });
+      });
+
+      setDetailedTestSessions(sessions);
+
+      // Convert to test history format for UI
+      const testHistoryItems = sessions.map((session: any) => ({
+        id: session.id || session.sessionId,
+        timestamp: new Date(session.completedAt || session.timestamp).getTime(),
+        percentage: session.accuracy || 0,
+        correctWords: session.correctAnswers || 0,
+        incorrectWords: session.incorrectAnswers || 0,
+        totalWords: session.totalWords || 0,
+        totalTime: session.totalTimeSpent || 0,
+        hintsUsed: session.totalHintsUsed || 0,
+        testMode: session.config?.testMode || 'standard',
+        chapters: session.config?.selectedChapters || [],
+        wrongWords: session.wrongWords || [],
+        wordTimes: [],
+        testParameters: session.config || { selectedChapters: [] },
+        chapterStats: session.chapterBreakdown || {}
+      }));
+      setTestHistory(testHistoryItems);
+    } catch (error) {
+      console.error('Error reloading detailed sessions:', error);
+    }
+  }, [user?.id, authUser?.uid]);
+
+  const refreshData = useCallback(async () => {
     statsFirestore.refresh();
     performanceFirestore.refresh();
     calculatedStatsCache.current = null;
     setLastSync(new Date());
-  }, [statsFirestore, performanceFirestore]);
+    
+    // Also reload detailed sessions to update testHistory
+    await reloadDetailedSessions();
+  }, [statsFirestore, performanceFirestore, reloadDetailedSessions]);
 
   const resetStats = useCallback(async (): Promise<OperationResult<void>> => {
     const startTime = Date.now();

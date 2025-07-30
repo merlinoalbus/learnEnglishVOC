@@ -209,7 +209,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const testCompleteCallback = async (testStats: any, testWords: Word[], wrongWords: Word[], detailedSession?: any) => {
     await statsAPI.handleTestComplete(testStats, testWords, wrongWords, detailedSession);
     // ⭐ FIX: Force refresh per aggiornare subito testHistory nel navigation
-    statsAPI.refreshData();
+    await statsAPI.refreshData();
   };
 
   const testAPI = useTest(testCompleteCallback);
