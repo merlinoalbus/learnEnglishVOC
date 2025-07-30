@@ -3,7 +3,7 @@ import { useAppContext } from '../../contexts/AppContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from '../ui/modal';
 import { Button } from '../ui/button';
-import ChapterTestSelector from '../ChapterTestSelector';
+import TestSelector from '../TestSelector';
 import { Trash2, RefreshCw } from 'lucide-react';
 
 export const GlobalModals = React.memo(() => {
@@ -19,13 +19,24 @@ export const GlobalModals = React.memo(() => {
     startTest
   } = useAppContext();
   
-  const { showSuccess } = useNotification();
+  const { showSuccess, showError } = useNotification();
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (confirmDelete) {
-      removeWord(confirmDelete.id);
-      showSuccess(`✅ Parola "${confirmDelete.english}" eliminata!`);
-      dispatch({ type: 'SET_CONFIRM_DELETE', payload: null });
+      try {
+        const result = await removeWord(confirmDelete.id);
+        
+        if (result.success) {
+          showSuccess(`✅ Parola "${confirmDelete.english}" eliminata!`);
+          dispatch({ type: 'SET_CONFIRM_DELETE', payload: null });
+        } else {
+          console.error('❌ Failed to delete word:', result.error);
+          showError(new Error(result.error?.message || 'Errore sconosciuto'), 'Eliminazione Parola');
+        }
+      } catch (error) {
+        console.error('❌ Exception during delete:', error);
+        showError(error instanceof Error ? error : new Error(String(error)), 'Eliminazione Parola');
+      }
     }
   };
 
@@ -35,8 +46,54 @@ export const GlobalModals = React.memo(() => {
     showSuccess('✅ Tutte le parole sono state eliminate!');
   };
 
-  const handleTestStart = (filteredWords) => {
-    startTest(filteredWords);
+  const handleTestStart = (config) => {
+    // Filter words based on configuration
+    let filteredWords = words.filter(word => {
+      // Filter by selected chapters
+      if (config.selectedChapters.includes('no-chapter')) {
+        if (!word.chapter && !config.selectedChapters.some(ch => ch !== 'no-chapter' && ch === word.chapter)) {
+          // Include words without chapter only if no other chapters match
+        } else if (word.chapter && !config.selectedChapters.includes(word.chapter)) {
+          return false;
+        }
+      } else if (word.chapter && !config.selectedChapters.includes(word.chapter)) {
+        return false;
+      } else if (!word.chapter && !config.selectedChapters.includes('no-chapter')) {
+        return false;
+      }
+
+      // Filter by test mode
+      if (config.testMode === 'difficult-only') {
+        return word.difficult;
+      }
+
+      // Filter by learned words setting
+      if (!config.includeLearnedWords && word.learned) {
+        return false;
+      }
+
+      return true;
+    });
+
+    // Convert TestConfig to useTest format - mantieni la configurazione originale
+    const testConfig = {
+      ...config, // Passa tutta la configurazione originale
+      hints: {
+        enabled: config.enableHints,
+        maxPerWord: config.maxHintsPerWord,
+        maxTotal: config.maxTotalHints
+      },
+      timing: {
+        enabled: config.enableTimer,
+        maxTimePerWord: config.maxTimePerWord
+      },
+      wordSelection: {
+        unlearnedOnly: !config.includeLearnedWords,
+        difficultOnly: config.testMode === 'difficult-only'
+      }
+    };
+
+    startTest(filteredWords, testConfig);
     dispatch({ type: 'SET_SHOW_CHAPTER_SELECTOR', payload: false });
   };
 
@@ -56,17 +113,17 @@ export const GlobalModals = React.memo(() => {
         <ModalContent>
           <div className="text-center py-4">
             <div className="text-6xl mb-4">🗑️</div>
-            <p className="text-gray-700 mb-2">Sei sicuro di voler eliminare la parola</p>
-            <div className="bg-gray-100 rounded-lg p-3 mb-4">
+            <p className="text-gray-700 dark:text-gray-300 mb-2">Sei sicuro di voler eliminare la parola</p>
+            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 mb-4">
               <span className="font-bold text-lg text-red-600">"{confirmDelete?.english}"</span>
               {confirmDelete?.italian && (
                 <>
                   <span className="mx-2 text-gray-400">→</span>
-                  <span className="text-gray-700">{confirmDelete.italian}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{confirmDelete.italian}</span>
                 </>
               )}
             </div>
-            <p className="text-sm text-gray-500">Questa azione non può essere annullata.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Questa azione non può essere annullata.</p>
           </div>
         </ModalContent>
         <ModalFooter>
@@ -99,11 +156,11 @@ export const GlobalModals = React.memo(() => {
         <ModalContent>
           <div className="text-center py-4">
             <div className="text-6xl mb-4">⚠️</div>
-            <p className="text-gray-700 mb-4">
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
               Sei sicuro di voler eliminare tutte le <strong>{words.length} parole</strong>?
             </p>
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-              <p className="text-orange-800 text-sm">
+            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg p-4 mb-4">
+              <p className="text-orange-800 dark:text-orange-300 text-sm">
                 Questa azione eliminerà permanentemente tutto il tuo vocabolario e non può essere annullata.
               </p>
             </div>
@@ -125,9 +182,9 @@ export const GlobalModals = React.memo(() => {
         </ModalFooter>
       </Modal>
 
-      {/* Chapter Test Selector */}
+      {/* Test Selector */}
       {showChapterSelector && (
-        <ChapterTestSelector
+        <TestSelector
           words={words}
           onStartTest={handleTestStart}
           onClose={() => dispatch({ type: 'SET_SHOW_CHAPTER_SELECTOR', payload: false })}

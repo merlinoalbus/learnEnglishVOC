@@ -1,0 +1,116 @@
+/* =====================================================
+ * 📁 ChapterTestSelector Component - Chapter Selection
+ * ===================================================== */
+
+/* ===================
+ * Header Components
+ * =================== */
+
+/* Header with gradient */
+.chapter-test-header {
+  @apply bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-2xl;
+}
+
+/* ===================
+ * Summary Section
+ * =================== */
+
+/* Summary container */
+.chapter-test-summary {
+  @apply bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3;
+}
+
+.dark .chapter-test-summary {
+  @apply from-blue-900/20 to-purple-900/20;
+}
+
+/* ===================
+ * Action Buttons
+ * =================== */
+
+/* Start test button */
+.chapter-test-start-button {
+  @apply flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 text-lg font-semibold rounded-xl transition-all duration-300 transform hover:scale-105;
+}
+
+/* ===================
+ * Chapter Cards
+ * =================== */
+
+/* Chapter card base */
+.chapter-card-base {
+  @apply bg-white rounded-xl border border-gray-200 p-3 transition-all duration-300;
+}
+
+.dark .chapter-card-base {
+  @apply bg-gray-800 border-gray-700;
+}
+
+/* Chapter card selected */
+.chapter-card-selected {
+  @apply border-blue-500 shadow-lg;
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+}
+
+.dark .chapter-card-selected {
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
+}
+
+/* Chapter card hover */
+.chapter-card-base:hover {
+  @apply shadow-md border-blue-300;
+}
+
+/* ===================
+ * Stats Display
+ * =================== */
+
+/* Chapter stats */
+.chapter-stats {
+  @apply grid grid-cols-3 gap-2 mt-3;
+}
+
+/* Chapter stat item */
+.chapter-stat-item {
+  @apply text-center p-1 rounded-lg bg-gray-50;
+}
+
+.dark .chapter-stat-item {
+  @apply bg-gray-700;
+}
+
+/* Stat value */
+.chapter-stat-value {
+  @apply text-lg font-bold text-blue-600;
+}
+
+.dark .chapter-stat-value {
+  @apply text-blue-400;
+}
+
+/* Stat label */
+.chapter-stat-label {
+  @apply text-xs text-gray-600;
+}
+
+.dark .chapter-stat-label {
+  @apply text-gray-400;
+}
+
+/* ===================
+ * Responsive Design
+ * =================== */
+
+@media (max-width: 768px) {
+  .chapter-stats {
+    @apply grid-cols-1 gap-1;
+  }
+  
+  .chapter-test-start-button {
+    @apply py-2 text-base;
+  }
+  
+  .chapter-test-summary {
+    @apply p-1;
+  }
+}

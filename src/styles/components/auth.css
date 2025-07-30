@@ -1,0 +1,463 @@
+/* =====================================================
+ * 📁 Authentication Components - Login, Signup, Forms
+ * ===================================================== */
+
+/* ===================
+ * Auth Layout Base
+ * =================== */
+
+/* Auth page container */
+.auth-container {
+  @apply min-h-screen flex items-center justify-center p-4;
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.1) 0%,
+    rgba(139, 92, 246, 0.1) 25%,
+    rgba(236, 72, 153, 0.1) 50%,
+    rgba(59, 130, 246, 0.1) 75%,
+    rgba(16, 185, 129, 0.1) 100%
+  );
+  backdrop-filter: blur(1px);
+}
+
+.dark .auth-container {
+  background: linear-gradient(
+    135deg,
+    rgba(17, 24, 39, 0.95) 0%,
+    rgba(30, 41, 59, 0.9) 25%,
+    rgba(51, 65, 85, 0.9) 50%,
+    rgba(71, 85, 105, 0.9) 75%,
+    rgba(17, 24, 39, 0.95) 100%
+  );
+}
+
+/* Auth card container */
+.auth-card {
+  @apply w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .auth-card {
+  background: rgba(17, 24, 39, 0.95);
+  border-color: rgba(107, 114, 128, 0.3);
+}
+
+/* Auth header */
+.auth-header {
+  @apply text-center p-6 border-b border-gray-100;
+  background: var(--glass-light);
+}
+
+.dark .auth-header {
+  @apply border-gray-700 bg-gray-800/60;
+}
+
+.auth-logo {
+  @apply w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center;
+  background: var(--gradient-primary);
+}
+
+.auth-title {
+  @apply text-3xl font-bold text-gray-900 mb-2;
+}
+
+.dark .auth-title {
+  @apply text-gray-100;
+}
+
+.auth-subtitle {
+  @apply text-gray-600;
+}
+
+.dark .auth-subtitle {
+  @apply text-gray-400;
+}
+
+/* ===================
+ * Auth Form Components
+ * =================== */
+
+/* Form container */
+.auth-form {
+  @apply p-6 space-y-6;
+}
+
+/* Form field group */
+.auth-field {
+  @apply space-y-2;
+}
+
+/* Form labels */
+.auth-label {
+  @apply block text-sm font-medium text-gray-700;
+}
+
+.dark .auth-label {
+  @apply text-gray-300;
+}
+
+.auth-label-required::after {
+  content: "*";
+  @apply text-red-500 ml-1;
+}
+
+/* Form inputs */
+.auth-input {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-200;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.auth-input:focus {
+  @apply ring-2 ring-blue-500/20 shadow-lg;
+  background: rgba(255, 255, 255, 1);
+}
+
+.dark .auth-input {
+  @apply border-gray-600 bg-gray-700/80 text-white;
+}
+
+/* ===================
+ * Auth-Specific Components
+ * =================== */
+
+/* Auth page background */
+.auth-page-background {
+  @apply flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50;
+}
+
+.dark .auth-page-background {
+  @apply from-gray-900 to-purple-900/20;
+}
+
+/* Protected route background */
+.auth-protected-background {
+  @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50;
+}
+
+.dark .auth-protected-background {
+  @apply from-gray-900 via-gray-800 to-purple-900/20;
+}
+
+/* Icon containers */
+.auth-icon-container {
+  @apply mx-auto w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4;
+}
+
+/* Auth buttons */
+.auth-button-primary {
+  @apply w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl;
+}
+
+.auth-button-secondary {
+  @apply w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl;
+}
+
+.auth-button-action {
+  @apply w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700;
+}
+
+/* Error state backgrounds */
+.auth-error-background {
+  @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50;
+}
+
+.dark .auth-error-background {
+  @apply from-red-900/20 via-gray-900 to-orange-900/20;
+}
+
+.auth-warning-background {
+  @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-white to-orange-50;
+}
+
+.dark .auth-warning-background {
+  @apply from-yellow-900/20 via-gray-900 to-orange-900/20;
+}
+
+.dark .auth-input:focus {
+  @apply border-purple-500 ring-purple-500/20 bg-gray-700;
+}
+
+/* Input with error state */
+.auth-input-error {
+  @apply border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-400/20;
+}
+
+.dark .auth-input-error {
+  @apply border-red-700 bg-red-900/30 focus:border-red-500 focus:ring-red-500/20;
+}
+
+/* Error message */
+.auth-error {
+  @apply text-red-600 text-sm flex items-center gap-1;
+}
+
+.dark .auth-error {
+  @apply text-red-400;
+}
+
+/* Success message */
+.auth-success {
+  @apply text-green-600 text-sm flex items-center gap-1;
+}
+
+.dark .auth-success {
+  @apply text-green-400;
+}
+
+/* ===================
+ * Auth Buttons
+ * =================== */
+
+/* Primary auth button */
+.auth-button-primary {
+  @apply w-full py-4 text-lg font-semibold rounded-xl text-white transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.auth-button-primary:hover {
+  box-shadow: var(--shadow-xl);
+}
+
+/* Secondary auth button */
+.auth-button-secondary {
+  @apply w-full py-4 text-lg font-semibold rounded-xl border-2 transition-all duration-200 transform hover:scale-105;
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.05);
+  color: #6366f1;
+}
+
+.auth-button-secondary:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.dark .auth-button-secondary {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.05);
+  color: #a855f7;
+}
+
+.dark .auth-button-secondary:hover {
+  border-color: rgba(139, 92, 246, 0.5);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+/* Social auth buttons */
+.auth-button-social {
+  @apply w-full py-3 px-3 border border-gray-300 rounded-xl text-gray-700 font-medium transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-3;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.auth-button-social:hover {
+  @apply border-gray-400 shadow-lg;
+  background: rgba(255, 255, 255, 1);
+}
+
+.dark .auth-button-social {
+  @apply border-gray-600 bg-gray-700/80 text-gray-300;
+}
+
+.dark .auth-button-social:hover {
+  @apply border-gray-500 bg-gray-700;
+}
+
+/* Google button variant */
+.auth-button-google {
+  @apply hover:border-red-300 hover:text-red-600;
+}
+
+.dark .auth-button-google:hover {
+  @apply border-red-400 text-red-400;
+}
+
+/* ===================
+ * Auth Links
+ * =================== */
+
+/* Link styling */
+.auth-link {
+  @apply text-blue-600 hover:text-blue-700 transition-colors duration-200 font-medium;
+}
+
+.dark .auth-link {
+  @apply text-purple-400 hover:text-purple-300;
+}
+
+/* Link container */
+.auth-links {
+  @apply text-center space-y-4 p-3 border-t border-gray-100;
+  background: var(--glass-light);
+}
+
+.dark .auth-links {
+  @apply border-gray-700 bg-gray-800/60;
+}
+
+/* ===================
+ * Password Strength
+ * =================== */
+
+.auth-password-strength {
+  @apply space-y-2;
+}
+
+.auth-strength-bar {
+  @apply w-full h-2 bg-gray-200 rounded-full overflow-hidden;
+}
+
+.dark .auth-strength-bar {
+  @apply bg-gray-700;
+}
+
+.auth-strength-fill {
+  @apply h-full transition-all duration-300 rounded-full;
+}
+
+.auth-strength-weak {
+  @apply bg-red-500;
+  width: 25%;
+}
+
+.auth-strength-fair {
+  @apply bg-orange-500;
+  width: 50%;
+}
+
+.auth-strength-good {
+  @apply bg-yellow-500;
+  width: 75%;
+}
+
+.auth-strength-strong {
+  @apply bg-green-500;
+  width: 100%;
+}
+
+.auth-strength-text {
+  @apply text-sm text-gray-600;
+}
+
+.dark .auth-strength-text {
+  @apply text-gray-400;
+}
+
+/* ===================
+ * Two-Factor Auth
+ * =================== */
+
+.auth-2fa-container {
+  @apply space-y-6;
+}
+
+.auth-2fa-input-group {
+  @apply flex justify-center gap-2;
+}
+
+.auth-2fa-input {
+  @apply w-12 h-12 text-center border border-gray-300 rounded-xl text-lg font-bold focus:border-blue-500 focus:outline-none transition-colors;
+}
+
+.dark .auth-2fa-input {
+  @apply border-gray-600 bg-gray-700 text-white focus:border-purple-500;
+}
+
+.auth-qr-code {
+  @apply p-3 bg-white rounded-xl border border-gray-200 text-center;
+}
+
+.dark .auth-qr-code {
+  @apply bg-gray-800 border-gray-700;
+}
+
+/* ===================
+ * Loading States
+ * =================== */
+
+.auth-loading {
+  @apply flex items-center justify-center gap-2;
+}
+
+.auth-loading-spinner {
+  @apply w-5 h-5 animate-spin;
+}
+
+.auth-loading-text {
+  @apply text-gray-600;
+}
+
+.dark .auth-loading-text {
+  @apply text-gray-400;
+}
+
+/* ===================
+ * Responsive Design
+ * =================== */
+
+@media (max-width: 640px) {
+  .auth-card {
+    @apply rounded-2xl;
+  }
+  
+  .auth-header,
+  .auth-form,
+  .auth-links {
+    @apply p-3;
+  }
+  
+  .auth-title {
+    @apply text-2xl;
+  }
+  
+  .auth-button-primary,
+  .auth-button-secondary {
+    @apply py-3 text-base;
+  }
+}
+
+/* ===================
+ * Animations
+ * =================== */
+
+.auth-card {
+  animation: authSlideIn 0.6s ease-out;
+}
+
+@keyframes authSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===================
+ * Background Effects
+ * =================== */
+
+.auth-background-decoration {
+  @apply absolute rounded-full blur-3xl pointer-events-none;
+}
+
+.auth-decoration-1 {
+  @apply -top-40 -right-40 w-80 h-80;
+  background: linear-gradient(to bottom right, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+}
+
+.auth-decoration-2 {
+  @apply -bottom-40 -left-40 w-80 h-80;
+  background: linear-gradient(to bottom right, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+}
+
+.dark .auth-decoration-1 {
+  background: linear-gradient(to bottom right, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+}
+
+.dark .auth-decoration-2 {
+  background: linear-gradient(to bottom right, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+}

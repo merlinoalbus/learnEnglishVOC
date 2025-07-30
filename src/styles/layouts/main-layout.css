@@ -1,0 +1,122 @@
+/* =====================================================
+ * 📁 src/styles/layouts/main-layout.css - MAIN LAYOUT
+ * ===================================================== */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+  width: 100%;
+}
+
+/* ===================
+ * App Container Sizing
+ * =================== */
+
+/* Standard app container width */
+.app-container {
+  @apply max-w-7xl mx-auto px-4;
+  max-width: 1400px;
+}
+
+/* App container with top padding for headers */
+.app-container-header {
+  @apply max-w-7xl mx-auto px-4 pt-8;
+  max-width: 1400px;
+}
+
+/* Main content container */
+.app-content-container {
+  @apply flex-1 max-w-7xl mx-auto px-4 w-full;
+  max-width: 1400px;
+}
+
+/* ===================
+ * Layout Sections
+ * =================== */
+
+/* Header section */
+.app-header-section {
+  @apply relative z-10 pb-8;
+}
+
+/* Navigation section */
+.app-navigation-section {
+  @apply relative z-10 pb-8;
+}
+
+/* Main content section */
+.app-main-section {
+  @apply relative z-10 flex flex-col min-h-screen;
+}
+
+/* ===================
+ * Dynamic Content Spacing
+ * =================== */
+
+/* Content with authentication padding */
+.app-content-authenticated {
+  @apply pt-4;
+}
+
+/* Content with default padding */
+.app-content-default {
+  @apply pt-8;
+}
+
+/* ===================
+ * AppHeader Components
+ * =================== */
+
+/* Header background blur effect */
+.app-header-blur {
+  @apply absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl blur-3xl opacity-20;
+}
+
+/* Header overlay */
+.app-header-overlay {
+  @apply absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10;
+}
+
+/* Header title */
+.app-header-title {
+  @apply text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-3;
+}
+
+.section-indicator {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  padding: var(--space-sm) var(--space-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.indicator-icon {
+  font-size: var(--font-size-lg);
+}
+
+.indicator-text {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: var(--font-size-base);
+}
+
+/* RESPONSIVE MAIN */
+@media (max-width: 768px) {
+  .app-main {
+    padding: var(--space-md);
+  }
+  
+  .section-indicator {
+    padding: var(--space-sm) var(--space-md);
+  }
+}

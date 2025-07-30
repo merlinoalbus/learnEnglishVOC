@@ -1,0 +1,741 @@
+// =====================================================
+// 📁 src/components/stats/sections/OverviewSection.js - FIXED Performance Index, Date e Grafici
+// =====================================================
+
+import React, { useMemo, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  ComposedChart
+} from 'recharts';
+import { TrendingUp, Target, Clock, Lightbulb, Zap, Award, Info } from 'lucide-react';
+import { useStats } from '../../../hooks/data/useStats';
+import { StatsCalculationService, type PerformanceIndexResult, type ChartDataPoint } from '../../../services/statsCalculationService';
+import type { TestHistoryItem, Word } from '../../../types';
+
+interface OverviewSectionProps {
+  testHistory: TestHistoryItem[];
+  words?: Word[];
+  localRefresh: number;
+  onClearHistory?: () => void;
+}
+
+const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRefresh }) => {
+  const [showPerformanceExplanation, setShowPerformanceExplanation] = useState<boolean>(false);
+  const { stats, calculatedStats, detailedSessions, testHistory: dbTestHistory } = useStats();
+
+  // ⭐ USE SERVICE: Get chart data from service only (ultimi 30 giorni)
+  const multiMetricData = useMemo((): ChartDataPoint[] => {
+    // PRIORITÀ: dbTestHistory dall'hook useStats (ha i dati reali!)
+    if (dbTestHistory && dbTestHistory.length > 0) {
+      return StatsCalculationService.processTestHistoryData(dbTestHistory, 30);
+    } else if (detailedSessions && detailedSessions.length > 0) {
+      return StatsCalculationService.processChartData(detailedSessions, 30);
+    } else if (testHistory && testHistory.length > 0) {
+      return StatsCalculationService.processTestHistoryData(testHistory, 30);
+    }
+    return [];
+  }, [detailedSessions, dbTestHistory, testHistory]);
+
+  // ⭐ PERFORMANCE ANALYSIS using centralized service only
+  const performanceAnalysis = useMemo((): {
+    learningVelocity: number;
+    consistency: number;
+    hintEfficiency: number;
+    avgResponseTime: number;
+    speedRating: string;
+    speedScore: number;
+    performanceIndex: number;
+    trend: string;
+    breakdown: {
+      precisione: { value: number; weight: number; contribution: number };
+      consistenza: { value: number; weight: number; contribution: number };
+      efficienza: { value: number; weight: number; contribution: number };
+      velocita: { value: number; weight: number; contribution: number };
+    };
+  } | null => {
+    if (multiMetricData.length === 0) return null;
+
+    // Use centralized service for Performance Index calculation
+    let performanceIndexResult: PerformanceIndexResult;
+    try {
+      // Use the same data source as multiMetricData
+      const dataToUse = dbTestHistory && dbTestHistory.length > 0 ? dbTestHistory : testHistory;
+      performanceIndexResult = StatsCalculationService.calculatePerformanceIndex(dataToUse);
+    } catch (error) {
+      console.error('Error calculating Performance Index:', error);
+      return null;
+    }
+
+    // Calculate learning velocity using linear regression with safeguards
+    const calculateLearningVelocity = (data: typeof multiMetricData): number => {
+      if (data.length < 3) return 0;
+      
+      // Sort data by timestamp to ensure chronological order
+      const sortedData = [...data].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      
+      // Convert timestamps to days from first test
+      const startTime = sortedData[0].timestamp.getTime();
+      const endTime = sortedData[sortedData.length - 1].timestamp.getTime();
+      const totalDays = (endTime - startTime) / (1000 * 60 * 60 * 24);
+      
+      
+      // ⭐ SAFETY CHECK: Se i test sono tutti nello stesso giorno o molto ravvicinati
+      if (totalDays < 1) {
+        // Calcolo semplificato: differenza tra primo e ultimo punteggio
+        const firstScore = sortedData[0].percentage;
+        const lastScore = sortedData[sortedData.length - 1].percentage;
+        const improvement = lastScore - firstScore;
+        // Limitiamo a un range ragionevole
+        return Math.max(-50, Math.min(50, improvement));
+      }
+      
+      const points = sortedData.map((test, index) => ({
+        x: (test.timestamp.getTime() - startTime) / (1000 * 60 * 60 * 24), // days
+        y: test.percentage,
+        index
+      }));
+      
+      // Linear regression: y = mx + b
+      const n = points.length;
+      const sumX = points.reduce((sum, p) => sum + p.x, 0);
+      const sumY = points.reduce((sum, p) => sum + p.y, 0);
+      const sumXY = points.reduce((sum, p) => sum + p.x * p.y, 0);
+      const sumXX = points.reduce((sum, p) => sum + p.x * p.x, 0);
+      
+      const denominator = n * sumXX - sumX * sumX;
+      
+      // ⭐ SAFETY CHECK: Evita divisioni per zero o valori molto piccoli
+      if (Math.abs(denominator) < 0.001) {
+        const firstScore = sortedData[0].percentage;
+        const lastScore = sortedData[sortedData.length - 1].percentage;
+        const improvement = (lastScore - firstScore) / totalDays * 7; // per settimana
+        return Math.max(-50, Math.min(50, improvement));
+      }
+      
+      const slope = (n * sumXY - sumX * sumY) / denominator;
+      
+      
+      // ⭐ SAFETY LIMITS: Limita il risultato a valori ragionevoli
+      const weeklyImprovement = slope * 7;
+      const limitedResult = Math.max(-50, Math.min(50, weeklyImprovement));
+      
+      
+      return isFinite(limitedResult) ? limitedResult : 0;
+    };
+
+    const learningVelocity = calculateLearningVelocity(multiMetricData);
+
+    const validTimes = multiMetricData.filter(t => t.avgTime > 0);
+    const avgResponseTime = validTimes.length > 0 ? 
+      validTimes.reduce((sum, t) => sum + t.avgTime, 0) / validTimes.length : 15;
+    
+    const speedRating = avgResponseTime <= 8 ? 'Molto Veloce' : 
+                       avgResponseTime <= 12 ? 'Veloce' : 
+                       avgResponseTime <= 18 ? 'Normale' : 
+                       avgResponseTime <= 25 ? 'Lento' : 'Molto Lento';
+
+    return {
+      learningVelocity: Math.round(learningVelocity * 10) / 10,
+      consistency: performanceIndexResult.consistency.value,
+      hintEfficiency: performanceIndexResult.efficiency.value,
+      avgResponseTime: Math.round(avgResponseTime * 10) / 10,
+      speedRating,
+      speedScore: performanceIndexResult.speed.value,
+      performanceIndex: performanceIndexResult.performanceIndex,
+      trend: learningVelocity > 0 ? 'Miglioramento' : learningVelocity < 0 ? 'Calo' : 'Stabile',
+      breakdown: performanceIndexResult.breakdown
+    };
+  }, [multiMetricData, testHistory]);
+
+  // ⭐ USE SERVICE: Get all analytics from service
+  const overviewAnalytics = useMemo(() => {
+    return StatsCalculationService.calculateOverviewAnalytics(multiMetricData, performanceAnalysis);
+  }, [multiMetricData, performanceAnalysis]);
+
+  // Extract data from service
+  const { performanceDistribution, weeklyPattern, hintsAnalysis, summaryStats } = overviewAnalytics;
+
+
+  // ⭐ REMOVED: Now calculated by service
+
+  // ⭐ REMOVED: Now calculated by service
+
+  if (!performanceAnalysis) {
+    return (
+      <div className="text-center py-16 text-gray-500">
+        <Target className="w-16 h-16 mx-auto mb-4 opacity-50" />
+        <p>Completa alcuni test per vedere le metriche performance</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8" key={`overview-${localRefresh}`}>
+      
+      {/* ⭐ ENHANCED: Performance Index Overview with COLLAPSIBLE explanation */}
+      <Card className="bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 text-white">
+        <CardContent className="p-8">
+          {/* Header with info button */}
+          <div className="flex justify-between items-start mb-6">
+            <div className="text-center flex-1">
+              <h2 className="text-3xl font-bold mb-2">Performance Index</h2>
+              <div className="text-6xl font-bold mb-2">{performanceAnalysis.performanceIndex}</div>
+              <div className="text-xl opacity-90">
+                {performanceAnalysis.performanceIndex >= 85 ? '🏆 Eccellente!' :
+                 performanceAnalysis.performanceIndex >= 70 ? '👍 Molto Buono' :
+                 performanceAnalysis.performanceIndex >= 55 ? '📈 In Crescita' : '📚 Da Migliorare'}
+              </div>
+            </div>
+            {/* ⭐ NEW: Info button */}
+            <button
+              onClick={() => setShowPerformanceExplanation(!showPerformanceExplanation)}
+              className={`p-2 rounded-full transition-all duration-300 hover:bg-white/20 ${
+                showPerformanceExplanation ? 'bg-white/20 rotate-180' : 'bg-white/10'
+              }`}
+              title={showPerformanceExplanation ? "Nascondi spiegazione" : "Mostra come viene calcolato"}
+            >
+              <Info className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm">
+              <div className="text-2xl font-bold">{performanceAnalysis.breakdown.precisione.value}%</div>
+              <div className="text-white/80 text-sm">Precisione Media</div>
+              <div className="text-white/60 text-xs">Peso: {performanceAnalysis.breakdown.precisione.weight}%</div>
+            </div>
+            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm">
+              <div className="text-2xl font-bold">{performanceAnalysis.breakdown.consistenza.value}%</div>
+              <div className="text-white/80 text-sm">Consistenza</div>
+              <div className="text-white/60 text-xs">Peso: {performanceAnalysis.breakdown.consistenza.weight}%</div>
+            </div>
+            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm">
+              <div className="text-2xl font-bold">{performanceAnalysis.breakdown.efficienza.value}%</div>
+              <div className="text-white/80 text-sm">Efficienza Aiuti</div>
+              <div className="text-white/60 text-xs">Peso: {performanceAnalysis.breakdown.efficienza.weight}%</div>
+            </div>
+            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm">
+              <div className="text-2xl font-bold">{performanceAnalysis.breakdown.velocita.value}%</div>
+              <div className="text-white/80 text-sm">Velocità</div>
+              <div className="text-white/60 text-xs">Peso: {performanceAnalysis.breakdown.velocita.weight}%</div>
+            </div>
+          </div>
+
+          {/* ⭐ NEW: COLLAPSIBLE Performance Index Calculation Explanation */}
+          <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            showPerformanceExplanation ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}>
+            <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+              <h4 className="font-bold text-white mb-3 flex items-center gap-2">
+                <Info className="w-5 h-5" />
+                📊 Come viene calcolato il Performance Index
+              </h4>
+              <div className="text-white/90 text-sm space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="font-medium mb-2">Formula di calcolo:</p>
+                    <div className="bg-white/10 rounded p-2 font-mono text-xs">
+                      Index = (Precisione × 40%) + (Consistenza × 25%) + (Efficienza × 20%) + (Velocità × 15%)
+                    </div>
+                  </div>
+                  <div>
+                    <p className="font-medium mb-2">Il tuo calcolo:</p>
+                    <div className="space-y-1 text-xs">
+                      <div>{performanceAnalysis.breakdown.precisione.value}% × 40% = {performanceAnalysis.breakdown.precisione.contribution} punti</div>
+                      <div>{performanceAnalysis.breakdown.consistenza.value}% × 25% = {performanceAnalysis.breakdown.consistenza.contribution} punti</div>
+                      <div>{performanceAnalysis.breakdown.efficienza.value}% × 20% = {performanceAnalysis.breakdown.efficienza.contribution} punti</div>
+                      <div>{performanceAnalysis.breakdown.velocita.value}% × 15% = {performanceAnalysis.breakdown.velocita.contribution} punti</div>
+                      <div className="border-t border-white/20 pt-1 font-bold">
+                        Totale = {performanceAnalysis.performanceIndex} punti
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 text-xs bg-white/10 rounded p-2">
+                  <strong>💡 Significato delle metriche:</strong><br/>
+                  • <strong>Precisione:</strong> Media dei punteggi di tutti i test<br/>
+                  • <strong>Consistenza:</strong> Quanto stabili sono le tue performance (100 - deviazione standard)<br/>
+                  • <strong>Efficienza:</strong> Quanto bene rispondi senza aiuti (100 - % aiuti utilizzati)<br/>
+                  • <strong>Velocità:</strong> Score basato sul tempo medio di risposta ({performanceAnalysis.avgResponseTime}s = {performanceAnalysis.speedRating})
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ⭐ NEW: Hint text when collapsed */}
+          {!showPerformanceExplanation && (
+            <div className="text-center mt-4">
+              <button
+                onClick={() => setShowPerformanceExplanation(true)}
+                className="text-white/70 hover:text-white text-sm transition-colors duration-200 flex items-center gap-2 mx-auto"
+              >
+                <Info className="w-4 h-4" />
+                Clicca l'icona ℹ️ per vedere come viene calcolato il punteggio
+              </button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ⭐ FIXED: Multi-Metric Performance Chart with REAL dates and times */}
+      <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+          <CardTitle className="flex items-center gap-3 text-white">
+            <TrendingUp className="w-6 h-6" />
+            Andamento Multi-Metrica (Ultimi 30 giorni - {multiMetricData.length} Test)
+          </CardTitle>
+          <p className="text-blue-100 text-sm">
+            Monitoraggio di precisione, efficienza, velocità e aiuti nel tempo
+          </p>
+        </CardHeader>
+        <CardContent className="p-6">
+          <ResponsiveContainer width="100%" height={350}>
+            <ComposedChart data={multiMetricData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e0e4e7" />
+              <XAxis 
+                dataKey="test" 
+                tick={{ fontSize: 10 }} 
+                interval={Math.ceil(multiMetricData.length / 8)} // Show fewer labels if many tests
+                angle={-45}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis yAxisId="left" domain={[0, 100]} tick={{ fontSize: 12 }} label={{ value: 'Percentuale (%)', angle: -90, position: 'insideLeft' }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 'dataMax + 2']} tick={{ fontSize: 12 }} label={{ value: 'Aiuti', angle: 90, position: 'insideRight' }} />
+              <Tooltip 
+                formatter={(value, name) => {
+                  if (name === 'hintsCount') {
+                    return [`${value} aiuti`, 'Aiuti Utilizzati'];
+                  }
+                  return [
+                    `${Math.round(Number(value))}%`,
+                    name === 'percentage' ? 'Precisione' :
+                    name === 'efficiency' ? 'Efficienza' :
+                    name === 'speed' ? 'Velocità' : name
+                  ];
+                }}
+                labelFormatter={(label, payload) => {
+                  const data = payload?.[0]?.payload;
+                  return data ? `${label} (${data.fullDate})` : label;
+                }}
+                contentStyle={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
+              />
+              {/* Area for precision */}
+              <Area 
+                yAxisId="left"
+                type="monotone" 
+                dataKey="percentage" 
+                fill="#3b82f6" 
+                fillOpacity={0.3}
+                stroke="#3b82f6" 
+                strokeWidth={3}
+                name="percentage"
+              />
+              {/* Line for efficiency */}
+              <Line 
+                yAxisId="left"
+                type="monotone" 
+                dataKey="efficiency" 
+                stroke="#10b981" 
+                strokeWidth={2}
+                name="efficiency"
+              />
+              {/* Line for REAL speed */}
+              <Line 
+                yAxisId="left"
+                type="monotone" 
+                dataKey="speed" 
+                stroke="#8b5cf6" 
+                strokeWidth={2}
+                name="speed"
+              />
+              {/* ⭐ FIXED: Line for hints instead of bar */}
+              <Line 
+                yAxisId="right"
+                type="monotone" 
+                dataKey="hintsCount" 
+                stroke="#f59e0b" 
+                strokeWidth={3}
+                strokeDasharray="5 5"
+                dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
+                name="hintsCount"
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+          
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm">
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 bg-blue-500 rounded"></div>
+              <span>Precisione (%)</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 bg-green-500 rounded"></div>
+              <span>Efficienza (%)</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 bg-purple-500 rounded"></div>
+              <span>Velocità (%)</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-yellow-500 bg-white rounded"></div>
+              <span>Aiuti (linea tratteggiata)</span>
+            </div>
+          </div>
+          
+          {/* ⭐ ENHANCED: Detailed explanation of metrics with REAL data */}
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
+            <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
+              <Target className="w-5 h-5" />
+              📊 Spiegazione delle Metriche (Dati Reali)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700 dark:text-blue-300">
+              <div>
+                <h5 className="font-bold mb-2">📈 Metriche Principali (Asse Sinistro 0-100%):</h5>
+                <ul className="space-y-1 text-xs">
+                  <li><strong>🎯 Precisione:</strong> % di risposte corrette nel test</li>
+                  <li><strong>⚡ Efficienza:</strong> Precisione - (Aiuti × 2) - penalità per dipendenza da aiuti</li>
+                  <li><strong>🚀 Velocità:</strong> Calcolata dai tempi effettivi dei test<br/>
+                      <span className="text-blue-600 dark:text-blue-400">• Tempo medio attuale: {performanceAnalysis.avgResponseTime}s ({performanceAnalysis.speedRating})</span></li>
+                </ul>
+              </div>
+              <div>
+                <h5 className="font-bold mb-2">💡 Aiuti (Asse Destro - Linea Tratteggiata):</h5>
+                <ul className="space-y-1 text-xs">
+                  <li><strong>Numero reale</strong> di aiuti utilizzati nel test</li>
+                  <li><strong>Obiettivo:</strong> Diminuzione nel tempo = maggiore autonomia</li>
+                  <li><strong>Efficienza aiuti:</strong> {performanceAnalysis.hintEfficiency}%</li>
+                  <li><strong>Media aiuti:</strong> {hintsAnalysis.avgHintsPerTest}/test</li>
+                </ul>
+              </div>
+            </div>
+            <div className="mt-3 p-3 bg-white dark:bg-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-600">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                <strong>💡 Come interpretare:</strong> Un trend positivo mostra precisione in aumento, 
+                aiuti in diminuzione ed efficienza crescente. La velocità è ora calcolata dai tempi reali di risposta.
+              </p>
+            </div>
+          </div>
+          
+          {/* ⭐ ENHANCED: Real-time hints analysis summary */}
+          <div className="mt-6 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-700">
+            <h4 className="font-bold text-orange-800 dark:text-orange-200 mb-2 flex items-center gap-2">
+              <Lightbulb className="w-5 h-5" />
+              Analisi Utilizzo Aiuti (Dati Reali)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+              <div className="text-center">
+                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                  {hintsAnalysis.totalHints}
+                </div>
+                <div className="text-orange-700 dark:text-orange-300">Aiuti Totali</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">{hintsAnalysis.hintsUsagePercentage}%</div>
+                <div className="text-orange-700 dark:text-orange-300">% Risposte con Aiuto</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                  {hintsAnalysis.avgHintsPerTest}
+                </div>
+                <div className="text-orange-700 dark:text-orange-300">Media Aiuti/Test</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">{performanceAnalysis.hintEfficiency}%</div>
+                <div className="text-orange-700 dark:text-orange-300">Efficienza Aiuti</div>
+              </div>
+            </div>
+            <div className="mt-3 text-xs text-orange-600 dark:text-orange-400">
+              💡 <strong>Suggerimento:</strong> Un uso efficiente degli aiuti è sopra l'80% di efficienza. 
+              Gli aiuti dovrebbero diminuire con l'esperienza.
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* ⭐ FIXED: Performance Distribution with SIMPLIFIED pie chart labels */}
+        <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+            <CardTitle className="flex items-center gap-3 text-white">
+              <Award className="w-6 h-6" />
+              Distribuzione Performance
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            {performanceDistribution.length > 0 ? (
+              <>
+                
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={performanceDistribution}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      dataKey="value"
+                      // ⭐ FIXED: Simplified label showing only percentage
+                      label={({ name, percentage }) => `${name}: ${percentage}%`}
+                    >
+                      {performanceDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value, name, props) => [
+                        `${value} test (${props.payload.percentage}%)`,
+                        props.payload.fullName
+                      ]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                
+                {/* ⭐ ENHANCED: Detailed breakdown below the chart */}
+                <div className="mt-4 space-y-2">
+                  {performanceDistribution.map((item, index) => {
+                    
+                    return (
+                      <div key={index} className="flex items-center justify-between text-sm p-2 rounded-lg" style={{ backgroundColor: `${item.color}15` }}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }}></div>
+                          <span className="font-medium">{item.fullName}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold" style={{ color: item.color }}>{item.value} test</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">{item.percentage}% del totale</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Summary */}
+                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Su <strong>{multiMetricData.length} test totali</strong>, hai ottenuto risultati eccellenti o buoni nel 
+                    <strong className="text-green-600 dark:text-green-400 mx-1">
+                      {summaryStats.excellentAndGoodPercentage}%
+                    </strong>
+                    dei casi
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <p>Dati insufficienti per la distribuzione</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ⭐ ENHANCED: Advanced Metrics Breakdown with REAL data */}
+        <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+            <CardTitle className="flex items-center gap-3 text-white">
+              <Zap className="w-6 h-6" />
+              Metriche Performance Avanzate
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            
+            <div className="space-y-6">
+              
+              {/* Learning Velocity */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Velocità di Apprendimento</span>
+                  <span className={`font-bold ${
+                    performanceAnalysis.learningVelocity > 0 ? 'text-green-600' : 
+                    performanceAnalysis.learningVelocity < 0 ? 'text-red-600' : 'text-gray-600'
+                  }`}>
+                    {performanceAnalysis.learningVelocity > 0 ? '+' : ''}{performanceAnalysis.learningVelocity}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full ${
+                      performanceAnalysis.learningVelocity > 0 ? 'bg-green-500' : 
+                      performanceAnalysis.learningVelocity < 0 ? 'bg-red-500' : 'bg-gray-400'
+                    }`}
+                    style={{ width: `${Math.min(100, Math.abs(performanceAnalysis.learningVelocity) * 2)}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {performanceAnalysis.trend} rispetto ai primi test
+                </div>
+              </div>
+
+              {/* Consistency Score */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Consistenza</span>
+                  <span className="font-bold text-blue-600">{performanceAnalysis.consistency}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="h-2 rounded-full bg-blue-500"
+                    style={{ width: `${performanceAnalysis.consistency}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {performanceAnalysis.consistency >= 80 ? 'Molto stabile' :
+                   performanceAnalysis.consistency >= 60 ? 'Abbastanza costante' : 'Variabile'}
+                </div>
+              </div>
+
+              {/* Response Speed REAL */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Velocità Risposta (Reale)</span>
+                  <span className="font-bold text-purple-600">
+                    {performanceAnalysis.avgResponseTime}s ({performanceAnalysis.speedRating})
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full ${
+                      performanceAnalysis.speedRating.includes('Veloce') ? 'bg-green-500' :
+                      performanceAnalysis.speedRating === 'Normale' ? 'bg-blue-500' : 'bg-orange-500'
+                    }`}
+                    style={{ width: `${performanceAnalysis.speedScore}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Calcolato dai tempi reali di risposta
+                </div>
+              </div>
+
+              {/* Hint Efficiency */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Efficienza Aiuti</span>
+                  <span className="font-bold text-orange-600">{performanceAnalysis.hintEfficiency}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="h-2 rounded-full bg-orange-500"
+                    style={{ width: `${performanceAnalysis.hintEfficiency}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {hintsAnalysis.hintsUsagePercentage}% aiuti utilizzati di media
+                </div>
+              </div>
+            </div>
+
+            {/* Overall Assessment */}
+            <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-indigo-200 dark:border-indigo-700">
+              <h4 className="font-bold text-indigo-800 dark:text-indigo-200 mb-2">📊 Valutazione Complessiva</h4>
+              <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                {performanceAnalysis.performanceIndex >= 85 ? 
+                  '🏆 Performance eccellenti! Continua così e considera di aumentare la difficoltà.' :
+                 performanceAnalysis.performanceIndex >= 70 ?
+                  '👍 Ottime performance! Lavora sulla consistenza per raggiungere l\'eccellenza.' :
+                 performanceAnalysis.performanceIndex >= 55 ?
+                  '📈 Performance in crescita. Concentrati sui punti deboli identificati.' :
+                  '📚 C\'è margine di miglioramento. Rivedi le strategie di studio e pratica più regolarmente.'
+                }
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ⭐ ENHANCED: Weekly Pattern Analysis */}
+      {weeklyPattern.length > 0 && (
+        <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
+            <CardTitle className="flex items-center gap-3 text-white">
+              <Clock className="w-6 h-6" />
+              Pattern Settimanale di Studio
+            </CardTitle>
+            <p className="text-cyan-100 text-sm">
+              Analisi dei giorni della settimana più produttivi
+            </p>
+          </CardHeader>
+          <CardContent className="p-6">
+            {/* 🕰️ CONSOLE LOGS: Weekly Study Pattern */}
+            {/* Weekly Pattern Analysis */}
+            
+            <ResponsiveContainer width="100%" height={250}>
+              <ComposedChart data={weeklyPattern}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis yAxisId="left" orientation="left" />
+                <YAxis yAxisId="right" orientation="right" />
+                <Tooltip 
+                  formatter={(value, name) => [
+                    name === 'avgScore' ? `${value}%` : `${value} test`,
+                    name === 'avgScore' ? 'Punteggio Medio' : 'Numero Test'
+                  ]}
+                />
+                <Bar yAxisId="left" dataKey="tests" fill="#06b6d4" name="tests" />
+                <Line yAxisId="right" type="monotone" dataKey="avgScore" stroke="#3b82f6" strokeWidth={3} name="avgScore" />
+              </ComposedChart>
+            </ResponsiveContainer>
+            
+            {/* Log per le metriche di riepilogo */}
+            {(() => {
+              
+              // Trova i dati dettagliati per ogni metrica
+              const mostActiveDayData = weeklyPattern.find(d => d.day === summaryStats.mostActiveDay);
+              const bestDayData = weeklyPattern.find(d => d.day === summaryStats.bestDay);
+              
+              
+              // Calcolo della media settimanale
+              const totalScore = weeklyPattern.reduce((sum, day) => sum + (day.avgScore * day.tests), 0);
+              const totalTests = weeklyPattern.reduce((sum, day) => sum + day.tests, 0);
+              const calculatedWeeklyAvg = totalTests > 0 ? Math.round(totalScore / totalTests) : 0;
+              
+              
+              return null;
+            })()}
+            
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="text-center p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl">
+                <div className="font-bold text-cyan-600 dark:text-cyan-400">
+                  {summaryStats.mostActiveDay}
+                </div>
+                <div className="text-cyan-700 dark:text-cyan-300 text-xs">Giorno più attivo</div>
+              </div>
+              <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                <div className="font-bold text-blue-600 dark:text-blue-400">
+                  {summaryStats.bestDay}
+                </div>
+                <div className="text-blue-700 dark:text-blue-300 text-xs">Giorno migliore</div>
+              </div>
+              <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                <div className="font-bold text-green-600 dark:text-green-400">
+                  {summaryStats.weeklyAverage}%
+                </div>
+                <div className="text-green-700 dark:text-green-300 text-xs">Media settimanale</div>
+              </div>
+              <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                <div className="font-bold text-purple-600 dark:text-purple-400">
+                  {summaryStats.totalWeeklyTests}
+                </div>
+                <div className="text-purple-700 dark:text-purple-300 text-xs">Test totali</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default OverviewSection;

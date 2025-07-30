@@ -1,0 +1,681 @@
+/* =====================================================
+ * 📊 Chapters Section Component - Analytics Dashboard
+ * ===================================================== */
+
+/* Main container - integrato con design system esistente */
+.chapters-section {
+  @apply space-y-8;
+}
+
+/* Overview cards grid - responsive layout */
+.chapters-overview-grid {
+  @apply grid grid-cols-1 md:grid-cols-4 gap-4;
+}
+
+.chapters-overview-card {
+  @apply rounded-xl p-4 text-center text-white shadow-lg transition-transform hover:scale-105;
+}
+
+.chapters-overview-card.total-chapters {
+  @apply bg-gradient-to-br from-blue-500 to-blue-600;
+}
+
+.chapters-overview-card.best-efficiency {
+  @apply bg-gradient-to-br from-green-500 to-green-600;
+}
+
+.chapters-overview-card.average-completion {
+  @apply bg-gradient-to-br from-purple-500 to-purple-600;
+}
+
+.chapters-overview-card.tested-chapters {
+  @apply bg-gradient-to-br from-orange-500 to-orange-600;
+}
+
+.chapters-overview-icon {
+  @apply w-8 h-8 mx-auto mb-2;
+}
+
+.chapters-overview-value {
+  @apply text-2xl font-bold;
+}
+
+.chapters-overview-label {
+  @apply text-sm opacity-90;
+}
+
+/* Performance chart card - glass morphism design */
+.chapters-performance-card {
+  @apply bg-white border-0 shadow-xl rounded-3xl overflow-hidden;
+}
+
+.dark .chapters-performance-card {
+  @apply bg-gray-900 border-gray-700;
+}
+
+.chapters-performance-header {
+  @apply bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6;
+}
+
+.chapters-performance-title {
+  @apply flex items-center gap-3 text-white text-xl font-semibold;
+}
+
+.chapters-performance-description {
+  @apply text-blue-100 text-sm space-y-1 mt-3;
+}
+
+.chapters-performance-content {
+  @apply p-6;
+}
+
+/* Chart legend - modern indicators */
+.chapters-chart-legend {
+  @apply mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm;
+}
+
+.chapters-legend-item {
+  @apply flex items-center justify-center gap-2;
+}
+
+.chapters-legend-color {
+  @apply w-4 h-4 rounded;
+}
+
+.chapters-legend-color.accuracy {
+  @apply bg-blue-500;
+}
+
+.chapters-legend-color.hints {
+  @apply bg-yellow-500;
+}
+
+.chapters-legend-color.efficiency {
+  @apply bg-green-500;
+}
+
+.chapters-legend-color.completion {
+  @apply bg-purple-500;
+}
+
+/* Trend analysis card - interactive design */
+.chapters-trend-card {
+  @apply bg-white border-0 shadow-xl rounded-3xl overflow-hidden;
+}
+
+.dark .chapters-trend-card {
+  @apply bg-gray-900 border-gray-700;
+}
+
+.chapters-trend-header {
+  @apply bg-gradient-to-r from-green-500 to-emerald-500 text-white p-6;
+}
+
+.chapters-trend-title {
+  @apply flex items-center gap-3 text-white text-xl font-semibold;
+}
+
+.chapters-trend-meta {
+  @apply flex items-center gap-4 text-sm text-green-100 mt-3;
+}
+
+.chapters-trend-close-btn {
+  @apply px-3 py-1 bg-white/20 rounded-full hover:bg-white/30 transition-colors;
+}
+
+.chapters-trend-content {
+  @apply p-6;
+}
+
+/* Top and struggling chapters - side by side layout */
+.chapters-performance-grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+}
+
+/* Top chapters card - success theme */
+.chapters-top-card {
+  @apply bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200;
+}
+
+.dark .chapters-top-card {
+  @apply from-green-900/20 to-emerald-900/20 border-green-700/50;
+}
+
+.chapters-top-header {
+  @apply bg-gradient-to-r from-green-500 to-emerald-500 text-white p-6 rounded-t-lg;
+}
+
+.chapters-top-title {
+  @apply flex items-center gap-3 text-xl font-semibold;
+}
+
+.chapters-top-subtitle {
+  @apply flex items-center gap-2 text-green-100 text-sm mt-2;
+}
+
+.chapters-top-content {
+  @apply p-6 space-y-4;
+}
+
+.chapters-top-item {
+  @apply flex items-center justify-between p-4 bg-white rounded-xl border border-green-200;
+}
+
+.dark .chapters-top-item {
+  @apply bg-gray-800 border-green-700/50;
+}
+
+.chapters-top-rank {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-white font-bold;
+}
+
+.chapters-top-rank.first {
+  @apply bg-yellow-500;
+}
+
+.chapters-top-rank.second {
+  @apply bg-gray-400;
+}
+
+.chapters-top-rank.third {
+  @apply bg-orange-500;
+}
+
+.chapters-top-info {
+  @apply flex-1 ml-3;
+}
+
+.chapters-top-name {
+  @apply font-bold text-gray-800;
+}
+
+.dark .chapters-top-name {
+  @apply text-gray-200;
+}
+
+.chapters-top-stats {
+  @apply text-sm text-gray-600;
+}
+
+.dark .chapters-top-stats {
+  @apply text-gray-400;
+}
+
+.chapters-top-details {
+  @apply text-xs text-gray-500;
+}
+
+.dark .chapters-top-details {
+  @apply text-gray-500;
+}
+
+.chapters-top-efficiency {
+  @apply text-right;
+}
+
+.chapters-top-efficiency-value {
+  @apply text-xl font-bold text-green-600;
+}
+
+.dark .chapters-top-efficiency-value {
+  @apply text-green-400;
+}
+
+.chapters-top-efficiency-label {
+  @apply text-sm text-green-700;
+}
+
+.dark .chapters-top-efficiency-label {
+  @apply text-green-500;
+}
+
+/* Struggling chapters card - warning theme */
+.chapters-struggling-card {
+  @apply bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200;
+}
+
+.dark .chapters-struggling-card {
+  @apply from-orange-900/20 to-red-900/20 border-orange-700/50;
+}
+
+.chapters-struggling-header {
+  @apply bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 rounded-t-lg;
+}
+
+.chapters-struggling-title {
+  @apply flex items-center gap-3 text-xl font-semibold;
+}
+
+.chapters-struggling-subtitle {
+  @apply text-orange-100 text-sm mt-2;
+}
+
+.chapters-struggling-content {
+  @apply p-6 space-y-4;
+}
+
+.chapters-struggling-item {
+  @apply p-4 bg-white rounded-xl border border-orange-200;
+}
+
+.dark .chapters-struggling-item {
+  @apply bg-gray-800 border-orange-700/50;
+}
+
+.chapters-struggling-header-row {
+  @apply flex items-center justify-between mb-3;
+}
+
+.chapters-struggling-name {
+  @apply font-bold text-gray-800;
+}
+
+.dark .chapters-struggling-name {
+  @apply text-gray-200;
+}
+
+.chapters-struggling-efficiency {
+  @apply text-xl font-bold text-red-600;
+}
+
+.dark .chapters-struggling-efficiency {
+  @apply text-red-400;
+}
+
+.chapters-struggling-metrics {
+  @apply grid grid-cols-3 gap-2 text-sm mb-3;
+}
+
+.chapters-struggling-metric {
+  @apply text-center;
+}
+
+.chapters-struggling-metric-value {
+  @apply font-bold;
+}
+
+.chapters-struggling-metric-value.accuracy {
+  @apply text-blue-600;
+}
+
+.dark .chapters-struggling-metric-value.accuracy {
+  @apply text-blue-400;
+}
+
+.chapters-struggling-metric-value.hints {
+  @apply text-orange-600;
+}
+
+.dark .chapters-struggling-metric-value.hints {
+  @apply text-orange-400;
+}
+
+.chapters-struggling-metric-value.difficulty {
+  @apply text-purple-600;
+}
+
+.dark .chapters-struggling-metric-value.difficulty {
+  @apply text-purple-400;
+}
+
+.chapters-struggling-metric-label {
+  @apply text-xs;
+}
+
+.chapters-struggling-details {
+  @apply text-xs text-gray-600 mb-2;
+}
+
+.dark .chapters-struggling-details {
+  @apply text-gray-400;
+}
+
+.chapters-struggling-suggestion {
+  @apply p-2 bg-orange-100 rounded-lg;
+}
+
+.dark .chapters-struggling-suggestion {
+  @apply bg-orange-900/30;
+}
+
+.chapters-struggling-suggestion-text {
+  @apply text-xs text-orange-800;
+}
+
+.dark .chapters-struggling-suggestion-text {
+  @apply text-orange-300;
+}
+
+/* Detailed table card - comprehensive view */
+.chapters-detailed-card {
+  @apply bg-white border-0 shadow-xl rounded-3xl overflow-hidden;
+}
+
+.dark .chapters-detailed-card {
+  @apply bg-gray-900 border-gray-700;
+}
+
+.chapters-detailed-header {
+  @apply bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-6;
+}
+
+.chapters-detailed-title {
+  @apply flex items-center gap-3 text-white text-xl font-semibold;
+}
+
+.chapters-detailed-subtitle {
+  @apply text-indigo-100 text-sm mt-2;
+}
+
+.chapters-detailed-content {
+  @apply p-6;
+}
+
+/* Table styling - modern responsive table */
+.chapters-table-container {
+  @apply overflow-x-auto;
+}
+
+.chapters-table {
+  @apply w-full text-sm;
+}
+
+.chapters-table-header {
+  @apply border-b border-gray-200;
+}
+
+.dark .chapters-table-header {
+  @apply border-gray-700;
+}
+
+.chapters-table-header-cell {
+  @apply text-left py-3 px-2 font-bold;
+}
+
+.chapters-table-row {
+  @apply border-b border-gray-100 transition-colors;
+}
+
+.dark .chapters-table-row {
+  @apply border-gray-800;
+}
+
+.chapters-table-row.even {
+  @apply bg-gray-50;
+}
+
+.dark .chapters-table-row.even {
+  @apply bg-gray-800/50;
+}
+
+.chapters-table-row.clickable {
+  @apply hover:bg-blue-50 cursor-pointer;
+}
+
+.dark .chapters-table-row.clickable {
+  @apply hover:bg-blue-900/20;
+}
+
+.chapters-table-row.selected {
+  @apply bg-blue-100 border-blue-300;
+}
+
+.dark .chapters-table-row.selected {
+  @apply bg-blue-900/30 border-blue-600;
+}
+
+.chapters-table-cell {
+  @apply py-3 px-2;
+}
+
+.chapters-table-chapter-name {
+  @apply font-medium;
+}
+
+.chapters-table-word-count {
+  @apply inline-flex items-center gap-1;
+}
+
+.chapters-table-difficulty-badge {
+  @apply text-xs bg-red-100 text-red-700 px-1 rounded;
+}
+
+.dark .chapters-table-difficulty-badge {
+  @apply bg-red-900/30 text-red-400;
+}
+
+.chapters-table-answers-detail {
+  @apply text-xs text-gray-500;
+}
+
+.dark .chapters-table-answers-detail {
+  @apply text-gray-400;
+}
+
+.chapters-table-accuracy {
+  @apply font-bold;
+}
+
+.chapters-table-accuracy.high {
+  @apply text-green-600;
+}
+
+.dark .chapters-table-accuracy.high {
+  @apply text-green-400;
+}
+
+.chapters-table-accuracy.medium {
+  @apply text-blue-600;
+}
+
+.dark .chapters-table-accuracy.medium {
+  @apply text-blue-400;
+}
+
+.chapters-table-accuracy.low {
+  @apply text-red-600;
+}
+
+.dark .chapters-table-accuracy.low {
+  @apply text-red-400;
+}
+
+.chapters-table-hints {
+  @apply font-bold;
+}
+
+.chapters-table-hints.low {
+  @apply text-green-600;
+}
+
+.dark .chapters-table-hints.low {
+  @apply text-green-400;
+}
+
+.chapters-table-hints.medium {
+  @apply text-orange-600;
+}
+
+.dark .chapters-table-hints.medium {
+  @apply text-orange-400;
+}
+
+.chapters-table-hints.high {
+  @apply text-red-600;
+}
+
+.dark .chapters-table-hints.high {
+  @apply text-red-400;
+}
+
+.chapters-table-hints-count {
+  @apply text-xs text-gray-500;
+}
+
+.dark .chapters-table-hints-count {
+  @apply text-gray-400;
+}
+
+.chapters-table-efficiency {
+  @apply font-bold;
+}
+
+.chapters-table-efficiency.excellent {
+  @apply text-green-600;
+}
+
+.dark .chapters-table-efficiency.excellent {
+  @apply text-green-400;
+}
+
+.chapters-table-efficiency.good {
+  @apply text-orange-600;
+}
+
+.dark .chapters-table-efficiency.good {
+  @apply text-orange-400;
+}
+
+.chapters-table-efficiency.poor {
+  @apply text-red-600;
+}
+
+.dark .chapters-table-efficiency.poor {
+  @apply text-red-400;
+}
+
+/* Progress bar - modern animated progress */
+.chapters-progress-container {
+  @apply flex items-center justify-center;
+}
+
+.chapters-progress-bar {
+  @apply w-12 bg-gray-200 rounded-full h-2;
+}
+
+.dark .chapters-progress-bar {
+  @apply bg-gray-700;
+}
+
+.chapters-progress-fill {
+  @apply h-2 rounded-full transition-all duration-300;
+}
+
+.chapters-progress-fill.high {
+  @apply bg-green-500;
+}
+
+.chapters-progress-fill.medium {
+  @apply bg-blue-500;
+}
+
+.chapters-progress-fill.low {
+  @apply bg-orange-500;
+}
+
+.chapters-progress-text {
+  @apply ml-2 text-xs font-bold;
+}
+
+/* Status badges - semantic indicators */
+.chapters-status-badge {
+  @apply text-xs px-2 py-1 rounded-full;
+}
+
+.chapters-status-badge.not-tested {
+  @apply bg-gray-100 text-gray-600;
+}
+
+.dark .chapters-status-badge.not-tested {
+  @apply bg-gray-800 text-gray-400;
+}
+
+.chapters-status-badge.excellent {
+  @apply bg-green-100 text-green-700;
+}
+
+.dark .chapters-status-badge.excellent {
+  @apply bg-green-900/30 text-green-400;
+}
+
+.chapters-status-badge.good {
+  @apply bg-blue-100 text-blue-700;
+}
+
+.dark .chapters-status-badge.good {
+  @apply bg-blue-900/30 text-blue-400;
+}
+
+.chapters-status-badge.needs-improvement {
+  @apply bg-orange-100 text-orange-700;
+}
+
+.dark .chapters-status-badge.needs-improvement {
+  @apply bg-orange-900/30 text-orange-400;
+}
+
+/* Help tip - user guidance */
+.chapters-help-tip {
+  @apply mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200;
+}
+
+.dark .chapters-help-tip {
+  @apply bg-blue-900/20 border-blue-800/50;
+}
+
+.chapters-help-tip-text {
+  @apply text-sm text-blue-800;
+}
+
+.dark .chapters-help-tip-text {
+  @apply text-blue-300;
+}
+
+/* Empty states - user-friendly placeholders */
+.chapters-empty-state {
+  @apply text-center py-8 text-gray-500;
+}
+
+.dark .chapters-empty-state {
+  @apply text-gray-400;
+}
+
+.chapters-empty-state-text {
+  @apply text-sm;
+}
+
+/* Responsive design - mobile optimization */
+@media (max-width: 768px) {
+  .chapters-overview-grid {
+    @apply grid-cols-2 gap-3;
+  }
+  
+  .chapters-overview-card {
+    @apply p-3;
+  }
+  
+  .chapters-overview-value {
+    @apply text-xl;
+  }
+  
+  .chapters-overview-label {
+    @apply text-xs;
+  }
+  
+  .chapters-performance-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .chapters-struggling-metrics {
+    @apply grid-cols-2;
+  }
+  
+  .chapters-table {
+    @apply text-xs;
+  }
+  
+  .chapters-table-header-cell,
+  .chapters-table-cell {
+    @apply py-2 px-1;
+  }
+}

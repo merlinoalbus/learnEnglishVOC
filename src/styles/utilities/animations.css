@@ -1,0 +1,53 @@
+/* =====================================================
+ * 📁 src/styles/utilities/animations.css - ANIMATIONS
+ * ===================================================== */
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.app-main > * {
+  animation: slideIn 0.3s ease-out;
+}
+
+.nav-btn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* FOCUS E ACCESSIBILITÀ */
+.nav-btn:focus,
+.btn:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.nav-btn.active:focus {
+  outline-color: rgba(255, 255, 255, 0.8);
+}
+
+/* REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -16,8 +16,8 @@ import {
   RefreshCw,
   Info
 } from 'lucide-react';
-import { enhancedAIService } from '../services/enhancedAIService';
-import { enhancedStorageService } from '../services/enhancedStorageService';
+import { aiService } from '../services/aiService';
+import { storageService } from '../services/storageService';
 
 const ServiceStatusIndicator = ({ 
   compact = false, 
@@ -34,8 +34,8 @@ const ServiceStatusIndicator = ({
     
     try {
       const [aiResult, storageResult] = await Promise.all([
-        enhancedAIService.getServiceStatus(),
-        enhancedStorageService.getServiceStatus()
+        aiService.getServiceStatus(),
+        storageService.getServiceStatus()
       ]);
       
       setAiStatus(aiResult);
