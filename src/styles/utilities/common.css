@@ -1,0 +1,239 @@
+/* Common Utility Classes */
+
+/* Glassmorphism effects */
+.glass-effect {
+  @apply bg-white/20 backdrop-blur-md;
+}
+
+.glass-effect-light {
+  @apply bg-white/10 backdrop-blur-sm;
+}
+
+.glass-effect-dark {
+  @apply bg-black/20 backdrop-blur-md;
+}
+
+:root.dark .glass-effect {
+  @apply bg-gray-800/20;
+}
+
+:root.dark .glass-effect-light {
+  @apply bg-gray-800/10;
+}
+
+:root.dark .glass-effect-dark {
+  @apply bg-gray-900/20;
+}
+
+/* Flex utilities */
+.flex-center {
+  @apply flex items-center justify-center;
+}
+
+.flex-center-column {
+  @apply flex flex-col items-center justify-center;
+}
+
+.flex-between {
+  @apply flex items-center justify-between;
+}
+
+/* Text shadows */
+.text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow-md {
+  text-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow-lg {
+  text-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow-strong {
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Gradient text */
+.gradient-text-purple {
+  @apply bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent;
+}
+
+:root.dark .gradient-text-purple {
+  @apply from-purple-400 to-indigo-400;
+}
+
+.gradient-text-green {
+  @apply bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent;
+}
+
+:root.dark .gradient-text-green {
+  @apply from-green-400 to-emerald-400;
+}
+
+/* Card styles */
+.card-base {
+  @apply bg-white rounded-xl shadow-lg;
+}
+
+:root.dark .card-base {
+  @apply bg-gray-800;
+}
+
+.card-glass {
+  @apply bg-white/90 backdrop-blur-sm rounded-xl shadow-lg;
+}
+
+:root.dark .card-glass {
+  @apply bg-gray-800/90;
+}
+
+/* Interactive elements */
+.interactive-scale {
+  @apply transform transition-all duration-200 hover:scale-105;
+}
+
+.interactive-lift {
+  @apply transition-all duration-200 hover:shadow-xl hover:-translate-y-1;
+}
+
+/* Status colors */
+.status-success {
+  @apply text-green-600 bg-green-100;
+}
+
+:root.dark .status-success {
+  @apply text-green-400 bg-green-900/30;
+}
+
+.status-error {
+  @apply text-red-600 bg-red-100;
+}
+
+:root.dark .status-error {
+  @apply text-red-400 bg-red-900/30;
+}
+
+.status-warning {
+  @apply text-yellow-600 bg-yellow-100;
+}
+
+:root.dark .status-warning {
+  @apply text-yellow-400 bg-yellow-900/30;
+}
+
+.status-info {
+  @apply text-blue-600 bg-blue-100;
+}
+
+:root.dark .status-info {
+  @apply text-blue-400 bg-blue-900/30;
+}
+
+/* Animations */
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive text sizes */
+.text-responsive-sm {
+  @apply text-xs sm:text-sm;
+}
+
+.text-responsive-base {
+  @apply text-sm sm:text-base;
+}
+
+.text-responsive-lg {
+  @apply text-base sm:text-lg md:text-xl;
+}
+
+.text-responsive-xl {
+  @apply text-lg sm:text-xl md:text-2xl;
+}
+
+.text-responsive-2xl {
+  @apply text-xl sm:text-2xl md:text-3xl;
+}
+
+.text-responsive-3xl {
+  @apply text-2xl sm:text-3xl md:text-4xl;
+}
+
+/* Spacing utilities */
+.section-spacing {
+  @apply py-8 md:py-12;
+}
+
+.content-spacing {
+  @apply px-4 md:px-6 lg:px-8;
+}
+
+.stack-sm {
+  @apply space-y-2;
+}
+
+.stack-md {
+  @apply space-y-4;
+}
+
+.stack-lg {
+  @apply space-y-6;
+}
+
+/* Border utilities */
+.border-soft {
+  @apply border border-gray-200;
+}
+
+:root.dark .border-soft {
+  @apply border-gray-700;
+}
+
+.border-dashed-soft {
+  @apply border-2 border-dashed border-gray-300;
+}
+
+:root.dark .border-dashed-soft {
+  @apply border-gray-600;
+}

@@ -1,182 +1,109 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
 # =====================================================
-# 🔐 SECURITY: Environment Variables & Credentials
+# 🔐 .gitignore - Configurazione Completa React/TypeScript
 # =====================================================
+# SCOPO: Esclude file che non devono essere committati su Git
+# AGGIORNAMENTO: Sostituisce il .gitignore IntelliJ errato
 
-# Environment files with sensitive data
-.env
-.env.*
-!.env.example
-
-# API Keys and credentials (backup security)
-**/config/credentials.*
-**/config/secrets.*
-**/*-secrets.*
-**/*-credentials.*
-
-# Backup files that might contain credentials
-*.backup
-*.bak
-*.old
-config.local.*
-settings.local.*
-
-# IDE and editor files that might contain credentials
-.vscode/settings.json
-.idea/workspace.xml
-*.swp
-*.swo
-*~
-
-# =====================================================
-# Development & Build
-# =====================================================
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# next.js build output
-.next
-
-# nuxt.js build output
-.nuxt
-
-# rollup.js default build output
-dist/
-
-# Uncomment the public line in if your project uses Gatsby
-# https://nextjs.org/blog/next-9-1#public-directory-support
-# https://create-react-app.dev/docs/using-the-public-folder/#docsNav
-# public
-
-# Storybook build outputs
-.out
-.storybook-out
-
-# vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# =====================================================
-# OS Generated files
-# =====================================================
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon?
-._*
-.Spotlight-V100
-.Trashes
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
-# Linux
-*~
-.nfs*
-
-# =====================================================
-# Docker & DevOps
-# =====================================================
-
-# Docker
-.dockerignore
-docker-compose.override.yml
-
-# Terraform
-*.tfstate
-*.tfstate.*
-.terraform/
-
-# Kubernetes
-*.kubeconfig
-
-# =====================================================
-# Logs & Temporary files
-# =====================================================
-
-# Logs
-logs
-*.log
+# ====== DEPENDENCIES ======
+# Cartella con tutte le librerie npm
+node_modules/
+# Log di debug npm/yarn
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
-# Temporary folders
-tmp/
-temp/
-.tmp/
+# ====== BUILD OUTPUT ======
+# Cartella build React (generata da npm run build)
+build/
+# Alternative build directories
+dist/
+out/
 
-# =====================================================
-# Package Managers
-# =====================================================
+# ====== ENVIRONMENT VARIABLES ======
+# File con variabili ambiente (contengono API keys!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# npm
-node_modules/
+# ====== IDE FILES ======
+# IntelliJ IDEA / WebStorm (quello che stavi usando erroneamente)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code (IDE raccomandato per React)
+.vscode/
+# Eccezioni: mantieni alcune config condivise nel team
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# ====== OS GENERATED FILES ======
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ====== LOGS ======
+logs/
+*.log
+
+# ====== CACHE & TEMP ======
 .npm
-.node_repl_history
+.eslintcache
+.stylelintcache
+.cache/
+.parcel-cache
+
+# ====== TESTING ======
+coverage/
+*.lcov
+.nyc_output
+
+# ====== TYPESCRIPT ======
+*.tsbuildinfo
+
+# ====== PACKAGE MANAGERS ======
+# npm
+.npm
 
 # Yarn
 .yarn/cache
@@ -188,32 +115,27 @@ node_modules/
 # pnpm
 .pnpm-debug.log*
 
-# =====================================================
-# Testing & Coverage
-# =====================================================
+# ====== FRAMEWORK SPECIFIC ======
+# Next.js
+.next
 
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-.nyc_output
+# Nuxt.js
+.nuxt
 
-# Jest
-.jest/
+# Gatsby
+.cache/
+public
 
-# =====================================================
-# IMPORTANT SECURITY REMINDERS
-# =====================================================
+# VuePress
+.vuepress/dist
 
-# NEVER commit:
-# - API keys or tokens
-# - Database passwords
-# - SSL certificates
-# - SSH keys
-# - Service account files
-# - Any .env files except .env.example
+# Serverless
+.serverless/
 
-# If you accidentally commit sensitive data:
-# 1. Remove it from the repository immediately
-# 2. Revoke/regenerate the exposed credentials
-# 3. Consider using git-filter-branch or BFG Repo-Cleaner
-# 4. Force push the cleaned history
+# ====== MISC ======
+.fusebox/
+.dynamodb/
+.tern-port
+.vscode-test
+.store
+.claude

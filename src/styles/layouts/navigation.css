@@ -1,0 +1,268 @@
+/* =====================================================
+ * 📁 src/styles/layouts/navigation.css - NAVIGATION STYLES
+ * ===================================================== */
+
+/* ===================
+ * Modern Navigation Components
+ * =================== */
+
+/* Base navigation button styling */
+.nav-button-base {
+  @apply flex items-center justify-center gap-2 h-12 px-4 rounded-2xl text-base font-semibold transition-all duration-300 relative;
+}
+
+/* Navigation button normal state */
+.nav-button-normal {
+  @apply bg-gray-100 hover:bg-gray-200 text-gray-700;
+}
+
+.dark .nav-button-normal {
+  @apply bg-gray-700 hover:bg-gray-600 text-gray-300;
+}
+
+/* Navigation button active state */
+.nav-button-active {
+  @apply text-white shadow-lg transform scale-105;
+}
+
+/* User menu button */
+.nav-user-button {
+  @apply flex items-center justify-center gap-2 h-12 px-4 rounded-2xl transition-all duration-300 border-0;
+  background: linear-gradient(to right, rgb(243, 244, 246), rgb(229, 231, 235));
+}
+
+.nav-user-button:hover {
+  background: linear-gradient(to right, rgb(229, 231, 235), rgb(209, 213, 219));
+}
+
+.dark .nav-user-button {
+  background: linear-gradient(to right, rgb(55, 65, 81), rgb(75, 85, 99));
+}
+
+.dark .nav-user-button:hover {
+  background: linear-gradient(to right, rgb(75, 85, 99), rgb(107, 114, 128));
+}
+
+/* Dropdown menu */
+.nav-dropdown {
+  @apply fixed w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden;
+  z-index: 9999;
+}
+
+.dark .nav-dropdown {
+  @apply bg-gray-800 border-gray-700;
+}
+
+/* ===================
+ * Gradient Color Variants
+ * =================== */
+
+/* Brand gradient (main) */
+.nav-gradient-brand {
+  background: linear-gradient(to right, #2563eb, #7c3aed);
+}
+
+/* Success gradient (green) */
+.nav-gradient-success {
+  background: linear-gradient(to right, #059669, #0d9488);
+}
+
+/* Warning gradient (orange) */
+.nav-gradient-warning {
+  background: linear-gradient(to right, #ea580c, #dc2626);
+}
+
+/* Info gradient (blue) */
+.nav-gradient-info {
+  background: linear-gradient(to right, #0ea5e9, #3b82f6);
+}
+
+/* Purple gradient */
+.nav-gradient-purple {
+  background: linear-gradient(to right, #7c3aed, #a855f7);
+}
+
+/* Pink gradient */
+.nav-gradient-pink {
+  background: linear-gradient(to right, #ec4899, #f43f5e);
+}
+
+/* ===================
+ * Layout Components
+ * =================== */
+
+/* Navigation container */
+.app-navigation-container {
+  @apply relative;
+}
+
+/* Navigation inner content */
+.app-navigation-content {
+  @apply flex items-center justify-between h-16 backdrop-blur-sm;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 0.5rem;
+}
+
+.dark .app-navigation-content {
+  background: rgba(17, 24, 39, 0.9);
+  border-color: rgba(107, 114, 128, 0.3);
+}
+
+/* Navigation items container */
+.app-navigation-items {
+  @apply flex items-center gap-2;
+}
+
+/* ===================
+ * Dropdown Positioning
+ * =================== */
+
+/* Use CSS custom properties for dynamic positioning */
+.nav-dropdown-positioned {
+  top: var(--dropdown-top, 0px);
+  right: var(--dropdown-right, 0px);
+}
+
+/* ===================
+ * Z-Index Management
+ * =================== */
+
+.nav-layer-dropdown {
+  z-index: 9999;
+}
+
+.nav-layer-backdrop {
+  z-index: 9998;
+}
+
+.nav-layer-overlay {
+  z-index: 9997;
+}
+
+.app-nav {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: var(--space-sm) 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* ===================
+ * AppNavigation Specific Components
+ * =================== */
+
+/* User button with gradient */
+.app-nav-user-button {
+  @apply flex items-center justify-center gap-2 h-12 px-4 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 transition-all duration-300 border-0;
+}
+
+.dark .app-nav-user-button {
+  @apply from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500;
+}
+
+/* User avatar */
+.app-nav-user-avatar {
+  @apply w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold;
+}
+
+/* Dropdown header */
+.app-nav-dropdown-header {
+  @apply bg-gradient-to-r from-indigo-500 to-purple-600 p-4 text-white;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: var(--space-sm);
+  padding: 0 var(--space-md);
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  position: relative;
+  text-decoration: none;
+  color: #555;
+}
+
+.nav-btn:hover {
+  background: rgba(52, 152, 219, 0.1);
+  transform: translateY(-1px);
+}
+
+.nav-btn.active {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.nav-icon {
+  font-size: var(--font-size-xl);
+  line-height: 1;
+}
+
+.nav-text {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.nav-badge {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  background: var(--color-error);
+  color: white;
+  font-size: var(--font-size-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.2;
+  font-weight: bold;
+}
+
+/* RESPONSIVE NAV */
+@media (max-width: 768px) {
+  .nav-container {
+    padding: 0 var(--space-sm);
+    gap: var(--space-xs);
+  }
+  
+  .nav-btn {
+    min-width: 60px;
+    padding: var(--space-sm);
+  }
+  
+  .nav-text {
+    font-size: var(--font-size-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-text {
+    display: none;
+  }
+  
+  .nav-btn {
+    min-width: 50px;
+    padding: var(--space-sm) var(--space-xs);
+  }
+}

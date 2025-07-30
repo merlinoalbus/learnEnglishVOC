@@ -57,6 +57,6 @@ export const getTestResult = (stats) => {
   } else if (percentage >= 60) {
     return { type: 'good', message: 'Buon lavoro! 👍', color: 'text-blue-600', bgColor: 'bg-blue-50' };
   } else {
-    return { type: 'defeat', message: 'Continua a studiare! 📚', color: 'text-red-600', bgColor: 'bg-red-50' };
+    return { type: 'study', message: 'Continua a studiare! 📚', color: 'text-red-600', bgColor: 'bg-red-50' };
   }
 };

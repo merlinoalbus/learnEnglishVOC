@@ -1,0 +1,232 @@
+/* =====================================================
+ * 📁 Test Results Component - Modern Responsive Styles
+ * ===================================================== */
+
+/* Main container - modern glass design */
+.test-results-container {
+  @apply min-h-screen p-4;
+  background: linear-gradient(135deg, rgb(99 102 241 / 0.1) 0%, rgb(139 92 246 / 0.1) 50%, rgb(59 130 246 / 0.1) 100%);
+}
+
+.dark .test-results-container {
+  background: linear-gradient(135deg, rgb(17 24 39) 0%, rgb(30 41 59) 50%, rgb(15 23 42) 100%);
+}
+
+/* Results card - modern container */
+.test-results-card {
+  @apply bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-6 border border-gray-200/50 max-w-6xl mx-auto;
+}
+
+.dark .test-results-card {
+  @apply bg-gray-900/95 border-gray-700/50;
+}
+
+/* Header section - modern layout */
+.test-results-header {
+  @apply text-center mb-12;
+}
+
+.test-results-title {
+  @apply text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4;
+}
+
+.dark .test-results-title {
+  @apply from-indigo-400 via-purple-400 to-pink-400;
+}
+
+.test-results-subtitle {
+  @apply text-lg text-gray-600 font-medium;
+}
+
+.dark .test-results-subtitle {
+  @apply text-gray-300;
+}
+
+/* Statistics grid - modern responsive layout */
+.test-results-stats-grid {
+  @apply grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8;
+}
+
+/* Modern stat cards */
+.test-results-stat-card {
+  @apply bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-200/50 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg;
+}
+
+.dark .test-results-stat-card {
+  @apply bg-gray-800/80 border-gray-600/50;
+}
+
+.test-results-stat-value {
+  @apply text-2xl md:text-3xl font-bold mb-1;
+}
+
+.test-results-stat-label {
+  @apply text-sm text-gray-600 font-medium;
+}
+
+.dark .test-results-stat-label {
+  @apply text-gray-400;
+}
+
+/* Specific stat colors */
+.test-results-stat-correct .test-results-stat-value {
+  @apply text-green-600;
+}
+
+.dark .test-results-stat-correct .test-results-stat-value {
+  @apply text-green-400;
+}
+
+.test-results-stat-incorrect .test-results-stat-value {
+  @apply text-red-600;
+}
+
+.dark .test-results-stat-incorrect .test-results-stat-value {
+  @apply text-red-400;
+}
+
+.test-results-stat-hints .test-results-stat-value {
+  @apply text-orange-600;
+}
+
+.dark .test-results-stat-hints .test-results-stat-value {
+  @apply text-orange-400;
+}
+
+.test-results-stat-time .test-results-stat-value {
+  @apply text-blue-600;
+}
+
+.dark .test-results-stat-time .test-results-stat-value {
+  @apply text-blue-400;
+}
+
+.test-results-stat-accuracy .test-results-stat-value {
+  @apply text-purple-600;
+}
+
+.dark .test-results-stat-accuracy .test-results-stat-value {
+  @apply text-purple-400;
+}
+
+/* Action buttons - modern layout */
+.test-results-actions {
+  @apply flex flex-wrap gap-3 justify-center mb-8;
+}
+
+.test-results-action-button {
+  @apply px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg border;
+}
+
+.test-results-retry-button {
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600;
+}
+
+.dark .test-results-retry-button {
+  @apply bg-indigo-500 hover:bg-indigo-600 border-indigo-500;
+}
+
+.test-results-new-button {
+  @apply bg-white hover:bg-gray-50 text-gray-700 border-gray-300;
+}
+
+.dark .test-results-new-button {
+  @apply bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-600;
+}
+
+/* Performance analysis card */
+.test-results-analysis-card {
+  @apply bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 mb-6;
+}
+
+.dark .test-results-analysis-card {
+  @apply bg-gray-800/60 border-gray-600/50;
+}
+
+.test-results-analysis-title {
+  @apply text-xl font-bold text-gray-800 mb-4 flex items-center gap-2;
+}
+
+.dark .test-results-analysis-title {
+  @apply text-gray-200;
+}
+
+/* Wrong words section */
+.test-results-wrong-words {
+  @apply mt-8;
+}
+
+.test-results-tips-card {
+  @apply bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 overflow-hidden;
+}
+
+.dark .test-results-tips-card {
+  @apply bg-gray-800/60 border-gray-600/50;
+}
+
+.test-results-tips-header {
+  @apply bg-gradient-to-r from-red-500 to-pink-500 p-4;
+}
+
+.test-results-wrong-words-title {
+  @apply text-xl font-bold text-white flex items-center gap-2;
+}
+
+.test-results-wrong-words-grid {
+  @apply grid gap-4 p-6;
+}
+
+.test-results-wrong-word-card {
+  @apply bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 transition-all duration-300 hover:scale-105;
+}
+
+.dark .test-results-wrong-word-card {
+  @apply bg-gray-800/80 border-gray-600/50;
+}
+
+.test-results-wrong-word-header {
+  @apply flex items-center justify-between mb-3;
+}
+
+.test-results-wrong-word-en {
+  @apply text-xl font-bold text-gray-800;
+}
+
+.dark .test-results-wrong-word-en {
+  @apply text-gray-200;
+}
+
+.test-results-wrong-word-it {
+  @apply text-lg text-gray-600;
+}
+
+.dark .test-results-wrong-word-it {
+  @apply text-gray-400;
+}
+
+.test-results-wrong-word-hint-badge {
+  @apply inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.dark .test-results-wrong-word-hint-badge {
+  @apply bg-orange-900/50 text-orange-300;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .test-results-stats-grid {
+    @apply grid-cols-2 gap-3;
+  }
+  
+  .test-results-actions {
+    @apply flex-col;
+  }
+  
+  .test-results-action-button {
+    @apply w-full;
+  }
+  
+  .test-results-title {
+    @apply text-3xl;
+  }
+}

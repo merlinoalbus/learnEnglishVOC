@@ -5,27 +5,30 @@
 
 /**
  * Memoization utility for expensive function calls
- * ✅ UTILIZZATA in useOptimizedStats e useOptimizedWords
+ * ✅ UTILIZZATA in useOptimizedStats e useWords
  */
-export const memoize = (fn, keyGenerator = (...args) => JSON.stringify(args)) => {
+export const memoize = (
+  fn,
+  keyGenerator = (...args) => JSON.stringify(args)
+) => {
   const cache = new Map();
-  
+
   return (...args) => {
     const key = keyGenerator(...args);
-    
+
     if (cache.has(key)) {
       return cache.get(key);
     }
-    
+
     const result = fn(...args);
     cache.set(key, result);
-    
+
     // Prevent memory leaks by limiting cache size
     if (cache.size > 100) {
       const firstKey = cache.keys().next().value;
       cache.delete(firstKey);
     }
-    
+
     return result;
   };
 };
@@ -36,7 +39,7 @@ export const memoize = (fn, keyGenerator = (...args) => JSON.stringify(args)) =>
  */
 export const debounce = (fn, delay = 300) => {
   let timeoutId;
-  
+
   return (...args) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn(...args), delay);
@@ -49,15 +52,15 @@ export const debounce = (fn, delay = 300) => {
  */
 export const deepEqual = (a, b) => {
   if (a === b) return true;
-  
+
   if (a == null || b == null) return false;
-  
+
   if (typeof a !== typeof b) return false;
-  
-  if (typeof a !== 'object') return a === b;
-  
+
+  if (typeof a !== "object") return a === b;
+
   if (Array.isArray(a) !== Array.isArray(b)) return false;
-  
+
   if (Array.isArray(a)) {
     if (a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++) {
@@ -65,17 +68,17 @@ export const deepEqual = (a, b) => {
     }
     return true;
   }
-  
+
   const keysA = Object.keys(a);
   const keysB = Object.keys(b);
-  
+
   if (keysA.length !== keysB.length) return false;
-  
+
   for (const key of keysA) {
     if (!keysB.includes(key)) return false;
     if (!deepEqual(a[key], b[key])) return false;
   }
-  
+
   return true;
 };
 
@@ -85,18 +88,18 @@ export const deepEqual = (a, b) => {
  */
 export const shallowEqual = (a, b) => {
   if (a === b) return true;
-  
+
   if (!a || !b) return false;
-  
+
   const keysA = Object.keys(a);
   const keysB = Object.keys(b);
-  
+
   if (keysA.length !== keysB.length) return false;
-  
+
   for (const key of keysA) {
     if (a[key] !== b[key]) return false;
   }
-  
+
   return true;
 };
 
@@ -107,7 +110,7 @@ export const shallowEqual = (a, b) => {
 export const createSelector = (selector, equalityFn = shallowEqual) => {
   let lastArgs;
   let lastResult;
-  
+
   return (...args) => {
     if (!lastArgs || !equalityFn(args, lastArgs)) {
       lastArgs = args;
@@ -140,7 +143,7 @@ export const pipe = (...fns) => {
 export const once = (fn) => {
   let called = false;
   let result;
-  
+
   return (...args) => {
     if (!called) {
       called = true;

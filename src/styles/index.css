@@ -1,0 +1,55 @@
+/* =====================================================
+ * 📁 src/styles/index.css - MAIN ENTRY POINT
+ * ===================================================== */
+
+/* TAILWIND CSS */
+@tailwind base;
+@tailwind components;
+
+/* UTILITIES (Import after @tailwind components for @layer to work) */
+@import './utilities/components.css';
+@import './utilities/animations.css';
+@import './utilities/common.css';
+@import './utilities/advanced.css';
+
+@tailwind utilities;
+
+/* DESIGN SYSTEM */
+@import './design-system.css';
+@import './variables.css';
+
+/* GLOBAL STYLES */
+@import './globals.css';
+
+/* LAYOUTS */
+@import './layouts/header.css';
+@import './layouts/navigation.css';
+@import './layouts/main-layout.css';
+@import './layouts/footer.css';
+
+/* COMPONENTS */
+@import './components/buttons.css';
+@import './components/add-word-form.css';
+@import './components/auth.css';
+@import './components/modals.css';
+@import './components/lists.css';
+@import './components/control-panel.css';
+@import './components/test-history.css';
+@import './components/error-boundary.css';
+@import './components/chapter-test-selector.css';
+@import './components/test-selector.css';
+@import './components/test-selector-advanced.css';
+@import './components/test-card.css';
+@import './components/test-view.css';
+@import './components/test-results.css';
+@import './components/chapters-section.css';
+
+/* PAGES */
+@import './pages/start-test.css';
+
+/* TAILWIND CUSTOM UTILITIES */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

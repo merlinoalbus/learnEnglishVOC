@@ -1,0 +1,114 @@
+/* =====================================================
+ * 📁 src/styles/pages/start-test.css - PAGE STYLES
+ * ===================================================== */
+
+.start-test {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-xl);
+}
+
+.start-test-content {
+  max-width: 600px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: var(--space-2xl) var(--space-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.start-test h2 {
+  color: #2c3e50;
+  margin-bottom: var(--space-xl);
+  font-size: var(--font-size-3xl);
+}
+
+.test-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-md);
+  margin: var(--space-xl) 0;
+}
+
+.info-card {
+  background: linear-gradient(145deg, #f8f9fa, #ffffff);
+  border: 1px solid #e9ecef;
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg) var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  transition: transform 0.2s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-2px);
+}
+
+.info-icon {
+  font-size: var(--font-size-2xl);
+  line-height: 1;
+}
+
+.info-card strong {
+  font-size: var(--font-size-xl);
+  color: #2c3e50;
+  font-weight: bold;
+}
+
+.info-card p {
+  font-size: var(--font-size-sm);
+  color: #7f8c8d;
+  text-align: center;
+  margin: 0;
+}
+
+.error-view {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-xl);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  max-width: 500px;
+  margin: var(--space-xl) auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.error-view h2 {
+  color: var(--color-error);
+  margin-bottom: var(--space-md);
+}
+
+.error-view p {
+  color: #7f8c8d;
+  margin-bottom: var(--space-xl);
+}
+
+.help-text {
+  color: #7f8c8d;
+  font-style: italic;
+  margin-top: var(--space-md);
+}
+
+/* RESPONSIVE PAGES */
+@media (max-width: 768px) {
+  .start-test-content {
+    padding: var(--space-xl) var(--space-md);
+  }
+  
+  .test-info {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+  
+  .info-card {
+    padding: var(--space-md) var(--space-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .test-info {
+    grid-template-columns: 1fr;
+  }
+}

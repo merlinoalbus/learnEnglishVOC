@@ -1,0 +1,177 @@
+/* ==========================================
+   VARIABILI CSS PERSONALIZZATE PER TAILWIND
+   ========================================== */
+
+/* GLOBAL OVERRIDE: Remove default yellow outline */
+* {
+  outline: none !important;
+}
+
+/* Global body styling for theme support */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove default browser focus ring */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+:root {
+  /* Colori principali - Beautiful indigo/purple */
+  --primary: 99 102 241; /* indigo-500 */
+  --primary-foreground: 255 255 255; /* white */
+  
+  /* Colori di sfondo - Clean and bright */
+  --background: 255 255 255; /* white */
+  --foreground: 51 65 85; /* slate-700 */
+  
+  /* Colori secondari - Soft grays */
+  --secondary: 248 250 252; /* slate-50 */
+  --secondary-foreground: 51 65 85; /* slate-700 */
+  
+  /* Colori di accento - Light gray */
+  --accent: 241 245 249; /* slate-100 */
+  --accent-foreground: 51 65 85; /* slate-700 */
+  
+  /* Colori muted - Gentle contrast */
+  --muted: 248 250 252; /* slate-50 */
+  --muted-foreground: 100 116 139; /* slate-500 */
+  
+  /* Colori distruttivi */
+  --destructive: 239 68 68; /* red-500 */
+  --destructive-foreground: 255 255 255; /* white */
+  
+  /* Bordi e input - Subtle borders */
+  --border: 226 232 240; /* slate-200 */
+  --input: 226 232 240; /* slate-200 */
+  --ring: 99 102 241; /* indigo-500 - beautiful focus ring */
+  
+  /* Card e popover - Clean white */
+  --card: 255 255 255; /* white */
+  --card-foreground: 51 65 85; /* slate-700 */
+  --popover: 255 255 255; /* white */
+  --popover-foreground: 51 65 85; /* slate-700 */
+  
+  /* Radius */
+  --radius: 0.5rem; /* 8px */
+}
+
+/* Tema scuro */
+.dark {
+    --primary: 147 51 234; /* purple-600 */
+    --primary-foreground: 255 255 255; /* white */
+    
+    --background: 15 23 42; /* slate-900 */
+    --foreground: 248 250 252; /* slate-50 */
+    
+    --secondary: 30 41 59; /* slate-800 */
+    --secondary-foreground: 248 250 252; /* slate-50 */
+    
+    --accent: 51 65 85; /* slate-700 */
+    --accent-foreground: 248 250 252; /* slate-50 */
+    
+    --muted: 30 41 59; /* slate-800 */
+    --muted-foreground: 148 163 184; /* slate-400 */
+    
+    --destructive: 239 68 68; /* red-500 */
+    --destructive-foreground: 255 255 255; /* white */
+    
+    --border: 51 65 85; /* slate-700 */
+    --input: 51 65 85; /* slate-700 */
+    --ring: 147 51 234; /* purple-600 */
+    
+    --card: 30 41 59; /* slate-800 */
+    --card-foreground: 248 250 252; /* slate-50 */
+    --popover: 30 41 59; /* slate-800 */
+    --popover-foreground: 248 250 252; /* slate-50 */
+}
+
+/* FIXED: Classi utility per i colori - NO MORE INVISIBILE TEXT! */
+.text-primary {
+  color: rgb(var(--primary)) !important;
+}
+
+.bg-primary {
+  background-color: rgb(var(--primary)) !important;
+}
+
+.text-primary-foreground {
+  color: rgb(var(--primary-foreground)) !important;
+}
+
+.bg-primary-foreground {
+  background-color: rgb(var(--primary-foreground)) !important;
+}
+
+.border-primary {
+  border-color: rgb(var(--primary)) !important;
+}
+
+/* FIXED: Hover states - mantengono testo visibile */
+.hover\:bg-primary\/90:hover {
+  background-color: rgb(var(--primary) / 0.9) !important;
+  color: rgb(var(--primary-foreground)) !important;
+}
+
+.hover\:bg-accent:hover {
+  background-color: rgb(var(--accent)) !important;
+  color: rgb(var(--accent-foreground)) !important;
+}
+
+.hover\:text-accent-foreground:hover {
+  color: rgb(var(--accent-foreground)) !important;
+}
+
+/* FIXED: Focus states - NO YELLOW OUTLINE */
+.focus\:ring-primary:focus {
+  --tw-ring-color: rgb(var(--primary)) !important;
+  outline: none !important;
+}
+
+.focus\:border-primary:focus {
+  border-color: rgb(var(--primary)) !important;
+}
+
+/* FIXED: Generic button classes */
+.btn-primary {
+  background-color: rgb(var(--primary)) !important;
+  color: rgb(var(--primary-foreground)) !important;
+  border: none !important;
+}
+
+.btn-primary:hover {
+  background-color: rgb(var(--primary) / 0.9) !important;
+  color: rgb(var(--primary-foreground)) !important;
+}
+
+.btn-secondary {
+  background-color: rgb(var(--secondary)) !important;
+  color: rgb(var(--secondary-foreground)) !important;
+  border: 1px solid rgb(var(--border)) !important;
+}
+
+.btn-secondary:hover {
+  background-color: rgb(var(--accent)) !important;
+  color: rgb(var(--accent-foreground)) !important;
+}
+
+.btn-ghost {
+  background-color: transparent !important;
+  color: rgb(var(--foreground)) !important;
+  border: none !important;
+}
+
+.btn-ghost:hover {
+  background-color: rgb(var(--accent)) !important;
+  color: rgb(var(--accent-foreground)) !important;
+}

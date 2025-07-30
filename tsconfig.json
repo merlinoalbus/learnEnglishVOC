@@ -24,18 +24,23 @@
     "paths": {
       "@/*": ["*"],
       "@components/*": ["components/*"],
-      "@hooks/*": ["hooks/*"],
-      "@contexts/*": ["contexts/*"],
-      "@utils/*": ["utils/*"],
-      "@services/*": ["services/*"],
+      "@config/*": ["config/*"],
       "@constants/*": ["constants/*"],
+      "@contexts/*": ["contexts/*"],
+      "@hooks/*": ["hooks/*"],
+      "@layouts/*": ["layouts/*"],
+      "@routing/*": ["routing/*"],
+      "@services/*": ["services/*"],
+      "@styles/*": ["styles/*"],
+      "@utils/*": ["utils/*"],
       "@views/*": ["views/*"],
-      "@layouts/*": ["layouts/*"]
+      "@types/*": ["types/*"]
     }
   },
   "include": [
     "src/**/*",
     "src/**/*.ts",
+    "src/**/*.types.ts",
     "src/**/*.tsx",
     "src/**/*.js",
     "src/**/*.jsx"
