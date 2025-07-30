@@ -118,13 +118,7 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
     // ⭐ DEBUG: Log per verificare come viene classificata la parola "quite"
     const quiteWord = optimizedData.wordsWithPerformance.find(w => w.english === 'quite') || 
                      optimizedData.wordsWithoutPerformance.find(w => w.english === 'quite');
-    if (quiteWord) {
-      console.log(`🔍 DEBUG [quite] - WordsSection - Parola processata:`, {
-        foundIn: optimizedData.wordsWithPerformance.find(w => w.english === 'quite') ? 'wordsWithPerformance' : 'wordsWithoutPerformance',
-        wordData: quiteWord,
-        rawWordPerformance: wordPerformance ? wordPerformance[quiteWord.id] : null
-      });
-    }
+    // Debug logging removed
 
     return {
       allWords: [...optimizedData.wordsWithPerformance, ...optimizedData.wordsWithoutPerformance],

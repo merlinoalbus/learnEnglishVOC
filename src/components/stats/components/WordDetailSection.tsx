@@ -83,21 +83,7 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
 
   // ⭐ REFACTORED: Service decide la strategia migliore
   const timelineData = useMemo(() => {
-    // ⭐ DEBUG: Log dei dati quando clicchi su una parola per il dettaglio
-    if (finalWordInfo.english === 'quite') {
-      console.log(`🔍 DEBUG [quite] - WordDetailSection - Dati in input:`, {
-        wordId,
-        finalWordInfo,
-        wordPerformance: wordPerformance ? wordPerformance[wordId] : null,
-        testHistoryLength: testHistory.length
-      });
-    }
-    
     const result = timelineService.getOptimalTimelineData(wordId, testHistory, finalWordInfo, wordPerformance);
-    
-    if (finalWordInfo.english === 'quite') {
-      console.log(`🔍 DEBUG [quite] - WordDetailSection - Risultato timeline:`, result);
-    }
     
     return result;
   }, [wordId, testHistory, finalWordInfo, timelineService, wordPerformance]);

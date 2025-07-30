@@ -55,7 +55,6 @@ export const useDataManagement = (): UseDataManagementReturn => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    console.log('📁 File selected:', file.name, 'Type:', file.type);
 
     if (file.type !== 'application/json') {
       alert('Per favore seleziona un file JSON valido');
@@ -65,14 +64,12 @@ export const useDataManagement = (): UseDataManagementReturn => {
     setIsImporting(true);
     
     try {
-      console.log('🔍 Reading file content...');
       
       // ⭐ FIXED: Read file content as text
       const fileContent = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         
         reader.onload = (e) => {
-          console.log('✅ File read successfully');
           resolve(e.target?.result as string);
         };
         
@@ -89,7 +86,6 @@ export const useDataManagement = (): UseDataManagementReturn => {
         throw new Error(`importStats is not a function. Available type: ${typeof importStats}`);
       }
 
-      console.log('🔄 Starting import with content length:', fileContent.length);
       
       // ⭐ ENHANCED: Parse and detect import type
       const parsedData = JSON.parse(fileContent);

@@ -375,7 +375,7 @@ export const useStats = (): StatsResult => {
         } catch (error) {
           // Collection performance non esiste ancora - è normale per il primo test
           if (AppConfig.app.environment === "development") {
-            console.log("📊 Performance collection not found - will create documents");
+            // Performance collection will be created on first use
           }
         }
 
@@ -442,26 +442,16 @@ export const useStats = (): StatsResult => {
 
             // FIXED: Aggiorna o crea su Firebase
             if (existingPerfFirebase) {
-              if (AppConfig.app.environment === "development") {
-                console.log(`📊 Updating performance for word ${word.english}:`, {
-                  existingAttempts: existingAttempts.length,
-                  newTotal: totalAttempts,
-                  accuracy: (correctAttempts / totalAttempts) * 100
-                });
-              }
+              // Update existing performance data
               
               await performanceFirestore.update(word.id, updatedPerf);
             } else {
-              if (AppConfig.app.environment === "development") {
-                console.log(`📊 Creating performance for word ${word.english} (ID: ${word.id}) - not found on Firebase`);
-              }
+              // Create new performance record
               await (performanceFirestore.create as any)(updatedPerf, word.id);
             }
           } else {
             // FIXED: Caso completamente nuovo - primo test per questa parola
-            if (AppConfig.app.environment === "development") {
-              console.log(`📊 Creating NEW performance for word ${word.english} (ID: ${word.id}) - first time`);
-            }
+            // Create new performance for first-time word
             
             const newPerf = createCompleteWordPerformance(
               word.id, // FIXED: passa word.id come primo parametro
@@ -790,14 +780,14 @@ export const useStats = (): StatsResult => {
     const startTime = Date.now();
     try {
       setIsProcessing(true);
-      console.log('🗑️ Starting clear current user statistics operation...');
+      // Starting clear operation
       
       const currentUserId = authUser?.uid;
       if (!currentUserId) {
         throw new Error('No authenticated user found');
       }
       
-      console.log(`🔐 Clearing statistics for user: ${currentUserId}`);
+      // Clear user statistics
       
       // Delete ONLY current user's performance documents
       const performanceCollection = collection(db, "performance");

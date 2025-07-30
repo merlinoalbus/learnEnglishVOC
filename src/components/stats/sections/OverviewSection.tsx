@@ -120,7 +120,6 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
       
       // ⭐ SAFETY CHECK: Evita divisioni per zero o valori molto piccoli
       if (Math.abs(denominator) < 0.001) {
-        console.log('⚠️ Denominatore troppo piccolo, usando calcolo semplificato');
         const firstScore = sortedData[0].percentage;
         const lastScore = sortedData[sortedData.length - 1].percentage;
         const improvement = (lastScore - firstScore) / totalDays * 7; // per settimana
@@ -129,20 +128,11 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
       
       const slope = (n * sumXY - sumX * sumY) / denominator;
       
-      console.log('📊 CALCOLO REGRESSIONE:', {
-        slope: slope.toFixed(4),
-        slopePerWeek: (slope * 7).toFixed(2),
-        denominator: denominator.toFixed(4)
-      });
       
       // ⭐ SAFETY LIMITS: Limita il risultato a valori ragionevoli
       const weeklyImprovement = slope * 7;
       const limitedResult = Math.max(-50, Math.min(50, weeklyImprovement));
       
-      console.log('✅ VELOCITÀ FINALE:', {
-        calculated: weeklyImprovement.toFixed(2),
-        limited: limitedResult.toFixed(2)
-      });
       
       return isFinite(limitedResult) ? limitedResult : 0;
     };
