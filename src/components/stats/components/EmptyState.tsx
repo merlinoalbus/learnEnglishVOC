@@ -7,15 +7,13 @@ import React from 'react';
 import { Card, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Play, Database } from 'lucide-react';
-import DataManagementPanel from '../DataManagementPanel';
-
+import { useAppContext } from '../../../contexts/AppContext';
 interface EmptyStateProps {
   onGoToMain: () => void;
-  showDataManagement: boolean;
-  setShowDataManagement: (show: boolean) => void;
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ onGoToMain, showDataManagement, setShowDataManagement }) => {
+const EmptyState: React.FC<EmptyStateProps> = ({ onGoToMain }) => {
+  const { dispatch } = useAppContext();
   return (
     <Card className="backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-0 shadow-2xl rounded-3xl overflow-hidden">
       <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-1">
@@ -29,7 +27,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onGoToMain, showDataManagement,
             </CardTitle>
             
             <Button
-              onClick={() => setShowDataManagement(!showDataManagement)}
+              onClick={() => dispatch({ type: 'SET_VIEW', payload: 'data-management' })}
               className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl"
             >
               <Database className="w-4 h-4 mr-2" />
@@ -37,7 +35,6 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onGoToMain, showDataManagement,
             </Button>
           </div>
 
-          {showDataManagement && <DataManagementPanel />}
 
           <div className="text-center py-16">
             <div className="text-8xl mb-6">📊</div>

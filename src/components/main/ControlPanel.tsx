@@ -5,7 +5,7 @@
 import React from 'react';
 import { Card, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
-import { Play, RefreshCw, BookOpen, AlertTriangle } from 'lucide-react';
+import { Play, BookOpen, AlertTriangle } from 'lucide-react';
 import { Word, WordStats } from '../../types/entities/Word.types';
 
 // =====================================================
@@ -14,7 +14,6 @@ import { Word, WordStats } from '../../types/entities/Word.types';
 
 interface ControlPanelProps {
   onStartTest: () => void;
-  onClearAllWords: () => void;
   words: Word[];
   wordStats: WordStats;
   getAvailableChapters: () => string[];
@@ -26,7 +25,6 @@ interface ControlPanelProps {
 
 export const ControlPanel: React.FC<ControlPanelProps> = React.memo(({ 
   onStartTest, 
-  onClearAllWords, 
   words, 
   wordStats,
   getAvailableChapters
@@ -81,7 +79,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
             </div>
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex justify-center">
             <Button 
               onClick={onStartTest} 
               disabled={availableWords.length === 0}
@@ -95,19 +93,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = React.memo(({
                   ({availableWords.length} disponibili
                   {wordStats.difficult > 0 && `, ${wordStats.difficult} difficili`})
                 </span>
-              </div>
-            </Button>
-
-            <Button 
-              onClick={onClearAllWords} 
-              variant="outline" 
-              disabled={words.length === 0}
-              className="control-panel-clear-button"
-            >
-              <div className="flex flex-col items-center gap-2 text-red-600 dark:text-red-400">
-                <RefreshCw className="w-8 h-8" />
-                <span className="font-bold">Pulisci Vocabolario</span>
-                <span className="text-sm">Elimina tutte le parole</span>
               </div>
             </Button>
           </div>

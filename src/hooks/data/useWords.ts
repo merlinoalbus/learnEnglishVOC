@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useFirestore } from "../core/useFirestore";
 import { useFirebase } from "../../contexts/FirebaseContext";
+import { useAuth } from "../integration/useAuth";
 import AppConfig from "../../config/appConfig";
 import type {
   Word,
@@ -89,6 +90,7 @@ export const useWords = (): WordsResult => {
   });
 
   const { isReady } = useFirebase();
+  const { user } = useAuth();
 
   // Local state
   const [editingWord, setEditingWord] = useState<Word | null>(null);
@@ -352,20 +354,59 @@ export const useWords = (): WordsResult => {
     [firestoreHook.data, updateWord]
   );
 
-  // Clear all words
+  // Clear all words - HARD DELETE (physical deletion from DB)
   const clearAllWords = useCallback(async (): Promise<
     OperationResult<void>
   > => {
     const startTime = Date.now();
 
     try {
-      // Use batch operation for better performance
-      const operations = firestoreHook.data.map((word) => ({
-        type: "delete" as const,
-        id: word.id,
-      }));
+      // Get current user
+      const currentUserId = user?.id;
+      if (!currentUserId) {
+        throw new Error("User not authenticated");
+      }
 
-      await firestoreHook.batchUpdate(operations);
+      // HARD DELETE: Physical deletion from Firestore
+      const { collection, query, where, getDocs, deleteDoc, doc, writeBatch } = await import("firebase/firestore");
+      const { db } = await import("../../config/firebase");
+      
+      // Query for user's words
+      const wordsRef = collection(db, "words");
+      const wordsQuery = query(
+        wordsRef, 
+        where("firestoreMetadata.userId", "==", currentUserId)
+      );
+      const wordsSnapshot = await getDocs(wordsQuery);
+      
+      console.log(`🗑️ HARD DELETE: Found ${wordsSnapshot.size} words to physically delete`);
+      
+      // Use batch for efficient deletion
+      const batch = writeBatch(db);
+      
+      // Delete words
+      wordsSnapshot.docs.forEach((docSnap) => {
+        batch.delete(doc(db, "words", docSnap.id));
+      });
+      
+      // Also delete associated performances
+      const performanceRef = collection(db, "performance");
+      const performanceQuery = query(
+        performanceRef, 
+        where("firestoreMetadata.userId", "==", currentUserId)
+      );
+      const performanceSnapshot = await getDocs(performanceQuery);
+      
+      console.log(`🗑️ HARD DELETE: Found ${performanceSnapshot.size} performance records to physically delete`);
+      
+      performanceSnapshot.docs.forEach((docSnap) => {
+        batch.delete(doc(db, "performance", docSnap.id));
+      });
+      
+      // Execute batch deletion
+      await batch.commit();
+      
+      console.log(`✅ HARD DELETE COMPLETED: ${wordsSnapshot.size} words + ${performanceSnapshot.size} performances physically deleted`);
 
       setEditingWord(null);
       statsCache.current = null;
@@ -380,6 +421,7 @@ export const useWords = (): WordsResult => {
         },
       };
     } catch (error) {
+      console.error("❌ HARD DELETE ERROR:", error);
       return {
         success: false,
         error: error as FirestoreError,
@@ -390,7 +432,7 @@ export const useWords = (): WordsResult => {
         },
       };
     }
-  }, [firestoreHook.data, firestoreHook.batchUpdate]);
+  }, [user?.id]);
 
   // Import words
   const importWords = useCallback(
@@ -408,35 +450,86 @@ export const useWords = (): WordsResult => {
           throw new Error("No valid words to import");
         }
 
-        // Check for duplicates
-        const existingEnglishWords = new Set(
-          firestoreHook.data.map((w) => w.english.toLowerCase())
-        );
+        // Use current user from hook
+        const currentUserId = user?.id || 'current-user';
 
-        const newWords = validWords.filter(
-          (word) => !existingEnglishWords.has(word.english.toLowerCase())
-        );
+        // Process each word to handle ID remapping for different users
+        const processedWords = [];
+        for (const word of validWords) {
+          let finalWordId = word.id;
+          let shouldCreate = true;
+          
+          // First check if current user already has this word by english text
+          const existingUserWord = firestoreHook.data.find(
+            w => w.english.toLowerCase() === word.english.toLowerCase()
+          );
+          
+          if (existingUserWord) {
+            // Current user already has this word - update it with existing ID
+            finalWordId = existingUserWord.id;
+            shouldCreate = false;
+            console.log(`✅ UPDATE: ${word.english} will replace existing word ${existingUserWord.id}`);
+          }
+          
+          if (word.id) {
+            // Check if document with this ID already exists (from different user)
+            const { getDoc, doc } = await import('firebase/firestore');
+            const { db } = await import('../../config/firebase');
+            
+            const existingDocRef = doc(db, "words", word.id);
+            const existingDocSnap = await getDoc(existingDocRef);
+            
+            if (existingDocSnap.exists()) {
+              const existingData = existingDocSnap.data();
+              const existingUserId = existingData?.firestoreMetadata?.userId;
+              
+              if (existingUserId && existingUserId !== currentUserId) {
+                // Generate new ID for words owned by different user
+                const { collection } = await import('firebase/firestore');
+                const newDocRef = doc(collection(db, "words"));
+                finalWordId = newDocRef.id;
+                shouldCreate = true;
+                console.log(`🔄 REMAPPED WORD: ${word.id} → ${finalWordId} (${existingUserId} → ${currentUserId})`);
+              } else if (existingUserId === currentUserId) {
+                // Same user - keep original ID to overwrite  
+                shouldCreate = false;
+                console.log(`✅ OVERWRITE: ${word.id} (same user ${currentUserId})`);
+              }
+            }
+          }
+          
+          processedWords.push({
+            ...word,
+            id: finalWordId,
+            _shouldCreate: shouldCreate
+          });
+        }
+
+        const newWords = processedWords;
 
         if (newWords.length === 0) {
           throw new Error("All words already exist");
         }
 
-        // Prepare words for batch creation
-        const operations = newWords.map((word) => ({
-          type: "create" as const,
-          id: word.id, // Preserve custom ID from import if present
-          data: {
-            ...word,
-            english: word.english.trim(),
-            italian: word.italian.trim(),
-            chapter: word.chapter || "1",
-            group: word.group || "GENERAL",
-            sentences: word.sentences || [],
-            synonyms: word.synonyms || [],
-            learned: false,
-            difficult: false,
-          },
-        }));
+        // Prepare words for batch creation/update
+        const operations = newWords.map((word: any) => {
+          const operationType = word._shouldCreate ? "create" : "update";
+          return {
+            type: operationType as "create" | "update",
+            id: word.id, // Preserve custom ID from import if present
+            data: {
+              ...word,
+              english: word.english.trim(),
+              italian: word.italian.trim(),  
+              chapter: word.chapter || "1",
+              group: word.group || "GENERAL",
+              sentences: word.sentences || [],
+              synonyms: word.synonyms || [],
+              learned: false,
+              difficult: false,
+            },
+          };
+        });
 
         await firestoreHook.batchUpdate(operations);
 

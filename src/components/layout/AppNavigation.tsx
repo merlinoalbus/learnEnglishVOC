@@ -7,6 +7,7 @@ import { Button } from "../ui/button";
 import {
   Brain,
   BarChart3,
+  Database,
   Shield,
   User,
   LogOut,
@@ -39,6 +40,13 @@ export const AppNavigation = React.memo(() => {
       icon: BarChart3,
       color: "from-purple-500 to-pink-600",
       badge: testHistory.length > 0 ? testHistory.length : null,
+      requireAuth: true,
+    },
+    {
+      id: "data-management",
+      label: "Gestione Dati",
+      icon: Database,
+      color: "from-indigo-500 to-blue-600",
       requireAuth: true,
     },
     ...(isAdmin

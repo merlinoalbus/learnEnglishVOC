@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import StatsHeader from './StatsHeader';
 import StatsNavigation from './StatsNavigation';
-import DataManagementPanel from './DataManagementPanel';
 import EmptyState from './components/EmptyState';
 import type { TestHistoryItem, Word } from '../../types';
 
@@ -16,14 +15,12 @@ const TrendsSection = React.lazy(() => import('./sections/TrendsSection'));
 interface StatsOverviewProps {
   testHistory: TestHistoryItem[];
   words: Word[];
-  onClearAllStatistics: () => void; // ⭐ RENAMED: from onClearHistory to onClearAllStatistics
   onGoToMain: () => void;
   forceUpdate: number | (() => void);
 }
 
-const StatsOverview: React.FC<StatsOverviewProps> = ({ testHistory, words, onClearAllStatistics, onGoToMain, forceUpdate }) => {
+const StatsOverview: React.FC<StatsOverviewProps> = ({ testHistory, words, onGoToMain, forceUpdate }) => {
   const [selectedView, setSelectedView] = useState<string>('overview');
-  const [showDataManagement, setShowDataManagement] = useState<boolean>(false);
   const [localRefresh, setLocalRefresh] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -54,8 +51,6 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ testHistory, words, onCle
     return (
       <EmptyState 
         onGoToMain={onGoToMain}
-        showDataManagement={showDataManagement}
-        setShowDataManagement={setShowDataManagement}
       />
     );
   }
@@ -64,8 +59,7 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ testHistory, words, onCle
     const commonProps = { 
       testHistory, 
       words, 
-      localRefresh,
-      onClearAllStatistics // ⭐ RENAMED: from onClearHistory to onClearAllStatistics
+      localRefresh
     };
 
     switch (selectedView) {
@@ -88,17 +82,12 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ testHistory, words, onCle
     <div className="space-y-8 animate-fade-in">
       <StatsHeader 
         testHistory={testHistory}
-        showDataManagement={showDataManagement}
-        setShowDataManagement={setShowDataManagement}
-        onClearAllStatistics={onClearAllStatistics} // ⭐ RENAMED: from onClearHistory to onClearAllStatistics
       />
 
       <StatsNavigation 
         selectedView={selectedView}
         setSelectedView={setSelectedView}
       />
-
-      {showDataManagement && <DataManagementPanel />}
 
       <React.Suspense fallback={<div className="text-center py-8 text-gray-600 dark:text-gray-400">Caricamento...</div>}>
         {renderSelectedSection()}

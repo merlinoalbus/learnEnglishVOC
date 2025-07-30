@@ -6,6 +6,7 @@ import { MainView } from "../views/MainView";
 import { TestView } from "../views/TestView";
 import { ResultsView } from "../views/ResultsView";
 import { StatsView } from "../views/StatsView";
+import { DataManagementView } from "../views/DataManagementView";
 import { AdminView } from "../views/AdminView";
 import { AuthView } from "../views/AuthView";
 import { ProfileView } from "../views/ProfileView";
@@ -166,6 +167,13 @@ export const AppRouter = () => {
       return (
         <ProtectedRoute requireAuth={true}>
           <StatsView />
+        </ProtectedRoute>
+      );
+
+    case "data-management":
+      return (
+        <ProtectedRoute requireAuth={true}>
+          <DataManagementView onGoBack={() => dispatch({ type: 'SET_VIEW', payload: 'main' })} />
         </ProtectedRoute>
       );
 

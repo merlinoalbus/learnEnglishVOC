@@ -8,7 +8,7 @@ import { Word, TestHistoryItem, Statistics, WordPerformance, TestStats } from ".
 // 🎯 TYPE DEFINITIONS
 // =====================================================
 
-type AppView = "main" | "test" | "results" | "stats" | "auth" | "settings" | "profile" | "admin" | "privacy" | "terms";
+type AppView = "main" | "test" | "results" | "stats" | "data-management" | "auth" | "settings" | "profile" | "admin" | "privacy" | "terms";
 
 interface AppState {
   currentView: AppView;

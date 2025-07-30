@@ -8,7 +8,6 @@ import type { ChangeEvent } from 'react';
 import { collection, query, where, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { useAuth } from '../../../hooks/integration/useAuth';
-import { useFirestoreWords, useFirestoreStats, useFirestorePerformance } from '../../../hooks/core/useFirestore';
 
 interface UseDataManagementReturn {
   // States
@@ -39,11 +38,6 @@ export const useDataManagement = (): UseDataManagementReturn => {
   const [importType, setImportType] = useState<string>(''); // ⭐ NEW: Track import type
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
-
-  // ⭐ NEW: Direct Firestore hooks for more reliable refresh
-  const wordsHook = useFirestoreWords();
-  const statsHook = useFirestoreStats();
-  const performanceHook = useFirestorePerformance();
 
   const {
     importStats,
@@ -527,8 +521,15 @@ export const useDataManagement = (): UseDataManagementReturn => {
           console.log('📚 Importing words only...');
           console.log('📚 Raw parsed data:', parsedData);
           
-          // ⭐ ENHANCED: Handle words import with userId remapping
-          const rawWords = parsedData.words || parsedData;
+          // ⭐ ENHANCED: Handle words import with userId remapping  
+          // Support both old JSONManager format and new export format
+          let rawWords = parsedData.words || parsedData;
+          
+          // If it's an old JSONManager export format, extract words array
+          if (parsedData.exportData && Array.isArray(parsedData.exportData)) {
+            rawWords = parsedData.exportData;
+          }
+          
           const wordsToImport = Array.isArray(rawWords) ? rawWords : [];
           
           try {
@@ -797,67 +798,32 @@ export const useDataManagement = (): UseDataManagementReturn => {
       
       console.log('✅ Import completed successfully');
       
-      // ⭐ ENHANCED: Force complete data refresh using direct Firestore hooks
+      // ⭐ ENHANCED: Force complete data refresh after import
       console.log('🔄 Forcing complete data refresh after import...');
       
-      // Refresh all Firestore hooks directly for immediate update
-      const refreshPromises = [];
-      
-      if (importType.includes('words') || importType.includes('statistics') || importType.includes('test_history')) {
-        console.log('🔄 Refreshing words data...');
-        refreshPromises.push(wordsHook.refresh());
+      // First refresh the data
+      if (typeof refreshData === 'function') {
+        refreshData();
       }
       
-      if (importType.includes('statistics')) {
-        console.log('🔄 Refreshing statistics data...');
-        refreshPromises.push(statsHook.refresh());
-      }
-      
-      if (importType.includes('performance')) {
-        console.log('🔄 Refreshing performance data...');
-        refreshPromises.push(performanceHook.refresh());
-      }
-      
-      // Wait for all refreshes to complete
-      try {
-        await Promise.all(refreshPromises);
-        console.log('✅ All Firestore data refreshed successfully');
-      } catch (refreshError) {
-        console.error('⚠️ Some data refresh operations failed:', refreshError);
-      }
-      
-      // Also call the context refresh functions as backup
+      // Then force refresh with a slight delay to ensure data propagation
       setTimeout(() => {
-        console.log('🔄 Calling context refresh functions...');
-        if (typeof refreshData === 'function') {
-          refreshData();
-        }
         if (typeof forceRefresh === 'function') {
+          console.log('🔄 Force refreshing UI components...');
           forceRefresh();
         }
-        
-        // Force clear all caches to ensure fresh data
-        wordsHook.clearCache();
-        statsHook.clearCache();
-        performanceHook.clearCache();
-        
-        // Trigger another fetch after cache clear
-        setTimeout(() => {
-          console.log('🔄 Final fetch after cache clear...');
-          wordsHook.fetch();
-          statsHook.fetch();
-          performanceHook.fetch();
-        }, 100);
-      }, 200);
-      
-      // Show success message and ask user if they want to reload the page
-      setTimeout(() => {
-        // eslint-disable-next-line no-restricted-globals
-        const shouldReload = confirm(`✅ Import ${importType} completato con successo!\n\nPer garantire che tutti i dati siano visibili, è consigliato ricaricare la pagina.\n\nVuoi ricaricare ora?`);
-        if (shouldReload) {
-          window.location.reload();
-        }
       }, 500);
+      
+      // Additional refresh to ensure UI is fully updated
+      setTimeout(() => {
+        if (typeof refreshData === 'function') {
+          console.log('🔄 Final data refresh...');
+          refreshData();
+        }
+        
+        // Show success message after all refreshes
+        alert(`✅ Import ${importType} completato con successo!`);
+      }, 1000);
       
     } catch (error) {
       console.error('❌ Errore importazione:', error);

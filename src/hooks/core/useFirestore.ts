@@ -780,6 +780,40 @@ export function useFirestore<T extends { id: string }>(
     }));
   }, [fetchOperation.loading, fetchOperation.error]);
 
+  // 🧹 CLEAR CACHE ON LOGOUT
+  useEffect(() => {
+    const handleLogout = () => {
+      clearCache();
+      setState({
+        data: [],
+        loading: false,
+        error: null,
+        listening: false,
+        lastSync: null,
+        fromCache: false,
+      });
+      if (syncWithLocalStorage && localStorageKey) {
+        localStorage.removeItem(localStorageKey);
+        localStorage.removeItem(`${localStorageKey}_lastUpdate`);
+      }
+    };
+
+    const handleLogin = () => {
+      // Force reload data after login
+      if (getCurrentUserId()) {
+        fetch();
+      }
+    };
+
+    window.addEventListener('userLogout', handleLogout);
+    window.addEventListener('userLogin', handleLogin);
+    
+    return () => {
+      window.removeEventListener('userLogout', handleLogout);
+      window.removeEventListener('userLogin', handleLogin);
+    };
+  }, [clearCache, syncWithLocalStorage, localStorageKey, fetch, getCurrentUserId]);
+
   return {
     ...state,
     fetch,

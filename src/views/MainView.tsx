@@ -2,7 +2,6 @@ import React from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { ControlPanel } from '../components/main/ControlPanel';
-import JSONManager from '../components/JSONManager';
 import AddWordForm from '../components/AddWordForm';
 import WordsList from '../components/WordsList';
 import { Word, CreateWordInput, UpdateWordInput } from '../types';
@@ -102,31 +101,6 @@ export const MainView: React.FC = React.memo(() => {
     }
   }, [words, toggleWordDifficult, showSuccess]);
 
-  const handleImportWords = React.useCallback(async (jsonText: string): Promise<number> => {
-    try {
-      const count = await importWords(JSON.parse(jsonText));
-      
-      if (forceRefresh) {
-        setTimeout(forceRefresh, 100);
-      }
-      
-      const imported = typeof count === 'number' ? count : count?.imported || 0;
-      showSuccess(`✅ ${imported} parole importate con successo!`);
-      return imported;
-    } catch (error) {
-      console.error('MainView: Import error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
-      if (errorMessage.includes('already exist')) {
-        showWarning('⚠️ Tutte le parole nel JSON sono già presenti nel vocabolario.');
-      } else if (errorMessage.includes('JSON')) {
-        showError(new Error('❌ File JSON non valido. Controlla la sintassi.'), 'Import Words');
-      } else {
-        showError(error instanceof Error ? error : new Error(errorMessage), 'Import Words');
-      }
-      throw error;
-    }
-  }, [importWords, forceRefresh, showSuccess, showError, showWarning]);
 
   const handleEditWord = React.useCallback((word: Word) => {
     if (!word || !word.id) {
@@ -158,7 +132,6 @@ export const MainView: React.FC = React.memo(() => {
     <div className="space-y-8 animate-fade-in">
       <ControlPanel {...{
         onStartTest: handleStartTest,
-        onClearAllWords: () => dispatch({ type: 'SET_SHOW_CONFIRM_CLEAR', payload: true }),
         words: words,
         wordStats: {
           ...wordStats,
@@ -171,10 +144,6 @@ export const MainView: React.FC = React.memo(() => {
         getAvailableChapters: getAvailableChapters
       }} />
 
-      <JSONManager 
-        words={words}
-        onImportWords={handleImportWords}
-      />
 
       <AddWordForm
         onAddWord={handleAddWord}

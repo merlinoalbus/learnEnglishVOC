@@ -785,29 +785,61 @@ export const useStats = (): StatsResult => {
     }
   }, []);
 
-  // ⭐ NEW: Clear all statistics function (invalidate performance and detailedTestSessions with deleted=true)
+  // ⭐ FIXED: Clear only CURRENT USER's statistics function
   const clearAllStatistics = useCallback(async (): Promise<OperationResult<void>> => {
     const startTime = Date.now();
     try {
       setIsProcessing(true);
-      console.log('🗑️ Starting clear all statistics operation...');
+      console.log('🗑️ Starting clear current user statistics operation...');
       
-      // Delete ALL performance documents permanently (including soft-deleted ones)
+      const currentUserId = authUser?.uid;
+      if (!currentUserId) {
+        throw new Error('No authenticated user found');
+      }
+      
+      console.log(`🔐 Clearing statistics for user: ${currentUserId}`);
+      
+      // Delete ONLY current user's performance documents
       const performanceCollection = collection(db, "performance");
-      const allPerformanceDocs = await getDocs(performanceCollection);
+      const userPerformanceQuery = query(
+        performanceCollection, 
+        where("firestoreMetadata.userId", "==", currentUserId)
+      );
+      const userPerformanceDocs = await getDocs(userPerformanceQuery);
       
-      if (allPerformanceDocs.size > 0) {
-        for (const docSnapshot of allPerformanceDocs.docs) {
+      if (userPerformanceDocs.size > 0) {
+        console.log(`🗑️ Deleting ${userPerformanceDocs.size} performance documents for user ${currentUserId}`);
+        for (const docSnapshot of userPerformanceDocs.docs) {
           await deleteDoc(docSnapshot.ref);
         }
       }
       
-      // Delete ALL detailed test sessions permanently (including soft-deleted ones)
+      // Delete ONLY current user's detailed test sessions
       const sessionsCollection = collection(db, "detailedTestSessions");
-      const allSessionsDocs = await getDocs(sessionsCollection);
+      const userSessionsQuery = query(
+        sessionsCollection, 
+        where("userId", "==", currentUserId)
+      );
+      const userSessionsDocs = await getDocs(userSessionsQuery);
       
-      if (allSessionsDocs.size > 0) {
-        for (const docSnapshot of allSessionsDocs.docs) {
+      if (userSessionsDocs.size > 0) {
+        console.log(`🗑️ Deleting ${userSessionsDocs.size} test sessions for user ${currentUserId}`);
+        for (const docSnapshot of userSessionsDocs.docs) {
+          await deleteDoc(docSnapshot.ref);
+        }
+      }
+      
+      // Delete ONLY current user's statistics documents
+      const statisticsCollection = collection(db, "statistics");
+      const userStatsQuery = query(
+        statisticsCollection, 
+        where("firestoreMetadata.userId", "==", currentUserId)
+      );
+      const userStatsDocs = await getDocs(userStatsQuery);
+      
+      if (userStatsDocs.size > 0) {
+        console.log(`🗑️ Deleting ${userStatsDocs.size} statistics documents for user ${currentUserId}`);
+        for (const docSnapshot of userStatsDocs.docs) {
           await deleteDoc(docSnapshot.ref);
         }
       }
@@ -839,7 +871,7 @@ export const useStats = (): StatsResult => {
     } finally {
       setIsProcessing(false);
     }
-  }, [performanceFirestore, detailedTestSessions]);
+  }, [authUser]);
 
   const exportData = useCallback((): ComprehensiveStatisticsExportData => {
     const wordPerformanceAnalyses = getAllWordsPerformance();
@@ -859,13 +891,18 @@ export const useStats = (): StatsResult => {
         setIsProcessing(true);
 
         if (data.statistics && data.statistics !== null) {
-          if (statsFirestore.data[0]) {
-            await statsFirestore.update(
-              statsFirestore.data[0].id,
-              data.statistics
-            );
-          } else {
-            await statsFirestore.create(data.statistics);
+          // Import statistics with setDoc to overwrite existing
+          for (const stat of (Array.isArray(data.statistics) ? data.statistics : [data.statistics])) {
+            if (!stat.id) continue;
+            const docRef = doc(db, "statistics", stat.id);
+            const docData = {
+              ...stat,
+              firestoreMetadata: {
+                ...(stat.firestoreMetadata || {}),
+                userId: user?.id || 'current-user'
+              }
+            };
+            await setDoc(docRef, docData);
           }
         }
 
@@ -884,9 +921,9 @@ export const useStats = (): StatsResult => {
               userId: user?.id || 'current-user'
             });
             
-            // Delay after each document to stay under timeout
-            if (i < sessions.length - 1) {
-              await new Promise(resolve => setTimeout(resolve, 200));
+            // Minimal delay only every 10 documents to avoid rate limiting
+            if ((i + 1) % 10 === 0 && i < sessions.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 50));
             }
           }
         }
@@ -899,14 +936,13 @@ export const useStats = (): StatsResult => {
             const analysis = performances[i];
             try {
               const docRef = doc(db, "performance", analysis.id);
+              // Preserve existing firestoreMetadata and add current userId
               const docData = {
                 ...analysis,
                 firestoreMetadata: {
+                  ...((analysis as any).firestoreMetadata || {}),
                   userId: user?.id || 'current-user',
-                  createdAt: new Date(),
-                  updatedAt: new Date(),
-                  deleted: false,
-                  version: 1
+                  updatedAt: new Date()
                 }
               };
               await setDoc(docRef, docData);
@@ -914,9 +950,9 @@ export const useStats = (): StatsResult => {
               // Skip failed docs
             }
             
-            // Delay after each document to stay under timeout
-            if (i < performances.length - 1) {
-              await new Promise(resolve => setTimeout(resolve, 200));
+            // Minimal delay only every 10 documents to avoid rate limiting
+            if ((i + 1) % 10 === 0 && i < performances.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 50));
             }
           }
         }
@@ -1440,6 +1476,59 @@ export const useStats = (): StatsResult => {
     
     return chapterStatsService.calculateChapterTrend(chapterName, analysis.chapterDetailedHistory);
   }, [testHistory, wordsData, getAllWordsPerformance, chapterStatsService]);
+
+  // 🧹 CLEAR ALL DATA ON LOGOUT AND RELOAD ON LOGIN
+  useEffect(() => {
+    const handleLogout = () => {
+      setDetailedTestSessions([]);
+      setTestHistory([]);
+      setWordPerformance({});
+      setManualWordPerformances([]);
+      calculatedStatsCache.current = null;
+      chapterAnalysisCache.current = null;
+    };
+
+    const handleLogin = () => {
+      // Force reload manual data after login
+      if (isReady && (user?.id || authUser?.uid)) {
+        const loadData = async () => {
+          setDetailedSessionsLoading(true);
+          try {
+            const userId = user?.id || authUser?.uid;
+            
+            // Load detailedTestSessions
+            const sessionsRef = collection(db, "detailedTestSessions");
+            const sessionsQuery = query(sessionsRef, where("userId", "==", userId));
+            const sessionsSnapshot = await getDocs(sessionsQuery);
+            
+            const sessions: any[] = [];
+            sessionsSnapshot.forEach((doc) => {
+              const data = doc.data();
+              if (!data.deleted && !data.firestoreMetadata?.deleted) {
+                sessions.push({ id: doc.id, ...data });
+              }
+            });
+            
+            setDetailedTestSessions(sessions);
+          } catch (error) {
+            console.error('Error loading data after login:', error);
+          } finally {
+            setDetailedSessionsLoading(false);
+          }
+        };
+        
+        setTimeout(loadData, 200);
+      }
+    };
+
+    window.addEventListener('userLogout', handleLogout);
+    window.addEventListener('userLogin', handleLogin);
+    
+    return () => {
+      window.removeEventListener('userLogout', handleLogout);
+      window.removeEventListener('userLogin', handleLogin);
+    };
+  }, [isReady, user?.id, authUser?.uid]);
 
   return {
     stats: currentStats,

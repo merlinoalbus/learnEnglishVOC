@@ -29,7 +29,8 @@
       "Bash(true)",
       "Bash(npm run:*)",
       "Bash(cp:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }

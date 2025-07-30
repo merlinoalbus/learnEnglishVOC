@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Shield, Download, Upload } from 'lucide-react';
-import { useDataManagement } from './hooks/useDataManagement';
+import { useDataManagement } from '../stats/hooks/useDataManagement';
 import { useStats } from '../../hooks/data/useStats';
 
 const DataManagementPanel = () => {
@@ -18,9 +18,11 @@ const DataManagementPanel = () => {
     handleExportStatistics, // ⭐ NEW: Individual export functions
     handleExportTestHistory,
     handleExportPerformance,
+    handleExportWords, // ⭐ NEW: Words export
     handleImportStatistics, // ⭐ NEW: Individual import functions
     handleImportTestHistory,
     handleImportPerformance,
+    handleImportWords, // ⭐ NEW: Words import
     fileInputRef
   } = useDataManagement();
 
@@ -56,6 +58,13 @@ const DataManagementPanel = () => {
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-sm"
             >
               🎯 Export Performance Parole
+            </Button>
+            <Button 
+              onClick={handleExportWords}
+              disabled={isExporting || isProcessing}
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm"
+            >
+              📚 Export Vocabolario
             </Button>
           </div>
           
@@ -94,6 +103,13 @@ const DataManagementPanel = () => {
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-sm"
             >
               🎯 Import Performance Parole
+            </Button>
+            <Button 
+              onClick={handleImportWords}
+              disabled={isImporting || isProcessing}
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm"
+            >
+              📚 Import Vocabolario
             </Button>
           </div>
           

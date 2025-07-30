@@ -927,6 +927,11 @@ export const signIn = async (
 
     debugLog("Sign in successful", { uid: authUser.uid });
 
+    // CRITICAL: Emit event to trigger data reload after login
+    setTimeout(() => {
+      window.dispatchEvent(new Event('userLogin'));
+    }, 100);
+
     const result = createOperationResult(
       true,
       authUser,
@@ -994,6 +999,11 @@ export const signInWithGoogle = async (): Promise<AuthOperationResult> => {
 
     debugLog("Google sign in successful", { uid: authUser.uid });
 
+    // CRITICAL: Emit event to trigger data reload after login
+    setTimeout(() => {
+      window.dispatchEvent(new Event('userLogin'));
+    }, 100);
+
     const result = createOperationResult(
       true,
       authUser,
@@ -1038,6 +1048,11 @@ export const handleGoogleRedirectResult = async (): Promise<AuthOperationResult 
 
     debugLog("Google redirect sign in successful", { uid: authUser.uid });
 
+    // CRITICAL: Emit event to trigger data reload after login
+    setTimeout(() => {
+      window.dispatchEvent(new Event('userLogin'));
+    }, 100);
+
     const operationResult = createOperationResult(
       true,
       authUser,
@@ -1070,6 +1085,9 @@ export const signOutUser = async (): Promise<AuthOperationResult> => {
     debugLog("Sign out attempt", { uid: currentUser?.uid });
 
     await signOut(auth);
+
+    // CRITICAL: Emit event to clear all caches
+    window.dispatchEvent(new Event('userLogout'));
 
     debugLog("Sign out successful");
 
