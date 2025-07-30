@@ -130,7 +130,7 @@ COPY . .
 # EXCLUDE: .dockerignore definisce cosa non copiare
 
 # ====== BUILD con fallback ======
-RUN npm run build:docker || (echo "Build failed, trying fallback..." && CI=false npm run build:docker)
+RUN CI=false npm run build:docker || (echo "Build failed, trying fallback..." && CI=false GENERATE_SOURCEMAP=false react-scripts build)
 # SCOPO: Build production con strategia fallback
 #
 # COMANDO PRIMARIO: npm run build
