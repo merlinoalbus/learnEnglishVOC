@@ -88,17 +88,36 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
     return result;
   }, [wordId, testHistory, finalWordInfo, timelineService, wordPerformance]);
 
+  // ⭐ ADDITIONAL CHECK: If word explicitly has no performance data, don't show details
+  if (wordInfo && wordInfo.hasPerformanceData === false) {
+    return (
+      <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
+        <CardContent className="text-center py-16">
+          <div className="text-6xl mb-4">🚫</div>
+          <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">Nessun dato performance</h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            La parola "{finalWordInfo.english}" non ha dati di performance disponibili.
+          </p>
+          <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-sm text-yellow-700 dark:text-yellow-300">
+            <div>💡 Questa parola è nella sezione "Parole Mai Testate"</div>
+            <div>Completa alcuni test per vedere l'analisi dettagliata</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // ⭐ REFACTORED: Early return if no data
   if (!timelineData.hasData) {
     return (
-      <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+      <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardContent className="text-center py-16">
           <div className="text-6xl mb-4">📊</div>
-          <h3 className="text-xl font-bold text-gray-700 mb-2">Nessun tentativo trovato</h3>
-          <p className="text-gray-600">
+          <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">Nessun tentativo trovato</h3>
+          <p className="text-gray-600 dark:text-gray-400">
             La parola "{finalWordInfo.english}" non è ancora stata testata o non è stata trovata nella cronologia test.
           </p>
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-500">
+          <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm text-gray-500 dark:text-gray-400">
             <div>Capitolo: {finalWordInfo.chapter || 'Nessun capitolo'}</div>
             <div>Cronologia disponibile: {testHistory.length} test</div>
           </div>
@@ -115,9 +134,9 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-bold text-gray-800">{`Data: ${label}`}</p>
-          <p className="text-sm text-gray-600">{`Dettaglio: ${data.fullDate}`}</p>
+        <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+          <p className="font-bold text-gray-800 dark:text-gray-200">{`Data: ${label}`}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{`Dettaglio: ${data.fullDate}`}</p>
           <div className="mt-2 space-y-1">
             <p className={`text-sm font-medium ${data.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
               {`Risultato: ${data.isCorrect ? '✅ Corretto' : '❌ Sbagliato'}`}
@@ -133,7 +152,7 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
             <p className="text-sm text-purple-600">
               {`Tempo: ${data.time}s`}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {`Tentativo #${data.attemptNumber} di ${attempts.length}`}
             </p>
           </div>
@@ -144,7 +163,7 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
   };
 
   return (
-    <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden" key={`detail-${wordId}-${localRefresh}`}>
+    <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden" key={`detail-${wordId}-${localRefresh}`}>
       <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
         <CardTitle className="flex items-center justify-between text-white">
           <div className="flex items-center gap-3">
@@ -169,34 +188,34 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
       <CardContent className="p-6">
         {/* ⭐ ENHANCED: Quick stats overview */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          <div className="text-center p-3 bg-blue-50 rounded-xl">
-            <div className="text-xl font-bold text-blue-600">{recentStats.totalAttempts}</div>
-            <div className="text-blue-700 text-sm">Tentativi Totali</div>
+          <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+            <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{recentStats.totalAttempts}</div>
+            <div className="text-blue-700 dark:text-blue-300 text-sm">Tentativi Totali</div>
           </div>
-          <div className="text-center p-3 bg-green-50 rounded-xl">
-            <div className="text-xl font-bold text-green-600">{reconstructedStats.accuracy}%</div>
-            <div className="text-green-700 text-sm">Accuratezza Finale</div>
+          <div className="text-center p-3 bg-green-50 dark:bg-green-900/30 rounded-xl">
+            <div className="text-xl font-bold text-green-600 dark:text-green-400">{reconstructedStats.accuracy}%</div>
+            <div className="text-green-700 dark:text-green-300 text-sm">Accuratezza Finale</div>
           </div>
-          <div className="text-center p-3 bg-orange-50 rounded-xl">
-            <div className="text-xl font-bold text-orange-600">{recentStats.recentHints}</div>
-            <div className="text-orange-700 text-sm">Aiuti Recenti</div>
+          <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/30 rounded-xl">
+            <div className="text-xl font-bold text-orange-600 dark:text-orange-400">{recentStats.recentHints}</div>
+            <div className="text-orange-700 dark:text-orange-300 text-sm">Aiuti Recenti</div>
           </div>
-          <div className="text-center p-3 bg-purple-50 rounded-xl">
-            <div className="text-xl font-bold text-purple-600">{recentStats.avgRecentTime}s</div>
-            <div className="text-purple-700 text-sm">Tempo Medio</div>
+          <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl">
+            <div className="text-xl font-bold text-purple-600 dark:text-purple-400">{recentStats.avgRecentTime}s</div>
+            <div className="text-purple-700 dark:text-purple-300 text-sm">Tempo Medio</div>
           </div>
-          <div className="text-center p-3 bg-indigo-50 rounded-xl">
-            <div className={`text-xl font-bold ${recentStats.trend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <div className="text-center p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
+            <div className={`text-xl font-bold ${recentStats.trend >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
               {recentStats.trend >= 0 ? '+' : ''}{recentStats.trend}%
             </div>
-            <div className="text-indigo-700 text-sm">Trend Recente</div>
+            <div className="text-indigo-700 dark:text-indigo-300 text-sm">Trend Recente</div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* ⭐ FIXED: Timeline Chart with REAL Dates */}
           <div>
-            <h4 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+            <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
               Andamento Temporale ({chartData.length} tentativi recenti)
             </h4>
@@ -281,7 +300,7 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
                 </ComposedChart>
               </ResponsiveContainer>
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <p>Nessun tentativo disponibile per il grafico</p>
                 <p className="text-sm mt-2">Completare alcuni test per vedere l'andamento</p>
               </div>
@@ -308,9 +327,9 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
             </div>
 
             {/* ⭐ REFACTORED: Timeline info using props data */}
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <h5 className="font-semibold text-sm text-blue-800 mb-2">📋 Informazioni Timeline</h5>
-              <div className="text-xs text-blue-700 space-y-1">
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700">
+              <h5 className="font-semibold text-sm text-blue-800 dark:text-blue-300 mb-2">📋 Informazioni Timeline</h5>
+              <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
                 <div>Parola: <span className="font-medium">"{finalWordInfo.english}" → "{finalWordInfo.italian}"</span></div>
                 <div>Capitolo: <span className="font-medium">{finalWordInfo.chapter || 'Nessun capitolo'}</span></div>
                 <div>Tentativi ricostruiti: <span className="font-medium">{attempts.length}</span></div>
@@ -335,7 +354,7 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
                 </div>
                  
                 {testHistory.length > 0 && (
-                  <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+                  <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-600 rounded text-xs">
                     <div className="font-semibold">Ultimi 3 test:</div>
                     {testHistory.slice(0, 3).map((test, index) => (
                       <div key={test.id} className="truncate">
@@ -349,9 +368,9 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
 
             {/* ⭐ NEW: Timeline info */}
             {chartData.length > 0 && (
-              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                <h5 className="font-semibold text-sm text-gray-700 mb-2">📅 Periodo Analizzato</h5>
-                <div className="text-xs text-gray-600 space-y-1">
+              <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <h5 className="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-2">📅 Periodo Analizzato</h5>
+                <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                   <div>Dal: <span className="font-medium">{chartData[0]?.fullDate}</span></div>
                   <div>Al: <span className="font-medium">{chartData[chartData.length - 1]?.fullDate}</span></div>
                   <div>Tentativi mostrati: <span className="font-medium">{chartData.length}</span> su {attempts.length} totali</div>
@@ -362,65 +381,65 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
            
           {/* ⭐ ENHANCED: Detailed Statistics (rest of the component remains the same) */}
           <div>
-            <h4 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+            <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
               <Target className="w-5 h-5" />
               Statistiche Dettagliate
             </h4>
              
             <div className="space-y-4">
               {/* Current Status */}
-              <div className="p-4 bg-gray-50 rounded-xl">
-                <h5 className="font-bold text-gray-800 mb-3">📊 Stato Attuale</h5>
+              <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                <h5 className="font-bold text-gray-800 dark:text-gray-200 mb-3">📊 Stato Attuale</h5>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-xl font-bold text-blue-600">{reconstructedStats.accuracy}%</div>
-                    <div className="text-blue-700 text-sm">Accuratezza Complessiva</div>
+                    <div className="text-blue-700 dark:text-blue-300 text-sm">Accuratezza Complessiva</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-orange-600">{reconstructedStats.hintsPercentage}%</div>
-                    <div className="text-orange-700 text-sm">% Aiuti</div>
+                    <div className="text-orange-700 dark:text-orange-300 text-sm">% Aiuti</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-green-600">{reconstructedStats.currentStreak}</div>
-                    <div className="text-green-700 text-sm">Serie Consecutiva</div>
+                    <div className="text-green-700 dark:text-green-300 text-sm">Serie Consecutiva</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-purple-600">{reconstructedStats.avgTime}s</div>
-                    <div className="text-purple-700 text-sm">Tempo Medio</div>
+                    <div className="text-purple-700 dark:text-purple-300 text-sm">Tempo Medio</div>
                   </div>
                 </div>
               </div>
                
               {/* Performance Analysis */}
-              <div className="p-4 bg-blue-50 rounded-xl">
-                <h5 className="font-bold text-blue-800 mb-3">🎯 Analisi Performance</h5>
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+                <h5 className="font-bold text-blue-800 dark:text-blue-300 mb-3">🎯 Analisi Performance</h5>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Tentativi totali:</span>
+                    <span className="text-gray-700 dark:text-gray-300">Tentativi totali:</span>
                     <span className="font-bold">{reconstructedStats.totalAttempts}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Risposte corrette:</span>
+                    <span className="text-gray-700 dark:text-gray-300">Risposte corrette:</span>
                     <span className="font-bold text-green-600">{reconstructedStats.correctAttempts}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Aiuti utilizzati:</span>
+                    <span className="text-gray-700 dark:text-gray-300">Aiuti utilizzati:</span>
                     <span className="font-bold text-orange-600">{reconstructedStats.hintsUsed}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Accuratezza finale:</span>
+                    <span className="text-gray-700 dark:text-gray-300">Accuratezza finale:</span>
                     <span className="font-bold text-blue-600">{reconstructedStats.accuracy}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Serie consecutiva corrente:</span>
+                    <span className="text-gray-700 dark:text-gray-300">Serie consecutiva corrente:</span>
                     <span className="font-bold text-green-600">{reconstructedStats.currentStreak}</span>
                   </div>
                 </div>
               </div>
                
               {/* ⭐ REFACTORED: Status Badge from service */}
-              <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
-                <h5 className="font-bold text-indigo-800 mb-2">🏷️ Stato Parola (Ricostruito)</h5>
+              <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
+                <h5 className="font-bold text-indigo-800 dark:text-indigo-300 mb-2">🏷️ Stato Parola (Ricostruito)</h5>
                 <div className="flex items-center gap-3">
                   <span className={`px-3 py-1 rounded-full text-white text-sm font-medium ${
                     status === 'Critica' ? 'bg-red-500' :
@@ -437,7 +456,7 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
                   </span>
                    
                   {recentStats.trend !== 0 && (
-                    <span className={`text-sm font-medium ${recentStats.trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className={`text-sm font-medium ${recentStats.trend > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                       {recentStats.trend > 0 ? '📈' : '📉'} 
                       {recentStats.trend > 0 ? '+' : ''}{recentStats.trend}% trend
                     </span>
@@ -446,9 +465,9 @@ const WordDetailSection: React.FC<WordDetailSectionProps> = ({ wordId, getWordAn
               </div>
                
               {/* ⭐ REFACTORED: Recommendations from service */}
-              <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-                <h5 className="font-bold text-yellow-800 mb-2">💡 Raccomandazioni</h5>
-                <div className="text-sm text-yellow-700 space-y-1">
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl border border-yellow-200 dark:border-yellow-700">
+                <h5 className="font-bold text-yellow-800 dark:text-yellow-300 mb-2">💡 Raccomandazioni</h5>
+                <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
                   {recommendations.map((recommendation, index) => (
                     <p key={index}>• {recommendation}</p>
                   ))}

@@ -327,42 +327,42 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
       </Card>
 
       {/* ⭐ SEPARATO: Dati statistici in blocco indipendente */}
-      <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+      <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardContent className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-2xl border border-blue-200">
-              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-              <div className="text-blue-700 text-sm">Totale Parole</div>
+            <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/30 rounded-2xl border border-blue-200 dark:border-blue-700">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.total}</div>
+              <div className="text-blue-700 dark:text-blue-300 text-sm">Totale Parole</div>
             </div>
-            <div className="text-center p-4 bg-green-50 rounded-2xl border border-green-200">
-              <div className="text-2xl font-bold text-green-600">{stats.learned}</div>
-              <div className="text-green-700 text-sm">Apprese</div>
+            <div className="text-center p-4 bg-green-50 dark:bg-green-900/30 rounded-2xl border border-green-200 dark:border-green-700">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.learned}</div>
+              <div className="text-green-700 dark:text-green-300 text-sm">Apprese</div>
             </div>
-            <div className="text-center p-4 bg-orange-50 rounded-2xl border border-orange-200">
-              <div className="text-2xl font-bold text-orange-600">{stats.notLearned}</div>
-              <div className="text-orange-700 text-sm">Da Studiare</div>
+            <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/30 rounded-2xl border border-orange-200 dark:border-orange-700">
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.notLearned}</div>
+              <div className="text-orange-700 dark:text-orange-300 text-sm">Da Studiare</div>
             </div>
-            <div className="text-center p-4 bg-red-50 rounded-2xl border border-red-200">
-              <div className="text-2xl font-bold text-red-600">{stats.difficult}</div>
-              <div className="text-red-700 text-sm">⭐ Difficili</div>
+            <div className="text-center p-4 bg-red-50 dark:bg-red-900/30 rounded-2xl border border-red-200 dark:border-red-700">
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.difficult}</div>
+              <div className="text-red-700 dark:text-red-300 text-sm">⭐ Difficili</div>
             </div>
-            <div className="text-center p-4 bg-purple-50 rounded-2xl border border-purple-200">
-              <div className="text-2xl font-bold text-purple-600">{wordsData.wordsWithPerformance.length}</div>
-              <div className="text-purple-700 text-sm">📊 Con Performance</div>
+            <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/30 rounded-2xl border border-purple-200 dark:border-purple-700">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{wordsData.wordsWithPerformance.length}</div>
+              <div className="text-purple-700 dark:text-purple-300 text-sm">📊 Con Performance</div>
             </div>
-            <div className="text-center p-4 bg-gray-50 rounded-2xl border border-gray-200">
-              <div className="text-2xl font-bold text-gray-600">{wordsData.wordsWithoutPerformance.length}</div>
-              <div className="text-gray-700 text-sm">📝 Senza Attempts</div>
+            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600">
+              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{wordsData.wordsWithoutPerformance.length}</div>
+              <div className="text-gray-700 dark:text-gray-300 text-sm">📝 Senza Attempts</div>
             </div>
           </div>
           
           {/* ⭐ NUOVO: Sezione dedicata accuratezza solo per parole con performance */}
           {wordsData.wordsWithPerformance.length > 0 && (
-            <div className="mt-4 p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl border border-cyan-200">
+            <div className="mt-4 p-4 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/30 dark:to-blue-900/30 rounded-2xl border border-cyan-200 dark:border-cyan-700">
               <div className="text-center">
-                <div className="text-3xl font-bold text-cyan-600">{stats.avgAccuracy}%</div>
-                <div className="text-cyan-700 text-sm">📈 Accuratezza Media (solo parole con attempts)</div>
-                <div className="text-xs text-cyan-600 mt-1">
+                <div className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">{stats.avgAccuracy}%</div>
+                <div className="text-cyan-700 dark:text-cyan-300 text-sm">📈 Accuratezza Media (solo parole con attempts)</div>
+                <div className="text-xs text-cyan-600 dark:text-cyan-400 mt-1">
                   Ottimizzata: usa accuracy già calcolata nella collezione performance
                 </div>
               </div>
@@ -390,8 +390,8 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
         <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardContent className="text-center py-16">
             <div className="text-8xl mb-6">🔍</div>
-            <h3 className="text-2xl font-bold text-gray-700 mb-4">Nessuna parola trovata</h3>
-            <p className="text-gray-600 text-lg mb-8">Modifica i filtri per vedere altre parole</p>
+            <h3 className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-4">Nessuna parola trovata</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-lg mb-8">Modifica i filtri per vedere altre parole</p>
             <div className="space-y-2">
               <Button onClick={clearTestedFilters} className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 w-full">
                 Cancella Filtri Parole Testate
@@ -411,10 +411,10 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-1 h-8 bg-gradient-to-b from-green-500 to-emerald-500 rounded"></div>
-                  <h2 className="text-2xl font-bold text-gray-800">
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                     📊 Parole Testate ({separatedWords.totalWithAttempts})
                   </h2>
-                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
+                  <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-3 py-1 rounded-full text-sm">
                     Con dati di performance
                   </span>
                 </div>
@@ -433,7 +433,7 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
                     disabled={Object.keys(separatedWords.wordsWithAttempts).every(chapter => !collapsedChapters.tested[chapter])}
                     variant="ghost"
                     size="sm"
-                    className="text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Maximize2 className="w-4 h-4 mr-2" />
                     Espandi Tutti
@@ -450,7 +450,7 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
                     disabled={Object.keys(separatedWords.wordsWithAttempts).every(chapter => collapsedChapters.tested[chapter])}
                     variant="ghost"
                     size="sm"
-                    className="text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Minimize2 className="w-4 h-4 mr-2" />
                     Collassa Tutti
@@ -502,10 +502,10 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-1 h-8 bg-gradient-to-b from-gray-400 to-gray-500 rounded"></div>
-                  <h2 className="text-2xl font-bold text-gray-800">
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                     📝 Parole Mai Testate ({separatedWords.totalWithoutAttempts})
                   </h2>
-                  <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                  <span className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-sm">
                     Senza tentativi
                   </span>
                 </div>
@@ -524,7 +524,7 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
                     disabled={Object.keys(separatedWords.wordsWithoutAttempts).every(chapter => !collapsedChapters.untested[chapter])}
                     variant="ghost"
                     size="sm"
-                    className="text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Maximize2 className="w-4 h-4 mr-2" />
                     Espandi Tutti
@@ -541,7 +541,7 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
                     disabled={Object.keys(separatedWords.wordsWithoutAttempts).every(chapter => collapsedChapters.untested[chapter])}
                     variant="ghost"
                     size="sm"
-                    className="text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Minimize2 className="w-4 h-4 mr-2" />
                     Collassa Tutti
@@ -630,22 +630,22 @@ const CompactWordCard: React.FC<CompactWordCardProps> = ({
   return (
     <div className={`p-3 rounded-xl border transition-all duration-200 hover:shadow-md ${
       word.learned 
-        ? 'bg-green-50 border-green-200'
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700'
         : word.difficult
-        ? 'bg-red-50 border-red-200'
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
         : isSelected
-        ? 'border-blue-500 bg-blue-50 shadow-md'
-        : 'bg-white border-gray-200 hover:border-gray-300'
+        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
     }`}>
       <div className="flex items-center justify-between">
         {/* ⭐ COMPACT: Word info */}
-        <div className="flex items-center gap-3 flex-1 cursor-pointer" onClick={onClick}>
+        <div className={`flex items-center gap-3 flex-1 ${word.hasPerformanceData ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`} onClick={word.hasPerformanceData ? onClick : undefined}>
           <div className="flex items-center gap-2">
-            <span className={`text-lg font-bold ${word.learned ? 'text-gray-600' : 'text-gray-800'}`}>
+            <span className={`text-lg font-bold ${word.learned ? 'text-gray-600 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}>
               {word.english}
             </span>
-            <span className="text-gray-400">→</span>
-            <span className={`text-base ${word.learned ? 'text-gray-500' : 'text-gray-700'}`}>
+            <span className="text-gray-400 dark:text-gray-500">→</span>
+            <span className={`text-base ${word.learned ? 'text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
               {word.italian}
             </span>
           </div>
@@ -680,19 +680,19 @@ const CompactWordCard: React.FC<CompactWordCardProps> = ({
           <div className="flex items-center gap-3 text-sm">
             <div className="text-center" title={`Percentuale di accuratezza: ${word.correctAttempts} risposte corrette su ${word.totalAttempts} tentativi totali`}>
               <div className="font-bold text-blue-600">📊 {word.accuracy}%</div>
-              <div className="text-xs text-gray-500">Precisione</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Precisione</div>
             </div>
             <div className="text-center" title={`Serie corrente (Streak): ${word.currentStreak} risposte corrette consecutive dalla fine. Una risposta sbagliata interrompe la serie.`}>
               <div className="font-bold text-green-600">🔥 {word.currentStreak}</div>
-              <div className="text-xs text-gray-500">Serie Corrente</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Serie Corrente</div>
             </div>
             <div className="text-center" title={`Tempo medio di risposta: ${word.avgTime} secondi per ogni tentativo di questa parola`}>
               <div className="font-bold text-purple-600">⏱️ {word.avgTime}s</div>
-              <div className="text-xs text-gray-500">Tempo Medio</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Tempo Medio</div>
             </div>
             <div className="text-center" title={`Percentuale di aiuti utilizzati: ${word.hintsUsed} suggerimenti su ${word.totalAttempts} tentativi totali (${word.hintsPercentage}%)`}>
               <div className="font-bold text-orange-600">💡 {word.hintsPercentage}%</div>
-              <div className="text-xs text-gray-500">Aiuti Usati</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Aiuti Usati</div>
             </div>
           </div>
         )}
@@ -724,9 +724,9 @@ const CompactWordCard: React.FC<CompactWordCardProps> = ({
           </div>
            
           <div 
-            onClick={onClick}
-            className="cursor-pointer text-blue-500 hover:text-blue-700"
-            title="Visualizza andamento temporale"
+            onClick={word.hasPerformanceData ? onClick : undefined}
+            className={word.hasPerformanceData ? "cursor-pointer text-blue-500 hover:text-blue-700" : "cursor-not-allowed text-gray-400 opacity-50"}
+            title={word.hasPerformanceData ? "Visualizza andamento temporale" : "Nessun dato performance disponibile"}
           >
             <Eye className="w-5 h-5" />
           </div>
@@ -736,11 +736,11 @@ const CompactWordCard: React.FC<CompactWordCardProps> = ({
       {/* ⭐ COMPACT: Status info */}
       <div className="mt-2 text-center text-xs">
         {isSelected ? (
-          <span className="text-blue-600">↑ Clicca per nascondere l'andamento temporale</span>
+          <span className="text-blue-600 dark:text-blue-400">↑ Clicca per nascondere l'andamento temporale</span>
         ) : word.hasPerformanceData ? (
-          <span className="text-gray-500">↑ Clicca per vedere l'andamento temporale</span>
+          <span className="text-gray-500 dark:text-gray-400">↑ Clicca per vedere l'andamento temporale</span>
         ) : (
-          <span className="text-gray-400">📊 Nessun dato performance disponibile</span>
+          <span className="text-gray-400 dark:text-gray-500">📊 Nessun dato performance disponibile</span>
         )}
       </div>
     </div>
@@ -761,32 +761,32 @@ const WordChapterCard: React.FC<WordChapterCardProps> = ({
 }) => {
   const sectionStyles = sectionType === 'tested' 
     ? {
-        headerBg: 'bg-gradient-to-r from-green-100 to-emerald-100 border-b border-green-200',
-        hoverBg: 'hover:from-green-200 hover:to-emerald-200',
-        textColor: 'text-green-800',
-        iconColor: 'text-green-600',
+        headerBg: 'bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-800/30 dark:to-emerald-800/30 border-b border-green-200 dark:border-green-700',
+        hoverBg: 'hover:from-green-200 hover:to-emerald-200 dark:hover:from-green-700/40 dark:hover:to-emerald-700/40',
+        textColor: 'text-green-800 dark:text-green-200',
+        iconColor: 'text-green-600 dark:text-green-400',
         badgeColors: {
-          total: 'bg-green-200 text-green-700',
-          learned: 'bg-emerald-200 text-emerald-700', 
-          difficult: 'bg-red-200 text-red-700',
-          performance: 'bg-blue-200 text-blue-700'
+          total: 'bg-green-200 dark:bg-green-800/50 text-green-700 dark:text-green-300',
+          learned: 'bg-emerald-200 dark:bg-emerald-800/50 text-emerald-700 dark:text-emerald-300', 
+          difficult: 'bg-red-200 dark:bg-red-800/50 text-red-700 dark:text-red-300',
+          performance: 'bg-blue-200 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300'
         }
       }
     : {
-        headerBg: 'bg-gradient-to-r from-gray-100 to-slate-100 border-b border-gray-200',
-        hoverBg: 'hover:from-gray-200 hover:to-slate-200',
-        textColor: 'text-gray-800',
-        iconColor: 'text-gray-600',
+        headerBg: 'bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-700 dark:to-slate-700 border-b border-gray-200 dark:border-gray-600',
+        hoverBg: 'hover:from-gray-200 hover:to-slate-200 dark:hover:from-gray-600 dark:hover:to-slate-600',
+        textColor: 'text-gray-800 dark:text-gray-200',
+        iconColor: 'text-gray-600 dark:text-gray-400',
         badgeColors: {
-          total: 'bg-gray-200 text-gray-700',
-          learned: 'bg-green-200 text-green-700',
-          difficult: 'bg-red-200 text-red-700', 
-          performance: 'bg-gray-300 text-gray-600'
+          total: 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
+          learned: 'bg-green-200 dark:bg-green-800/50 text-green-700 dark:text-green-300',
+          difficult: 'bg-red-200 dark:bg-red-800/50 text-red-700 dark:text-red-300', 
+          performance: 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
         }
       };
 
   return (
-    <Card className="bg-white border-0 shadow-lg rounded-2xl overflow-hidden">
+    <Card className="bg-white dark:bg-gray-800 border-0 shadow-lg rounded-2xl overflow-hidden">
       <CardHeader 
         className={`${sectionStyles.headerBg} cursor-pointer ${sectionStyles.hoverBg} transition-colors`}
         onClick={() => onToggleCollapse(chapter, sectionType)}
@@ -845,7 +845,7 @@ const WordChapterCard: React.FC<WordChapterCardProps> = ({
           </div>
            
           {chapterWords.length > 5 && (
-            <div className="mt-3 text-center text-sm text-gray-500">
+            <div className="mt-3 text-center text-sm text-gray-500 dark:text-gray-400">
               📊 {chapterWords.length} parole totali • Scorri per vedere tutte
             </div>
           )}
@@ -892,13 +892,13 @@ const TestedWordsFilters: React.FC<TestedWordsFiltersProps> = ({
   totalFiltered
 }) => {
   return (
-    <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 mb-4">
+    <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-700 mb-4">
       <CardHeader 
-        className="cursor-pointer hover:bg-green-100/50 transition-colors"
+        className="cursor-pointer hover:bg-green-100/50 dark:hover:bg-green-800/30 transition-colors"
         onClick={() => setShowFilters(!showFilters)}
       >
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Filter className="w-5 h-5 text-green-600" />
+          <Filter className="w-5 h-5 text-green-600 dark:text-green-400" />
           Filtri Parole Testate ({totalFiltered} parole mostrate)
           {showFilters ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
         </CardTitle>
@@ -908,21 +908,21 @@ const TestedWordsFilters: React.FC<TestedWordsFiltersProps> = ({
         <CardContent className="animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">🔍 Cerca Parola</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">🔍 Cerca Parola</label>
               <Input
                 placeholder="Parola inglese..."
                 value={filters.searchWord}
                 onChange={(e) => setFilters(prev => ({ ...prev, searchWord: e.target.value }))}
-                className="border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"
+                className="border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-green-500 transition-colors dark:bg-gray-800 dark:text-gray-200"
               />
             </div>
              
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">📚 Capitolo</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">📚 Capitolo</label>
               <select
                 value={filters.filterChapter}
                 onChange={(e) => setFilters(prev => ({ ...prev, filterChapter: e.target.value }))}
-                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-green-500 bg-white"
+                className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-green-500 bg-white dark:bg-gray-800 dark:text-gray-200"
               >
                 <option value="">Tutti i capitoli</option>
                 {availableChapters.map(chapter => (
@@ -935,11 +935,11 @@ const TestedWordsFilters: React.FC<TestedWordsFiltersProps> = ({
             </div>
              
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">🎓 Stato Apprendimento</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">🎓 Stato Apprendimento</label>
               <select
                 value={filters.filterLearned}
                 onChange={(e) => setFilters(prev => ({ ...prev, filterLearned: e.target.value }))}
-                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-green-500 bg-white"
+                className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-green-500 bg-white dark:bg-gray-800 dark:text-gray-200"
               >
                 <option value="all">Tutte le parole</option>
                 <option value="learned">✅ Solo apprese</option>
@@ -948,11 +948,11 @@ const TestedWordsFilters: React.FC<TestedWordsFiltersProps> = ({
             </div>
              
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">⭐ Difficoltà</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">⭐ Difficoltà</label>
               <select
                 value={filters.filterDifficult}
                 onChange={(e) => setFilters(prev => ({ ...prev, filterDifficult: e.target.value }))}
-                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-green-500 bg-white"
+                className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-green-500 bg-white dark:bg-gray-800 dark:text-gray-200"
               >
                 <option value="all">Tutte le parole</option>
                 <option value="difficult">⭐ Solo difficili</option>
@@ -961,11 +961,11 @@ const TestedWordsFilters: React.FC<TestedWordsFiltersProps> = ({
             </div>
              
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">📂 Categoria</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">📂 Categoria</label>
               <select
                 value={filters.filterGroup}
                 onChange={(e) => setFilters(prev => ({ ...prev, filterGroup: e.target.value }))}
-                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-green-500 bg-white"
+                className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-green-500 bg-white dark:bg-gray-800 dark:text-gray-200"
               >
                 <option value="">Tutte le categorie</option>
                 {availableGroups.map(group => (
@@ -1029,13 +1029,13 @@ const UntestedWordsFilters: React.FC<UntestedWordsFiltersProps> = ({
   totalFiltered
 }) => {
   return (
-    <Card className="bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 mb-4">
+    <Card className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-700 dark:to-slate-700 border-2 border-gray-200 dark:border-gray-600 mb-4">
       <CardHeader 
-        className="cursor-pointer hover:bg-gray-100/50 transition-colors"
+        className="cursor-pointer hover:bg-gray-100/50 dark:hover:bg-gray-600/30 transition-colors"
         onClick={() => setShowFilters(!showFilters)}
       >
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Filter className="w-5 h-5 text-gray-600" />
+          <Filter className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           Filtri Parole Mai Testate ({totalFiltered} parole mostrate)
           {showFilters ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
         </CardTitle>
@@ -1045,21 +1045,21 @@ const UntestedWordsFilters: React.FC<UntestedWordsFiltersProps> = ({
         <CardContent className="animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">🔍 Cerca Parola</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">🔍 Cerca Parola</label>
               <Input
                 placeholder="Parola inglese..."
                 value={filters.searchWord}
                 onChange={(e) => setFilters(prev => ({ ...prev, searchWord: e.target.value }))}
-                className="border-2 border-gray-200 rounded-xl focus:border-gray-500 transition-colors"
+                className="border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-gray-500 transition-colors dark:bg-gray-800 dark:text-gray-200"
               />
             </div>
              
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">📚 Capitolo</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">📚 Capitolo</label>
               <select
                 value={filters.filterChapter}
                 onChange={(e) => setFilters(prev => ({ ...prev, filterChapter: e.target.value }))}
-                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-gray-500 bg-white"
+                className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-gray-500 bg-white dark:bg-gray-800 dark:text-gray-200"
               >
                 <option value="">Tutti i capitoli</option>
                 {availableChapters.map(chapter => (
@@ -1072,11 +1072,11 @@ const UntestedWordsFilters: React.FC<UntestedWordsFiltersProps> = ({
             </div>
              
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">🎓 Stato Apprendimento</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">🎓 Stato Apprendimento</label>
               <select
                 value={filters.filterLearned}
                 onChange={(e) => setFilters(prev => ({ ...prev, filterLearned: e.target.value }))}
-                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-gray-500 bg-white"
+                className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-gray-500 bg-white dark:bg-gray-800 dark:text-gray-200"
               >
                 <option value="all">Tutte le parole</option>
                 <option value="learned">✅ Solo apprese</option>
@@ -1085,11 +1085,11 @@ const UntestedWordsFilters: React.FC<UntestedWordsFiltersProps> = ({
             </div>
              
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">⭐ Difficoltà</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">⭐ Difficoltà</label>
               <select
                 value={filters.filterDifficult}
                 onChange={(e) => setFilters(prev => ({ ...prev, filterDifficult: e.target.value }))}
-                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-gray-500 bg-white"
+                className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-gray-500 bg-white dark:bg-gray-800 dark:text-gray-200"
               >
                 <option value="all">Tutte le parole</option>
                 <option value="difficult">⭐ Solo difficili</option>
@@ -1098,11 +1098,11 @@ const UntestedWordsFilters: React.FC<UntestedWordsFiltersProps> = ({
             </div>
              
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">📂 Categoria</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">📂 Categoria</label>
               <select
                 value={filters.filterGroup}
                 onChange={(e) => setFilters(prev => ({ ...prev, filterGroup: e.target.value }))}
-                className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-gray-500 bg-white"
+                className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-gray-500 bg-white dark:bg-gray-800 dark:text-gray-200"
               >
                 <option value="">Tutte le categorie</option>
                 {availableGroups.map(group => (
