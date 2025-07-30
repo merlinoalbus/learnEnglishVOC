@@ -22,6 +22,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "../../config/firebase";
 import { useFirebase } from "../../contexts/FirebaseContext";
+import { useAuth } from "../integration/useAuth";
 import { useAsyncOperation } from "./useAsyncOperation";
 import type { Word } from "../../types/entities/Word.types";
 import type { Statistics } from "../../types/entities/Statistics.types";
@@ -130,9 +131,11 @@ export function useFirestore<T extends { id: string }>(
     totalFetches: 0,
   });
 
+  const { user } = useAuth();
+  
   const getCurrentUserId = useCallback(() => {
-    return auth.currentUser?.uid || null;
-  }, []);
+    return user?.id || auth.currentUser?.uid || null;
+  }, [user]);
 
   const createError = useCallback(
     (code: string, message: string, originalError?: any): FirestoreError => {
@@ -223,6 +226,16 @@ export function useFirestore<T extends { id: string }>(
       const userId = getCurrentUserId();
       if (!userId) {
         throw new Error("🔐 User not authenticated for create operation");
+      }
+
+      // DEBUG: Log user info for word creation
+      if (collectionName === "words") {
+        console.log("🔍 WORD CREATION DEBUG:", {
+          currentUserId: userId,
+          authUser: auth.currentUser?.uid,
+          authEmail: auth.currentUser?.email,
+          wordData: (data as any)?.english || "unknown"
+        });
       }
 
       const now = new Date();
