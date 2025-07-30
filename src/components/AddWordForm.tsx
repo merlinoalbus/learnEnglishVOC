@@ -420,9 +420,9 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
           italian: formData.italian.trim(),
           group: formData.group.trim() || undefined,
           chapter: formData.chapter.trim() || undefined,
-          sentences: sentences.length > 0 ? sentences : undefined,
-          synonyms: synonyms.length > 0 ? synonyms : undefined,
-          antonyms: antonyms.length > 0 ? antonyms : undefined,
+          sentences: sentences.length > 0 ? sentences : [],
+          synonyms: synonyms.length > 0 ? synonyms : [],
+          antonyms: antonyms.length > 0 ? antonyms : [],
           notes: formData.notes.trim() || undefined,
           difficult: formData.difficult,
           learned: formData.learned
@@ -436,9 +436,9 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
           italian: formData.italian.trim(),
           group: formData.group.trim() || undefined,
           chapter: formData.chapter.trim() || undefined,
-          sentences: sentences.length > 0 ? sentences : undefined,
-          synonyms: synonyms.length > 0 ? synonyms : undefined,
-          antonyms: antonyms.length > 0 ? antonyms : undefined,
+          sentences: sentences.length > 0 ? sentences : [],
+          synonyms: synonyms.length > 0 ? synonyms : [],
+          antonyms: antonyms.length > 0 ? antonyms : [],
           notes: formData.notes.trim() || undefined,
           difficult: formData.difficult
         };

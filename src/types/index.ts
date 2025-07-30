@@ -142,6 +142,12 @@ export type {
 
 export * from "./entities/Statistics.types";
 
+// =====================================================
+// 📈 TRENDS ENTITY EXPORTS
+// =====================================================
+
+export * from "./entities/Trends.types";
+
 // Re-export principali - UPDATED with correct aggregated types
 export type {
   Statistics,

@@ -37,13 +37,18 @@ export const MainView: React.FC = React.memo(() => {
 
   const handleAddWord = React.useCallback(async (wordData: CreateWordInput) => {
     try {
-      addWord(wordData);
-      dispatch({ type: 'SET_EDITING_WORD', payload: null });
-      showSuccess(
-        editingWord 
-          ? `✅ Parola "${wordData.english}" modificata!`
-          : `✅ Parola "${wordData.english}" aggiunta!`
-      );
+      const result = await addWord(wordData);
+      if (result.success) {
+        dispatch({ type: 'SET_EDITING_WORD', payload: null });
+        showSuccess(
+          editingWord 
+            ? `✅ Parola "${wordData.english}" modificata!`
+            : `✅ Parola "${wordData.english}" aggiunta con successo!`
+        );
+      } else {
+        console.error('MainView: Error adding word:', result.error);
+        showError(result.error || new Error('Failed to add word'), 'Add Word');
+      }
     } catch (error) {
       console.error('MainView: Error adding word:', error);
       showError(error instanceof Error ? error : new Error('Unknown error'), 'Add Word');

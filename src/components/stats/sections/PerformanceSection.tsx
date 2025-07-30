@@ -23,7 +23,7 @@ import {
   ScatterChart,
   Scatter
 } from 'recharts';
-import { Trophy, Lightbulb, Zap, Clock, Target, TrendingUp } from 'lucide-react';
+import { Trophy, Lightbulb, Zap, Clock, Target, TrendingUp, Info } from 'lucide-react';
 import { useStats } from '../../../hooks/data/useStats';
 import type { TestHistoryItem, Word } from '../../../types';
 import PerformanceAnalyticsService from '../../../services/PerformanceAnalyticsService';
@@ -35,8 +35,9 @@ interface PerformanceSectionProps {
   onClearHistory?: () => void;
 }
 
-const PerformanceSection: React.FC<PerformanceSectionProps> = ({ testHistory, localRefresh }) => {
-  const { stats, calculatedStats, testHistory: dbTestHistory } = useStats();
+const PerformanceSection: React.FC<PerformanceSectionProps> = ({ testHistory, words, localRefresh }) => {
+  const { stats, calculatedStats, testHistory: dbTestHistory, getDetailedTestSessions } = useStats();
+  const [showFormulaDetails, setShowFormulaDetails] = React.useState(false);
   
   // ⭐ NEW: Service instance for business logic
   const performanceAnalyticsService = useMemo(() => new PerformanceAnalyticsService(), []);
@@ -46,10 +47,29 @@ const PerformanceSection: React.FC<PerformanceSectionProps> = ({ testHistory, lo
     return performanceAnalyticsService.processPerformanceTimelineData(dbTestHistory || testHistory);
   }, [dbTestHistory, testHistory, performanceAnalyticsService]);
 
+  // ⭐ Get detailed sessions for difficulty analysis
+  const [detailedSessions, setDetailedSessions] = React.useState<any[]>([]);
+  
+  React.useEffect(() => {
+    if (getDetailedTestSessions) {
+      const loadSessions = async () => {
+        try {
+          const result = await getDetailedTestSessions();
+          if (result.success && result.data) {
+            setDetailedSessions(result.data);
+          }
+        } catch (error) {
+          console.error('Error loading detailed sessions:', error);
+        }
+      };
+      loadSessions();
+    }
+  }, [getDetailedTestSessions]);
+
   // ⭐ REFACTORED: Use service for all calculations
   const performanceMetrics = useMemo(() => {
-    return performanceAnalyticsService.calculatePerformanceMetrics(performanceTimelineData, dbTestHistory || testHistory);
-  }, [performanceTimelineData, dbTestHistory, testHistory, performanceAnalyticsService]);
+    return performanceAnalyticsService.calculatePerformanceMetrics(performanceTimelineData, dbTestHistory || testHistory, detailedSessions);
+  }, [performanceTimelineData, dbTestHistory, testHistory, detailedSessions, performanceAnalyticsService]);
 
   // ⭐ REFACTORED: Use service for radar data
   const radarData = useMemo(() => {
@@ -57,15 +77,15 @@ const PerformanceSection: React.FC<PerformanceSectionProps> = ({ testHistory, lo
     return performanceAnalyticsService.prepareRadarData(performanceMetrics);
   }, [performanceMetrics, performanceAnalyticsService]);
 
-  // ⭐ REFACTORED: Use service for improvement analysis
+  // ⭐ REFACTORED: Use service for improvement analysis with detailed sessions
   const improvementData = useMemo(() => {
-    return performanceAnalyticsService.calculateImprovementData(performanceTimelineData);
-  }, [performanceTimelineData, performanceAnalyticsService]);
+    return performanceAnalyticsService.calculateImprovementData(performanceTimelineData, detailedSessions);
+  }, [performanceTimelineData, detailedSessions, performanceAnalyticsService]);
 
-  // ⭐ REFACTORED: Use service for difficulty analysis
+  // ⭐ REFACTORED: Use service for difficulty analysis with detailed sessions and words database
   const difficultyAnalysis = useMemo(() => {
-    return performanceAnalyticsService.analyzeDifficultyPerformance(dbTestHistory || testHistory);
-  }, [dbTestHistory, testHistory, performanceAnalyticsService]);
+    return performanceAnalyticsService.analyzeDifficultyPerformance(dbTestHistory || testHistory, detailedSessions, words);
+  }, [dbTestHistory, testHistory, detailedSessions, words, performanceAnalyticsService]);
 
   if (!performanceMetrics) {
     return (
@@ -83,20 +103,38 @@ const PerformanceSection: React.FC<PerformanceSectionProps> = ({ testHistory, lo
       <Card className="bg-gradient-to-br from-purple-500 via-indigo-600 to-blue-500 text-white">
         <CardContent className="p-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold mb-2">Performance Index</h2>
+            <h2 className="text-3xl font-bold mb-2 flex items-center gap-3">
+              Valutazione Personale
+              <button 
+                onClick={() => setShowFormulaDetails(!showFormulaDetails)}
+                className="text-lg bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"
+                title="Mostra dettagli formula"
+              >
+                <Info className="w-5 h-5" />
+              </button>
+            </h2>
             <div className="text-6xl font-bold mb-2">{performanceMetrics.performanceIndex}</div>
-            <div className="text-sm opacity-75 mb-2">
-              📊 Formula: (Precisione × 40%) + (Consistenza × 25%) + (Efficienza × 20%) + (Velocità × 15%)
+            <div className="text-xs opacity-70">
+              💡 La tua valutazione personale basata su 5 metriche di performance
             </div>
-            {/* ⭐ CALCULATION BREAKDOWN DISPLAY */}
-            <div className="text-xs opacity-80 bg-white/10 rounded-lg p-3 mb-2">
-              <div className="font-semibold mb-1">Il tuo calcolo:</div>
-              <div>{performanceMetrics.calculationBreakdown.precision.value}% × 40% = {performanceMetrics.calculationBreakdown.precision.points} punti</div>
-              <div>{performanceMetrics.calculationBreakdown.consistency.value}% × 25% = {performanceMetrics.calculationBreakdown.consistency.points} punti</div>
-              <div>{performanceMetrics.calculationBreakdown.efficiency.value}% × 20% = {performanceMetrics.calculationBreakdown.efficiency.points} punti</div>
-              <div>{performanceMetrics.calculationBreakdown.speed.value}% × 15% = {performanceMetrics.calculationBreakdown.speed.points} punti</div>
-              <div className="border-t border-white/20 pt-1 mt-1 font-semibold">Totale = {performanceMetrics.performanceIndex} punti</div>
-            </div>
+            
+            {/* ⭐ COLLAPSIBLE FORMULA DETAILS */}
+            {showFormulaDetails && (
+              <div className="mt-4 space-y-3">
+                <div className="text-sm opacity-75">
+                  📊 Formula: (Precisione × 30%) + (Consistenza × 25%) + (Efficienza × 20%) + (Velocità × 15%) + (Gestione Difficoltà × 10%)
+                </div>
+                <div className="text-xs opacity-80 bg-white/10 rounded-lg p-3">
+                  <div className="font-semibold mb-1">Il tuo calcolo:</div>
+                  <div>{performanceMetrics.calculationBreakdown.precision.value}% × 30% = {performanceMetrics.calculationBreakdown.precision.points} punti</div>
+                  <div>{performanceMetrics.calculationBreakdown.consistency.value}% × 25% = {performanceMetrics.calculationBreakdown.consistency.points} punti</div>
+                  <div>{performanceMetrics.calculationBreakdown.efficiency.value}% × 20% = {performanceMetrics.calculationBreakdown.efficiency.points} punti</div>
+                  <div>{performanceMetrics.calculationBreakdown.speed.value}% × 15% = {performanceMetrics.calculationBreakdown.speed.points} punti</div>
+                  <div>{performanceMetrics.calculationBreakdown.difficulty.value}% × 10% = {performanceMetrics.calculationBreakdown.difficulty.points} punti</div>
+                  <div className="border-t border-white/20 pt-1 mt-1 font-semibold">Totale = {performanceMetrics.performanceIndex} punti</div>
+                </div>
+              </div>
+            )}
             <div className="text-xl opacity-90">
               {performanceMetrics.performanceIndex >= 90 ? '🏆 Performance Eccezionale!' :
                performanceMetrics.performanceIndex >= 80 ? '🌟 Performance Ottima' :
@@ -119,7 +157,7 @@ const PerformanceSection: React.FC<PerformanceSectionProps> = ({ testHistory, lo
             )}
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm" title="Media dei punteggi di tutti i test">
               <Trophy className="w-8 h-8 mx-auto mb-2" />
               <div className="text-2xl font-bold">{performanceMetrics.accuracy}%</div>
@@ -144,10 +182,11 @@ const PerformanceSection: React.FC<PerformanceSectionProps> = ({ testHistory, lo
               <div className="text-white/80 text-sm">Velocità</div>
               <div className="text-white/60 text-xs mt-1">Tempo medio risposta</div>
             </div>
-            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm">
+            <div className="text-center p-4 bg-white/20 rounded-xl backdrop-blur-sm" title="Gestione di test difficili e complessi">
               <Zap className="w-8 h-8 mx-auto mb-2" />
-              <div className="text-2xl font-bold">{performanceMetrics.bestStreak}</div>
-              <div className="text-white/80 text-sm">Best Streak</div>
+              <div className="text-2xl font-bold">{performanceMetrics.difficultyScore}%</div>
+              <div className="text-white/80 text-sm">Gestione Difficoltà</div>
+              <div className="text-white/60 text-xs mt-1">Performance test complessi</div>
             </div>
           </div>
         </CardContent>
@@ -205,7 +244,7 @@ const PerformanceSection: React.FC<PerformanceSectionProps> = ({ testHistory, lo
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            {improvementData.length > 1 ? (
+            {improvementData.length > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={improvementData}>
@@ -253,7 +292,7 @@ const PerformanceSection: React.FC<PerformanceSectionProps> = ({ testHistory, lo
               </>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <p>Completa più test per vedere i trend</p>
+                <p>Completa almeno 3 test per vedere i trend di miglioramento</p>
               </div>
             )}
           </CardContent>
@@ -270,6 +309,44 @@ const PerformanceSection: React.FC<PerformanceSectionProps> = ({ testHistory, lo
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
+            {/* ⭐ Explanatory note for difficulty calculation */}
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
+                📋 Come viene calcolata la difficoltà dei test
+              </h4>
+              <div className="text-sm text-blue-700 space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-red-600">🔴 Difficile</div>
+                    <div className="text-xs mt-1">
+                      • &ge; 70% parole marcate come difficili nel DB<br/>
+                      • O media &ge; 2 aiuti per parola<br/>
+                      • O score integrato difficoltà &ge; 0.5
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-orange-600">🟡 Normale</div>
+                    <div className="text-xs mt-1">
+                      • Mix bilanciato di parole facili/difficili<br/>
+                      • Performance miste dell'utente<br/>
+                      • Score integrato intermedio
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded border">
+                    <div className="font-semibold text-green-600">🟢 Facile</div>
+                    <div className="text-xs mt-1">
+                      • &ge; 70% parole già apprese nel DB<br/>
+                      • O media &lt; 0.3 aiuti e tempo &lt; 5 sec<br/>
+                      • O score integrato facilità &ge; 0.6
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 p-2 bg-white rounded text-xs">
+                  <strong>Formula integrata:</strong> Difficoltà oggettiva parole (50%) + Performance soggettiva utente (50%). Considera sia le caratteristiche intrinseche delle parole nel database che il comportamento dell'utente durante il test.
+                </div>
+              </div>
+            </div>
+            
             <ResponsiveContainer width="100%" height={300}>
               <ComposedChart data={difficultyAnalysis}>
                 <CartesianGrid strokeDasharray="3 3" />
