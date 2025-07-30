@@ -35,10 +35,10 @@ COPY package*.json ./
 # FILES: package.json + package-lock.json (se presente)
 # CACHE: Questo layer viene cached finché dependencies non cambiano
 
-# ====== OPTIMIZATION 3: npm ci ottimizzato ======
-RUN npm ci --omit=dev --prefer-offline --no-audit --progress=false && \
+# ====== OPTIMIZATION 3: npm ci with dev deps for build ======
+RUN npm ci --prefer-offline --no-audit --progress=false && \
     npm cache clean --force
-# SCOPO: Installazione ottimizzata dipendenze per production
+# SCOPO: Installazione dipendenze per build (include dev deps per TypeScript)
 # 
 # COMANDO BREAKDOWN:
 # npm ci: "Clean install" - installazione deterministica da package-lock.json
@@ -47,9 +47,9 @@ RUN npm ci --omit=dev --prefer-offline --no-audit --progress=false && \
 #   - Usa esattamente versioni da package-lock.json
 #   - Ideale per environments production/CI
 #
-# --omit=dev: Esclude devDependencies (webpack, eslint, etc.)
-#   - Riduce dimensioni e tempo installazione
-#   - Production non ha bisogno di development tools
+# INCLUDE devDependencies: Necessario per @types/react, TypeScript, etc.
+#   - Build React richiede TypeScript types durante compilazione
+#   - DevDependencies verranno eliminate nel final stage
 #
 # --prefer-offline: Usa cache locale quando possibile
 #   - Riduce download da registry npm
