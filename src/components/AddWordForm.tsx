@@ -15,6 +15,7 @@ import { useAILoading } from '../hooks/useLoadingState';
 import { SmartLoadingIndicator, ErrorWithRetry } from '../components/LoadingComponents';
 import { AIServiceErrorBoundary, FormErrorBoundary } from '../components/ErrorBoundaries';
 import { Word, CreateWordInput, UpdateWordInput } from '../types/entities/Word.types';
+import { useWords } from '../hooks/data/useWords';
 
 // =====================================================
 // 🔧 TYPES & INTERFACES
@@ -101,6 +102,11 @@ interface FormData {
   difficult: boolean;
 }
 
+interface JsonFormData {
+  jsonInput: string;
+  showJsonInput: boolean;
+}
+
 interface FormValidation {
   [key: string]: string;
 }
@@ -140,6 +146,10 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
     learned: false,
     difficult: false
   });
+  const [jsonFormData, setJsonFormData] = useState<JsonFormData>({
+    jsonInput: '',
+    showJsonInput: false
+  });
   const [showAdvancedForm, setShowAdvancedForm] = useState<boolean>(false);
   const [aiServiceStatus, setAiServiceStatus] = useState<AIServiceStatus | null>(null);
   const [formValidation, setFormValidation] = useState<FormValidation>({});
@@ -147,6 +157,21 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
   
   const { showNotification, showError, showWarning, showSuccess } = useNotification();
   const aiLoading = useAILoading();
+  const { words } = useWords(); // Per controllare i duplicati
+
+  // ⭐ DUPLICATE CHECK HELPER
+  const checkForDuplicate = useCallback((englishWord: string, excludeId?: string): Word | null => {
+    if (!englishWord || !words) return null;
+    
+    const normalizedEnglish = englishWord.toLowerCase().trim();
+    const existingWord = words.find(word => 
+      word.english.toLowerCase().trim() === normalizedEnglish && 
+      word.id !== excludeId && // Escludi la parola che stiamo modificando
+      !word.firestoreMetadata?.deleted // Solo parole non cancellate
+    );
+    
+    return existingWord || null;
+  }, [words]);
 
   // ⭐ PASSIVE AI STATUS CHECK - NO API CALLS
   const checkAIServiceStatus = useCallback(() => {
@@ -394,11 +419,132 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
     }
   }, [formData.english, aiServiceStatus, aiLoading, showNotification, showWarning, showSuccess, showError]);
 
+  // ⭐ JSON PARSING AND SUBMISSION
+  const handleJsonSubmit = useCallback(async () => {
+    if (!jsonFormData.jsonInput.trim()) {
+      showWarning('⚠️ Inserisci il JSON della parola');
+      return;
+    }
+
+    try {
+      // Parse JSON
+      const jsonData = JSON.parse(jsonFormData.jsonInput.trim());
+      
+      // Validate required fields
+      if (!jsonData.english || !jsonData.italian) {
+        showWarning('⚠️ I campi "english" e "italian" sono obbligatori nel JSON');
+        return;
+      }
+
+      if (typeof jsonData.english !== 'string' || typeof jsonData.italian !== 'string') {
+        showWarning('⚠️ I campi "english" e "italian" devono essere stringhe');
+        return;
+      }
+
+      // Validate english field (min 2 characters)
+      if (jsonData.english.trim().length < 2) {
+        showWarning('⚠️ Il campo "english" deve avere almeno 2 caratteri');
+        return;
+      }
+
+      // Validate italian field (min 2 characters)
+      if (jsonData.italian.trim().length < 2) {
+        showWarning('⚠️ Il campo "italian" deve avere almeno 2 caratteri');
+        return;
+      }
+
+      // Check for duplicates
+      const duplicateWord = checkForDuplicate(jsonData.english);
+      if (duplicateWord) {
+        showWarning(`⚠️ La parola "${jsonData.english}" esiste già nel tuo vocabolario.`);
+        return;
+      }
+
+      // Validate group if provided
+      if (jsonData.group && !getPredefinedGroups().includes(jsonData.group)) {
+        showWarning(`⚠️ Categoria "${jsonData.group}" non valida. Usa una delle categorie disponibili.`);
+        return;
+      }
+
+      // Helper per filtrare e validare array
+      const filterAndValidateArray = (arr: any, maxLength: number, maxItemLength?: number, fieldName?: string) => {
+        if (!Array.isArray(arr)) return [];
+        
+        const filtered = arr.filter(s => s && typeof s === 'string' && s.trim()).map(s => s.trim());
+        
+        if (filtered.length > maxLength) {
+          throw new Error(`${fieldName} può contenere massimo ${maxLength} elementi`);
+        }
+        
+        if (maxItemLength) {
+          for (const item of filtered) {
+            if (item.length > maxItemLength) {
+              throw new Error(`Ogni elemento di ${fieldName} può avere massimo ${maxItemLength} caratteri`);
+            }
+          }
+        }
+        
+        return filtered;
+      };
+
+      // Validate arrays with limits
+      const sentences = filterAndValidateArray(jsonData.sentences || [], 5, 500, 'sentences');
+      const synonyms = filterAndValidateArray(jsonData.synonyms || [], 10, 50, 'synonyms');
+      const antonyms = filterAndValidateArray(jsonData.antonyms || [], 10, 50, 'antonyms');
+
+      // Validate notes length
+      if (jsonData.notes && typeof jsonData.notes === 'string' && jsonData.notes.length > 1000) {
+        showWarning('⚠️ Il campo "notes" può avere massimo 1000 caratteri');
+        return;
+      }
+
+      // Create word data from JSON with defaults
+      const wordData: CreateWordInput = {
+        english: jsonData.english.trim(),
+        italian: jsonData.italian.trim(),
+        group: jsonData.group || undefined,
+        chapter: jsonData.chapter || undefined,
+        sentences: sentences,
+        synonyms: synonyms,
+        antonyms: antonyms,
+        notes: jsonData.notes || undefined,
+        difficult: Boolean(jsonData.difficult || false)
+      };
+
+      await onAddWord(wordData);
+      
+      // Reset only JSON input, keep JSON mode active
+      setJsonFormData(prev => ({
+        ...prev,
+        jsonInput: ''
+      }));
+      
+      showSuccess('✅ Parola aggiunta da JSON!');
+      
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        showError(new Error('JSON non valido. Controlla la sintassi.'), 'JSON Parse Error');
+      } else {
+        console.error('Error adding word from JSON:', error);
+        showError(error instanceof Error ? error : new Error(String(error)), 'Add Word from JSON');
+      }
+    }
+  }, [jsonFormData.jsonInput, onAddWord, showWarning, showError, showSuccess, checkForDuplicate]);
+
   // ⭐ SUBMIT
   const handleSubmit = useCallback(async () => {
     if (!validateForm()) {
       showWarning('⚠️ Correggi gli errori nel form');
       return;
+    }
+
+    // Check for duplicates when adding new word (not when editing)
+    if (!editingWord) {
+      const duplicateWord = checkForDuplicate(formData.english);
+      if (duplicateWord) {
+        showWarning(`⚠️ La parola "${formData.english}" esiste già nel tuo vocabolario.`);
+        return;
+      }
     }
 
     try {
@@ -466,7 +612,7 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
       console.error('Error adding word:', error);
       showError(error instanceof Error ? error : new Error(String(error)), 'Add Word');
     }
-  }, [formData, validateForm, onAddWord, showWarning, showError]);
+  }, [formData, validateForm, onAddWord, onUpdateWord, editingWord, showWarning, showError, checkForDuplicate]);
 
   // ⭐ CLEAR FORM
   const handleClear = useCallback(() => {
@@ -475,7 +621,7 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
                     formData.synonyms.some(s => s.trim()) || 
                     formData.antonyms.some(s => s.trim()) || 
                     formData.notes.trim() || formData.group.trim() || formData.chapter.trim() ||
-                    formData.learned || formData.difficult;
+                    formData.learned || formData.difficult || jsonFormData.jsonInput.trim();
     
     if (hasData && !window.confirm('🗑️ Cancellare tutti i dati?')) {
       return;
@@ -493,10 +639,14 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
       learned: false,
       difficult: false
     });
+    setJsonFormData(prev => ({
+      ...prev,
+      jsonInput: ''
+    }));
     setShowAdvancedForm(false);
     setFormValidation({});
     onClearForm();
-  }, [formData, onClearForm]);
+  }, [formData, jsonFormData, onClearForm]);
 
   // ⭐ EFFECTS - NO AUTO PING
   useEffect(() => {
@@ -601,6 +751,16 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
                 >
                   {showAdvancedForm ? 'Semplice' : 'Avanzato'}
                 </Button>
+                {!editingWord && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setJsonFormData(prev => ({ ...prev, showJsonInput: !prev.showJsonInput }))}
+                    className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    {jsonFormData.showJsonInput ? '📝 Form' : '🔧 JSON'}
+                  </Button>
+                )}
               </div>
               {!editingWord && renderAIStatusIndicator()}
             </div>
@@ -615,8 +775,9 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
         
         <CardContent className="p-6">
           <div className="space-y-6">
-            {/* Main Fields with validation */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Main Fields with validation - Hide when JSON input is active */}
+            {!jsonFormData.showJsonInput && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Input
                   placeholder="Parola inglese *"
@@ -652,11 +813,13 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
                   </p>
                 )}
               </div>
-            </div>
+              </div>
+            )}
 
-            {/* AI Assistant */}
-            <AIServiceErrorBoundary onAIError={(error) => showError(error instanceof Error ? error : new Error(String(error)), 'AI Assistant')}>
-              {aiLoading.isLoading ? (
+            {/* AI Assistant - Hide when JSON input is active */}
+            {!jsonFormData.showJsonInput && (
+              <AIServiceErrorBoundary onAIError={(error) => showError(error instanceof Error ? error : new Error(String(error)), 'AI Assistant')}>
+                {aiLoading.isLoading ? (
                 <div className="p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-xl">
                   <SmartLoadingIndicator 
                     isLoading={true}
@@ -685,10 +848,58 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
                   💰 AI Assistant - Compila Automaticamente
                 </Button>
               )}
-            </AIServiceErrorBoundary>
+              </AIServiceErrorBoundary>
+            )}
+
+            {/* JSON Input Section */}
+            {jsonFormData.showJsonInput && !editingWord && (
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-2xl">🔧</span>
+                  <h4 className="font-bold text-blue-800 dark:text-blue-200">Inserimento da JSON</h4>
+                </div>
+                
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-lg mb-4">
+                  <h5 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">📋 Formato Richiesto:</h5>
+                  <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                    <p><strong>Obbligatori:</strong> "english" e "italian" (min 2 caratteri)</p>
+                    <p><strong>Opzionali:</strong> "group", "chapter", "sentences" (max 5), "synonyms" (max 10), "antonyms" (max 10), "notes" (max 1000 caratteri), "difficult"</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Textarea
+                    placeholder={`Esempio:\n{\n  "english": "beautiful",\n  "italian": "bello/bella",\n  "group": "AGGETTIVI_BASE",\n  "chapter": "1",\n  "sentences": ["She has a beautiful smile"],\n  "synonyms": ["pretty", "lovely"],\n  "antonyms": ["ugly"],\n  "notes": "Cambia forma in base al genere",\n  "difficult": false\n}`}
+                    value={jsonFormData.jsonInput}
+                    onChange={(e) => setJsonFormData(prev => ({ ...prev, jsonInput: e.target.value }))}
+                    rows={12}
+                    className="border-2 border-blue-200 dark:border-blue-600 rounded-xl font-mono text-sm"
+                  />
+                  
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleJsonSubmit}
+                      disabled={!jsonFormData.jsonInput.trim()}
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Aggiungi da JSON
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setJsonFormData(prev => ({ ...prev, jsonInput: '' }))}
+                      disabled={!jsonFormData.jsonInput.trim()}
+                      className="border-blue-300 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                    >
+                      Pulisci
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Advanced Form */}
-            {showAdvancedForm && (
+            {showAdvancedForm && !jsonFormData.showJsonInput && (
               <div className="add-word-advanced-section">
                 <div className="add-word-info-box">
                   <div className="flex items-center gap-3 mb-2">
@@ -836,28 +1047,30 @@ const AddWordForm: React.FC<AddWordFormProps> = ({
               </div>
             )}
 
-            {/* Submit */}
-            <Button 
-              onClick={handleSubmit}
-              disabled={!isFormValid}
-              className={`w-full py-4 text-lg rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
-                editingWord 
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700' 
-                  : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
-              } text-white`}
-            >
-              {editingWord ? (
-                <>
-                  <Check className="w-5 h-5 mr-2" />
-                  Salva Modifiche
-                </>
-              ) : (
-                <>
-                  <Plus className="w-5 h-5 mr-2" />
-                  Aggiungi Parola
-                </>
-              )}
-            </Button>
+            {/* Submit - Hide when JSON input is active */}
+            {!jsonFormData.showJsonInput && (
+              <Button 
+                onClick={handleSubmit}
+                disabled={!isFormValid}
+                className={`w-full py-4 text-lg rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                  editingWord 
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700' 
+                    : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
+                } text-white`}
+              >
+                {editingWord ? (
+                  <>
+                    <Check className="w-5 h-5 mr-2" />
+                    Salva Modifiche
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-5 h-5 mr-2" />
+                    Aggiungi Parola
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

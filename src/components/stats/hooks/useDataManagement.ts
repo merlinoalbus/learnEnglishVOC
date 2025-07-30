@@ -5,9 +5,10 @@
 import { useState, useRef } from 'react';
 import { useAppContext } from '../../../contexts/AppContext';
 import type { ChangeEvent } from 'react';
-import { collection, query, where, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { useAuth } from '../../../hooks/integration/useAuth';
+import { useWords } from '../../../hooks/data/useWords';
 
 interface UseDataManagementReturn {
   // States
@@ -38,6 +39,7 @@ export const useDataManagement = (): UseDataManagementReturn => {
   const [importType, setImportType] = useState<string>(''); // ⭐ NEW: Track import type
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  const { importWords } = useWords(); // ⭐ NEW: Use useWords for proper word import
 
   const {
     importStats,
@@ -460,8 +462,8 @@ export const useDataManagement = (): UseDataManagementReturn => {
         case 'words_only':
           
           // ⭐ ENHANCED: Handle words import with userId remapping  
-          // Support both old JSONManager format and new export format
-          let rawWords = parsedData.words || parsedData;
+          // Support multiple formats: words, wordPerformance, exportData, or raw array
+          let rawWords = parsedData.words || parsedData.wordPerformance || parsedData;
           
           // If it's an old JSONManager export format, extract words array
           if (parsedData.exportData && Array.isArray(parsedData.exportData)) {
@@ -482,19 +484,21 @@ export const useDataManagement = (): UseDataManagementReturn => {
             for (const word of wordsToImport) {
               if (!word || typeof word !== 'object') continue;
               if (!word.english || !word.italian) continue;
-              if (!word.id) continue;
+              
+              // ⭐ FIXED: Generate ID if missing
+              const wordId = word.id || doc(collection(db, "words")).id;
               
               // Skip if this ID was already processed in this import
-              if (processedWordIds.has(word.id)) {
+              if (processedWordIds.has(wordId)) {
                 continue;
               }
-              processedWordIds.add(word.id);
+              processedWordIds.add(wordId);
               
               // Check if document with this ID already exists on DB
-              const existingDocRef = doc(db, "words", word.id);
+              const existingDocRef = doc(db, "words", wordId);
               const existingDocSnap = await getDoc(existingDocRef);
               
-              let docId = word.id;
+              let docId = wordId;
               
               if (existingDocSnap.exists()) {
                 const existingData = existingDocSnap.data();
@@ -510,14 +514,25 @@ export const useDataManagement = (): UseDataManagementReturn => {
               } else {
               }
               
-              // Deep copy word data to avoid mutations and clean all userId references
+              // ⭐ FIXED: Deep copy word data with proper Firestore Timestamps
+              const now = Timestamp.now();
               const wordData: any = {
                 ...word,
                 id: docId, // Update with new ID
                 userId: currentUserId, // Update root userId
+                learned: word.learned !== undefined ? word.learned : false, // Default to false
+                difficult: word.difficult !== undefined ? word.difficult : false, // Default to false
+                createdAt: word.createdAt ? (word.createdAt instanceof Timestamp ? word.createdAt : Timestamp.fromDate(new Date(word.createdAt))) : now,
+                updatedAt: word.updatedAt ? (word.updatedAt instanceof Timestamp ? word.updatedAt : Timestamp.fromDate(new Date(word.updatedAt))) : now,
                 firestoreMetadata: {
                   ...(word.firestoreMetadata || {}),
-                  userId: currentUserId // Always use current user's ID
+                  userId: currentUserId, // Always use current user's ID
+                  createdAt: word.firestoreMetadata?.createdAt ? (word.firestoreMetadata.createdAt instanceof Timestamp ? word.firestoreMetadata.createdAt : Timestamp.fromDate(new Date(word.firestoreMetadata.createdAt))) : now,
+                  updatedAt: now,
+                  custom: {
+                    deleted: false,
+                    version: 1
+                  }
                 }
               };
               
