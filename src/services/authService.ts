@@ -144,7 +144,6 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
 
     return cleanedData;
   } catch (error) {
-    console.error("Error getting user profile:", error);
     throw new Error("Failed to get user profile");
   }
 };
@@ -245,7 +244,6 @@ export const initializeUserProfile = async (
 
     return newUser as User;
   } catch (error) {
-    console.error("Error initializing user profile:", error);
     throw new Error("Failed to initialize user profile");
   }
 };
@@ -331,7 +329,6 @@ const initializeUserCollections = async (userId: string): Promise<void> => {
 
     // User collections initialized successfully
   } catch (error) {
-    console.error("Error initializing user collections:", error);
     throw new Error("Failed to initialize user collections");
   }
 };
@@ -384,7 +381,6 @@ export const getAllUsers = async (
 
     return users;
   } catch (error) {
-    console.error("Error getting all users:", error);
     throw new Error("Failed to get users");
   }
 };
@@ -421,7 +417,6 @@ export const toggleUserStatus = async (
     await batch.commit();
     return true;
   } catch (error) {
-    console.error("Error toggling user status:", error);
     return false;
   }
 };
@@ -449,7 +444,6 @@ export const resetUserPassword = async (
 
     return true;
   } catch (error) {
-    console.error("Error sending password reset:", error);
     return false;
   }
 };
@@ -496,7 +490,6 @@ export const deleteUserData = async (
     await batch.commit();
     return true;
   } catch (error) {
-    console.error("Error deleting user:", error);
     return false;
   }
 };
@@ -557,7 +550,6 @@ export const exportUserData = async (
 
     return exportData;
   } catch (error) {
-    console.error("Error exporting user data:", error);
     return null;
   }
 };
@@ -609,7 +601,6 @@ export const importUserData = async (
     await batch.commit();
     return true;
   } catch (error) {
-    console.error("Error importing user data:", error);
     return false;
   }
 };
@@ -631,7 +622,6 @@ export const getAdminOperations = async (
       timestamp: doc.data().timestamp?.toDate() || new Date(),
     })) as AdminOperation[];
   } catch (error) {
-    console.error("Error getting admin operations:", error);
     throw new Error("Failed to get admin operations");
   }
 };
@@ -641,7 +631,6 @@ export const checkIfFirstUser = async (): Promise<boolean> => {
     const snapshot = await getDocs(usersQuery);
     return snapshot.size === 0;
   } catch (error) {
-    console.error("Error checking if first user:", error);
     return false;
   }
 };
@@ -672,7 +661,6 @@ const checkUserInvitation = async (email: string): Promise<UserRole | null> => {
     
     return null;
   } catch (error) {
-    console.error("Error checking user invitation:", error);
     return null;
   }
 };
@@ -706,7 +694,7 @@ const AUTH_SERVICE_CONFIG = {
  */
 const debugLog = (message: string, data?: any) => {
   if (AUTH_SERVICE_CONFIG.enableSecurityLogging) {
-    console.log(`🔐 [AuthService] ${message}`, data || "");
+    // Debug logging removed for production
   }
 };
 
@@ -1615,7 +1603,6 @@ export const updateUserRole = async (
 
     debugLog("User role updated successfully", { userId, newRole, adminId });
   } catch (error) {
-    console.error("Error updating user role:", error);
     throw new Error("Failed to update user role");
   }
 };
@@ -1649,7 +1636,6 @@ export const updateUserStatus = async (
 
     debugLog("User status updated successfully", { userId, isActive, adminId });
   } catch (error) {
-    console.error("Error updating user status:", error);
     throw new Error("Failed to update user status");
   }
 };
@@ -1703,7 +1689,6 @@ export const createNewUser = async (
     } catch (emailError) {
       // If email fails, it's because the email doesn't exist in Firebase Auth yet
       // This is expected - user will need to register normally
-      console.log("Expected: Email not in Firebase Auth yet, user will register normally");
     }
     
     debugLog("User invitation created successfully", { 
@@ -1713,7 +1698,6 @@ export const createNewUser = async (
     });
     
   } catch (error) {
-    console.error("Error creating user invitation:", error);
     throw new Error("Failed to create user invitation");
   }
 };
@@ -1758,7 +1742,6 @@ export const getUserExtendedProfile = async (userId: string): Promise<UserProfil
       updatedAt: userData.profileUpdatedAt || userData.lastUpdated || new Date(),
     } as UserProfile;
   } catch (error) {
-    console.error("Error getting user profile:", error);
     return null;
   }
 };
@@ -1791,7 +1774,6 @@ export const updateUserExtendedProfile = async (
 
     return true;
   } catch (error) {
-    console.error("Error updating user profile:", error);
     return false;
   }
 };
@@ -1836,7 +1818,6 @@ export const getUserStats = async (userId: string): Promise<UserStats | null> =>
 
     return null;
   } catch (error) {
-    console.error("Error getting user stats:", error);
     return null;
   }
 };
@@ -1867,7 +1848,6 @@ export const updateUserStats = async (
 
     return true;
   } catch (error) {
-    console.error("Error updating user stats:", error);
     return false;
   }
 };
@@ -1983,7 +1963,6 @@ export const getUserPreferences = async (userId: string): Promise<UserPreference
 
     return null;
   } catch (error) {
-    console.error("Error getting user preferences:", error);
     return null;
   }
 };
@@ -2012,7 +1991,6 @@ export const updateUserPreferences = async (
 
     return true;
   } catch (error) {
-    console.error("Error updating user preferences:", error);
     return false;
   }
 };
@@ -2024,7 +2002,6 @@ export const updateUserTheme = async (
   try {
     return await updateUserPreferences(userId, { theme });
   } catch (error) {
-    console.error("Error updating user theme:", error);
     return false;
   }
 };
@@ -2051,7 +2028,6 @@ export const updateNotificationPreferences = async (
       notificationPreferences: updatedNotifications,
     });
   } catch (error) {
-    console.error("Error updating notification preferences:", error);
     return false;
   }
 };

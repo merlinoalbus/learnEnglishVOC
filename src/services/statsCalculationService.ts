@@ -153,9 +153,6 @@ export class StatsCalculationService {
     result: StatsCalculationResult
   ): void {
     // Debug logging removed - calculation is working correctly
-    if (process.env.NODE_ENV === 'development' && result.mediaCorretta === 0) {
-      console.log('📊 Stats Debug: Using fallback calculation due to missing performance data');
-    }
   }
 
   /**

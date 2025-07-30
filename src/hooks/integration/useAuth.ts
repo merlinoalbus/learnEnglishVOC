@@ -242,25 +242,19 @@ export const useAuth = () => {
       if (result.success) {
         // Check if this is an admin login and process pending user creations
         try {
-          console.log('Login successful, checking if admin...');
           const userProfile = await getUserProfile(result.user!.uid);
-          console.log('User profile:', userProfile);
           
           if (userProfile?.role === 'admin') {
-            console.log('Admin login detected, processing pending user creations...');
             const { processPendingUserCreations } = await import('../../services/adminService');
             const results = await processPendingUserCreations('email', { email: input.email, password: input.password });
-            console.log('Pending user creation results:', results);
             
             if (results.processed > 0) {
-              console.log(`Successfully processed ${results.processed} pending user creations`);
               // Notify admin components to refresh their data
               window.dispatchEvent(new CustomEvent('adminUsersProcessed', { 
                 detail: { processed: results.processed, failed: results.failed } 
               }));
             }
           } else {
-            console.log('Not an admin user, skipping pending user processing');
           }
         } catch (adminError) {
           console.error('Error processing admin tasks:', adminError);
@@ -289,26 +283,20 @@ export const useAuth = () => {
       if (result.success) {
         // Check if this is an admin login and process pending user creations
         try {
-          console.log('Google login successful, checking if admin...');
           const userProfile = await getUserProfile(result.user!.uid);
-          console.log('User profile:', userProfile);
           
           if (userProfile?.role === 'admin') {
-            console.log('Admin Google login detected, processing pending user creations...');
             
             const { processPendingUserCreations } = await import('../../services/adminService');
             const results = await processPendingUserCreations('google');
-            console.log('Pending user creation results:', results);
             
             if (results.processed > 0) {
-              console.log(`Successfully processed ${results.processed} pending user creations`);
               // Notify admin components to refresh their data
               window.dispatchEvent(new CustomEvent('adminUsersProcessed', { 
                 detail: { processed: results.processed, failed: results.failed } 
               }));
             }
           } else {
-            console.log('Not an admin user, skipping pending user processing');
           }
         } catch (adminError) {
           console.error('Error processing admin tasks:', adminError);

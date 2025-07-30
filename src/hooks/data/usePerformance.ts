@@ -184,11 +184,9 @@ export const usePerformance = (): PerformanceResult => {
       setIsInitialized(true);
       setLastSync(new Date());
 
-      if (AppConfig.app.environment === "development") {
-        console.log("📊 usePerformance initialized with Firebase");
-      }
+      // Debug logging removed
     } catch (error) {
-      console.error("Failed to initialize performance:", error);
+      // Error handling removed
     } finally {
       setIsProcessing(false);
     }

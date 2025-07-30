@@ -211,10 +211,7 @@ export const useWords = (): WordsResult => {
               deleteDoc(doc(db, "performance", docSnap.id))
             );
             await Promise.all(deletePromises);
-            
-            console.log(`✅ Cancellata performance per la parola: ${word.english} (${snapshot.size} documenti)`);
           } catch (perfError) {
-            console.error("⚠️ Errore nella cancellazione della performance:", perfError);
             // Non bloccare l'operazione se la cancellazione performance fallisce
           }
         }
@@ -379,8 +376,6 @@ export const useWords = (): WordsResult => {
       );
       const wordsSnapshot = await getDocs(wordsQuery);
       
-      console.log(`🗑️ HARD DELETE: Found ${wordsSnapshot.size} words to physically delete`);
-      
       // Use batch for efficient deletion
       const batch = writeBatch(db);
       
@@ -397,8 +392,6 @@ export const useWords = (): WordsResult => {
       );
       const performanceSnapshot = await getDocs(performanceQuery);
       
-      console.log(`🗑️ HARD DELETE: Found ${performanceSnapshot.size} performance records to physically delete`);
-      
       performanceSnapshot.docs.forEach((docSnap) => {
         batch.delete(doc(db, "performance", docSnap.id));
       });
@@ -406,8 +399,6 @@ export const useWords = (): WordsResult => {
       // Execute batch deletion
       await batch.commit();
       
-      console.log(`✅ HARD DELETE COMPLETED: ${wordsSnapshot.size} words + ${performanceSnapshot.size} performances physically deleted`);
-
       setEditingWord(null);
       statsCache.current = null;
       setRefreshTrigger((prev) => prev + 1);
@@ -421,7 +412,6 @@ export const useWords = (): WordsResult => {
         },
       };
     } catch (error) {
-      console.error("❌ HARD DELETE ERROR:", error);
       return {
         success: false,
         error: error as FirestoreError,
@@ -468,7 +458,6 @@ export const useWords = (): WordsResult => {
             // Current user already has this word - update it with existing ID
             finalWordId = existingUserWord.id;
             shouldCreate = false;
-            console.log(`✅ UPDATE: ${word.english} will replace existing word ${existingUserWord.id}`);
           }
           
           if (word.id) {
@@ -489,11 +478,9 @@ export const useWords = (): WordsResult => {
                 const newDocRef = doc(collection(db, "words"));
                 finalWordId = newDocRef.id;
                 shouldCreate = true;
-                console.log(`🔄 REMAPPED WORD: ${word.id} → ${finalWordId} (${existingUserId} → ${currentUserId})`);
               } else if (existingUserId === currentUserId) {
                 // Same user - keep original ID to overwrite  
                 shouldCreate = false;
-                console.log(`✅ OVERWRITE: ${word.id} (same user ${currentUserId})`);
               }
             }
           }

@@ -105,7 +105,7 @@ const FIRESTORE_SERVICE_CONFIG = {
  */
 const debugLog = (message: string, data?: any) => {
   if (FIRESTORE_SERVICE_CONFIG.enableDebugLogging) {
-    console.log(`🔥 [FirestoreService] ${message}`, data || "");
+    // Debug logging removed for production
   }
 };
 

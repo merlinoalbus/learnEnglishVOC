@@ -488,12 +488,7 @@ export const ErrorTracker = {
       this.errors = this.errors.slice(-50);
     }
     
-    if (process.env.NODE_ENV === 'development') {
-      console.group(`🚨 Error in ${boundary}`);
-      console.error('Error:', error);
-      console.log('Context:', context);
-      console.groupEnd();
-    }
+    // Debug logging removed for production
   },
   
   exportErrors() {

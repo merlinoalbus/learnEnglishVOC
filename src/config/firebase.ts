@@ -159,13 +159,11 @@ async function setupDevelopment(): Promise<void> {
       // Firestore Emulator (opzionale)
       if (process.env.REACT_APP_USE_FIRESTORE_EMULATOR === "true") {
         connectFirestoreEmulator(db, "localhost", 8080);
-        console.log("🔧 Connected to Firestore Emulator");
       }
 
       // Auth Emulator (opzionale)
       if (process.env.REACT_APP_USE_AUTH_EMULATOR === "true") {
         connectAuthEmulator(auth, "http://localhost:9099");
-        console.log("🔧 Connected to Auth Emulator");
       }
 
     } catch (error) {

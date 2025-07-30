@@ -798,7 +798,6 @@ export const useStats = (): StatsResult => {
       const userPerformanceDocs = await getDocs(userPerformanceQuery);
       
       if (userPerformanceDocs.size > 0) {
-        console.log(`🗑️ Deleting ${userPerformanceDocs.size} performance documents for user ${currentUserId}`);
         for (const docSnapshot of userPerformanceDocs.docs) {
           await deleteDoc(docSnapshot.ref);
         }
@@ -813,7 +812,6 @@ export const useStats = (): StatsResult => {
       const userSessionsDocs = await getDocs(userSessionsQuery);
       
       if (userSessionsDocs.size > 0) {
-        console.log(`🗑️ Deleting ${userSessionsDocs.size} test sessions for user ${currentUserId}`);
         for (const docSnapshot of userSessionsDocs.docs) {
           await deleteDoc(docSnapshot.ref);
         }
@@ -828,7 +826,6 @@ export const useStats = (): StatsResult => {
       const userStatsDocs = await getDocs(userStatsQuery);
       
       if (userStatsDocs.size > 0) {
-        console.log(`🗑️ Deleting ${userStatsDocs.size} statistics documents for user ${currentUserId}`);
         for (const docSnapshot of userStatsDocs.docs) {
           await deleteDoc(docSnapshot.ref);
         }

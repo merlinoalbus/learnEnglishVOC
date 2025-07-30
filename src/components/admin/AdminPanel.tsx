@@ -78,7 +78,6 @@ export const AdminPanel: React.FC = () => {
       a.click();
       URL.revokeObjectURL(url);
 
-      console.log("User data exported successfully");
     } catch (error) {
       console.error("Error exporting user data:", error);
     } finally {
@@ -94,7 +93,6 @@ export const AdminPanel: React.FC = () => {
       const data = JSON.parse(text);
 
       // Implementation stub for import functionality
-      console.log("Importing data:", data);
 
       // Would implement actual import logic here
     } catch (error) {
@@ -130,7 +128,6 @@ export const AdminPanel: React.FC = () => {
       setOperationLoading(`reset-${user.id}`);
       // CORRECTED: Added adminId parameter
       await resetUserPassword(user.email, userProfile?.id || "unknown");
-      console.log(`Password reset email sent to ${user.email}`);
     } catch (error) {
       console.error("Error resetting password:", error);
     } finally {

@@ -392,33 +392,14 @@ export class TimelineReconstructionService {
     wordInfo: { english: string; italian: string; chapter?: string | null },
     wordPerformance?: Record<string, any>
   ) {
-    // ⭐ DEBUG: Log della strategia scelta
-    if (wordInfo.english === 'quite') {
-      const performanceData = wordPerformance?.[wordId];
-      console.log(`🔍 DEBUG [quite] - TimelineReconstructionService:`, {
-        wordId,
-        wordInfo,
-        hasWordPerformance: !!wordPerformance,
-        hasPerformanceData: !!performanceData,
-        hasAttempts: performanceData?.attempts?.length > 0,
-        performanceData: performanceData,
-        testHistoryLength: testHistory.length
-      });
-    }
     
     // ⭐ PRIORITÀ 1: Usa dati dalla collezione performance se disponibili
     const performanceData = wordPerformance?.[wordId];
     if (performanceData && performanceData.attempts && performanceData.attempts.length > 0) {
-      if (wordInfo.english === 'quite') {
-        console.log(`🔍 DEBUG [quite] - Usando dati dalla collezione performance`);
-      }
       return this.createTimelineFromPerformanceData(wordId, performanceData, wordInfo);
     }
     
     // ⭐ FALLBACK: Usa ricostruzione da testHistory (metodo originale)
-    if (wordInfo.english === 'quite') {
-      console.log(`🔍 DEBUG [quite] - Fallback: usando ricostruzione da testHistory`);
-    }
     return this.reconstructWordTimeline(wordId, testHistory, wordInfo);
   }
 

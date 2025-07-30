@@ -262,7 +262,6 @@ class StorageService {
       // Strategy 3: Compress word performance data
       await this.compressWordPerformanceData();
       
-      console.log(`🧹 Automatic cleanup freed ~${Math.round(cleanedSpace / 1024)}KB`);
       return cleanedSpace > 0;
     } catch (error) {
       console.error('❌ Automatic cleanup failed:', error);
@@ -288,7 +287,6 @@ class StorageService {
         
         if (compressed) {
           await this.set('wordPerformance', wordPerformance);
-          console.log('📊 Word performance data compressed');
         }
       }
     } catch (error) {

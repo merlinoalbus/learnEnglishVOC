@@ -103,7 +103,6 @@ export const smartRetryAI = async (aiOperation, word) => {
              error.message.includes('5');
     },
     onRetry: (error, attempt, delay) => {
-      console.log(`🤖 AI Retry ${attempt}/3 for word "${word}" in ${Math.round(delay)}ms:`, error.message);
     },
     onFinalFailure: (error, attempts) => {
       console.error(`❌ AI Service failed for word "${word}" after ${attempts} attempts:`, error);
@@ -136,7 +135,6 @@ export const smartRetryStorage = async (storageOperation, operationName) => {
              error.message.includes('access');
     },
     onRetry: (error, attempt, delay) => {
-      console.log(`💾 Storage Retry ${attempt}/3 for "${operationName}" in ${Math.round(delay)}ms:`, error.message);
     },
     onFinalFailure: (error, attempts) => {
       console.error(`❌ Storage operation "${operationName}" failed after ${attempts} attempts:`, error);
@@ -168,7 +166,6 @@ export const smartRetryNetwork = async (networkOperation, url) => {
              error.message.includes('5');
     },
     onRetry: (error, attempt, delay) => {
-      console.log(`🌐 Network Retry ${attempt}/3 for "${url}" in ${Math.round(delay)}ms:`, error.message);
     },
     onFinalFailure: (error, attempts) => {
       console.error(`❌ Network operation for "${url}" failed after ${attempts} attempts:`, error);
@@ -430,7 +427,6 @@ export const batchRetry = async (operations, options = {}) => {
   let completed = new Array(operations.length).fill(false);
 
   while (attempt <= maxAttempts && !completed.every(Boolean)) {
-    console.log(`📦 Batch retry attempt ${attempt}/${maxAttempts}`);
     
     const promises = operations.map(async (operation, index) => {
       if (completed[index]) return results[index]; // Skip completed operations

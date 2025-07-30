@@ -119,7 +119,6 @@ class AIService {
     }
 
     try {
-      console.log("🔍 Manual AI health check (COSTS MONEY)...");
 
       const response = await withTimeout(
         () =>
@@ -139,14 +138,9 @@ class AIService {
         this.healthStatus = "healthy";
         this.consecutiveFailures = 0;
         this.lastSuccessTime = Date.now();
-        console.log("✅ AI service manually verified as healthy");
       } else {
         this.consecutiveFailures++;
         this.healthStatus = this.consecutiveFailures > 2 ? "down" : "degraded";
-        console.log(
-          "⚠️ AI service manually verified as degraded:",
-          response.status
-        );
       }
 
       this.lastHealthCheck = Date.now();
@@ -156,16 +150,13 @@ class AIService {
 
       if ((error as Error).message.includes("timeout")) {
         this.healthStatus = "degraded";
-        console.log("⏱️ AI service manual timeout");
       } else if (
         (error as Error).message.includes("fetch") ||
         (error as Error).message.includes("network")
       ) {
         this.healthStatus = this.consecutiveFailures > 2 ? "down" : "degraded";
-        console.log("📡 AI service manual network error");
       } else {
         this.healthStatus = this.consecutiveFailures > 3 ? "down" : "degraded";
-        console.log("❌ AI service manual error:", (error as Error).message);
       }
 
       this.lastHealthCheck = Date.now();
@@ -200,7 +191,6 @@ class AIService {
       this.consecutiveFailures = 0;
       this.lastSuccessTime = Date.now();
       this.healthStatus = "healthy";
-      console.log("✅ AI analysis successful - health updated");
 
       return result;
     } catch (error) {
@@ -224,9 +214,6 @@ class AIService {
         throw new Error("🔴 AI temporaneamente non disponibile.");
       } else {
         this.healthStatus = this.consecutiveFailures > 2 ? "down" : "degraded";
-        console.log(
-          `❌ AI analysis failed - health updated to ${this.healthStatus}`
-        );
         throw new Error(`🤖 Errore AI: ${(error as Error).message}`);
       }
     }
@@ -322,7 +309,6 @@ class AIService {
   // ⭐ PARSE AI RESPONSE
   private parseAIResponse(content: string, fallbackWord: string): AIAnalysisResult {
     try {
-      console.log("🔍 AI Raw Response:", content);
       
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
@@ -331,10 +317,8 @@ class AIService {
       }
 
       const parsedData = JSON.parse(jsonMatch[0]);
-      console.log("📊 AI Parsed Data:", parsedData);
       
       const result = this.validateAndSanitizeResponse(parsedData, fallbackWord);
-      console.log("✅ AI Final Result:", result);
       
       return result;
     } catch (parseError) {
@@ -373,43 +357,36 @@ class AIService {
     }
 
     // Validazione frasi (NUOVO) - fallback su sentence singola per backward compatibility
-    console.log("🔍 Validating sentences - data.sentences:", data.sentences, "data.sentence:", data.sentence);
     
     if (Array.isArray(data.sentences) && data.sentences.length > 0) {
       result.sentences = data.sentences
         .filter((s: any) => typeof s === "string" && s.trim())
         .map((s: string) => s.trim())
         .slice(0, 5); // Max 5 frasi
-      console.log("✅ Using sentences array:", result.sentences);
     } else if (data.sentence && typeof data.sentence === "string") {
       // Backward compatibility
       result.sentences = [data.sentence.trim()];
       result.sentence = data.sentence.trim(); // Per backward compatibility
-      console.log("✅ Using single sentence fallback:", result.sentences);
     } else {
       console.warn("⚠️ No sentences found in AI response!");
     }
 
     // Validazione sinonimi (NUOVO)
-    console.log("🔍 Validating synonyms - data.synonyms:", data.synonyms);
     if (Array.isArray(data.synonyms) && data.synonyms.length > 0) {
       result.synonyms = data.synonyms
         .filter((s: any) => typeof s === "string" && s.trim())
         .map((s: string) => s.trim())
         .slice(0, 8); // Max 8 sinonimi
-      console.log("✅ Using synonyms:", result.synonyms);
     } else {
       console.warn("⚠️ No synonyms found in AI response!");
     }
 
     // Validazione contrari (NUOVO)
-    console.log("🔍 Validating antonyms - data.antonyms:", data.antonyms);
     if (Array.isArray(data.antonyms) && data.antonyms.length > 0) {
       result.antonyms = data.antonyms
         .filter((s: any) => typeof s === "string" && s.trim())
         .map((s: string) => s.trim())
         .slice(0, 8); // Max 8 contrari
-      console.log("✅ Using antonyms:", result.antonyms);
     } else {
       console.warn("⚠️ No antonyms found in AI response!");
     }

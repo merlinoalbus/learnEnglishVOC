@@ -65,17 +65,6 @@ export class WordPerformanceService {
       const performance = performanceMap.get(word.id);
       const hasAttempts = performance && performance.attempts && performance.attempts.length > 0;
       
-      // ⭐ DEBUG: Log specifico per "quite"
-      if (word.english === 'quite') {
-        console.log(`🔍 DEBUG [quite] - analyzeWordsPerformanceOptimized:`, {
-          wordId: word.id,
-          english: word.english,
-          hasPerformance: !!performance,
-          hasAttempts,
-          performance: performance,
-          attemptsLength: performance?.attempts?.length || 0
-        });
-      }
       
       const baseWordData = {
         id: word.id,
@@ -97,9 +86,6 @@ export class WordPerformanceService {
           ...performanceData
         });
         
-        if (word.english === 'quite') {
-          console.log(`🔍 DEBUG [quite] - Aggiunta a wordsWithPerformance`);
-        }
       } else {
         // Parole senza tentativi
         wordsWithoutPerformance.push({
@@ -107,9 +93,6 @@ export class WordPerformanceService {
           ...this.createEmptyPerformanceData(word)
         });
         
-        if (word.english === 'quite') {
-          console.log(`🔍 DEBUG [quite] - Aggiunta a wordsWithoutPerformance`);
-        }
       }
     });
 
@@ -142,23 +125,6 @@ export class WordPerformanceService {
     performance: WordPerformance,
     totalUserHints: number
   ) {
-    // ⭐ DEBUG: Log dei dati performance grezzi
-    if (word.english === 'quite') {
-      console.log(`🔍 DEBUG [quite] - Dati performance grezzi:`, {
-        wordId: word.id,
-        english: word.english,
-        performanceRaw: performance,
-        totalAttempts: performance.totalAttempts || 0,
-        correctAttempts: performance.correctAttempts || 0,
-        accuracy: performance.accuracy,
-        averageResponseTime: performance.averageResponseTime,
-        attempts: performance.attempts || []
-      });
-      
-      // ⭐ DEBUG: Log di TUTTE le proprietà dell'oggetto performance
-      console.log(`🔍 DEBUG [quite] - TUTTE le proprietà performance:`, Object.keys(performance));
-      console.log(`🔍 DEBUG [quite] - Performance object completo:`, performance);
-    }
     
     const attempts = performance.attempts || [];
     
@@ -172,9 +138,6 @@ export class WordPerformanceService {
       accuracy = Math.round(performance.accuracy);
       avgTime = performance.averageResponseTime ? Math.round(performance.averageResponseTime / 1000) : 0;
       
-      if (word.english === 'quite') {
-        console.log(`🔍 DEBUG [quite] - Usando dati già aggregati:`, { totalAttempts, correctAttempts, accuracy, avgTime });
-      }
     } else {
       // ⭐ CALCOLA dai tentativi reali
       totalAttempts = attempts.length;
@@ -183,12 +146,6 @@ export class WordPerformanceService {
       avgTime = totalAttempts > 0 ? 
         Math.round(attempts.reduce((sum, a) => sum + (a.timeSpent || 0), 0) / totalAttempts / 1000) : 0;
       
-      if (word.english === 'quite') {
-        console.log(`🔍 DEBUG [quite] - Calcolando dai tentativi reali:`, { 
-          totalAttempts, correctAttempts, accuracy, avgTime,
-          attemptsData: attempts.map(a => ({ correct: a.correct, timeSpent: a.timeSpent }))
-        });
-      }
     }
     
     // ⭐ CALCOLI HINTS CORRETTI
@@ -199,34 +156,6 @@ export class WordPerformanceService {
     // ⭐ NUOVO CALCOLO: hintsPercentage = percentuale degli aiuti di questa parola rispetto al totale aiuti utente
     const hintsPercentage = totalUserHints > 0 ? Math.round((hintsUsed / totalUserHints) * 100) : 0;
     
-    if (word.english === 'quite') {
-      console.log(`🔍 DEBUG [quite] - Calcolo hints corretto:`, {
-        hintsUsed, // hints totali usati (somma di tutti)
-        testsWithHints, // numero di test che hanno usato almeno un hint
-        hintsPercentage, // percentuale di test con hints
-        hintsPerTest: attempts.map(a => a.hintsCount || 0), // hints per ogni singolo test [0,3,2,1,0]
-        attempts: attempts.map(a => ({ usedHint: a.usedHint, hintsCount: a.hintsCount }))
-      });
-      
-      // ⭐ DEBUG: VERIFICA AUTENTICITA' DATI - NON MOCKATI
-      console.log(`🔍 DEBUG [quite] - VERIFICA DATI REALI:`, {
-        sorgenteDati: 'collezione performance Firebase',
-        timestampCreazione: performance.firestoreMetadata?.createdAt,
-        timestampUltimoAggiornamento: performance.firestoreMetadata?.updatedAt,
-        userId: performance.firestoreMetadata?.userId,
-        versioneDocumento: performance.firestoreMetadata?.version,
-        attemptsTimestamps: attempts.map(a => a.timestamp),
-        attemptsDettaglio: attempts.map((a, idx) => ({
-          test: idx + 1,
-          timestamp: a.timestamp,
-          correct: a.correct,
-          timeSpent: a.timeSpent,
-          usedHint: a.usedHint,
-          hintsCount: a.hintsCount || 0,
-          dataFormatted: new Date(a.timestamp).toLocaleString('it-IT')
-        }))
-      });
-    }
     
     // Calcola streak corrente (veloce - solo dalla fine dell'array)
     const currentStreak = this.calculateCurrentStreak(attempts);
@@ -260,10 +189,6 @@ export class WordPerformanceService {
       recommendations: this.generateRecommendations(accuracy, hintsPercentage, currentStreak, avgTime)
     };
     
-    // ⭐ DEBUG: Log del risultato calcolato
-    if (word.english === 'quite') {
-      console.log(`🔍 DEBUG [quite] - Risultato calcolato:`, result);
-    }
     
     return result;
   }

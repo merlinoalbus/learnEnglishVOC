@@ -323,9 +323,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
 
     lastArgsRef.current = null;
 
-    if (debug) {
-      console.log('🔄 AsyncOperation reset');
-    }
+    // Debug logging removed
   }, [debug]);
 
   // ===== CORE EXECUTION LOGIC =====
@@ -345,9 +343,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
       currentAttempt: attempt,
     });
 
-    if (debug) {
-      console.log(`🔄 AsyncOperation attempt ${attempt}/${finalRetryConfig.maxAttempts}`, args);
-    }
+    // Debug logging removed
 
     try {
       // Setup cancellation token
@@ -403,9 +399,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
         duration: endTime.getTime() - startTime.getTime(),
       });
 
-      if (debug) {
-        console.log('🔄 AsyncOperation success', result);
-      }
+      // Debug logging removed
 
       return result;
 
@@ -418,9 +412,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
 
       const operationError = error as TError;
 
-      if (debug) {
-        console.error(`🔄 AsyncOperation attempt ${attempt} failed:`, operationError);
-      }
+      // Debug logging removed
 
       // Update metadata con errore
       updateMetadata({
@@ -530,9 +522,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
       throw new Error('No previous arguments to retry with');
     }
 
-    if (debug) {
-      console.log('🔄 AsyncOperation manual retry');
-    }
+    // Debug logging removed
 
     return execute(...lastArgsRef.current);
   }, [execute, debug]);
@@ -544,9 +534,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
     if (cancellationTokenRef.current && !cancellationTokenRef.current.isCancelled) {
       cancellationTokenRef.current.cancel(reason || 'manual cancellation');
       
-      if (debug) {
-        console.log('🔄 AsyncOperation cancelled:', reason);
-      }
+      // Debug logging removed
     }
   }, [debug]);
 

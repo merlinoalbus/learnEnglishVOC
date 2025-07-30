@@ -336,7 +336,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
     lastArgsRef.current = null;
 
     if (debug) {
-      console.log("🔄 AsyncOperation reset");
+      // Debug logging removed
     }
   }, [debug]);
 
@@ -356,10 +356,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
       });
 
       if (debug) {
-        console.log(
-          `🔄 AsyncOperation attempt ${attempt}/${finalRetryConfig.maxAttempts}`,
-          args
-        );
+        // Debug logging removed
       }
 
       try {
@@ -426,7 +423,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
         });
 
         if (debug) {
-          console.log("🔄 AsyncOperation success", result);
+          // Debug logging removed
         }
 
         return result;
@@ -440,10 +437,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
         const operationError = error as TError;
 
         if (debug) {
-          console.error(
-            `🔄 AsyncOperation attempt ${attempt} failed:`,
-            operationError
-          );
+          // Debug logging removed
         }
 
         // Update metadata con errore
@@ -562,7 +556,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
     }
 
     if (debug) {
-      console.log("🔄 AsyncOperation manual retry");
+      // Debug logging removed
     }
 
     return execute(...lastArgsRef.current);
@@ -580,7 +574,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
         cancellationTokenRef.current.cancel(reason || "manual cancellation");
 
         if (debug) {
-          console.log("🔄 AsyncOperation cancelled:", reason);
+          // Debug logging removed
         }
       }
     },
