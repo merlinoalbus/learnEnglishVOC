@@ -15,6 +15,19 @@ import { getCategoryStyle } from '../../../utils/categoryUtils';
 import WordDetailSection from '../components/WordDetailSection';
 import WordPerformanceService from '../../../services/WordPerformanceService';
 
+// Helper function to calculate consecutive errors from the end
+const calculateConsecutiveErrors = (attempts: any[]): number => {
+  let consecutiveErrors = 0;
+  for (let i = attempts.length - 1; i >= 0; i--) {
+    if (!attempts[i].correct) {
+      consecutiveErrors++;
+    } else {
+      break;
+    }
+  }
+  return consecutiveErrors;
+};
+
 interface CollapsedChaptersState {
   [chapter: string]: boolean;
 }
@@ -589,6 +602,13 @@ const WordsSection: React.FC<WordsSectionProps> = ({ localRefresh }) => {
         </div>
       )}
 
+      {/* ⭐ NUOVO: Top Words Analytics - In fondo alla pagina */}
+      <TopWordsAnalytics 
+        wordsData={wordsData} 
+        onToggleLearned={handleToggleLearned}
+        onToggleDifficult={handleToggleDifficult}
+      />
+
     </div>
   );
 };
@@ -1126,6 +1146,136 @@ const UntestedWordsFilters: React.FC<UntestedWordsFiltersProps> = ({
         </CardContent>
       )}
     </Card>
+  );
+};
+
+// ⭐ NUOVO: Top Words Analytics Component
+interface TopWordsAnalyticsProps {
+  wordsData: {
+    wordsWithPerformance: WordPerformanceAnalysis[];
+    wordsWithoutPerformance: WordPerformanceAnalysis[];
+  };
+  onToggleLearned: (id: string) => void;
+  onToggleDifficult: (id: string) => void;
+}
+
+const TopWordsAnalytics: React.FC<TopWordsAnalyticsProps> = ({ wordsData, onToggleLearned, onToggleDifficult }) => {
+  // Calculate top 10 words with highest consecutive streak (not learned)
+  const topStreakWords = useMemo(() => {
+    return wordsData.wordsWithPerformance
+      .filter(word => !word.learned && word.hasPerformanceData && word.currentStreak > 0)
+      .sort((a, b) => b.currentStreak - a.currentStreak)
+      .slice(0, 10);
+  }, [wordsData.wordsWithPerformance]);
+
+  // Calculate top 10 words with most consecutive errors (not learned, not difficult, streak <= 1)
+  const topErrorWords = useMemo(() => {
+    return wordsData.wordsWithPerformance
+      .filter(word => {
+        if (word.learned || word.difficult || !word.hasPerformanceData || word.currentStreak > 1) return false;
+        const consecutiveErrors = calculateConsecutiveErrors(word.attempts);
+        return consecutiveErrors > 0;
+      })
+      .map(word => ({
+        ...word,
+        consecutiveErrors: calculateConsecutiveErrors(word.attempts)
+      }))
+      .sort((a, b) => b.consecutiveErrors - a.consecutiveErrors)
+      .slice(0, 10);
+  }, [wordsData.wordsWithPerformance]);
+
+  if (topStreakWords.length === 0 && topErrorWords.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Top Streak Words - Ready to be Learned */}
+      {topStreakWords.length > 0 && (
+        <Card className="bg-white dark:bg-gray-800 border-0 shadow-lg rounded-2xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CheckCircle className="w-5 h-5" />
+              🔥 Serie Consecutive Alte
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+              Clicca per marcare come apprese
+            </p>
+            <div className="space-y-1.5 max-h-64 overflow-y-auto">
+              {topStreakWords.map((word, index) => (
+                <div 
+                  key={word.id} 
+                  onClick={() => onToggleLearned(word.id)}
+                  className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700 cursor-pointer hover:bg-green-100 dark:hover:bg-green-800/30 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <div className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                        {word.english} → {word.italian}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {word.chapter ? `Cap. ${word.chapter}` : 'No cap.'} • {word.accuracy}% • {word.totalAttempts} test
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-green-600 dark:text-green-400">🔥{word.currentStreak}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Top Error Words - Potentially Difficult */}
+      {topErrorWords.length > 0 && (
+        <Card className="bg-white dark:bg-gray-800 border-0 shadow-lg rounded-2xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-red-500 to-orange-500 text-white py-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="w-5 h-5" />
+              ⚠️ Errori Consecutivi
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+              Clicca per marcare come difficili
+            </p>
+            <div className="space-y-1.5 max-h-64 overflow-y-auto">
+              {topErrorWords.map((word, index) => (
+                <div 
+                  key={word.id}
+                  onClick={() => onToggleDifficult(word.id)}
+                  className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-700 cursor-pointer hover:bg-red-100 dark:hover:bg-red-800/30 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <div className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                        {word.english} → {word.italian}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {word.chapter ? `Cap. ${word.chapter}` : 'No cap.'} • {word.accuracy}% • Serie: {word.currentStreak}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-red-600 dark:text-red-400">❌{word.consecutiveErrors}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 

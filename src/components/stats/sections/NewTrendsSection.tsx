@@ -308,15 +308,15 @@ const NewTrendsSection: React.FC<NewTrendsSectionProps> = ({
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-purple-700 dark:text-purple-300">Accuracy:</span>
-                      <span className="font-medium">{analysisData.learningVelocity.velocityByMetric.accuracy > 0 ? '+' : ''}{analysisData.learningVelocity.velocityByMetric.accuracy}%</span>
+                      <span className="font-medium">{analysisData.learningVelocity.velocityByMetric.accuracy > 0 ? '+' : ''}{analysisData.learningVelocity.velocityByMetric.accuracy.toFixed(4)}%</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-purple-700 dark:text-purple-300">Efficienza:</span>
-                      <span className="font-medium">{analysisData.learningVelocity.velocityByMetric.efficiency > 0 ? '+' : ''}{analysisData.learningVelocity.velocityByMetric.efficiency}%</span>
+                      <span className="font-medium">{analysisData.learningVelocity.velocityByMetric.efficiency > 0 ? '+' : ''}{analysisData.learningVelocity.velocityByMetric.efficiency.toFixed(4)}%</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-purple-700 dark:text-purple-300">Velocità:</span>
-                      <span className="font-medium">{analysisData.learningVelocity.velocityByMetric.speed > 0 ? '+' : ''}{analysisData.learningVelocity.velocityByMetric.speed}%</span>
+                      <span className="font-medium">{analysisData.learningVelocity.velocityByMetric.speed > 0 ? '+' : ''}{analysisData.learningVelocity.velocityByMetric.speed.toFixed(4)}%</span>
                     </div>
                   </div>
                 </div>
