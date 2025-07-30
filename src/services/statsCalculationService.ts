@@ -55,15 +55,39 @@ export class StatsCalculationService {
       wp.attempts && wp.attempts.length > 0
     ).length;
 
-    // 3. Media - % di parole flaggate come learned rispetto alle studiate
-    const paroleApprese = wordPerformances.filter(wp => {
-      return wp.learned === true;
-    }).length;
+    // 3. Media - media delle accuratezze delle parole con performance (se hanno attempts)
+    let totalAccuracy = 0;
+    let wordsWithPerformance = 0;
     
-    const mediaCorretta = paroleStudiate > 0 
-      ? Math.round((paroleApprese / paroleStudiate) * 100) 
+    // Calculate accuracy average for words with performance data
+    
+    wordPerformances.forEach((wp, index) => {
+      if (wp.attempts && wp.attempts.length > 0) {
+        const correctAttempts = wp.attempts.filter((attempt: any) => attempt.correct).length;
+        const accuracy = (correctAttempts / wp.attempts.length) * 100;
+        totalAccuracy += accuracy;
+        wordsWithPerformance++;
+        
+        // Add to total accuracy calculation
+      }
+    });
+    
+    const mediaCorretta = wordsWithPerformance > 0 
+      ? Math.round(totalAccuracy / wordsWithPerformance) 
       : 0;
     
+    // Final accuracy average calculation
+    
+    // ALTERNATIVA: Se non ci sono dati performance, calcola dai test sessions
+    let mediaAlternativa = 0;
+    if (mediaCorretta === 0 && detailedSessions.length > 0) {
+      const totalSessionAccuracy = detailedSessions.reduce((sum, session) => sum + (session.accuracy || 0), 0);
+      mediaAlternativa = Math.round(totalSessionAccuracy / detailedSessions.length);
+      // Using test sessions as fallback when word performance data not available
+    }
+    
+    // Use alternative if main calculation failed
+    const finalMediaCorretta = mediaCorretta > 0 ? mediaCorretta : mediaAlternativa;
 
     // 4. Record - miglior percentuale singolo test
     const recordScore = detailedSessions.length > 0
@@ -113,7 +137,7 @@ export class StatsCalculationService {
     return {
       testCompletati,
       paroleStudiate,
-      mediaCorretta,
+      mediaCorretta: finalMediaCorretta,
       recordScore: Math.round(recordScore),
       aiutiTotali,
       maxHintsPercentage
@@ -128,7 +152,10 @@ export class StatsCalculationService {
     wordPerformances: any[],
     result: StatsCalculationResult
   ): void {
-    // Removed logs as requested
+    // Debug logging removed - calculation is working correctly
+    if (process.env.NODE_ENV === 'development' && result.mediaCorretta === 0) {
+      console.log('📊 Stats Debug: Using fallback calculation due to missing performance data');
+    }
   }
 
   /**

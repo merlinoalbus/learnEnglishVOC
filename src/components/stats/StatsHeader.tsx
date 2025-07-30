@@ -31,8 +31,8 @@ const StatsHeader: React.FC<StatsHeaderProps> = ({
   const mainStats: Array<{label: string; value: string | number; color: ColorType}> = [
     { label: 'Test Completati', value: testCompletati, color: 'blue' },
     { label: '📚 Parole Studiate', value: paroleStudiate, color: 'emerald' },
-    { label: 'Media', value: `${mediaCorretta}%`, color: 'green' },
-    { label: 'Record', value: `${recordScore}%`, color: 'purple' },
+    { label: 'Accuracy Media', value: `${mediaCorretta}%`, color: 'green' },
+    { label: 'Miglior Test', value: `${recordScore}%`, color: 'purple' },
     { label: 'Aiuti', value: aiutiTotali, color: 'yellow' },
     { label: '% Aiuti', value: `${maxHintsPercentage}%`, color: 'indigo' }
   ];
