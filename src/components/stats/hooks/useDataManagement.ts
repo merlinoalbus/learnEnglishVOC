@@ -8,6 +8,7 @@ import type { ChangeEvent } from 'react';
 import { collection, query, where, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { useAuth } from '../../../hooks/integration/useAuth';
+import { useFirestoreWords, useFirestoreStats, useFirestorePerformance } from '../../../hooks/core/useFirestore';
 
 interface UseDataManagementReturn {
   // States
@@ -38,6 +39,11 @@ export const useDataManagement = (): UseDataManagementReturn => {
   const [importType, setImportType] = useState<string>(''); // ⭐ NEW: Track import type
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+
+  // ⭐ NEW: Direct Firestore hooks for more reliable refresh
+  const wordsHook = useFirestoreWords();
+  const statsHook = useFirestoreStats();
+  const performanceHook = useFirestorePerformance();
 
   const {
     importStats,
@@ -791,41 +797,67 @@ export const useDataManagement = (): UseDataManagementReturn => {
       
       console.log('✅ Import completed successfully');
       
-      // ⭐ ENHANCED: Force complete data refresh after import
+      // ⭐ ENHANCED: Force complete data refresh using direct Firestore hooks
       console.log('🔄 Forcing complete data refresh after import...');
       
-      // First refresh the data
-      if (typeof refreshData === 'function') {
-        refreshData();
+      // Refresh all Firestore hooks directly for immediate update
+      const refreshPromises = [];
+      
+      if (importType.includes('words') || importType.includes('statistics') || importType.includes('test_history')) {
+        console.log('🔄 Refreshing words data...');
+        refreshPromises.push(wordsHook.refresh());
       }
       
-      // Then force refresh with a slight delay to ensure data propagation
-      setTimeout(() => {
-        if (typeof forceRefresh === 'function') {
-          console.log('🔄 Force refreshing UI components...');
-          forceRefresh();
-        }
-      }, 500);
+      if (importType.includes('statistics')) {
+        console.log('🔄 Refreshing statistics data...');
+        refreshPromises.push(statsHook.refresh());
+      }
       
-      // Additional refresh to ensure UI is fully updated
+      if (importType.includes('performance')) {
+        console.log('🔄 Refreshing performance data...');
+        refreshPromises.push(performanceHook.refresh());
+      }
+      
+      // Wait for all refreshes to complete
+      try {
+        await Promise.all(refreshPromises);
+        console.log('✅ All Firestore data refreshed successfully');
+      } catch (refreshError) {
+        console.error('⚠️ Some data refresh operations failed:', refreshError);
+      }
+      
+      // Also call the context refresh functions as backup
       setTimeout(() => {
+        console.log('🔄 Calling context refresh functions...');
         if (typeof refreshData === 'function') {
-          console.log('🔄 Final data refresh...');
           refreshData();
         }
+        if (typeof forceRefresh === 'function') {
+          forceRefresh();
+        }
         
-        // ⭐ DEBUG: Log current data state after import
-        console.log('📊 Current stats after import:', stats);
-        console.log('📝 Current testHistory after import:', testHistory?.length);
-        console.log('🎯 Current wordPerformance after import:', Object.keys(wordPerformance || {}).length);
+        // Force clear all caches to ensure fresh data
+        wordsHook.clearCache();
+        statsHook.clearCache();
+        performanceHook.clearCache();
         
-        // ⭐ WARNING: These values might be stale from hook creation time
-        console.log('⚠️ Note: These values might be stale - they are captured at hook creation time');
-        console.log('🔍 Check the actual UI for updated data display');
-        
-        // Show success message after all refreshes
-        alert(`✅ Import ${importType} completato con successo!\n\nStato dopo import:\n- Statistiche: ${stats ? 'presenti' : 'assenti'}\n- Test History: ${testHistory?.length || 0} elementi\n- Performance: ${Object.keys(wordPerformance || {}).length} parole`);
-      }, 1000);
+        // Trigger another fetch after cache clear
+        setTimeout(() => {
+          console.log('🔄 Final fetch after cache clear...');
+          wordsHook.fetch();
+          statsHook.fetch();
+          performanceHook.fetch();
+        }, 100);
+      }, 200);
+      
+      // Show success message and ask user if they want to reload the page
+      setTimeout(() => {
+        // eslint-disable-next-line no-restricted-globals
+        const shouldReload = confirm(`✅ Import ${importType} completato con successo!\n\nPer garantire che tutti i dati siano visibili, è consigliato ricaricare la pagina.\n\nVuoi ricaricare ora?`);
+        if (shouldReload) {
+          window.location.reload();
+        }
+      }, 500);
       
     } catch (error) {
       console.error('❌ Errore importazione:', error);
