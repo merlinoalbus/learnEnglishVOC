@@ -110,8 +110,7 @@ ENV REACT_APP_GEMINI_API_KEY=$REACT_APP_GEMINI_API_KEY \
     REACT_APP_AI_RETRY_DELAY=$REACT_APP_AI_RETRY_DELAY \
     REACT_APP_MOCK_AI_RESPONSES=$REACT_APP_MOCK_AI_RESPONSES \
     REACT_APP_ENABLE_STATISTICS=$REACT_APP_ENABLE_STATISTICS \
-    REACT_APP_ENABLE_DATA_MANAGEMENT=$REACT_APP_ENABLE_DATA_MANAGEMENT \
-    GENERATE_SOURCEMAP=true
+    REACT_APP_ENABLE_DATA_MANAGEMENT=$REACT_APP_ENABLE_DATA_MANAGEMENT
 # 
 # PROCESSO:
 # 1. ARG riceve valore da --build-arg
@@ -131,7 +130,7 @@ COPY . .
 # EXCLUDE: .dockerignore definisce cosa non copiare
 
 # ====== BUILD con fallback ======
-RUN npm run build || (echo "Build failed, trying fallback..." && CI=false npm run build)
+RUN npm run build:docker || (echo "Build failed, trying fallback..." && CI=false npm run build:docker)
 # SCOPO: Build production con strategia fallback
 #
 # COMANDO PRIMARIO: npm run build
