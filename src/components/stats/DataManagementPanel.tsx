@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
-import { Shield, AlertTriangle, Download, Upload, RefreshCw } from 'lucide-react';
+import { Shield, Download, Upload } from 'lucide-react';
 import { useDataManagement } from './hooks/useDataManagement';
 import { useStats } from '../../hooks/data/useStats';
 
@@ -14,10 +14,13 @@ const DataManagementPanel = () => {
     isExporting,
     isImporting,
     isProcessing,
-    handleExport,
-    handleImportClick,
     handleFileSelect, // ⭐ FIXED: Use the correct file handler
-    handleReset,
+    handleExportStatistics, // ⭐ NEW: Individual export functions
+    handleExportTestHistory,
+    handleExportPerformance,
+    handleImportStatistics, // ⭐ NEW: Individual import functions
+    handleImportTestHistory,
+    handleImportPerformance,
     fileInputRef
   } = useDataManagement();
 
@@ -25,57 +28,86 @@ const DataManagementPanel = () => {
   return (
     <Card className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 border-2 border-indigo-200 dark:border-indigo-700 rounded-2xl animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Backup Section */}
+
+        {/* ⭐ NEW: Separate exports section */}
         <div className="text-center">
-          <h4 className="font-bold text-indigo-800 dark:text-indigo-200 mb-3 flex items-center justify-center gap-2">
-            <Shield className="w-5 h-5" />
-            Backup Completo
+          <h4 className="font-bold text-green-800 dark:text-green-200 mb-3 flex items-center justify-center gap-2">
+            <Download className="w-5 h-5" />
+            Export Separati
           </h4>
           <div className="space-y-2">
             <Button 
-              onClick={handleExport}
+              onClick={handleExportStatistics}
               disabled={isExporting || isProcessing}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-sm"
             >
-              <Download className="w-4 h-4 mr-2" />
-              {isExporting ? '⏳ Esportando...' : 'Esporta Backup'}
+              📊 Export Statistiche
             </Button>
             <Button 
-              onClick={handleImportClick}
-              disabled={isImporting || isProcessing}
-              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+              onClick={handleExportTestHistory}
+              disabled={isExporting || isProcessing}
+              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white text-sm"
             >
-              <Upload className="w-4 h-4 mr-2" />
-              {isImporting ? '⏳ Importando...' : 'Importa Backup'}
+              📝 Export Cronologia Test
+            </Button>
+            <Button 
+              onClick={handleExportPerformance}
+              disabled={isExporting || isProcessing}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-sm"
+            >
+              🎯 Export Performance Parole
             </Button>
           </div>
           
-          {/* ⭐ ENHANCED: Info about backup content */}
-          <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-indigo-200 dark:border-indigo-700">
-            <p className="text-xs text-indigo-700 dark:text-indigo-300">
-              <strong>Include:</strong> Parole, Statistiche, Cronologia Test, Performance Parole
+          {/* ⭐ Info about separate exports */}
+          <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-700">
+            <p className="text-xs text-green-700 dark:text-green-300">
+              <strong>Export singoli:</strong> Scarica solo il tipo di dato selezionato
             </p>
           </div>
         </div>
 
-        {/* Reset Section */}
+        {/* ⭐ NEW: Separate imports section */}
         <div className="text-center">
-          <h4 className="font-bold text-red-800 dark:text-red-200 mb-3 flex items-center justify-center gap-2">
-            <AlertTriangle className="w-5 h-5" />
-            Reset Completo
+          <h4 className="font-bold text-orange-800 dark:text-orange-200 mb-3 flex items-center justify-center gap-2">
+            <Upload className="w-5 h-5" />
+            Import Separati
           </h4>
-          <Button 
-            onClick={handleReset}
-            disabled={isProcessing}
-            className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Reset Completo
-          </Button>
-          <p className="text-xs text-red-600 dark:text-red-400 mt-2">
-            ⚠️ Cancella tutto: parole, test, statistiche
-          </p>
+          <div className="space-y-2">
+            <Button 
+              onClick={handleImportStatistics}
+              disabled={isImporting || isProcessing}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-sm"
+            >
+              📊 Import Statistiche
+            </Button>
+            <Button 
+              onClick={handleImportTestHistory}
+              disabled={isImporting || isProcessing}
+              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white text-sm"
+            >
+              📝 Import Cronologia Test
+            </Button>
+            <Button 
+              onClick={handleImportPerformance}
+              disabled={isImporting || isProcessing}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-sm"
+            >
+              🎯 Import Performance Parole
+            </Button>
+          </div>
+          
+          {/* ⭐ Info about separate imports */}
+          <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-700">
+            <p className="text-xs text-orange-700 dark:text-orange-300">
+              <strong>Import singoli:</strong> Carica solo il tipo di dato selezionato
+            </p>
+            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+              ⚠️ Sovrascrive documenti esistenti con gli stessi ID
+            </p>
+          </div>
         </div>
+
       </div>
 
       {/* ⭐ FIXED: Correct file input with proper onChange handler */}

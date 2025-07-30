@@ -16,12 +16,12 @@ const TrendsSection = React.lazy(() => import('./sections/TrendsSection'));
 interface StatsOverviewProps {
   testHistory: TestHistoryItem[];
   words: Word[];
-  onClearHistory: () => void;
+  onClearAllStatistics: () => void; // ⭐ RENAMED: from onClearHistory to onClearAllStatistics
   onGoToMain: () => void;
   forceUpdate: number | (() => void);
 }
 
-const StatsOverview: React.FC<StatsOverviewProps> = ({ testHistory, words, onClearHistory, onGoToMain, forceUpdate }) => {
+const StatsOverview: React.FC<StatsOverviewProps> = ({ testHistory, words, onClearAllStatistics, onGoToMain, forceUpdate }) => {
   const [selectedView, setSelectedView] = useState<string>('overview');
   const [showDataManagement, setShowDataManagement] = useState<boolean>(false);
   const [localRefresh, setLocalRefresh] = useState<number>(0);
@@ -65,7 +65,7 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ testHistory, words, onCle
       testHistory, 
       words, 
       localRefresh,
-      onClearHistory 
+      onClearAllStatistics // ⭐ RENAMED: from onClearHistory to onClearAllStatistics
     };
 
     switch (selectedView) {
@@ -90,7 +90,7 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ testHistory, words, onCle
         testHistory={testHistory}
         showDataManagement={showDataManagement}
         setShowDataManagement={setShowDataManagement}
-        onClearHistory={onClearHistory}
+        onClearAllStatistics={onClearAllStatistics} // ⭐ RENAMED: from onClearHistory to onClearAllStatistics
       />
 
       <StatsNavigation 

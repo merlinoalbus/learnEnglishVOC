@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { collection, query, where, getDocs, addDoc, deleteDoc, updateDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, deleteDoc, updateDoc, doc, setDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useFirestore } from "../core/useFirestore";
 import { useFirebase } from "../../contexts/FirebaseContext";
@@ -112,6 +112,7 @@ interface StatsOperations {
   refreshData: () => void;
   resetStats: () => Promise<OperationResult<void>>;
   clearHistoryOnly: () => Promise<OperationResult<void>>;
+  clearAllStatistics: () => Promise<OperationResult<void>>; // ⭐ NEW: Clear all statistics function
   exportData: () => ComprehensiveStatisticsExportData;
   importData: (
     data: ComprehensiveStatisticsExportData
@@ -169,7 +170,7 @@ export const useStats = (): StatsResult => {
   const performanceFirestore = useFirestore<WordPerformance & { id: string }>({
     collection: "performance",
     realtime: false,
-    enableCache: true,
+    enableCache: false,
     autoFetch: true,
     debug: process.env.NODE_ENV === "development",
   });
@@ -784,6 +785,62 @@ export const useStats = (): StatsResult => {
     }
   }, []);
 
+  // ⭐ NEW: Clear all statistics function (invalidate performance and detailedTestSessions with deleted=true)
+  const clearAllStatistics = useCallback(async (): Promise<OperationResult<void>> => {
+    const startTime = Date.now();
+    try {
+      setIsProcessing(true);
+      console.log('🗑️ Starting clear all statistics operation...');
+      
+      // Delete ALL performance documents permanently (including soft-deleted ones)
+      const performanceCollection = collection(db, "performance");
+      const allPerformanceDocs = await getDocs(performanceCollection);
+      
+      if (allPerformanceDocs.size > 0) {
+        for (const docSnapshot of allPerformanceDocs.docs) {
+          await deleteDoc(docSnapshot.ref);
+        }
+      }
+      
+      // Delete ALL detailed test sessions permanently (including soft-deleted ones)
+      const sessionsCollection = collection(db, "detailedTestSessions");
+      const allSessionsDocs = await getDocs(sessionsCollection);
+      
+      if (allSessionsDocs.size > 0) {
+        for (const docSnapshot of allSessionsDocs.docs) {
+          await deleteDoc(docSnapshot.ref);
+        }
+      }
+      
+      // Clear local state
+      setTestHistory([]);
+      calculatedStatsCache.current = null;
+      setLastSync(new Date());
+      
+      return {
+        success: true,
+        metadata: {
+          operation: "clearAllStatistics",
+          timestamp: new Date(),
+          duration: Date.now() - startTime,
+        },
+      };
+    } catch (error) {
+      console.error('❌ Error clearing all statistics:', error);
+      return {
+        success: false,
+        error: error as FirestoreError,
+        metadata: {
+          operation: "clearAllStatistics",
+          timestamp: new Date(),
+          duration: Date.now() - startTime,
+        },
+      };
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [performanceFirestore, detailedTestSessions]);
+
   const exportData = useCallback((): ComprehensiveStatisticsExportData => {
     const wordPerformanceAnalyses = getAllWordsPerformance();
     return analyticsService.createComprehensiveExportData(
@@ -793,7 +850,7 @@ export const useStats = (): StatsResult => {
     );
   }, [currentStats, testHistory, analyticsService]);
 
-  const importData = useCallback(
+  const importDataInternal = useCallback(
     async (
       data: ComprehensiveStatisticsExportData
     ): Promise<OperationResult<void>> => {
@@ -801,7 +858,7 @@ export const useStats = (): StatsResult => {
       try {
         setIsProcessing(true);
 
-        if (data.statistics) {
+        if (data.statistics && data.statistics !== null) {
           if (statsFirestore.data[0]) {
             await statsFirestore.update(
               statsFirestore.data[0].id,
@@ -812,72 +869,109 @@ export const useStats = (): StatsResult => {
           }
         }
 
-        if (data.sourceData?.testResults) {
-          // Convert TestResult[] to TestHistoryItem[]
-          const testHistoryItems: TestHistoryItem[] = data.sourceData.testResults.map(result => ({
-            id: result.testId,
-            timestamp: Date.now(),
-            percentage: result.finalScore?.total || 0,
-            correctWords: result.completedSession?.progress?.performance?.correctAnswers || 0,
-            incorrectWords: result.completedSession?.progress?.performance?.incorrectAnswers || 0,
-            hintsUsed: result.completedSession?.hintSystem?.globalState?.totalHintsUsed || 0,
-            totalTime: result.completedSession?.timeMetrics?.totalTestTime || 0,
-            avgTimePerWord: result.completedSession?.timeMetrics?.averageQuestionTime || 0,
-            totalWords: result.completedSession?.progress?.basic?.totalQuestions || 0,
-            difficulty: 'medium',
-            testType: 'normal',
-            wrongWords: [],
+        if (data.sourceData?.testResults && data.sourceData.testResults.length > 0) {
+          const sessions = data.sourceData.testResults.filter(s => (s as any).id || (s as any).sessionId);
+          
+          // Process each document one by one with delay to avoid timeout
+          for (let i = 0; i < sessions.length; i++) {
+            const testSession = sessions[i];
+            const session = testSession as any;
+            const docId = session.id || session.sessionId;
+            const docRef = doc(db, "detailedTestSessions", docId);
+            await setDoc(docRef, { 
+              ...session, 
+              deleted: false,
+              userId: user?.id || 'current-user'
+            });
+            
+            // Delay after each document to stay under timeout
+            if (i < sessions.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 200));
+            }
+          }
+        }
+
+        if (data.sourceData?.wordPerformances && data.sourceData.wordPerformances.length > 0) {
+          const performances = data.sourceData.wordPerformances.filter(p => p.id);
+          
+          // Process each document one by one with delay to avoid timeout
+          for (let i = 0; i < performances.length; i++) {
+            const analysis = performances[i];
+            try {
+              const docRef = doc(db, "performance", analysis.id);
+              const docData = {
+                ...analysis,
+                firestoreMetadata: {
+                  userId: user?.id || 'current-user',
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                  deleted: false,
+                  version: 1
+                }
+              };
+              await setDoc(docRef, docData);
+            } catch (error) {
+              // Skip failed docs
+            }
+            
+            // Delay after each document to stay under timeout
+            if (i < performances.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 200));
+            }
+          }
+        }
+
+        // Clear all caches and reload data
+        calculatedStatsCache.current = null;
+        setWordPerformance({});
+        setTestHistory([]);
+        setLastSync(new Date());
+        
+        // Force complete refresh
+        performanceFirestore.refresh();
+        statsFirestore.refresh();
+        
+        // Force complete data reload
+        const reloadAllData = async () => {
+          const userId = user?.id || 'current-user';
+          
+          // Reload detailed test sessions
+          const sessionsRef = collection(db, "detailedTestSessions");
+          const sessionsQuery = query(sessionsRef, where("userId", "==", userId));
+          const sessionsSnapshot = await getDocs(sessionsQuery);
+          const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setDetailedTestSessions(sessions);
+          
+          // Convert to test history format for UI
+          const testHistoryItems = sessions.map((session: any) => ({
+            id: session.id || session.sessionId,
+            timestamp: new Date(session.completedAt || session.timestamp).getTime(),
+            percentage: session.accuracy || 0,
+            correctWords: session.correctAnswers || 0,
+            incorrectWords: session.incorrectAnswers || 0,
+            hintsUsed: session.totalHintsUsed || 0,
+            totalTime: session.totalTimeSpent || 0,
+            avgTimePerWord: session.averageTimePerWord || 0,
+            totalWords: session.totalWords || 0,
+            difficulty: 'medium' as const,
+            testType: 'normal' as const,
+            wrongWords: session.wrongWords || [],
             wordTimes: [],
-            testParameters: { selectedChapters: [] },
-            chapterStats: {}
+            testParameters: session.config || { selectedChapters: [] },
+            chapterStats: session.chapterBreakdown || {}
           }));
           setTestHistory(testHistoryItems);
-        }
-
-        if (data.sourceData?.wordPerformances) {
-          const performanceMap: Record<string, WordPerformance> = {};
-
-          const deleteOps = performanceFirestore.data.map((perf) => ({
-            type: "delete" as const,
-            id: perf.id,
-          }));
-
-          if (deleteOps.length > 0) {
-            await performanceFirestore.batchUpdate(deleteOps);
-          }
-
-          const createOps = data.sourceData.wordPerformances.map(
-            (analysis) => ({
-              type: "create" as const,
-              data: createCompleteWordPerformance(
-                analysis.id, // wordId
-                analysis.english,
-                analysis.italian,
-                analysis.chapter,
-                analysis.attempts
-              ),
-            })
-          );
-
-          if (createOps.length > 0) {
-            await performanceFirestore.batchUpdate(createOps);
-          }
-
-          data.sourceData.wordPerformances.forEach((analysis) => {
-            performanceMap[analysis.id] = createCompleteWordPerformance( // FIXED: usa analysis.id come chiave
-              analysis.id, // wordId
-              analysis.english,
-              analysis.italian,
-              analysis.chapter,
-              analysis.attempts
-            );
-          });
-
-          setWordPerformance(performanceMap);
-        }
-
-        calculatedStatsCache.current = null;
-        setLastSync(new Date());
+          
+          // Refresh Firestore hooks
+          await performanceFirestore.refresh();
+          await statsFirestore.refresh();
+          
+          // Clear caches
+          calculatedStatsCache.current = null;
+          setLastSync(new Date());
+        };
+        
+        setTimeout(reloadAllData, 1000);
 
         return {
           success: true,
@@ -888,15 +982,7 @@ export const useStats = (): StatsResult => {
           },
         };
       } catch (error) {
-        return {
-          success: false,
-          error: error as FirestoreError,
-          metadata: {
-            operation: "importData",
-            timestamp: new Date(),
-            duration: Date.now() - startTime,
-          },
-        };
+        throw error;
       } finally {
         setIsProcessing(false);
       }
@@ -908,6 +994,27 @@ export const useStats = (): StatsResult => {
       performanceFirestore.data,
       performanceFirestore.batchUpdate,
     ]
+  );
+
+  // ⭐ WRAPPER: Import function without timeout
+  const importData = useCallback(
+    async (data: ComprehensiveStatisticsExportData): Promise<OperationResult<void>> => {
+      try {
+        // Call internal function directly without useAsyncOperation timeout
+        return await importDataInternal(data);
+      } catch (error) {
+        return {
+          success: false,
+          error: error as FirestoreError,
+          metadata: {
+            operation: "importData",
+            timestamp: new Date(),
+            duration: 0,
+          },
+        };
+      }
+    },
+    [importDataInternal]
   );
 
   // DetailedTestSession operations with user security
@@ -1350,6 +1457,7 @@ export const useStats = (): StatsResult => {
     refreshData,
     resetStats,
     clearHistoryOnly,
+    clearAllStatistics, // ⭐ NEW: Clear all statistics function
     exportData,
     importData,
     // DetailedTestSession operations

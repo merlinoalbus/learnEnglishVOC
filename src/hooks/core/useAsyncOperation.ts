@@ -198,7 +198,7 @@ export function useAsyncOperation<TArgs extends any[], TResult, TError = Error>(
   };
 
   const finalTimeoutConfig: TimeoutConfig = {
-    timeout: 30000,
+    timeout: timeoutConfig?.timeout === 0 ? 0 : (timeoutConfig?.timeout || 30000),
     ...timeoutConfig,
   };
 

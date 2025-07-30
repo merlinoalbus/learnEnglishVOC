@@ -6,7 +6,7 @@ export const StatsView: React.FC = React.memo(() => {
   const {
     testHistory,
     words,
-    clearHistoryOnly,
+    clearAllStatistics, // ⭐ RENAMED: from clearHistoryOnly to clearAllStatistics
     dispatch,
     forceRefresh
   } = useAppContext();
@@ -15,7 +15,7 @@ export const StatsView: React.FC = React.memo(() => {
     <StatsOverview
       testHistory={testHistory}
       words={words}
-      onClearHistory={clearHistoryOnly}
+      onClearAllStatistics={clearAllStatistics} // ⭐ RENAMED: from onClearHistory to onClearAllStatistics
       onGoToMain={() => dispatch({ type: 'SET_VIEW', payload: 'main' })}
       forceUpdate={forceRefresh}
     />

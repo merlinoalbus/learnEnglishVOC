@@ -102,6 +102,7 @@ interface AppContextType extends AppState {
   importStats: (data: any) => Promise<any>;
   handleTestComplete: (testStats: any, testWords: Word[], wrongWords: Word[], detailedSession?: any) => void;
   clearHistoryOnly: () => Promise<any>;
+  clearAllStatistics: () => Promise<any>; // ⭐ NEW: Clear all statistics function
   addTestToHistory: (testResult: TestHistoryItem) => void;
   getAllWordsPerformance: () => any;
   getWordAnalysis: (wordId: string) => any;
@@ -262,6 +263,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     importStats: statsAPI.importData,
     handleTestComplete: statsAPI.handleTestComplete,
     clearHistoryOnly: statsAPI.clearHistoryOnly,
+    clearAllStatistics: statsAPI.clearAllStatistics, // ⭐ NEW: Clear all statistics function
     addTestToHistory: statsAPI.addTestToHistory,
     getAllWordsPerformance: statsAPI.getAllWordsPerformance,
     getWordAnalysis: statsAPI.getWordAnalysis,

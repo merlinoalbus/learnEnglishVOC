@@ -12,14 +12,14 @@ interface StatsHeaderProps {
   testHistory: TestHistoryItem[];
   showDataManagement: boolean;
   setShowDataManagement: (show: boolean) => void;
-  onClearHistory: () => void;
+  onClearAllStatistics: () => void; // ⭐ RENAMED: from onClearHistory to onClearAllStatistics
 }
 
 const StatsHeader: React.FC<StatsHeaderProps> = ({ 
   testHistory, 
   showDataManagement, 
   setShowDataManagement,
-  onClearHistory 
+  onClearAllStatistics 
 }) => {
   const { stats, calculatedStats, getAllWordsPerformance, testHistory: dbTestHistory, getDetailedTestSessions, correctStatsData, detailedSessions } = useStats();
   
@@ -66,11 +66,11 @@ const StatsHeader: React.FC<StatsHeaderProps> = ({
                 Gestione Dati
               </Button>
               <Button
-                onClick={onClearHistory}
+                onClick={onClearAllStatistics}
                 variant="outline"
                 className="border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
               >
-                🗑️ Pulisci Cronologia ({testHistory.length})
+                🗑️ Cancella Tutte le Statistiche
               </Button>
             </div>
           </div>
