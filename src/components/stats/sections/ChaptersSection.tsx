@@ -105,7 +105,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
       </div>
 
       {/* ⭐ ENHANCED: Performance Chart with Radar/Spider visualization and correct ordering */}
-      <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+      <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
           <CardTitle className="flex items-center gap-3 text-white">
             <BarChart className="w-6 h-6" />
@@ -146,9 +146,9 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                     <Card 
                       key={chapter.fullChapter} 
                       className={`border-2 transition-all duration-300 hover:shadow-lg ${
-                        chapter.efficiency >= 75 ? 'border-green-300 bg-green-50' :
-                        chapter.efficiency >= 50 ? 'border-blue-300 bg-blue-50' :
-                        'border-orange-300 bg-orange-50'
+                        chapter.efficiency >= 75 ? 'border-green-300 bg-green-50 dark:border-green-600 dark:bg-green-900/20' :
+                        chapter.efficiency >= 50 ? 'border-blue-300 bg-blue-50 dark:border-blue-600 dark:bg-blue-900/20' :
+                        'border-orange-300 bg-orange-50 dark:border-orange-600 dark:bg-orange-900/20'
                       }`}
                     >
                       <CardHeader className={`pb-3 ${
@@ -173,13 +173,13 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                               <span className="text-sm font-medium">🎯 Precisione</span>
                               <span className="font-bold text-blue-600">{chapter.accuracy}%</span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                               <div 
                                 className="h-2 rounded-full bg-blue-500"
                                 style={{ width: `${chapter.accuracy}%` }}
                               ></div>
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               Media precisione {chapter.testedWords} parole testate
                             </div>
                           </div>
@@ -190,13 +190,13 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                               <span className="text-sm font-medium">💡 Aiuti %</span>
                               <span className="font-bold text-orange-600">{chapter.hintsPercentage}%</span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                               <div 
                                 className="h-2 rounded-full bg-orange-500"
                                 style={{ width: `${chapter.hintsPercentage}%` }}
                               ></div>
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               Incidenza aiuti su risposte corrette
                             </div>
                           </div>
@@ -207,13 +207,13 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                               <span className="text-sm font-medium">✅ Completamento</span>
                               <span className="font-bold text-green-600">{chapter.completionRate}%</span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                               <div 
                                 className="h-2 rounded-full bg-green-500"
                                 style={{ width: `${chapter.completionRate}%` }}
                               ></div>
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               {chapter.learnedWords}/{chapter.totalWords} parole learned
                             </div>
                           </div>
@@ -224,28 +224,28 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                               <span className="text-sm font-medium">⚪ Non Testate</span>
                               <span className="font-bold text-gray-600">{chapter.untestedPercentage}%</span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                               <div 
-                                className="h-2 rounded-full bg-gray-400"
+                                className="h-2 rounded-full bg-gray-400 dark:bg-gray-500"
                                 style={{ width: `${chapter.untestedPercentage}%` }}
                               ></div>
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               {chapter.untestedWords}/{chapter.totalWords} mai testate
                             </div>
                           </div>
                         </div>
 
                         {/* Footer con dettagli */}
-                        <div className="mt-4 pt-3 border-t border-gray-200">
-                          <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                        <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+                          <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400">
                             <div>Tentativi: {chapter.totalAnswers}</div>
                             <div>Difficili: {chapter.difficultWords}</div>
                           </div>
                           <div className={`mt-2 text-xs text-center px-2 py-1 rounded-full ${
-                            chapter.efficiency >= 75 ? 'bg-green-100 text-green-700' :
-                            chapter.efficiency >= 50 ? 'bg-blue-100 text-blue-700' :
-                            'bg-orange-100 text-orange-700'
+                            chapter.efficiency >= 75 ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
+                            chapter.efficiency >= 50 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :
+                            'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'
                           }`}>
                             {chapter.efficiency >= 75 ? '🏆 Eccellente' :
                              chapter.efficiency >= 50 ? '👍 Buono' : '📚 Da migliorare'}
@@ -286,7 +286,11 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                           name === 'untestedPercentage' ? 'Non Testate' : name
                         ]}
                         labelFormatter={(label) => `${label}`}
-                        contentStyle={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
+                        contentStyle={{ 
+                          backgroundColor: 'var(--tooltip-bg, #f8fafc)', 
+                          border: '1px solid var(--tooltip-border, #e2e8f0)',
+                          color: 'var(--tooltip-text, #1f2937)'
+                        }}
                       />
                       {/* Efficienza come area principale */}
                       <Area 
@@ -343,7 +347,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
 
       {/* ⭐ TREND ANALYSIS: Dati dal service mantenendo layout originale */}
       {selectedChapterForTrend && selectedChapterTrendData.length > 0 && (
-        <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+        <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
             <CardTitle className="flex items-center gap-3 text-white">
               <TrendingUp className="w-6 h-6" />
@@ -406,7 +410,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
       )}
 
       {/* ⭐ ENHANCED: Smart Insights - Suggerimenti Intelligenti Basati sui Dati */}
-      <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200">
+      <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-2 border-indigo-200 dark:border-indigo-700">
         <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
           <CardTitle className="flex items-center gap-3">
             <Target className="w-6 h-6" />
@@ -431,7 +435,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
 
             if (sortedTestedChapters.length === 0) {
               return (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <Target className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <h3 className="text-lg font-bold mb-2">Inizia a testare i capitoli</h3>
                   <p>Completa alcuni test per ricevere insights personalizzati</p>
@@ -531,33 +535,33 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                   <div 
                     key={index}
                     className={`p-4 rounded-xl border-2 ${
-                      insight.type === 'success' ? 'bg-green-50 border-green-200' :
-                      insight.type === 'warning' ? 'bg-orange-50 border-orange-200' :
-                      'bg-blue-50 border-blue-200'
+                      insight.type === 'success' ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700' :
+                      insight.type === 'warning' ? 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-700' :
+                      'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="text-2xl">{insight.icon}</div>
                       <div className="flex-1">
                         <h4 className={`font-bold mb-1 ${
-                          insight.type === 'success' ? 'text-green-800' :
-                          insight.type === 'warning' ? 'text-orange-800' :
-                          'text-blue-800'
+                          insight.type === 'success' ? 'text-green-800 dark:text-green-300' :
+                          insight.type === 'warning' ? 'text-orange-800 dark:text-orange-300' :
+                          'text-blue-800 dark:text-blue-300'
                         }`}>
                           {insight.title}
                         </h4>
                         <p className={`text-sm mb-2 ${
-                          insight.type === 'success' ? 'text-green-700' :
-                          insight.type === 'warning' ? 'text-orange-700' :
-                          'text-blue-700'
+                          insight.type === 'success' ? 'text-green-700 dark:text-green-400' :
+                          insight.type === 'warning' ? 'text-orange-700 dark:text-orange-400' :
+                          'text-blue-700 dark:text-blue-400'
                         }`}>
                           {insight.description}
                         </p>
                         {insight.action && (
                           <div className={`text-xs font-medium ${
-                            insight.type === 'success' ? 'text-green-600' :
-                            insight.type === 'warning' ? 'text-orange-600' :
-                            'text-blue-600'
+                            insight.type === 'success' ? 'text-green-600 dark:text-green-400' :
+                            insight.type === 'warning' ? 'text-orange-600 dark:text-orange-400' :
+                            'text-blue-600 dark:text-blue-400'
                           }`}>
                             💡 {insight.action}
                           </div>
@@ -568,31 +572,31 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                 ))}
 
                 {/* Quick Stats Summary */}
-                <div className="mt-6 p-4 bg-white rounded-xl border border-gray-200">
-                  <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <div className="mt-6 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600">
+                  <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-indigo-600" />
                     Riepilogo Rapido
                   </h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">{bestChapter.chapter}</div>
-                      <div className="text-green-700">Miglior Capitolo</div>
-                      <div className="text-xs text-gray-500">{bestChapter.efficiency}% efficienza</div>
+                      <div className="text-green-700 dark:text-green-400">Miglior Capitolo</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{bestChapter.efficiency}% efficienza</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">{worstChapter.chapter}</div>
-                      <div className="text-orange-700">Da Migliorare</div>
-                      <div className="text-xs text-gray-500">{worstChapter.efficiency}% efficienza</div>
+                      <div className="text-orange-700 dark:text-orange-400">Da Migliorare</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{worstChapter.efficiency}% efficienza</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">{avgEfficiency}%</div>
-                      <div className="text-blue-700">Media Efficienza</div>
-                      <div className="text-xs text-gray-500">{sortedTestedChapters.length} capitoli</div>
+                      <div className="text-blue-700 dark:text-blue-400">Media Efficienza</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{sortedTestedChapters.length} capitoli</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">{untestedWordsTotal}</div>
-                      <div className="text-purple-700">Parole da Scoprire</div>
-                      <div className="text-xs text-gray-500">Mai testate</div>
+                      <div className="text-purple-700 dark:text-purple-400">Parole da Scoprire</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Mai testate</div>
                     </div>
                   </div>
                 </div>
@@ -603,7 +607,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
       </Card>
 
       {/* ⭐ PROFESSIONAL: Deep Analytics Dashboard - Analisi Professionale Approfondita */}
-      <Card className="bg-white border-0 shadow-xl rounded-3xl overflow-hidden">
+      <Card className="bg-white dark:bg-gray-800 border-0 shadow-xl rounded-3xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-slate-600 to-gray-700 text-white">
           <CardTitle className="flex items-center gap-3 text-white">
             <Target className="w-6 h-6" />
@@ -629,7 +633,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
             // ⭐ LOADING STATE: Mostra loading se i dati non sono pronti
             if (isLoading) {
               return (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <Target className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <h3 className="text-lg font-bold mb-2">Caricamento analytics...</h3>
                   <p>Caricamento dati per analytics professionali</p>
@@ -639,7 +643,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
             
             if (sortedTestedChapters.length === 0) {
               return (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <Target className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <h3 className="text-lg font-bold mb-2">Analytics non disponibili</h3>
                   <p>Completa alcuni test per accedere alle analytics professionali</p>
@@ -658,47 +662,47 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                 
                 {/* ⭐ 1. EXECUTIVE SUMMARY - DATI REALI */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl border border-blue-200 dark:border-blue-700">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-700">{realStats.totalSessions}</div>
-                      <div className="text-blue-600 font-medium">Sessioni Test Reali</div>
-                      <div className="text-xs text-blue-500 mt-1">Totale effettivo</div>
+                      <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{realStats.totalSessions}</div>
+                      <div className="text-blue-600 dark:text-blue-400 font-medium">Sessioni Test Reali</div>
+                      <div className="text-xs text-blue-500 dark:text-blue-400 mt-1">Totale effettivo</div>
                     </div>
                   </div>
-                  <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                  <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-xl border border-green-200 dark:border-green-700">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-700">{realStats.avgWordsPerSession}</div>
-                      <div className="text-green-600 font-medium">Parole per Sessione</div>
-                      <div className="text-xs text-green-500 mt-1">Media reale dal timing</div>
+                      <div className="text-2xl font-bold text-green-700 dark:text-green-300">{realStats.avgWordsPerSession}</div>
+                      <div className="text-green-600 dark:text-green-400 font-medium">Parole per Sessione</div>
+                      <div className="text-xs text-green-500 dark:text-green-400 mt-1">Media reale dal timing</div>
                     </div>
                   </div>
-                  <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                  <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl border border-purple-200 dark:border-purple-700">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-700">{realStats.avgTimePerWord}s</div>
-                      <div className="text-purple-600 font-medium">Tempo per Parola</div>
-                      <div className="text-xs text-purple-500 mt-1">Dai tempi effettivi</div>
+                      <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">{realStats.avgTimePerWord}s</div>
+                      <div className="text-purple-600 dark:text-purple-400 font-medium">Tempo per Parola</div>
+                      <div className="text-xs text-purple-500 dark:text-purple-400 mt-1">Dai tempi effettivi</div>
                     </div>
                   </div>
-                  <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+                  <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-xl border border-orange-200 dark:border-orange-700">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-700">{realStats.preferredTimeSlot}</div>
-                      <div className="text-orange-600 font-medium">Orario Preferito</div>
-                      <div className="text-xs text-orange-500 mt-1">Pattern temporale reale</div>
+                      <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">{realStats.preferredTimeSlot}</div>
+                      <div className="text-orange-600 dark:text-orange-400 font-medium">Orario Preferito</div>
+                      <div className="text-xs text-orange-500 dark:text-orange-400 mt-1">Pattern temporale reale</div>
                     </div>
                   </div>
                 </div>
 
                 {/* ⭐ 2. ANALISI REALE DELLE PERFORMANCE - Dati dal DB */}
                 <div>
-                  <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <BookOpen className="w-6 h-6 text-slate-600" />
+                  <h4 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                    <BookOpen className="w-6 h-6 text-slate-600 dark:text-slate-400" />
                     Analisi Performance Reale per Capitolo (Dai Dati di Test)
                   </h4>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     
                     {/* Grafico Performance Reali */}
                     <div>
-                      <h5 className="font-bold text-gray-700 mb-3">📈 Coverage vs Difficoltà Reale</h5>
+                      <h5 className="font-bold text-gray-700 dark:text-gray-300 mb-3">📈 Coverage vs Difficoltà Reale</h5>
                       <ResponsiveContainer width="100%" height={300}>
                         <ComposedChart data={realAnalyticsData}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -784,11 +788,11 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
 
                     {/* Tabella Dettagli REALI */}
                     <div>
-                      <h5 className="font-bold text-gray-700 mb-3">📊 Metriche Reali</h5>
-                      <div className="bg-gray-50 rounded-xl p-4 max-h-80 overflow-y-auto">
+                      <h5 className="font-bold text-gray-700 dark:text-gray-300 mb-3">📊 Metriche Reali</h5>
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 max-h-80 overflow-y-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="text-xs text-gray-600 border-b">
+                            <tr className="text-xs text-gray-600 dark:text-gray-400 border-b dark:border-gray-600">
                               <th className="text-left py-2">Capitolo</th>
                               <th className="text-center py-2">Copertura</th>
                               <th className="text-center py-2">Precisione</th>
@@ -798,7 +802,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                           </thead>
                           <tbody>
                             {realAnalyticsData.map((item: any, index: number) => (
-                              <tr key={item.fullChapter} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                              <tr key={item.fullChapter} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
                                 <td className="py-2 font-medium">{item.chapter}</td>
                                 <td className="text-center py-2">
                                   <span className={`font-bold ${
@@ -807,7 +811,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                                   }`}>
                                     {item.coverageRate}%
                                   </span>
-                                  <div className="text-xs text-gray-500">{item.uniqueWordsTested}/{item.totalVocabularyWords}</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">{item.uniqueWordsTested}/{item.totalVocabularyWords}</div>
                                 </td>
                                 <td className="text-center py-2">
                                   <span className={`font-bold ${
@@ -816,7 +820,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                                   }`}>
                                     {item.precisionRate}%
                                   </span>
-                                  <div className="text-xs text-gray-500">{item.totalAttempts} tent.</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">{item.totalAttempts} tent.</div>
                                 </td>
                                 <td className="text-center py-2">
                                   <span className={`font-bold ${
@@ -825,7 +829,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                                   }`}>
                                     {item.hintDependency}%
                                   </span>
-                                  <div className="text-xs text-gray-500">{item.hintsUsed} hint</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">{item.hintsUsed} hint</div>
                                 </td>
                                 <td className="text-center py-2">
                                   <span className={`font-bold ${
@@ -834,7 +838,7 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                                   }`}>
                                     {item.testsPerWord}
                                   </span>
-                                  <div className="text-xs text-gray-500">test/parola</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">test/parola</div>
                                 </td>
                               </tr>
                             ))}
@@ -849,8 +853,8 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   {/* Pattern Comportamentali Reali */}
-                  <div className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
-                    <h5 className="font-bold text-indigo-800 mb-4 flex items-center gap-2">
+                  <div className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-indigo-200 dark:border-indigo-700">
+                    <h5 className="font-bold text-indigo-800 dark:text-indigo-300 mb-4 flex items-center gap-2">
                       <TrendingUp className="w-5 h-5" />
                       Pattern Comportamentali Rilevati
                     </h5>
@@ -879,38 +883,38 @@ const ChaptersSection: React.FC<ChaptersSectionProps> = () => {
                   </div>
 
                   {/* Raccomandazioni Basate su Dati Reali */}
-                  <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                    <h5 className="font-bold text-green-800 mb-4 flex items-center gap-2">
+                  <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-700">
+                    <h5 className="font-bold text-green-800 dark:text-green-300 mb-4 flex items-center gap-2">
                       <Award className="w-5 h-5" />
                       Raccomandazioni Data-Driven
                     </h5>
-                    <div className="space-y-3 text-sm text-green-700">
+                    <div className="space-y-3 text-sm text-green-700 dark:text-green-400">
                       {realAnalyticsData.filter((c: any) => c.coverageRate < 50).length > 0 && (
-                        <div className="p-2 bg-yellow-100 rounded border border-yellow-300">
+                        <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded border border-yellow-300 dark:border-yellow-700">
                           <strong>🎯 Copertura Bassa:</strong> {realAnalyticsData.filter((c: any) => c.coverageRate < 50).length} capitoli 
                           hanno copertura &lt;50%. Focus su più parole.
                         </div>
                       )}
                       {realAnalyticsData.filter((c: any) => c.hintDependency > 60).length > 0 && (
-                        <div className="p-2 bg-orange-100 rounded border border-orange-300">
+                        <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded border border-orange-300 dark:border-orange-700">
                           <strong>💡 Dipendenza Aiuti:</strong> {realAnalyticsData.filter((c: any) => c.hintDependency > 60).length} capitoli 
                           usano molti aiuti. Prova senza aiuti.
                         </div>
                       )}
                       {realStats.avgTimePerWord > 10 && (
-                        <div className="p-2 bg-blue-100 rounded border border-blue-300">
+                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded border border-blue-300 dark:border-blue-700">
                           <strong>⏱️ Velocità:</strong> {realStats.avgTimePerWord}s/parola è sopra media. 
                           Esercitati per risposte più rapide.
                         </div>
                       )}
                       {realStats.sessionIntensity.intensive > realStats.sessionIntensity.light && (
-                        <div className="p-2 bg-green-100 rounded border border-green-300">
+                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded border border-green-300 dark:border-green-700">
                           <strong>✅ Pattern Positivo:</strong> Preferisci sessioni intensive. 
                           Ottimo per consolidamento memoria!
                         </div>
                       )}
                       {realAnalyticsData.filter((c: any) => c.precisionRate < 60).length > 0 && (
-                        <div className="p-2 bg-red-100 rounded border border-red-300">
+                        <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded border border-red-300 dark:border-red-700">
                           <strong>⏰ Bassa Precisione:</strong> {realAnalyticsData.filter((c: any) => c.precisionRate < 60).length} capitoli 
                           hanno precisione &lt;60%. Rivedere approccio.
                         </div>
