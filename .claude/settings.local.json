@@ -33,7 +33,10 @@
       "Bash(mkdir:*)",
       "Bash(npm run type-check:*)",
       "Bash(CI=false npm run build:docker)",
-      "Bash(npm run build:docker:*)"
+      "Bash(npm run build:docker:*)",
+      "Bash(docker run:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)"
     ],
     "deny": []
   }
