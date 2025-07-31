@@ -36,7 +36,10 @@
       "Bash(npm run build:docker:*)",
       "Bash(docker run:*)",
       "Bash(docker stop:*)",
-      "Bash(docker rm:*)"
+      "Bash(docker rm:*)",
+      "Bash(docker build:*)",
+      "Bash(docker tag:*)",
+      "Bash(docker push:*)"
     ],
     "deny": []
   }

@@ -85,6 +85,12 @@ jobs:
           REACT_APP_MOCK_AI_RESPONSES=false
           REACT_APP_ENABLE_STATISTICS=true
           REACT_APP_ENABLE_DATA_MANAGEMENT=true
+          REACT_APP_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+          REACT_APP_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          REACT_APP_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+          REACT_APP_FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          REACT_APP_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          REACT_APP_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
 
     # ====== OPTIMIZATION 5: Parallel security scan (optional) ======
     - name: 🔍 Security scan (background)
