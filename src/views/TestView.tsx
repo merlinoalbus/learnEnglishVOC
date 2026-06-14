@@ -275,7 +275,7 @@ export const TestView: React.FC = React.memo(() => {
               <div className="flex-between text-xs text-gray-600 dark:text-gray-400">
                 <span>Tempo parola</span>
                 <span className={timeExpired ? 'text-red-600 font-bold' : ''}>
-                  {timeExpired ? 'Scaduto!' : `${timePerWord - currentWordTime}s rimanenti`}
+                  {timeExpired ? 'Scaduto!' : `${Math.max(0, timePerWord - currentWordTime)}s rimanenti`}
                 </span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
