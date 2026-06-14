@@ -57,7 +57,9 @@ class AIService {
 
   constructor() {
     this.config = AppConfig.ai;
-    this.isConfigured = !!this.config.apiKey;
+    // La key vive ora lato backend: il client è "configurato" quando la
+    // feature AI è abilitata. La reale disponibilità è verificata dal proxy.
+    this.isConfigured = !!this.config.enabled;
     this.canUseAI = isAIAvailable() || false;
     this.lastSuccessTime = null;
     this.consecutiveFailures = 0;
@@ -176,9 +178,7 @@ class AIService {
     }
 
     if (!this.isConfigured) {
-      throw new Error(
-        "AI service not configured. Add REACT_APP_GEMINI_API_KEY to .env.local"
-      );
+      throw new Error("AI service not configured.");
     }
 
     try {
@@ -309,22 +309,74 @@ class AIService {
   // ⭐ PARSE AI RESPONSE
   private parseAIResponse(content: string, fallbackWord: string): AIAnalysisResult {
     try {
-      
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
+      const parsedData = this.extractJsonObject(content);
+      if (parsedData === null) {
         console.error("❌ No JSON found in AI response");
         return this.createFallbackResponse(fallbackWord, "No JSON in response");
       }
 
-      const parsedData = JSON.parse(jsonMatch[0]);
-      
-      const result = this.validateAndSanitizeResponse(parsedData, fallbackWord);
-      
-      return result;
+      return this.validateAndSanitizeResponse(parsedData, fallbackWord);
     } catch (parseError) {
       console.error("❌ AI JSON Parsing Error:", parseError);
       return this.createFallbackResponse(fallbackWord, "JSON parsing failed");
     }
+  }
+
+  // ⭐ EXTRACT JSON OBJECT (robusto: niente regex greedy)
+  // 1) prova il parse diretto del contenuto (caso normale: solo JSON)
+  // 2) altrimenti scansiona dal primo "{" fino alla "}" che bilancia,
+  //    rispettando stringhe ed escape. Ritorna null se non trova nulla di valido.
+  private extractJsonObject(content: string): any | null {
+    if (!content || typeof content !== "string") return null;
+
+    const trimmed = content.trim();
+
+    // Caso comune: la risposta è già JSON puro
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      // prosegue con la scansione bilanciata
+    }
+
+    const start = trimmed.indexOf("{");
+    if (start === -1) return null;
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+
+    for (let i = start; i < trimmed.length; i++) {
+      const ch = trimmed[i];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === "\\") {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = true;
+      } else if (ch === "{") {
+        depth++;
+      } else if (ch === "}") {
+        depth--;
+        if (depth === 0) {
+          const candidate = trimmed.slice(start, i + 1);
+          try {
+            return JSON.parse(candidate);
+          } catch {
+            return null;
+          }
+        }
+      }
+    }
+
+    return null;
   }
 
   // ⭐ VALIDATE RESPONSE
@@ -545,10 +597,8 @@ IMPORTANTE: NON scrivere altro testo, solo il JSON!
   }
 
   private getApiUrl(): string {
-    if (!this.config.apiKey) {
-      throw new Error("API key non configurata");
-    }
-    return `${this.config.baseUrl}?key=${this.config.apiKey}`;
+    // La chiamata passa dal backend-proxy: nessuna API key lato client.
+    return this.config.proxyUrl;
   }
 
   // ⭐ SERVICE STATUS - NO AUTOMATIC CALLS
