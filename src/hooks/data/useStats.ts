@@ -195,6 +195,7 @@ export const useStats = (): StatsResult => {
   const calculatedStatsCache = useRef<{
     stats: AggregatedCalculatedStatistics;
     timestamp: number;
+    signature: string;
   } | null>(null);
 
   // ⭐ CHAPTER ANALYTICS CACHE: Cache per analisi capitoli
@@ -1280,8 +1281,16 @@ export const useStats = (): StatsResult => {
 
   const calculatedStats = useMemo<AggregatedCalculatedStatistics>(() => {
     const now = Date.now();
+    // Firma dei dati di input: invalida la cache quando cambiano davvero
+    // (test, parole, performance), evitando dati stantii entro il TTL.
+    const signature = `${testHistory.length}|${
+      Object.keys(wordPerformance).length
+    }|${wordsData.length}|${currentStats.testsCompleted}|${
+      currentStats.lastStudyDate ?? ""
+    }`;
     if (
       calculatedStatsCache.current &&
+      calculatedStatsCache.current.signature === signature &&
       now - calculatedStatsCache.current.timestamp < CACHE_TTL
     ) {
       return calculatedStatsCache.current.stats;
@@ -1291,12 +1300,20 @@ export const useStats = (): StatsResult => {
     const stats = analyticsService.calculateAggregatedStatistics(
       currentStats,
       testHistory,
-      wordPerformanceAnalyses
+      wordPerformanceAnalyses,
+      wordsData
     );
 
-    calculatedStatsCache.current = { stats, timestamp: now };
+    calculatedStatsCache.current = { stats, timestamp: now, signature };
     return stats;
-  }, [getAllWordsPerformance, testHistory, currentStats, analyticsService]);
+  }, [
+    getAllWordsPerformance,
+    testHistory,
+    currentStats,
+    analyticsService,
+    wordPerformance,
+    wordsData,
+  ]);
 
   const totalTests = currentStats.testsCompleted;
   const totalAnswers =
