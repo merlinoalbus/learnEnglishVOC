@@ -65,12 +65,12 @@ jobs:
         
         # ====== SPEED OPTIMIZATIONS ======
         platforms: linux/amd64  # Solo AMD64 (dimezza tempo)
-        cache-from: |
-          type=gha
-          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache
-        cache-to: |
-          type=gha,mode=max
-          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache,mode=max
+        # NOTA: solo cache GHA. La cache su registry (type=registry) richiede
+        # login a ghcr.io, che NON avviene sugli eventi pull_request (lo step di
+        # login è saltato), causando un 403 in fase di export cache. La cache GHA
+        # funziona senza autenticazione al registry.
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
         
         # ====== BUILD ARGS ======
         # 🔑 NOTA: REACT_APP_GEMINI_API_KEY NON è più un build-arg: la key non
