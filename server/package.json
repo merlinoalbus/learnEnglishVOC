@@ -1,0 +1,19 @@
+{
+  "name": "learnenglishvoc-backend",
+  "version": "1.0.0",
+  "description": "Backend proxy for the Gemini AI service of learnEnglishVOC. Keeps the API key server-side so it is never exposed to the browser.",
+  "private": true,
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0"
+  }
+}

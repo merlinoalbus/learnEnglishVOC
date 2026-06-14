@@ -21,7 +21,7 @@ import {
   Cell,
   ComposedChart
 } from 'recharts';
-import { TrendingUp, Target, Clock, Lightbulb, Zap, Award, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, Clock, Lightbulb, Zap, Award, Info, Flame, CalendarDays, Layers } from 'lucide-react';
 import { useStats } from '../../../hooks/data/useStats';
 import { StatsCalculationService, type PerformanceIndexResult, type ChartDataPoint } from '../../../services/statsCalculationService';
 import type { TestHistoryItem, Word } from '../../../types';
@@ -183,9 +183,146 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({ testHistory, localRef
     );
   }
 
+  // ⭐ Aggregati derivati (streak, settimana, trend mensile, categorie)
+  const streakInfo = calculatedStats?.temporalAnalytics?.streakAnalysis;
+  const weeklyInfo = calculatedStats?.temporalAnalytics?.weeklyProgress;
+  const monthlyTrendInfo = calculatedStats?.temporalAnalytics?.monthlyTrends;
+  const categoryProgressList = Object.values(
+    calculatedStats?.baseStats?.categoriesProgress || {}
+  );
+  const testsThisWeek = (weeklyInfo?.currentWeek || []).reduce(
+    (sum, day) => sum + (day.testActivity?.testsCompleted || 0),
+    0
+  );
+  const wordsThisWeek = (weeklyInfo?.currentWeek || []).reduce(
+    (sum, day) => sum + (day.wordActivity?.wordsStudied || 0),
+    0
+  );
+  const weeklyAccuracyChange = Math.round(
+    weeklyInfo?.weekOverWeekChange?.accuracyChange || 0
+  );
+  const weeklyConsistencyPct = Math.round(
+    (weeklyInfo?.weeklyConsistency || 0) * 100
+  );
+  const monthlyAccuracyChange = Math.round(
+    monthlyTrendInfo?.keyMetricChanges?.accuracyChange || 0
+  );
+  const topCategories = [...categoryProgressList]
+    .sort(
+      (a, b) =>
+        b.overallProgress.completionPercentage -
+        a.overallProgress.completionPercentage
+    )
+    .slice(0, 3);
+
   return (
     <div className="space-y-8" key={`overview-${localRefresh}`}>
-      
+
+      {/* ⭐ NEW: Riepilogo abitudini di studio (streak, settimana, trend mensile, categorie) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Streak */}
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 text-orange-500 mb-2">
+              <Flame className="w-5 h-5" />
+              <span className="font-semibold">Streak</span>
+            </div>
+            <div className="text-3xl font-bold text-gray-800 dark:text-gray-100">
+              {streakInfo?.currentStreak ?? 0}
+              <span className="text-base font-normal text-gray-500 ml-1">giorni</span>
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Record: {streakInfo?.longestStreak ?? 0} giorni consecutivi
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Questa settimana */}
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 text-indigo-500 mb-2">
+              <CalendarDays className="w-5 h-5" />
+              <span className="font-semibold">Questa settimana</span>
+            </div>
+            <div className="text-3xl font-bold text-gray-800 dark:text-gray-100">
+              {testsThisWeek}
+              <span className="text-base font-normal text-gray-500 ml-1">test</span>
+            </div>
+            <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+              <span>{wordsThisWeek} parole · costanza {weeklyConsistencyPct}%</span>
+            </div>
+            <div
+              className={`text-xs mt-1 flex items-center gap-1 ${
+                weeklyAccuracyChange >= 0 ? 'text-green-600' : 'text-red-500'
+              }`}
+            >
+              {weeklyAccuracyChange >= 0 ? (
+                <TrendingUp className="w-3 h-3" />
+              ) : (
+                <TrendingDown className="w-3 h-3" />
+              )}
+              {weeklyAccuracyChange >= 0 ? '+' : ''}
+              {weeklyAccuracyChange}% vs settimana precedente
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Trend mensile */}
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 text-purple-500 mb-2">
+              <TrendingUp className="w-5 h-5" />
+              <span className="font-semibold">Trend mensile</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+              {monthlyTrendInfo?.trendDirection === 'improving'
+                ? '📈 In crescita'
+                : monthlyTrendInfo?.trendDirection === 'declining'
+                ? '📉 In calo'
+                : '➡️ Stabile'}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Precisione {monthlyAccuracyChange >= 0 ? '+' : ''}
+              {monthlyAccuracyChange}% sul mese precedente
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Categorie */}
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 text-emerald-500 mb-2">
+              <Layers className="w-5 h-5" />
+              <span className="font-semibold">Categorie</span>
+            </div>
+            {topCategories.length > 0 ? (
+              <div className="space-y-1">
+                {topCategories.map((cat) => (
+                  <div
+                    key={cat.category}
+                    className="flex items-center justify-between text-xs"
+                  >
+                    <span className="truncate text-gray-600 dark:text-gray-300">
+                      {String(cat.category).replace(/_/g, ' ')}
+                    </span>
+                    <span className="font-semibold text-gray-800 dark:text-gray-100 ml-2">
+                      {cat.overallProgress.completionPercentage}%
+                    </span>
+                  </div>
+                ))}
+                <div className="text-[11px] text-gray-400 pt-1">
+                  {categoryProgressList.length} categorie monitorate
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">
+                Aggiungi parole per vedere il progresso per categoria
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       {/* ⭐ ENHANCED: Performance Index Overview with COLLAPSIBLE explanation */}
       <Card className="bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 text-white">
         <CardContent className="p-8">

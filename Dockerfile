@@ -71,15 +71,9 @@ RUN npm ci --prefer-offline --no-audit --progress=false && \
 # SCOPO: Variabili passate durante docker build per configurare app
 # DIFFERENZA da ENV: ARG solo durante build, ENV anche durante runtime
 
-ARG REACT_APP_GEMINI_API_KEY
-# SCOPO: API key Gemini per funzionalità AI
-# FONTE: Passata con --build-arg durante docker build
-# SICUREZZA: Embed nell'immagine, visibile nel bundle finale
-
-ARG REACT_APP_GEMINI_API_URL=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
-# SCOPO: Endpoint API Gemini
-# DEFAULT: URL ufficiale Google API
-# CUSTOMIZABLE: Può essere overridden per testing o proxy
+# NOTA SICUREZZA: la GEMINI_API_KEY NON è più un build-arg e NON viene più
+# inserita nel bundle. Le chiamate AI passano dal backend-proxy (/api/ai/generate),
+# che custodisce la key a runtime. Qui restano solo variabili pubbliche.
 
 ARG REACT_APP_ENVIRONMENT=production
 # SCOPO: Identifica ambiente target
@@ -108,9 +102,7 @@ ARG REACT_APP_FIREBASE_APP_ID
 
 # ====== SET ENV per build ======
 # SCOPO: Converte ARG in ENV per disponibilità durante build React
-ENV REACT_APP_GEMINI_API_KEY=$REACT_APP_GEMINI_API_KEY \
-    REACT_APP_GEMINI_API_URL=$REACT_APP_GEMINI_API_URL \
-    REACT_APP_ENVIRONMENT=$REACT_APP_ENVIRONMENT \
+ENV REACT_APP_ENVIRONMENT=$REACT_APP_ENVIRONMENT \
     REACT_APP_ENABLE_AI_FEATURES=$REACT_APP_ENABLE_AI_FEATURES \
     REACT_APP_DEBUG_LOGGING=$REACT_APP_DEBUG_LOGGING \
     REACT_APP_AI_TIMEOUT=$REACT_APP_AI_TIMEOUT \
@@ -185,11 +177,10 @@ COPY --from=builder /app/build /usr/share/nginx/html
 # CONTENUTO: HTML, CSS, JS, images ottimizzati
 # BENEFICIO: Immagine finale non contiene Node.js, source code, dependencies
 
-# Use default nginx config (remove nginx.conf copy for now)
-# COPY nginx.conf /etc/nginx/nginx.conf
-# NOTA: Commentato per usare configurazione Nginx default
-# FUTURE: Decommentare quando nginx.conf è ottimizzato
-# ALTERNATIVA: Nginx default gestisce React Router correttamente
+# ====== NGINX CONFIG ======
+# Usa la configurazione del progetto: serve la SPA + reverse proxy /api/ -> backend.
+# È un file completo (events{} + http{}), quindi sostituisce la config di default.
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # ====== HEALTH CHECK ======
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

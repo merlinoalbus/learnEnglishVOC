@@ -280,6 +280,13 @@ export const useTest = (
   const wordStartTimeRef = useRef<number | null>(null);
   const detailedSessionRef = useRef<DetailedTestSession | null>(null);
 
+  // ⭐ Selezione deterministica: indice della parola corrente nell'array (mescolato) testWords
+  const currentIndexRef = useRef<number>(0);
+  // ⭐ Guardia anti doppia-risposta sulla stessa parola (stato async non affidabile)
+  const isAdvancingRef = useRef<boolean>(false);
+  // ⭐ Guardia anti doppio-salvataggio (testSaved è async nel closure)
+  const testSavedRef = useRef<boolean>(false);
+
   // Initialize when Firebase is ready
   useEffect(() => {
     if (isReady && !isInitialized) {
@@ -710,9 +717,17 @@ export const useTest = (
           filteredWords = filteredWords.filter((word) => !word.learned);
         }
 
-        // NON randomizziamo l'ordine qui - lo facciamo durante l'estrazione
-        // per garantire che ogni parola sia estratta una volta sola
-        const selectedWords = filteredWords;
+        // ⭐ Mescoliamo UNA SOLA VOLTA all'avvio: poi si avanza per indice, così
+        // ogni parola è proposta esattamente una volta (robusto a doppie chiamate).
+        const shuffleArray = <T,>(arr: T[]): T[] => {
+          const a = [...arr];
+          for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+          }
+          return a;
+        };
+        const selectedWords = shuffleArray(filteredWords);
 
         // Initialize test state
         setTestWords(selectedWords);
@@ -727,6 +742,9 @@ export const useTest = (
         setWordTimes([]);
         setUsedWordIds(new Set());
         setTestSaved(false);
+        currentIndexRef.current = 0;
+        isAdvancingRef.current = false;
+        testSavedRef.current = false;
         setShowMeaning(false);
         setShowHint(false);
         setHintUsedForCurrentWord(false);
@@ -769,10 +787,10 @@ export const useTest = (
         testStartTimeRef.current = Date.now();
         wordStartTimeRef.current = Date.now();
 
-        // Estrai la prima parola casualmente
+        // Prima parola = elemento 0 dell'array già mescolato
         if (selectedWords.length > 0) {
-          const randomIndex = Math.floor(Math.random() * selectedWords.length);
-          const firstWord = selectedWords[randomIndex];
+          const firstWord = selectedWords[0];
+          currentIndexRef.current = 0;
           setCurrentWord(firstWord);
           setUsedWordIds(new Set([firstWord.id]));
           
@@ -841,19 +859,19 @@ export const useTest = (
 
   // Get next word (estrazione casuale, una volta sola per parola)
   const nextWord = useCallback(() => {
-    const availableWords = testWords.filter(
-      (word) => !usedWordIds.has(word.id)
-    );
+    // ⭐ Avanzamento DETERMINISTICO per indice sull'array già mescolato:
+    // ogni parola compare esattamente una volta, a prova di doppie invocazioni.
+    const nextIndex = currentIndexRef.current + 1;
 
-    if (availableWords.length === 0) {
+    if (nextIndex >= testWords.length) {
       setCurrentWord(null);
+      isAdvancingRef.current = false;
       return;
     }
 
-    // Estrazione casuale dalla lista delle parole disponibili
-    const randomIndex = Math.floor(Math.random() * availableWords.length);
-    const selectedWord = availableWords[randomIndex];
-    
+    currentIndexRef.current = nextIndex;
+    const selectedWord = testWords[nextIndex];
+
     setCurrentWord(selectedWord);
     setUsedWordIds((prev) => new Set([...prev, selectedWord.id]));
     setShowMeaning(false);
@@ -864,8 +882,8 @@ export const useTest = (
 
     // Initialize detailed word session tracking
     const now = new Date();
-    const currentPosition = usedWordIds.size + 1; // 1-based position
-    
+    const currentPosition = nextIndex + 1; // 1-based, deterministico
+
     const newWordSession: DetailedWordSession = {
       wordId: selectedWord.id,
       english: selectedWord.english,
@@ -880,7 +898,7 @@ export const useTest = (
       testPosition: currentPosition,
       timeExpired: false,
     };
-    
+
     setCurrentWordSession(newWordSession);
     setCurrentWordStartTime(now);
     setHintSequenceCounter(0);
@@ -889,14 +907,17 @@ export const useTest = (
     // Reset hints for the NEW word (not the completed one)
     setHintsUsedThisWord(0);
     setGameHints({});
-    currentWordHintsRef.current = []; // Reset ref too
 
-  }, [testWords, usedWordIds]);
+    // Nuova parola pronta: riabilita la risposta
+    isAdvancingRef.current = false;
+
+  }, [testWords]);
 
   // Save test results
   const saveTestResultsWithStats = useCallback(
     (finalStats: TestStats, finalDetailedSession?: DetailedTestSession) => {
-      if (testSaved) return;
+      if (testSaved || testSavedRef.current) return;
+      testSavedRef.current = true;
 
       recordWordTime([], false); // Record final word time (not timeout for final save)
 
@@ -1021,6 +1042,11 @@ export const useTest = (
     (isCorrect: boolean, isTimeout: boolean = false) => {
       if (!currentWord) return;
 
+      // ⭐ Guardia anti doppia-risposta: una sola risposta per parola
+      // (previene doppio click / timeout + click → salti e conteggi doppi)
+      if (isAdvancingRef.current) return;
+      isAdvancingRef.current = true;
+
       recordWordTime([], isTimeout);
 
       // Complete current word session tracking
@@ -1090,7 +1116,7 @@ export const useTest = (
           totalHintsCount: actualHintsCount, // Use actual count
           result: (isTimeout ? 'timeout' : (isCorrect ? 'correct' : 'incorrect')) as 'correct' | 'incorrect' | 'timeout',
           isCorrect,
-          testPosition: usedWordIds.size + 1, // Fix position calculation
+          testPosition: currentIndexRef.current + 1, // 1-based deterministico
           timeExpired: isTimeout,
         } : null
       );
@@ -1195,6 +1221,7 @@ export const useTest = (
         setTestMode(false);
         setShowResults(true);
         setCurrentWord(null);
+        isAdvancingRef.current = false;
       } else if (!isTimeout) {
         // Show meaning briefly, ensure card is face-down, then move to next word
         setIsTransitioning(true);
@@ -1274,6 +1301,9 @@ export const useTest = (
     // Reset timing refs
     testStartTimeRef.current = null;
     wordStartTimeRef.current = null;
+    currentIndexRef.current = 0;
+    isAdvancingRef.current = false;
+    testSavedRef.current = false;
 
     // Reset enhanced tracking
     setDetailedSession(null);
