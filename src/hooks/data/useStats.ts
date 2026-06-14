@@ -1281,13 +1281,25 @@ export const useStats = (): StatsResult => {
 
   const calculatedStats = useMemo<AggregatedCalculatedStatistics>(() => {
     const now = Date.now();
-    // Firma dei dati di input: invalida la cache quando cambiano davvero
-    // (test, parole, performance), evitando dati stantii entro il TTL.
+    // Firma dei dati di input: invalida la cache quando cambia il CONTENUTO
+    // rilevante (non solo le lunghezze). Includiamo i conteggi learned/difficult
+    // e il numero totale di tentativi, così toggle learned/difficult o nuovi
+    // tentativi su parole già esistenti non restano stantii entro il TTL.
+    let learnedCount = 0;
+    let difficultCount = 0;
+    for (const w of wordsData) {
+      if (w.learned) learnedCount++;
+      if (w.difficult) difficultCount++;
+    }
+    let attemptsCount = 0;
+    for (const p of Object.values(wordPerformance)) {
+      attemptsCount += p.attempts?.length || 0;
+    }
     const signature = `${testHistory.length}|${
       Object.keys(wordPerformance).length
-    }|${wordsData.length}|${currentStats.testsCompleted}|${
-      currentStats.lastStudyDate ?? ""
-    }`;
+    }|${wordsData.length}|${learnedCount}|${difficultCount}|${attemptsCount}|${
+      currentStats.testsCompleted
+    }|${currentStats.lastStudyDate ?? ""}`;
     if (
       calculatedStatsCache.current &&
       calculatedStatsCache.current.signature === signature &&

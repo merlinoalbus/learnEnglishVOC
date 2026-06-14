@@ -995,7 +995,7 @@ export class StatsAnalyticsService {
     }
 
     const wordGroup = new Map<string, string>(
-      (words || []).map((w) => [w.id, (w.group as string) || "UNCATEGORIZED"])
+      (words || []).map((w) => [w.id, (w.group as string) || "GENERAL"])
     );
     const monthCategories: Record<string, Set<string>> = {};
     const monthAttempts: Record<string, { words: number; attempts: number }> =
@@ -1013,7 +1013,7 @@ export class StatsAnalyticsService {
       ma.words++;
       ma.attempts += w.totalAttempts || attempts.length;
       (monthCategories[key] || (monthCategories[key] = new Set())).add(
-        wordGroup.get(w.id) || "UNCATEGORIZED"
+        wordGroup.get(w.id) || "GENERAL"
       );
     }
 
@@ -1123,7 +1123,7 @@ export class StatsAnalyticsService {
 
     const byCat: Record<string, Word[]> = {};
     for (const w of words) {
-      const cat = (w.group as string) || "UNCATEGORIZED";
+      const cat = (w.group as string) || "GENERAL";
       (byCat[cat] || (byCat[cat] = [])).push(w);
     }
 
@@ -1138,7 +1138,10 @@ export class StatsAnalyticsService {
       let totalAttempts = 0;
       let masteredWords = 0;
       let needsWorkWords = 0;
-      let testsIncluding = 0;
+      // NOTA: i test non portano la categoria per-parola, quindi non è possibile
+      // contare i "test che includono la categoria". Approssimiamo con il numero
+      // di parole della categoria effettivamente testate (campo non mostrato in UI).
+      let testedWords = 0;
       let lastTestedAt: Date | null = null;
 
       for (const w of catWords) {
@@ -1149,7 +1152,7 @@ export class StatsAnalyticsService {
           totalAttempts += p.totalAttempts;
           if (p.mastered) masteredWords++;
           if (p.needsWork) needsWorkWords++;
-          testsIncluding++;
+          testedWords++;
           const la = this.toDate((p.lastAttempt as any)?.timestamp);
           if (la && (!lastTestedAt || la > lastTestedAt)) lastTestedAt = la;
         }
@@ -1194,7 +1197,7 @@ export class StatsAnalyticsService {
           needsWorkWords,
         },
         testStats: {
-          testsIncluding,
+          testsIncluding: testedWords, // approssimazione: parole testate nella categoria
           averageTestScore: averageAccuracy,
           lastTestedAt: lastTestedAt || undefined,
         },
