@@ -2,6 +2,7 @@ import type {
   Statistics,
   DailyProgressAggregated,
   MonthlyStatsAggregated,
+  CategoryProgressAggregated,
   AggregatedCalculatedStatistics,
   LearningTrendsAnalysis,
   TrendAnalysis,
@@ -40,7 +41,7 @@ import type {
   FinalScore,
   HintSystemConfig,
 } from "../types/entities/Test.types";
-import type { Word } from "../types/entities/Word.types";
+import type { Word, WordCategory } from "../types/entities/Word.types";
 import type {
   WordPerformance,
   PerformanceAttempt,
@@ -490,10 +491,34 @@ export class StatsAnalyticsService {
   calculateAggregatedStatistics(
     currentStats: Statistics,
     testHistory: any[],
-    wordPerformanceAnalyses: WordPerformanceAnalysis[]
+    wordPerformanceAnalyses: WordPerformanceAnalysis[],
+    words: Word[] = []
   ): AggregatedCalculatedStatistics {
+    // ⭐ Campi aggregati DERIVATI dalle fonti (single source of truth):
+    // testHistory + performance + words. Evita doppio conteggio e si
+    // ricalcolano sempre coerenti con i dati reali.
+    const dailyProgress = this.buildDailyProgress(
+      testHistory,
+      wordPerformanceAnalyses
+    );
+    const streakDays = this.calculateStreakDays(dailyProgress);
+    const monthlyStats = this.buildMonthlyStats(
+      testHistory,
+      wordPerformanceAnalyses,
+      words,
+      dailyProgress
+    );
+    const categoriesProgress = this.buildCategoriesProgress(
+      words,
+      wordPerformanceAnalyses
+    );
+
     const baseStats: Statistics = {
       ...currentStats,
+      dailyProgress,
+      streakDays,
+      monthlyStats,
+      categoriesProgress,
     };
 
     const globalPerformanceStats: GlobalPerformanceStats = {
@@ -530,27 +555,17 @@ export class StatsAnalyticsService {
 
     const learningTrends: LearningTrendsAnalysis =
       this.calculateLearningTrends(testHistory);
-    const weeklyTrends: WeeklyProgressAnalysis = this.calculateWeeklyProgress(
-      currentStats.dailyProgress || {}
-    );
+    const weeklyTrends: WeeklyProgressAnalysis =
+      this.calculateWeeklyProgress(dailyProgress);
 
-    // Fixed: MonthlyTrendsAnalysis with proper structure
-    const monthlyTrends: MonthlyTrendsAnalysis = {
-      last3Months: [],
-      trendDirection: "stable",
-      keyMetricChanges: {
-        accuracyChange: 0,
-        vocabularyGrowthChange: 0,
-        consistencyChange: 0,
-      }, // Fixed: proper structure
-      seasonalPatterns: [],
-    };
+    // MonthlyTrendsAnalysis derivata dai monthlyStats reali
+    const monthlyTrends: MonthlyTrendsAnalysis =
+      this.calculateMonthlyTrends(monthlyStats);
 
-    // Fixed: StreakAnalysisData with only existing properties
+    // StreakAnalysisData con streak reale (corrente + più lungo storico)
     const streakAnalysis: StreakAnalysisData = {
-      currentStreak: currentStats.streakDays || 0,
-      longestStreak: currentStats.streakDays || 0,
-      // Removed non-existing properties: streakHistory, averageStreakLength, bestMonth, consistency
+      currentStreak: streakDays,
+      longestStreak: this.calculateLongestStreak(dailyProgress),
       streakBreakingPatterns: [],
       streakMotivation: [],
     };
@@ -708,18 +723,494 @@ export class StatsAnalyticsService {
       previousWeek.push(prevDayProgress);
     }
 
+    const sum = (
+      arr: DailyProgressAggregated[],
+      sel: (d: DailyProgressAggregated) => number
+    ) => arr.reduce((s, d) => s + sel(d), 0);
+    const avgActive = (
+      arr: DailyProgressAggregated[],
+      sel: (d: DailyProgressAggregated) => number
+    ) => {
+      const vals = arr
+        .filter((d) => d.testActivity.testsCompleted > 0)
+        .map(sel);
+      return vals.length
+        ? vals.reduce((a, b) => a + b, 0) / vals.length
+        : 0;
+    };
+
+    const curAcc = avgActive(currentWeek, (d) => d.testActivity.averageAccuracy);
+    const prevAcc = avgActive(previousWeek, (d) => d.testActivity.averageAccuracy);
+    const activeDays = currentWeek.filter(
+      (d) =>
+        d.testActivity.testsCompleted > 0 || d.wordActivity.wordsStudied > 0
+    ).length;
+
     return {
       currentWeek,
       previousWeek,
       weekOverWeekChange: {
-        testsChange: 0,
-        accuracyChange: 0,
-        timeChange: 0,
-        wordsStudiedChange: 0,
+        testsChange:
+          sum(currentWeek, (d) => d.testActivity.testsCompleted) -
+          sum(previousWeek, (d) => d.testActivity.testsCompleted),
+        accuracyChange: Math.round((curAcc - prevAcc) * 10) / 10,
+        timeChange:
+          sum(currentWeek, (d) => d.testActivity.totalTime) -
+          sum(previousWeek, (d) => d.testActivity.totalTime),
+        wordsStudiedChange:
+          sum(currentWeek, (d) => d.wordActivity.wordsStudied) -
+          sum(previousWeek, (d) => d.wordActivity.wordsStudied),
       },
-      weeklyConsistency: 0,
+      weeklyConsistency: Math.round((activeDays / 7) * 100) / 100,
       recommendedSchedule: [],
     };
+  }
+
+  // =====================================================
+  // 🧮 AGGREGAZIONI DERIVATE (daily / streak / monthly / categorie)
+  // =====================================================
+
+  /** Converte robustamente diversi formati (Date, ISO string, number, Firestore Timestamp). */
+  private toDate(value: any): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+    if (typeof value === "string" || typeof value === "number") {
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    if (typeof value.toDate === "function") {
+      try {
+        const d = value.toDate();
+        return d instanceof Date && !isNaN(d.getTime()) ? d : null;
+      } catch {
+        return null;
+      }
+    }
+    if (typeof value.seconds === "number") return new Date(value.seconds * 1000);
+    if (typeof value._seconds === "number")
+      return new Date(value._seconds * 1000);
+    return null;
+  }
+
+  private dayKey(d: Date): string {
+    return d.toISOString().split("T")[0];
+  }
+
+  private monthKey(d: Date): string {
+    return this.dayKey(d).slice(0, 7);
+  }
+
+  private isActiveDay(d: DailyProgressAggregated): boolean {
+    return d.testActivity.testsCompleted > 0 || d.wordActivity.wordsStudied > 0;
+  }
+
+  /** Aggrega l'attività per giorno (YYYY-MM-DD) da testHistory + performance. */
+  private buildDailyProgress(
+    testHistory: any[],
+    wordPerformanceAnalyses: WordPerformanceAnalysis[]
+  ): Record<string, DailyProgressAggregated> {
+    const result: Record<string, DailyProgressAggregated> = {};
+    const ensure = (key: string) =>
+      result[key] || (result[key] = this.createEmptyDayProgress(key));
+
+    // 1) Attività test per giorno
+    for (const t of testHistory || []) {
+      const d = this.toDate(t?.timestamp);
+      if (!d) continue;
+      const day = ensure(this.dayKey(d)).testActivity;
+      const prev = day.testsCompleted;
+      day.testsCompleted = prev + 1;
+      const pct = Number(t.percentage) || 0;
+      day.averageScore = (day.averageScore * prev + pct) / day.testsCompleted;
+      day.averageAccuracy = day.averageScore;
+      day.totalTime += Number(t.totalTime) || 0;
+      day.hintsUsed += Number(t.hintsUsed) || 0;
+    }
+
+    // 2) Attività parole per giorno (dagli attempts della performance)
+    const dayWords: Record<string, Set<string>> = {};
+    const dayNew: Record<string, number> = {};
+    const dayMastered: Record<string, number> = {};
+    for (const w of wordPerformanceAnalyses || []) {
+      const attempts = w.attempts || [];
+      attempts.forEach((a: any, idx: number) => {
+        const d = this.toDate(a?.timestamp);
+        if (!d) return;
+        const key = this.dayKey(d);
+        ensure(key);
+        (dayWords[key] || (dayWords[key] = new Set())).add(w.id);
+        if (idx === 0) dayNew[key] = (dayNew[key] || 0) + 1;
+      });
+      if (w.mastered && attempts.length) {
+        const d = this.toDate(attempts[attempts.length - 1]?.timestamp);
+        if (d) {
+          const key = this.dayKey(d);
+          dayMastered[key] = (dayMastered[key] || 0) + 1;
+        }
+      }
+    }
+
+    Object.keys(result).forEach((key) => {
+      const day = result[key];
+      const wordsStudied = dayWords[key] ? dayWords[key].size : 0;
+      day.testActivity.averageScore = Math.round(day.testActivity.averageScore);
+      day.testActivity.averageAccuracy = Math.round(
+        day.testActivity.averageAccuracy
+      );
+      day.wordActivity.wordsStudied = wordsStudied;
+      day.wordActivity.newWordsEncountered = dayNew[key] || 0;
+      day.wordActivity.wordsMastered = dayMastered[key] || 0;
+      day.wordActivity.wordsImproved = 0; // non derivabile in modo affidabile
+      const acc = day.testActivity.averageAccuracy;
+      const hintsRatio =
+        wordsStudied > 0 ? day.testActivity.hintsUsed / wordsStudied : 0;
+      day.derivedMetrics.studyEfficiency = Math.round(acc / (1 + hintsRatio));
+      day.derivedMetrics.learningVelocity =
+        wordsStudied > 0
+          ? Math.round((day.wordActivity.wordsMastered / wordsStudied) * 100) /
+            100
+          : 0;
+      day.derivedMetrics.consistency = this.isActiveDay(day) ? 1 : 0;
+    });
+
+    return result;
+  }
+
+  /** Streak corrente: giorni consecutivi attivi fino a oggi (o a ieri se oggi non ancora attivo). */
+  private calculateStreakDays(
+    dailyProgress: Record<string, DailyProgressAggregated>
+  ): number {
+    const active = new Set(
+      Object.keys(dailyProgress).filter((k) =>
+        this.isActiveDay(dailyProgress[k])
+      )
+    );
+    if (active.size === 0) return 0;
+
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    let cursor: Date;
+    if (active.has(this.dayKey(today))) cursor = today;
+    else if (active.has(this.dayKey(yesterday))) cursor = yesterday;
+    else return 0;
+
+    let streak = 0;
+    while (active.has(this.dayKey(cursor))) {
+      streak++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return streak;
+  }
+
+  /** Streak storico più lungo (run massimo di giorni attivi consecutivi). */
+  private calculateLongestStreak(
+    dailyProgress: Record<string, DailyProgressAggregated>
+  ): number {
+    const days = Object.keys(dailyProgress)
+      .filter((k) => this.isActiveDay(dailyProgress[k]))
+      .sort();
+    if (days.length === 0) return 0;
+
+    let longest = 1;
+    let current = 1;
+    for (let i = 1; i < days.length; i++) {
+      const diff = Math.round(
+        (new Date(days[i]).getTime() - new Date(days[i - 1]).getTime()) /
+          86400000
+      );
+      if (diff === 1) {
+        current++;
+        longest = Math.max(longest, current);
+      } else {
+        current = 1;
+      }
+    }
+    return longest;
+  }
+
+  private createEmptyMonth(month: string): MonthlyStatsAggregated {
+    return {
+      month,
+      testMetrics: {
+        testsCompleted: 0,
+        averageScore: 0,
+        averageAccuracy: 0,
+        totalTimeSpent: 0,
+        bestStreak: 0,
+        testDifficultyDistribution: { easy: 0, medium: 0, hard: 0 },
+      },
+      vocabularyMetrics: {
+        wordsAdded: 0,
+        wordsLearned: 0,
+        categoriesStudied: 0,
+      },
+      performanceMetrics: {
+        wordsImproved: 0,
+        wordsMastered: 0,
+        averageAttempts: 0,
+        consistencyScore: 0,
+      },
+      insights: [],
+    };
+  }
+
+  /** Aggrega l'attività per mese (YYYY-MM). */
+  private buildMonthlyStats(
+    testHistory: any[],
+    wordPerformanceAnalyses: WordPerformanceAnalysis[],
+    words: Word[],
+    dailyProgress: Record<string, DailyProgressAggregated>
+  ): Record<string, MonthlyStatsAggregated> {
+    const result: Record<string, MonthlyStatsAggregated> = {};
+    const ensure = (key: string) =>
+      result[key] || (result[key] = this.createEmptyMonth(key));
+
+    // Test metrics
+    for (const t of testHistory || []) {
+      const d = this.toDate(t?.timestamp);
+      if (!d) continue;
+      const tm = ensure(this.monthKey(d)).testMetrics;
+      const prev = tm.testsCompleted;
+      tm.testsCompleted = prev + 1;
+      const pct = Number(t.percentage) || 0;
+      tm.averageScore = (tm.averageScore * prev + pct) / tm.testsCompleted;
+      tm.averageAccuracy = tm.averageScore;
+      tm.totalTimeSpent += Number(t.totalTime) || 0;
+      const diff: "easy" | "medium" | "hard" =
+        t.difficulty === "easy" || t.difficulty === "hard"
+          ? t.difficulty
+          : "medium";
+      tm.testDifficultyDistribution[diff] =
+        (tm.testDifficultyDistribution[diff] || 0) + 1;
+    }
+
+    // Vocabulary: parole aggiunte per mese (da createdAt) + categorie studiate
+    for (const w of words || []) {
+      const created = this.toDate(
+        (w as any)?.firestoreMetadata?.createdAt || (w as any)?.createdAt
+      );
+      if (created) ensure(this.monthKey(created)).vocabularyMetrics.wordsAdded++;
+    }
+
+    const wordGroup = new Map<string, string>(
+      (words || []).map((w) => [w.id, (w.group as string) || "GENERAL"])
+    );
+    const monthCategories: Record<string, Set<string>> = {};
+    const monthAttempts: Record<string, { words: number; attempts: number }> =
+      {};
+
+    for (const w of wordPerformanceAnalyses || []) {
+      const attempts = w.attempts || [];
+      if (!attempts.length) continue;
+      const last = this.toDate(attempts[attempts.length - 1]?.timestamp);
+      if (!last) continue;
+      const key = this.monthKey(last);
+      const m = ensure(key);
+      if (w.mastered) m.performanceMetrics.wordsMastered++;
+      const ma = monthAttempts[key] || (monthAttempts[key] = { words: 0, attempts: 0 });
+      ma.words++;
+      ma.attempts += w.totalAttempts || attempts.length;
+      (monthCategories[key] || (monthCategories[key] = new Set())).add(
+        wordGroup.get(w.id) || "GENERAL"
+      );
+    }
+
+    // Giorni attivi per mese (per consistencyScore + bestStreak mensile)
+    const monthActiveDayKeys: Record<string, string[]> = {};
+    Object.keys(dailyProgress).forEach((dk) => {
+      if (this.isActiveDay(dailyProgress[dk])) {
+        const mk = dk.slice(0, 7);
+        (monthActiveDayKeys[mk] || (monthActiveDayKeys[mk] = [])).push(dk);
+      }
+    });
+
+    Object.keys(result).forEach((key) => {
+      const m = result[key];
+      m.testMetrics.averageScore = Math.round(m.testMetrics.averageScore);
+      m.testMetrics.averageAccuracy = Math.round(m.testMetrics.averageAccuracy);
+      const ma = monthAttempts[key];
+      m.performanceMetrics.averageAttempts =
+        ma && ma.words > 0 ? Math.round((ma.attempts / ma.words) * 10) / 10 : 0;
+      m.vocabularyMetrics.categoriesStudied = monthCategories[key]
+        ? monthCategories[key].size
+        : 0;
+      const [y, mm] = key.split("-").map(Number);
+      const daysInMonth = new Date(y, mm, 0).getDate();
+      const activeDays = monthActiveDayKeys[key] || [];
+      m.performanceMetrics.consistencyScore =
+        Math.round((activeDays.length / daysInMonth) * 100) / 100;
+      m.testMetrics.bestStreak = this.longestConsecutiveRun(activeDays);
+    });
+
+    return result;
+  }
+
+  /** Run massimo di date consecutive (YYYY-MM-DD) in un elenco. */
+  private longestConsecutiveRun(dayKeys: string[]): number {
+    const days = [...dayKeys].sort();
+    if (days.length === 0) return 0;
+    let longest = 1;
+    let current = 1;
+    for (let i = 1; i < days.length; i++) {
+      const diff = Math.round(
+        (new Date(days[i]).getTime() - new Date(days[i - 1]).getTime()) /
+          86400000
+      );
+      if (diff === 1) {
+        current++;
+        longest = Math.max(longest, current);
+      } else {
+        current = 1;
+      }
+    }
+    return longest;
+  }
+
+  private calculateMonthlyTrends(
+    monthlyStats: Record<string, MonthlyStatsAggregated>
+  ): MonthlyTrendsAnalysis {
+    const keys = Object.keys(monthlyStats).sort();
+    const last3Months = keys.slice(-3).map((k) => monthlyStats[k]);
+
+    let trendDirection: "improving" | "stable" | "declining" = "stable";
+    let accuracyChange = 0;
+    let vocabularyGrowthChange = 0;
+    let consistencyChange = 0;
+
+    if (last3Months.length >= 2) {
+      const a = last3Months[last3Months.length - 1];
+      const b = last3Months[last3Months.length - 2];
+      accuracyChange =
+        a.testMetrics.averageAccuracy - b.testMetrics.averageAccuracy;
+      vocabularyGrowthChange =
+        a.vocabularyMetrics.wordsAdded - b.vocabularyMetrics.wordsAdded;
+      consistencyChange =
+        a.performanceMetrics.consistencyScore -
+        b.performanceMetrics.consistencyScore;
+      trendDirection =
+        accuracyChange > 3
+          ? "improving"
+          : accuracyChange < -3
+          ? "declining"
+          : "stable";
+    }
+
+    return {
+      last3Months,
+      trendDirection,
+      keyMetricChanges: {
+        accuracyChange: Math.round(accuracyChange * 10) / 10,
+        vocabularyGrowthChange,
+        consistencyChange: Math.round(consistencyChange * 100) / 100,
+      },
+      seasonalPatterns: [],
+    };
+  }
+
+  /** Progresso per categoria (group) componendo Word[] + performance. */
+  private buildCategoriesProgress(
+    words: Word[],
+    wordPerformanceAnalyses: WordPerformanceAnalysis[]
+  ): Record<string, CategoryProgressAggregated> {
+    const result: Record<string, CategoryProgressAggregated> = {};
+    if (!words || words.length === 0) return result;
+
+    const perfMap = new Map(
+      (wordPerformanceAnalyses || []).map((p) => [p.id, p])
+    );
+
+    const byCat: Record<string, Word[]> = {};
+    for (const w of words) {
+      const cat = (w.group as string) || "GENERAL";
+      (byCat[cat] || (byCat[cat] = [])).push(w);
+    }
+
+    Object.keys(byCat).forEach((cat) => {
+      const catWords = byCat[cat];
+      const totalWords = catWords.length;
+      const learnedWords = catWords.filter((w) => w.learned).length;
+      const difficultWords = catWords.filter((w) => w.difficult).length;
+
+      let accSum = 0;
+      let accCount = 0;
+      let totalAttempts = 0;
+      let masteredWords = 0;
+      let needsWorkWords = 0;
+      // NOTA: i test non portano la categoria per-parola, quindi non è possibile
+      // contare i "test che includono la categoria". Approssimiamo con il numero
+      // di parole della categoria effettivamente testate (campo non mostrato in UI).
+      let testedWords = 0;
+      let lastTestedAt: Date | null = null;
+
+      for (const w of catWords) {
+        const p = perfMap.get(w.id);
+        if (p && p.totalAttempts > 0) {
+          accSum += p.accuracy;
+          accCount++;
+          totalAttempts += p.totalAttempts;
+          if (p.mastered) masteredWords++;
+          if (p.needsWork) needsWorkWords++;
+          testedWords++;
+          const la = this.toDate((p.lastAttempt as any)?.timestamp);
+          if (la && (!lastTestedAt || la > lastTestedAt)) lastTestedAt = la;
+        }
+      }
+
+      const averageAccuracy = accCount > 0 ? Math.round(accSum / accCount) : 0;
+      const completionPercentage =
+        totalWords > 0
+          ? Math.min(
+              100,
+              Math.round(((learnedWords + masteredWords) / totalWords) * 100)
+            )
+          : 0;
+
+      const masteryLevel: CategoryProgressAggregated["overallProgress"]["masteryLevel"] =
+        completionPercentage >= 90
+          ? "mastered"
+          : completionPercentage >= 70
+          ? "proficient"
+          : completionPercentage >= 50
+          ? "competent"
+          : completionPercentage >= 25
+          ? "learning"
+          : "beginner";
+
+      const recommendedAction: CategoryProgressAggregated["overallProgress"]["recommendedAction"] =
+        accCount > 0 && averageAccuracy < 60
+          ? "practice"
+          : completionPercentage >= 90
+          ? "advance"
+          : completionPercentage < 50
+          ? "review"
+          : "maintain";
+
+      result[cat] = {
+        category: cat as WordCategory,
+        wordStats: { totalWords, learnedWords, difficultWords },
+        performanceStats: {
+          averageAccuracy,
+          totalAttempts,
+          masteredWords,
+          needsWorkWords,
+        },
+        testStats: {
+          testsIncluding: testedWords, // approssimazione: parole testate nella categoria
+          averageTestScore: averageAccuracy,
+          lastTestedAt: lastTestedAt || undefined,
+        },
+        overallProgress: {
+          completionPercentage,
+          masteryLevel,
+          recommendedAction,
+        },
+        lastUpdated: new Date(),
+      };
+    });
+
+    return result;
   }
 
   private createEmptyDayProgress(date: string): DailyProgressAggregated {

@@ -29,7 +29,17 @@ export const useTestTimer = (config: UseTestTimerConfig): UseTestTimerReturn => 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const timeExpiredRef = useRef(false);
-  
+
+  // Mantieni i callback in ref così l'intervallo usa sempre l'ultima versione
+  // senza ricreare startTimer (evita restart del timer se il parent passa
+  // callback inline non memoizzati).
+  const onTickRef = useRef(onTick);
+  const onTimeExpiredRef = useRef(onTimeExpired);
+  useEffect(() => {
+    onTickRef.current = onTick;
+    onTimeExpiredRef.current = onTimeExpired;
+  }, [onTick, onTimeExpired]);
+
   // Calculate derived values
   const timeRemaining = Math.max(0, timePerWord - currentTime);
   const progressPercentage = timePerWord > 0 ? Math.min(100, (currentTime / timePerWord) * 100) : 0;
@@ -47,27 +57,27 @@ export const useTestTimer = (config: UseTestTimerConfig): UseTestTimerReturn => 
       
       const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
       setCurrentTime(elapsed);
-      
+
       // Call onTick callback
-      onTick?.(elapsed);
-      
+      onTickRef.current?.(elapsed);
+
       // Check if time expired
       if (elapsed >= timePerWord && !timeExpiredRef.current) {
         timeExpiredRef.current = true;
         setTimeExpired(true);
         setIsRunning(false);
-        
+
         if (timerRef.current) {
           clearInterval(timerRef.current);
           timerRef.current = null;
         }
-        
+
         if (autoAdvance) {
-          onTimeExpired?.();
+          onTimeExpiredRef.current?.();
         }
       }
     }, 1000);
-  }, [enabled, isRunning, timePerWord, autoAdvance, onTimeExpired, onTick]);
+  }, [enabled, isRunning, timePerWord, autoAdvance]);
   
   const stopTimer = useCallback(() => {
     setIsRunning(false);

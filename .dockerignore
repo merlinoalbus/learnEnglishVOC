@@ -194,6 +194,14 @@ yarn.lock
 scripts/
 !scripts/config-status.js
 
+# 🗑️ Dump/artefatti di sviluppo e dati non usati a runtime dal frontend
+config_txt/
+debug/
+data/
+
+# 🛡️ Backend: ha un proprio build context (server/Dockerfile), non serve qui
+server/
+
 # 🎯 SPIEGAZIONE:
 # scripts/: Cartella con script development
 # !scripts/config-status.js: ECCEZIONE - mantieni questo script

@@ -23,9 +23,12 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
-    // Initialize from localStorage on app start
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme === 'dark';
+    // Initialize from localStorage on app start (resiliente a incognito/quota)
+    try {
+      return localStorage.getItem('theme') === 'dark';
+    } catch {
+      return false;
+    }
   });
 
   // Apply theme to DOM
@@ -45,8 +48,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   // Listen to theme reset events (e.g., from logout)
   useEffect(() => {
     const handleThemeReset = () => {
-      const savedTheme = localStorage.getItem('theme');
-      const shouldBeDark = savedTheme === 'dark';
+      let shouldBeDark = false;
+      try {
+        shouldBeDark = localStorage.getItem('theme') === 'dark';
+      } catch {
+        shouldBeDark = false;
+      }
       setIsDark(shouldBeDark);
     };
 
@@ -66,7 +73,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const dark = theme === 'dark';
     setIsDark(dark);
     applyTheme(dark);
-    localStorage.setItem('theme', theme);
+    try {
+      localStorage.setItem('theme', theme);
+    } catch {
+      // ignora (incognito / quota piena): il tema resta applicato in memoria
+    }
   };
 
   const toggleTheme = () => {

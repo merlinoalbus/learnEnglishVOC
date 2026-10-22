@@ -450,8 +450,9 @@ export const useWords = (): WordsResult => {
           let shouldCreate = true;
           
           // First check if current user already has this word by english text
+          // (guard difensivo: dati legacy potrebbero non avere "english")
           const existingUserWord = firestoreHook.data.find(
-            w => w.english.toLowerCase() === word.english.toLowerCase()
+            w => w.english?.toLowerCase() === word.english.toLowerCase()
           );
           
           if (existingUserWord) {

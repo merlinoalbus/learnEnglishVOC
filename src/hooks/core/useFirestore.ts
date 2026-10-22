@@ -228,16 +228,6 @@ export function useFirestore<T extends { id: string }>(
         throw new Error("🔐 User not authenticated for create operation");
       }
 
-      // DEBUG: Log user info for word creation
-      if (collectionName === "words") {
-        console.log("🔍 WORD CREATION DEBUG:", {
-          currentUserId: userId,
-          authUser: auth.currentUser?.uid,
-          authEmail: auth.currentUser?.email,
-          wordData: (data as any)?.english || "unknown"
-        });
-      }
-
       const now = new Date();
       const documentData = {
         ...data,
@@ -806,8 +796,15 @@ export function useFirestore<T extends { id: string }>(
         fromCache: false,
       });
       if (syncWithLocalStorage && localStorageKey) {
-        localStorage.removeItem(localStorageKey);
-        localStorage.removeItem(`${localStorageKey}_lastUpdate`);
+        try {
+          localStorage.removeItem(localStorageKey);
+          localStorage.removeItem(`${localStorageKey}_lastUpdate`);
+        } catch (error) {
+          console.warn(
+            "🔥 [useFirestore] Failed to clear localStorage on logout:",
+            error
+          );
+        }
       }
     };
 

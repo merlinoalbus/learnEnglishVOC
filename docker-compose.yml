@@ -32,6 +32,40 @@ networks:
 
 # ====== SERVICES CONFIGURATION ======
 services:
+  # ====== BACKEND AI PROXY (NON esposto sul web) ======
+  backend:
+    # SCOPO: custodisce la GEMINI_API_KEY lato server. Raggiungibile SOLO dagli
+    # altri container sulla rete interna (nessuna porta pubblicata).
+    container_name: learnenglishvoc-backend
+
+    image: ghcr.io/merlinoalbus/learnenglishvoc-backend:latest
+    # In CI/CD l'immagine è buildata e pushata; in locale `docker compose build`
+    # la ricostruisce dal context ./server grazie alla sezione build sottostante.
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+
+    environment:
+      # 🔑 La key è iniettata SOLO a runtime, mai nel build/immagine.
+      # Riusa la stessa variabile host già usata in precedenza (REACT_APP_GEMINI_API_KEY),
+      # così i deploy esistenti continuano a funzionare senza modifiche.
+      - GEMINI_API_KEY=${REACT_APP_GEMINI_API_KEY:-}
+      - GEMINI_API_URL=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+      - PORT=3001
+
+    networks:
+      - learnenglishvoc_network
+      # NESSUN blocco "ports:" => non esposto sul web
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
   # ====== PRODUCTION SERVICE ======
   learnenglishvoc:
     # SCOPO: Servizio production-ready per deployment
@@ -51,16 +85,16 @@ services:
     # 3. Docker Compose puller immagine già pronta
     # BENEFICIO: Deploy veloce, nessun build locale
 
+    # ====== DEPENDENCIES ======
+    depends_on:
+      - backend
+      # Il frontend (nginx) inoltra /api/* al servizio backend interno.
+
     # ====== ENVIRONMENT VARIABLES ======
     environment:
       # VARIABILI PASSATE AL CONTAINER AL RUNTIME
-
-      # 🔑 CRITICAL: API KEY MANAGEMENT
-      - REACT_APP_GEMINI_API_KEY=${REACT_APP_GEMINI_API_KEY}
-      # SCOPO: API key Gemini passata da environment host
-      # SICUREZZA: Valore letto da variabile host, non hardcoded
-      # SETUP: export REACT_APP_GEMINI_API_KEY=your_key
-      # PROCESSO: Host env var → Docker container env var → React app
+      # 🔑 NOTA: REACT_APP_GEMINI_API_KEY NON è più qui. La key è gestita solo
+      # dal servizio "backend" (vedi sopra) e non è più esposta al browser.
 
       # 🏭 PRODUCTION CONFIGURATION
       - REACT_APP_ENVIRONMENT=production
@@ -165,9 +199,15 @@ services:
       # PROCESSO: Build real-time da source code
       # BENEFICIO: Modifiche immediate, debugging completo
 
+    depends_on:
+      - backend
+      # Il CRA dev server inoltra /api/* (vedi src/setupProxy.js) al backend.
+
     environment:
       # DEVELOPMENT-SPECIFIC CONFIGURATION
-      - REACT_APP_GEMINI_API_KEY=${REACT_APP_GEMINI_API_KEY}
+      # 🔑 La key NON è più nel frontend: vive nel servizio "backend".
+      # In dev dockerizzato il proxy CRA punta al container backend:
+      - AI_PROXY_TARGET=http://backend:3001
       - REACT_APP_ENVIRONMENT=development
       - REACT_APP_DEBUG_LOGGING=true # Debug abilitato
       - REACT_APP_ENABLE_AI_FEATURES=true
@@ -211,9 +251,13 @@ services:
     image: ghcr.io/merlinoalbus/learnenglishvoc:latest
     # NOTA: Stessa immagine production ma configurazione diversa
 
+    depends_on:
+      - backend
+      # nginx inoltra /api/* al backend interno (key non esposta).
+
     environment:
       # STAGING-SPECIFIC CONFIGURATION
-      - REACT_APP_GEMINI_API_KEY=${REACT_APP_GEMINI_API_KEY}
+      # 🔑 REACT_APP_GEMINI_API_KEY rimossa: gestita solo dal servizio "backend".
       - REACT_APP_ENVIRONMENT=staging
       - REACT_APP_DEBUG_LOGGING=true # Debug per troubleshooting
       - REACT_APP_ENABLE_AI_FEATURES=true

@@ -34,10 +34,12 @@ export const AppConfig = {
 
   // AI Configuration (sostituisce il tuo AI_CONFIG hardcodato)
   ai: {
-    // SICURO: API key da environment variable invece di hardcoded
-    apiKey: getEnvVar("REACT_APP_GEMINI_API_KEY"),
+    // SICURO: la chiamata passa dal backend-proxy del frontend (/api/ai/generate),
+    // così la GEMINI_API_KEY resta lato server e non finisce mai nel bundle.
+    proxyUrl: getEnvVar("REACT_APP_AI_PROXY_URL", "/api/ai/generate"),
 
-    // Stesso URL che usavi prima
+    // URL Gemini (solo a scopo informativo nello status; la chiamata reale
+    // la fa il backend). Mantenuto per retro-compatibilità della UI di stato.
     baseUrl: getEnvVar(
       "REACT_APP_GEMINI_API_URL",
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
@@ -133,7 +135,7 @@ export const ERROR_MESSAGES = {
   network: "Errore di connessione. Controlla la tua connessione internet.",
   ai: "Servizio AI temporaneamente non disponibile. Riprova più tardi.",
   aiNotConfigured:
-    "Servizio AI non configurato. Aggiungi REACT_APP_GEMINI_API_KEY in .env.local",
+    "Servizio AI non configurato. Contatta l'amministratore del servizio.",
   storage: "Errore nel salvataggio dei dati. Controlla lo spazio disponibile.",
   validation: "Dati non validi. Controlla i campi obbligatori.",
   import: "Errore durante l'importazione. Verifica il formato del file.",
@@ -157,10 +159,13 @@ export const SUCCESS_MESSAGES = {
 // ====== UTILITY FUNCTIONS ======
 
 /**
- * Check if AI is available (has API key)
+ * Check if AI is available.
+ * La presenza/validità della key è verificata lato backend; qui basta il
+ * feature flag. Se il backend non ha la key, le chiamate falliscono in modo
+ * gestito (503 -> fallback) senza esporre nulla al client.
  */
 export const isAIAvailable = () => {
-  return AppConfig.ai.enabled && !!AppConfig.ai.apiKey;
+  return !!AppConfig.ai.enabled;
 };
 
 /**
@@ -168,9 +173,9 @@ export const isAIAvailable = () => {
  */
 export const getConfigurationStatus = () => {
   return {
-    isValid: !!AppConfig.ai.apiKey,
+    isValid: AppConfig.ai.enabled,
     environment: AppConfig.app.environment,
-    aiConfigured: !!AppConfig.ai.apiKey,
+    aiConfigured: AppConfig.ai.enabled,
     features: {
       aiEnabled: isAIAvailable(),
       mockMode: AppConfig.ai.mockResponses,
